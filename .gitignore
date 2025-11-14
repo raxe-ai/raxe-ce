@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+#Claude Fles
+CLAUDE.md
+CLAUDE_WORKING_FILES/*
+
 # Distribution / packaging
 .Python
 build/

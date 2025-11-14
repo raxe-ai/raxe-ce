@@ -1,0 +1,158 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raxe"
+version = "0.1.0"
+description = "AI Safety Telemetry & Guardrails - Community Edition"
+authors = [{name = "RAXE Team", email = "hello@raxe.ai"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = ["ai", "security", "llm", "safety", "guardrails", "prompt-injection"]
+
+dependencies = [
+    "click>=8.0",
+    "pydantic>=2.0",
+    "httpx>=0.24",
+    "structlog>=23.0",
+    "python-dotenv>=1.0",
+    "sqlalchemy>=2.0",
+    "aiosqlite>=0.19",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-asyncio>=0.21",
+    "pytest-benchmark>=4.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5",
+    "pre-commit>=3.3",
+    "black>=23.0",
+    "types-pyyaml",
+    "types-requests",
+]
+
+wrappers = [
+    "openai>=1.0",
+    "anthropic>=0.5",
+    "langchain>=0.1",
+]
+
+[project.urls]
+Homepage = "https://raxe.ai"
+Documentation = "https://docs.raxe.ai"
+Repository = "https://github.com/raxe-ai/raxe-ce"
+"Bug Tracker" = "https://github.com/raxe-ai/raxe-ce/issues"
+
+[project.scripts]
+raxe = "raxe.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["raxe*"]
+
+[tool.setuptools.package-data]
+raxe = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "S",   # bandit security
+    "B",   # bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "T20", # flake8-print (no print statements)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101",  # Allow assert in tests
+    "S105",  # Allow hardcoded passwords in tests
+    "S106",  # Allow hardcoded passwords in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105", "S106", "T20"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+show_error_codes = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "benchmark: marks tests as benchmarks",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["src/raxe"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+fail_under = 80
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'

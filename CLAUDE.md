@@ -2,11 +2,11 @@
 
 ## Mission Statement
 
-**RAXE is the instrument panel for LLMs – "Snort for prompts".**
+**RAXE is the instrument panel for LLMs – "Snort for AI prompts".**
 
 RAXE provides developer-friendly, privacy-first AI security that creates a flywheel of community-driven threat detection. This repository (`raxe-ce`) is the **Community Edition CLI** – the local agent that scans LLM interactions for security threats while respecting user privacy.
 
-**Core Principle:** Privacy by design. All scanning happens locally. PII never leaves the device. Only hashes and metadata are optionally sent to cloud for threat intelligence.
+**Core Principle:** Privacy by design. All scanning happens locally. PII never leaves the device. Only hashes and metadata are sent to cloud for threat intelligence (rule hits)
 
 ## Project Overview
 
@@ -17,13 +17,22 @@ RAXE provides developer-friendly, privacy-first AI security that creates a flywh
 **Type:** CLI tool / Python SDK
 **Role in Ecosystem:** Local scanning agent for the RAXE platform
 
+###Claude Working Directory
+
+All CLAUDE WORKING FILES, UPDATES, REPORTS TO BE IN THIS FOLDER - ONLY DELIVERABLES FOR PUBLISH WILL BE OUTSIDE
+
+CLAUDE_WORKING_FILES/REPORTS
+CLAUDE_WORKING_FILES/TEST
+CLAUDE_WORKING_FILES/MISC
+
+
 ### Ecosystem Context
 
 This repo is the **public, open-source CLI** that:
 - Runs locally on developer machines
 - Scans LLM prompts and responses for threats
 - Stores events in local SQLite queue
-- Optionally sends telemetry to RAXE cloud (privacy-preserving)
+- sends telemetry to RAXE cloud (privacy-preserving)
 - Provides Python SDK for integration
 - Serves as foundation for other language SDKs
 
@@ -47,7 +56,7 @@ Developer Installs CE → Detects Threats → Shares Success → More Developers
 2. **Initialize** (< 10 seconds): `raxe init --api-key=optional`
 3. **Integrate** (< 5 minutes): Wrap existing LLM client with one line
 4. **Detect** (< 10 minutes): First threat detected and displayed
-5. **Upgrade** (when ready): `raxe upgrade pro` for cloud features
+5. **Upgrade** (when ready): `raxe upgrade pro` for cloud full features
 
 **Critical Success Factor:** Time to value must be < 60 seconds from install to first detection.
 
@@ -57,29 +66,29 @@ Developer Installs CE → Detects Threats → Shares Success → More Developers
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     CLI / API Layer                          │
-│              (Click commands, HTTP handlers)                 │
+│                     CLI / API Layer                         │
+│              (Click commands, HTTP handlers)                │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                  Application Layer                           │
-│        (Use cases, orchestration, workflows)                 │
+│                  Application Layer                          │
+│        (Use cases, orchestration, workflows)                │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              Domain Layer (PURE - NO I/O)                    │
-│    • ThreatDetector (pure functions)                         │
-│    • RuleEngine (stateless logic)                            │
-│    • ScanResult (value objects)                              │
-│    • NO database, NO network, NO filesystem                  │
+│              Domain Layer (PURE - NO I/O)                   │
+│    • ThreatDetector (pure functions)                        │
+│    • RuleEngine (stateless logic)                           │
+│    • ScanResult (value objects)                             │
+│    • NO database, NO network, NO filesystem                 │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                Infrastructure Layer                          │
-│    • SQLite persistence                                      │
-│    • HTTP client for cloud API                               │
-│    • File I/O for configs                                    │
-│    • Telemetry sender                                        │
+│                Infrastructure Layer                         │
+│    • SQLite persistence                                     │
+│    • HTTP client for cloud API                              │
+│    • File I/O for configs                                   │
+│    • Telemetry sender                                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -307,7 +316,7 @@ RAXE_TELEMETRY_ENABLED=true
 
 ## Database Schema & Migrations
 
-### SQLite Local Queue Schema
+### SQLite Local Queue Schema [If changes are made - please update here too]
 
 ```sql
 -- Version: 1.0.0
@@ -373,7 +382,7 @@ CREATE INDEX idx_detected_at ON detections_local(detected_at DESC);
 CREATE INDEX idx_severity ON detections_local(severity);
 ```
 
-### Migration Strategy
+### Migration Strategy (for first version until v1.0.0, no migration required due to starting fresh)
 
 ```python
 # migrations/001_initial_schema.py
@@ -1384,18 +1393,6 @@ def process(data):  # What is data?
 - [pytest Documentation](https://docs.pytest.org/)
 
 ## Changelog
-
-### 2025-11-14
-- Complete rewrite with RAXE CE-specific guidance
-- Added clean architecture principles
-- Added domain layer purity requirements
-- Added privacy-first data handling
-- Added database schema and migrations
-- Added performance requirements and benchmarks
-- Added comprehensive testing guidelines
-- Added SDK development patterns
-- Added security checklist
-- Added critical success factors
 
 ---
 

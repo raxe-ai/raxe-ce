@@ -7,11 +7,11 @@ __pycache__/
 *.so
 
 #Claude Fles
-CLAUDE.md
-CLAUDE_HISTORY.md
-CLAUDE_WORKING_FILES/*
-AGENTS.md
-TASKS.md
+#CLAUDE.md
+#CLAUDE_HISTORY.md
+#CLAUDE_WORKING_FILES/*
+#AGENTS.md
+#TASKS.md
 
 # Distribution / packaging
 .Python

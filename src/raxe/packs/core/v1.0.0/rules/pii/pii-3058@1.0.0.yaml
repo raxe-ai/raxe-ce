@@ -1,0 +1,31 @@
+version: 1.0.0
+rule_id: pii-3058
+family: PII
+sub_family: api_keys
+name: Microsoft Teams Webhook Detection
+description: Detects Microsoft Teams incoming webhook URLs
+severity: medium
+confidence: 0.93
+patterns:
+- pattern: https://[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-f0-9-]+@[a-f0-9-]+/IncomingWebhook/[a-f0-9]+/[a-f0-9-]+
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "https://outlook.webhook.office.com/webhookb2/12345678-1234-1234-1234-123456789abc@abcdef12-3456-7890-abcd-ef1234567890/IncomingWebhook/abc123def456/12345678-1234-1234-1234-123456789abc"
+  should_not_match:
+  - "How to create Teams webhook?"
+  - "Microsoft Teams integration guide"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1567
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: collaboration_credentials
+rule_hash: null

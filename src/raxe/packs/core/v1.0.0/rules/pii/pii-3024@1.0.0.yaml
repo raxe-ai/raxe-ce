@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: pii-3024
+family: PII
+sub_family: financial
+name: US Routing Number Detection
+description: Detects US bank routing numbers (9 digits, ABA format)
+severity: medium
+confidence: 0.90
+patterns:
+- pattern: (?i)(?:routing|ABA|RTN).{0,20}(?:no|number|num|#).{0,10}\b([0-9]{9})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Routing number: 123456789"
+  - "ABA: 021000021"
+  - "RTN #: 111000025"
+  should_not_match:
+  - "What is a routing number?"
+  - "Routing numbers have 9 digits"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: financial
+rule_hash: null

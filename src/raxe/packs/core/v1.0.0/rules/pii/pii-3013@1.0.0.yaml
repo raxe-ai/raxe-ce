@@ -1,0 +1,33 @@
+version: 1.0.0
+rule_id: pii-3013
+family: PII
+sub_family: api_keys
+name: Datadog API Key Detection
+description: Detects Datadog API keys (32-character hex strings in context)
+severity: high
+confidence: 0.93
+patterns:
+- pattern: (?i)datadog.{0,20}(?:api|app).{0,20}key.{0,20}['\"]([a-f0-9]{32})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "DATADOG_API_KEY='1234567890abcdef1234567890abcdef'"
+  - "dd_app_key: 'abcdef1234567890abcdef1234567890'"
+  should_not_match:
+  - "Datadog API keys are 32 characters"
+  - "How to find my Datadog key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: monitoring_credentials
+rule_hash: null

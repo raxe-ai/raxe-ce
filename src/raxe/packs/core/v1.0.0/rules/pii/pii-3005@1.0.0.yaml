@@ -1,0 +1,36 @@
+version: 1.0.0
+rule_id: pii-3005
+family: PII
+sub_family: api_keys
+name: OpenAI API Key Detection
+description: Detects OpenAI API keys (sk-proj- and sk- patterns)
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: \b(sk-proj-[A-Za-z0-9]{48,})\b
+  flags: []
+  timeout: 5.0
+- pattern: \b(sk-[A-Za-z0-9]{48,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQR"
+  - "My key: sk-1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP"
+  should_not_match:
+  - "OpenAI keys start with sk-"
+  - "How to get an OpenAI API key?"
+  - "Use sk-... for authentication"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: ai_credentials
+rule_hash: null

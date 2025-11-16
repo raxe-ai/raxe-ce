@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: pii-3046
+family: PII
+sub_family: api_keys
+name: Bitbucket App Password Detection
+description: Detects Bitbucket app passwords and access tokens
+severity: high
+confidence: 0.92
+patterns:
+- pattern: (?i)bitbucket.{0,20}(?:password|token|app).{0,10}['\"]([A-Za-z0-9]{16,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "BITBUCKET_APP_PASSWORD='ABCDEFGHIJKLMNOP'"
+  - "bitbucket_token: '1234567890ABCDEFGHIJ'"
+  should_not_match:
+  - "How to create Bitbucket app password?"
+  - "Bitbucket authentication guide"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: vcs_credentials
+rule_hash: null

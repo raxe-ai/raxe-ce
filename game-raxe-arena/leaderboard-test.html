@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAXE Leaderboard System - Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px 0;
+      border-bottom: 2px solid #444;
+    }
+
+    header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ff6b00, #ffc107);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #252525;
+      border-radius: 8px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-group label {
+      font-size: 12px;
+      color: #aaa;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .control-group input,
+    .control-group select,
+    .control-group button {
+      padding: 10px 12px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus,
+    .control-group button:focus {
+      outline: none;
+      border-color: #ff6b00;
+      box-shadow: 0 0 10px rgba(255, 107, 0, 0.2);
+    }
+
+    button {
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff6b00, #ffc107);
+      color: #000;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 107, 0, 0.3);
+    }
+
+    .btn-secondary {
+      background: #1f6feb;
+      color: #fff;
+      border: none;
+    }
+
+    .btn-secondary:hover {
+      background: #388bfd;
+    }
+
+    .btn-danger {
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+    }
+
+    .btn-danger:hover {
+      background: #f44336;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+    }
+
+    .tab-button {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      font-weight: bold;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-button.active {
+      color: #ff6b00;
+      border-bottom-color: #ff6b00;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .leaderboard-container {
+      background: #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leaderboard-table thead th {
+      background: #2a2a2a;
+      padding: 15px;
+      text-align: left;
+      font-weight: bold;
+      border-bottom: 2px solid #444;
+      color: #ff6b00;
+    }
+
+    .leaderboard-table tbody tr {
+      border-bottom: 1px solid #333;
+      transition: background 0.2s;
+    }
+
+    .leaderboard-table tbody tr:hover {
+      background: #252525;
+    }
+
+    .leaderboard-table td {
+      padding: 15px;
+    }
+
+    .rank-col { width: 80px; font-weight: bold; }
+    .nick-col { width: 200px; }
+    .points-col { width: 120px; text-align: right; }
+    .level-col { width: 100px; text-align: center; }
+    .tier-col { width: 150px; }
+    .achievement-col { width: 100px; text-align: center; }
+    .time-col { width: 120px; text-align: center; }
+
+    .tier-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .tier-badge[data-tier="Novice"] { background: #6c757d; }
+    .tier-badge[data-tier="Apprentice"] { background: #17a2b8; }
+    .tier-badge[data-tier="Journeyman"] { background: #ffc107; color: #000; }
+    .tier-badge[data-tier="Master"] { background: #dc3545; }
+    .tier-badge[data-tier="Legend"] { background: #ff6b00; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #252525;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 3px solid #ff6b00;
+    }
+
+    .stat-label {
+      color: #aaa;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff6b00;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 4px;
+      background: #252525;
+      border-left: 3px solid #ff6b00;
+      max-width: 400px;
+      animation: slideIn 0.3s;
+      z-index: 1000;
+    }
+
+    .notification.success {
+      border-left-color: #4caf50;
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    .notification.error {
+      border-left-color: #d32f2f;
+      background: rgba(211, 47, 47, 0.1);
+    }
+
+    .notification.warning {
+      border-left-color: #ffc107;
+      background: rgba(255, 193, 7, 0.1);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 10px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid #444;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #252525;
+      border: 1px solid #444;
+      border-top: none;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+      border-radius: 0 0 4px 4px;
+      z-index: 10;
+    }
+
+    .search-results.show {
+      display: block;
+    }
+
+    .search-item {
+      padding: 10px 15px;
+      border-bottom: 1px solid #333;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .search-item:hover {
+      background: #333;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>RAXE Arena Leaderboard System</h1>
+      <p>Anonymous Global Leaderboard with GitHub Claim Feature</p>
+    </header>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <label>Player Nickname</label>
+        <input type="text" id="nickname" placeholder="Enter nickname" maxlength="30">
+      </div>
+      <div class="control-group">
+        <label>Score Points</label>
+        <input type="number" id="points" placeholder="0" min="0" max="10000000">
+      </div>
+      <div class="control-group">
+        <label>Level</label>
+        <input type="number" id="level" placeholder="1" min="1" max="100">
+      </div>
+      <div class="control-group">
+        <label>Achievements</label>
+        <input type="number" id="achievements" placeholder="0" min="0" max="100">
+      </div>
+      <div class="control-group">
+        <label>Completion Time (seconds)</label>
+        <input type="number" id="completion_time" placeholder="0" min="0">
+      </div>
+      <div class="control-group">
+        <button class="btn-primary" onclick="submitScore()">Submit Score</button>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid" id="stats-container"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchTab('global')">Global Leaderboard</button>
+      <button class="tab-button" onclick="switchTab('weekly')">Weekly Leaderboard</button>
+      <button class="tab-button" onclick="switchTab('search')">Search Player</button>
+      <button class="tab-button" onclick="switchTab('tools')">Tools & Debug</button>
+    </div>
+
+    <!-- Global Leaderboard Tab -->
+    <div id="global" class="tab-content active">
+      <div class="control-group" style="width: 200px; margin-bottom: 15px;">
+        <label>Show Top:</label>
+        <select id="global-limit" onchange="loadGlobalLeaderboard()">
+          <option value="10">Top 10</option>
+          <option value="25" selected>Top 25</option>
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+        </select>
+      </div>
+      <div class="leaderboard-container">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th class="rank-col">Rank</th>
+              <th class="nick-col">Player</th>
+              <th class="points-col">Points</th>
+              <th class="level-col">Level</th>
+              <th class="tier-col">Tier</th>
+              <th class="achievement-col">🏆</th>
+              <th class="time-col">Time</th>
+            </tr>
+          </thead>
+          <tbody id="global-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Weekly Leaderboard Tab -->
+    <div id="weekly" class="tab-content">
+      <div class="control-group" style="width: 200px; margin-bottom: 15px;">
+        <label>Show Top:</label>
+        <select id="weekly-limit" onchange="loadWeeklyLeaderboard()">
+          <option value="10">Top 10</option>
+          <option value="25" selected>Top 25</option>
+          <option value="50">Top 50</option>
+        </select>
+      </div>
+      <div class="leaderboard-container">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th class="rank-col">Rank</th>
+              <th class="nick-col">Player</th>
+              <th class="points-col">Points</th>
+              <th class="level-col">Level</th>
+              <th class="tier-col">Tier</th>
+              <th class="achievement-col">🏆</th>
+              <th class="time-col">Time</th>
+            </tr>
+          </thead>
+          <tbody id="weekly-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Search Tab -->
+    <div id="search" class="tab-content">
+      <div class="control-group" style="margin-bottom: 20px;">
+        <label>Search Player</label>
+        <input type="text" id="search-input" placeholder="Type player name..." onkeyup="searchPlayers()">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <div id="player-card-container"></div>
+    </div>
+
+    <!-- Tools Tab -->
+    <div id="tools" class="tab-content">
+      <h3 style="margin-bottom: 15px;">Leaderboard Tools</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+        <button class="btn-secondary" onclick="generateTestData()">Generate Test Data (10 entries)</button>
+        <button class="btn-secondary" onclick="showLeaderboardStats()">Show Statistics</button>
+        <button class="btn-secondary" onclick="exportAsJSON()">Export JSON</button>
+        <button class="btn-secondary" onclick="exportAsCSV()">Export CSV</button>
+        <button class="btn-secondary" onclick="estimatePosition()">Estimate Position</button>
+        <button class="btn-danger" onclick="clearAllData()">Clear All Data</button>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <h4 style="margin-bottom: 10px;">Debug Info</h4>
+        <pre id="debug-info" style="background: #252525; padding: 15px; border-radius: 4px; overflow-x: auto; max-height: 300px;"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div id="notifications"></div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header" id="modal-title"></div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/leaderboard.js"></script>
+  <script>
+    // UI Functions
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+
+      // Load data if needed
+      if (tabName === 'global') loadGlobalLeaderboard();
+      if (tabName === 'weekly') loadWeeklyLeaderboard();
+      if (tabName === 'tools') updateDebugInfo();
+    }
+
+    function showNotification(message, type = 'success') {
+      const notif = document.createElement('div');
+      notif.className = `notification ${type}`;
+      notif.textContent = message;
+      document.getElementById('notifications').appendChild(notif);
+
+      setTimeout(() => {
+        notif.style.animation = 'slideIn 0.3s reverse';
+        setTimeout(() => notif.remove(), 300);
+      }, 3000);
+    }
+
+    function openModal(title, content) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerHTML = content;
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    // Leaderboard Functions
+    function submitScore() {
+      const nickname = document.getElementById('nickname').value.trim();
+      const points = parseInt(document.getElementById('points').value) || 0;
+      const level = parseInt(document.getElementById('level').value) || 1;
+      const achievements = parseInt(document.getElementById('achievements').value) || 0;
+      const completion_time = parseInt(document.getElementById('completion_time').value) || 0;
+
+      if (!nickname) {
+        showNotification('Please enter a nickname', 'error');
+        return;
+      }
+
+      const result = LeaderboardManager.submitScore(nickname, points, level, {
+        achievements,
+        completion_time
+      });
+
+      if (result.success) {
+        showNotification(`Score submitted! Position: #${LeaderboardManager.getPlayerRank(nickname).position}`, 'success');
+        document.getElementById('nickname').value = '';
+        document.getElementById('points').value = '';
+        document.getElementById('level').value = '';
+        document.getElementById('achievements').value = '';
+        document.getElementById('completion_time').value = '';
+        updateStats();
+        loadGlobalLeaderboard();
+      } else {
+        showNotification(result.message, 'error');
+      }
+    }
+
+    function loadGlobalLeaderboard() {
+      const limit = parseInt(document.getElementById('global-limit').value) || 25;
+      const entries = LeaderboardManager.getGlobalLeaderboard(limit);
+
+      const tbody = document.getElementById('global-table');
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #666;">No scores yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries.map((entry, idx) => `
+        <tr onclick="showPlayerDetails('${entry.id}')">
+          <td class="rank-col">${LeaderboardManager.formatRank(idx + 1)}</td>
+          <td class="nick-col">${LeaderboardManager.escapeHtml(entry.nickname)}</td>
+          <td class="points-col"><strong>${entry.points.toLocaleString()}</strong></td>
+          <td class="level-col">Lv. ${entry.level}</td>
+          <td class="tier-col">
+            <span class="tier-badge" data-tier="${entry.rank}">
+              ${LeaderboardManager.RANK_TIERS[entry.rank]?.medal || '⭐'} ${entry.rank}
+            </span>
+          </td>
+          <td class="achievement-col">🏆 ${entry.achievements || 0}</td>
+          <td class="time-col">${LeaderboardManager.formatTime(entry.completion_time)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function loadWeeklyLeaderboard() {
+      const limit = parseInt(document.getElementById('weekly-limit').value) || 25;
+      const entries = LeaderboardManager.getWeeklyLeaderboard(limit);
+
+      const tbody = document.getElementById('weekly-table');
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #666;">No weekly scores</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries.map((entry, idx) => `
+        <tr onclick="showPlayerDetails('${entry.id}')">
+          <td class="rank-col">${LeaderboardManager.formatRank(idx + 1)}</td>
+          <td class="nick-col">${LeaderboardManager.escapeHtml(entry.nickname)}</td>
+          <td class="points-col"><strong>${entry.points.toLocaleString()}</strong></td>
+          <td class="level-col">Lv. ${entry.level}</td>
+          <td class="tier-col">
+            <span class="tier-badge" data-tier="${entry.rank}">
+              ${LeaderboardManager.RANK_TIERS[entry.rank]?.medal || '⭐'} ${entry.rank}
+            </span>
+          </td>
+          <td class="achievement-col">🏆 ${entry.achievements || 0}</td>
+          <td class="time-col">${LeaderboardManager.formatTime(entry.completion_time)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function searchPlayers() {
+      const query = document.getElementById('search-input').value.trim();
+      const resultsDiv = document.getElementById('search-results');
+
+      if (!query) {
+        resultsDiv.classList.remove('show');
+        document.getElementById('player-card-container').innerHTML = '';
+        return;
+      }
+
+      const results = LeaderboardManager.searchPlayer(query, 10);
+
+      if (results.length === 0) {
+        resultsDiv.classList.remove('show');
+        document.getElementById('player-card-container').innerHTML = '<div class="empty-state"><h3>No players found</h3></div>';
+        return;
+      }
+
+      resultsDiv.classList.add('show');
+      resultsDiv.innerHTML = results.map(entry => `
+        <div class="search-item" onclick="selectSearchResult('${entry.nickname}'); event.stopPropagation();">
+          ${LeaderboardManager.escapeHtml(entry.nickname)} - ${entry.points.toLocaleString()} points
+        </div>
+      `).join('');
+    }
+
+    function selectSearchResult(nickname) {
+      document.getElementById('search-input').value = nickname;
+      document.getElementById('search-results').classList.remove('show');
+
+      const entry = LeaderboardManager.getPlayerRank(nickname).entry;
+      if (entry) {
+        showPlayerCard(entry);
+      }
+    }
+
+    function showPlayerCard(entry) {
+      const rank = LeaderboardManager.getPlayerRank(entry.nickname);
+      const html = `
+        <div class="leaderboard-container" style="margin-top: 20px;">
+          <div style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+              <h2 style="margin: 0;">${LeaderboardManager.escapeHtml(entry.nickname)}</h2>
+              <span style="font-size: 20px;">${LeaderboardManager.formatRank(rank.position)}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+              <div>
+                <div style="color: #666; font-size: 12px;">Points</div>
+                <div style="font-size: 24px; font-weight: bold; color: #ff6b00;">${entry.points.toLocaleString()}</div>
+              </div>
+              <div>
+                <div style="color: #666; font-size: 12px;">Level</div>
+                <div style="font-size: 24px; font-weight: bold;">Lv. ${entry.level}</div>
+              </div>
+              <div>
+                <div style="color: #666; font-size: 12px;">Tier</div>
+                <div style="font-size: 18px; font-weight: bold;">${LeaderboardManager.RANK_TIERS[entry.rank]?.medal || '⭐'} ${entry.rank}</div>
+              </div>
+              <div>
+                <div style="color: #666; font-size: 12px;">Achievements</div>
+                <div style="font-size: 24px; font-weight: bold;">🏆 ${entry.achievements || 0}</div>
+              </div>
+              <div>
+                <div style="color: #666; font-size: 12px;">Time</div>
+                <div style="font-size: 18px; font-weight: bold;">${LeaderboardManager.formatTime(entry.completion_time)}</div>
+              </div>
+              <div>
+                <div style="color: #666; font-size: 12px;">Submitted</div>
+                <div style="font-size: 14px;">${new Date(entry.timestamp).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('player-card-container').innerHTML = html;
+    }
+
+    function showPlayerDetails(entryId) {
+      const entries = LeaderboardManager.getGlobalEntries();
+      const entry = entries.find(e => e.id === entryId);
+      if (entry) showPlayerCard(entry);
+    }
+
+    function updateStats() {
+      const stats = LeaderboardManager.getLeaderboardStats();
+      document.getElementById('stats-container').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Total Players</div>
+          <div class="stat-value">${stats.totalPlayers}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Submissions</div>
+          <div class="stat-value">${stats.totalSubmissions}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Top Score</div>
+          <div class="stat-value">${stats.topScore.toLocaleString()}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Average Score</div>
+          <div class="stat-value">${stats.averageScore.toLocaleString()}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Median Score</div>
+          <div class="stat-value">${stats.medianScore.toLocaleString()}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Top Player</div>
+          <div class="stat-value">${LeaderboardManager.escapeHtml(stats.topPlayer)}</div>
+        </div>
+      `;
+    }
+
+    function showLeaderboardStats() {
+      const stats = LeaderboardManager.getLeaderboardStats();
+      openModal('Leaderboard Statistics', `
+        <table style="width: 100%;">
+          <tr>
+            <td style="padding: 8px; color: #666;">Total Players:</td>
+            <td style="padding: 8px; font-weight: bold;">${stats.totalPlayers}</td>
+          </tr>
+          <tr style="background: #252525;">
+            <td style="padding: 8px; color: #666;">Total Submissions:</td>
+            <td style="padding: 8px; font-weight: bold;">${stats.totalSubmissions}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; color: #666;">Top Score:</td>
+            <td style="padding: 8px; font-weight: bold; color: #ff6b00;">${stats.topScore.toLocaleString()}</td>
+          </tr>
+          <tr style="background: #252525;">
+            <td style="padding: 8px; color: #666;">Average Score:</td>
+            <td style="padding: 8px; font-weight: bold;">${stats.averageScore.toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; color: #666;">Median Score:</td>
+            <td style="padding: 8px; font-weight: bold;">${stats.medianScore.toLocaleString()}</td>
+          </tr>
+          <tr style="background: #252525;">
+            <td style="padding: 8px; color: #666;">Top Player:</td>
+            <td style="padding: 8px; font-weight: bold;">${LeaderboardManager.escapeHtml(stats.topPlayer)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; color: #666;">Last Update:</td>
+            <td style="padding: 8px; font-size: 12px;">${new Date(stats.lastUpdate).toLocaleString()}</td>
+          </tr>
+        </table>
+      `);
+    }
+
+    function generateTestData() {
+      const names = ['Shadow', 'Phoenix', 'Dragon', 'Titan', 'Nexus', 'Vortex', 'Eclipse', 'Cipher', 'Omega', 'Nova'];
+      const adjectives = ['Swift', 'Mighty', 'Dark', 'Pure', 'Cyber', 'Quantum', 'Ultra', 'Super', 'Hyper', 'Mega'];
+
+      for (let i = 0; i < 10; i++) {
+        const nickname = adjectives[Math.floor(Math.random() * adjectives.length)] +
+                         names[Math.floor(Math.random() * names.length)] + i;
+        const points = Math.floor(Math.random() * 50000) + 5000;
+        const level = Math.floor(Math.random() * 100) + 1;
+        const achievements = Math.floor(Math.random() * 20);
+        const completion_time = Math.floor(Math.random() * 7200);
+
+        LeaderboardManager.submitScore(nickname, points, level, {
+          achievements,
+          completion_time
+        });
+      }
+
+      showNotification('Generated 10 test entries', 'success');
+      updateStats();
+      loadGlobalLeaderboard();
+    }
+
+    function estimatePosition() {
+      const points = parseInt(prompt('Enter score points:')) || 0;
+      if (points > 0) {
+        const position = LeaderboardManager.calculatePosition(points);
+        openModal('Position Estimate', `
+          <p style="margin: 0; font-size: 16px;">
+            A score of <strong style="color: #ff6b00;">${points.toLocaleString()}</strong> points
+            would place you at position <strong style="color: #ff6b00;">#${position}</strong>
+          </p>
+        `);
+      }
+    }
+
+    function exportAsJSON() {
+      const data = LeaderboardManager.exportJSON();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'leaderboard-' + new Date().toISOString().split('T')[0] + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotification('Exported as JSON', 'success');
+    }
+
+    function exportAsCSV() {
+      const data = LeaderboardManager.exportCSV();
+      const blob = new Blob([data], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'leaderboard-' + new Date().toISOString().split('T')[0] + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotification('Exported as CSV', 'success');
+    }
+
+    function updateDebugInfo() {
+      const stats = LeaderboardManager.getStats();
+      const entries = LeaderboardManager.getGlobalEntries();
+      const debugInfo = {
+        leaderboardSize: entries.length,
+        totalStorageUsed: JSON.stringify(localStorage).length + ' bytes',
+        weeklyResetDate: stats.weeklyReset,
+        totalSubmissions: stats.totalSubmissions,
+        localStorageKeys: Object.keys(localStorage),
+        sampleEntry: entries[0] || null
+      };
+      document.getElementById('debug-info').textContent = JSON.stringify(debugInfo, null, 2);
+    }
+
+    function clearAllData() {
+      LeaderboardManager.clearAll();
+      updateStats();
+      loadGlobalLeaderboard();
+    }
+
+    // Initialize
+    updateStats();
+    loadGlobalLeaderboard();
+  </script>
+
+  <footer>
+    <p>RAXE Leaderboard System v1.0 | MVP with localStorage | GitHub Gist integration optional</p>
+  </footer>
+</body>
+</html>

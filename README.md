@@ -21,6 +21,22 @@ RAXE is a **privacy-first, developer-friendly AI security tool** that scans LLM 
 
 ---
 
+## 🎮 NEW: RAXE Arena - Gamified AI Security CTF
+
+**Learn AI security by hacking!** Master 72 progressive levels teaching real LLM attack techniques.
+
+[![Play RAXE Arena](https://img.shields.io/badge/Play-RAXE%20Arena-00D9FF?style=for-the-badge&logo=target)](game-raxe-arena/)
+
+- 🏆 72 levels across 5 difficulty tiers
+- 🧠 Real attack techniques from 100+ research papers
+- 📊 Global leaderboard with achievements
+- 🔬 Free RAXE Playground for testing
+- 📱 Mobile-friendly, 100% browser-based
+
+[**🚀 Play Now →**](game-raxe-arena/) | [**📖 Game Docs →**](game-raxe-arena/README.md)
+
+---
+
 ## ⚡ Quick Start (< 60 seconds)
 
 ### 1️⃣ Install

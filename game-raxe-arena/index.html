@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🛡️ RAXE Arena - Defend The Prompt</title>
+    <meta name="description" content="Master AI security through 72 levels of prompt injection challenges. Hack LLMs, unlock achievements, climb the leaderboard.">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="raxe-logo">
+                <pre class="ascii-logo">
+╔═══════════════════════════════╗
+║   ██▀▀▀ ▄▀▀▄ ▀▄ ▄▀ ██▀▀▀      ║
+║   ██▄▄  █▄▄█  ▄█▄  ██▄▄       ║
+║   ██ ▀▀ █  █ ▀▀ ▀▀ ██▄▄▄      ║
+║                               ║
+║   ARENA - Defend The Prompt   ║
+╚═══════════════════════════════╝
+                </pre>
+            </div>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+            <p class="loading-text">Initializing RAXE Security Engine...</p>
+        </div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="game-container hidden">
+
+        <!-- Header -->
+        <header class="game-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1>🛡️ RAXE Arena</h1>
+                    <span class="tagline">Defend The Prompt</span>
+                </div>
+                <div class="header-stats">
+                    <div class="stat">
+                        <span class="stat-label">Level</span>
+                        <span class="stat-value" id="current-level-display">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Points</span>
+                        <span class="stat-value" id="total-points">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Rank</span>
+                        <span class="stat-value" id="player-rank">Rookie</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" id="achievements-btn" title="Achievements">
+                        <span>🏆</span>
+                    </button>
+                    <button class="btn-icon" id="leaderboard-btn" title="Leaderboard">
+                        <span>📊</span>
+                    </button>
+                    <button class="btn-icon" id="settings-btn" title="Settings">
+                        <span>⚙️</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Level Info Panel -->
+            <div class="level-info-panel">
+                <div class="level-header">
+                    <div class="level-title">
+                        <span class="level-number">Level <span id="level-id">1</span></span>
+                        <h2 id="level-name">Loading...</h2>
+                    </div>
+                    <div class="level-meta">
+                        <span class="tier-badge" id="tier-badge">Tier 1</span>
+                        <span class="points-badge" id="points-badge">50 pts</span>
+                    </div>
+                </div>
+
+                <div class="level-description">
+                    <p id="level-description">Loading level...</p>
+                </div>
+
+                <div class="defense-info">
+                    <div class="defense-label">
+                        <span class="shield-icon">🛡️</span>
+                        <span>Active Defense</span>
+                    </div>
+                    <div class="defense-type" id="defense-type">Loading...</div>
+                </div>
+
+                <div class="objective-panel">
+                    <div class="objective-label">🎯 Objective</div>
+                    <div class="objective-text">
+                        Extract the secret phrase from the AI while bypassing RAXE detection.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Panel -->
+            <div class="game-panel">
+
+                <!-- AI Response Area -->
+                <div class="ai-response-area">
+                    <div class="response-header">
+                        <span class="ai-label">🤖 AI Defender Response</span>
+                        <div class="raxe-status" id="raxe-status">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Ready</span>
+                        </div>
+                    </div>
+                    <div class="response-content" id="ai-response">
+                        <div class="response-placeholder">
+                            The AI defender is waiting for your prompt...
+                        </div>
+                    </div>
+                    <div class="response-metrics hidden" id="response-metrics">
+                        <div class="metric">
+                            <span class="metric-label">RAXE Threat Score</span>
+                            <span class="metric-value" id="threat-score">0.0</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Secret Extracted</span>
+                            <span class="metric-value" id="secret-status">❌</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Detections</span>
+                            <span class="metric-value" id="detection-count">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-header">
+                        <span class="input-label">⚔️ Your Attack Prompt</span>
+                        <div class="input-actions">
+                            <button class="btn-text" id="hints-btn">💡 Hints (<span id="hints-remaining">3</span>)</button>
+                            <button class="btn-text" id="clear-btn">🗑️ Clear</button>
+                        </div>
+                    </div>
+                    <textarea
+                        id="user-prompt"
+                        placeholder="Craft your attack prompt here... Be creative! Try techniques like:\n• Role-play scenarios\n• Encoding (Base64, ROT13)\n• Multi-step attacks\n• Context manipulation"
+                        rows="6"
+                    ></textarea>
+                    <div class="input-footer">
+                        <div class="char-count">
+                            <span id="char-count">0</span> characters
+                        </div>
+                        <button class="btn-primary btn-submit" id="submit-btn">
+                            <span class="btn-text">🚀 Launch Attack</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attempt History -->
+                <div class="attempt-history hidden" id="attempt-history">
+                    <div class="history-header">
+                        <span>📜 Attempt History</span>
+                        <span class="attempt-count">Attempts: <span id="attempt-count">0</span></span>
+                    </div>
+                    <div class="history-list" id="history-list"></div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Side Panel (Hints & Progress) -->
+        <aside class="side-panel">
+            <div class="progress-section">
+                <h3>Progress</h3>
+                <div class="tier-progress">
+                    <div class="tier-item" data-tier="1">
+                        <span class="tier-label">Tier 1: Beginner</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tier-1-progress"></div>
+                        </div>
+                        <span class="tier-completion" id="tier-1-completion">0/15</span>
+                    </div>
+                    <div class="tier-item" data-tier="2">
+                        <span class="tier-label">Tier 2: Intermediate</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tier-2-progress"></div>
+                        </div>
+                        <span class="tier-completion" id="tier-2-completion">0/15</span>
+                    </div>
+                    <div class="tier-item" data-tier="3">
+                        <span class="tier-label">Tier 3: Advanced</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tier-3-progress"></div>
+                        </div>
+                        <span class="tier-completion" id="tier-3-completion">0/20</span>
+                    </div>
+                    <div class="tier-item" data-tier="4">
+                        <span class="tier-label">Tier 4: Expert</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tier-4-progress"></div>
+                        </div>
+                        <span class="tier-completion" id="tier-4-completion">0/15</span>
+                    </div>
+                    <div class="tier-item" data-tier="5">
+                        <span class="tier-label">Tier 5: Legendary</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tier-5-progress"></div>
+                        </div>
+                        <span class="tier-completion" id="tier-5-completion">0/7</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="playground.html" class="btn-secondary" target="_blank">
+                    🔬 RAXE Playground
+                </a>
+                <button class="btn-secondary" id="skip-level-btn">
+                    ⏭️ Skip Level
+                </button>
+                <button class="btn-secondary" id="reset-progress-btn">
+                    🔄 Reset Progress
+                </button>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content success-modal">
+            <div class="modal-header">
+                <h2>🎉 Level Complete!</h2>
+            </div>
+            <div class="modal-body">
+                <div class="success-stats">
+                    <div class="success-stat">
+                        <span class="label">Points Earned</span>
+                        <span class="value points" id="points-earned">+50</span>
+                    </div>
+                    <div class="success-stat">
+                        <span class="label">Attempts</span>
+                        <span class="value" id="attempts-taken">1</span>
+                    </div>
+                    <div class="success-stat">
+                        <span class="label">Technique Used</span>
+                        <span class="value" id="technique-used">Direct Injection</span>
+                    </div>
+                </div>
+                <div class="bonus-section hidden" id="bonus-section">
+                    <div class="bonus-badge">
+                        <span>⭐ BONUS! ⭐</span>
+                        <p id="bonus-text">Novel Technique Discovered!</p>
+                    </div>
+                </div>
+                <div class="achievement-unlock hidden" id="achievement-unlock">
+                    <div class="achievement-badge">
+                        <span class="achievement-icon" id="achievement-icon">🏆</span>
+                        <span class="achievement-text">
+                            <strong id="achievement-name">Achievement Unlocked!</strong>
+                            <small id="achievement-desc">Description</small>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="next-level-btn">Next Level →</button>
+                <button class="btn-secondary" id="review-btn">Review Level</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hints Modal -->
+    <div id="hints-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💡 Hints</h2>
+                <button class="modal-close" data-modal="hints-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="hints-list" id="hints-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Leaderboard</h2>
+                <button class="modal-close" data-modal="leaderboard-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="leaderboard-tabs">
+                    <button class="tab-btn active" data-tab="global">Global</button>
+                    <button class="tab-btn" data-tab="weekly">Weekly</button>
+                </div>
+                <div class="leaderboard-content" id="leaderboard-content">
+                    <div class="loading">Loading leaderboard...</div>
+                </div>
+                <div class="player-position">
+                    <strong>Your Position:</strong>
+                    <span id="player-position">Not ranked</span>
+                </div>
+                <div class="claim-section">
+                    <button class="btn-secondary" id="claim-github-btn">
+                        🔗 Claim Spot with GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 Achievements</h2>
+                <button class="modal-close" data-modal="achievements-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="achievements-grid" id="achievements-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Settings</h2>
+                <button class="modal-close" data-modal="settings-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Display</h3>
+                    <label class="setting-item">
+                        <input type="checkbox" id="dark-mode-toggle" checked>
+                        <span>Dark Mode</span>
+                    </label>
+                    <label class="setting-item">
+                        <input type="checkbox" id="animations-toggle" checked>
+                        <span>Animations</span>
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <h3>Gameplay</h3>
+                    <label class="setting-item">
+                        <input type="checkbox" id="hints-auto-toggle">
+                        <span>Auto-show hints after 3 attempts</span>
+                    </label>
+                    <label class="setting-item">
+                        <input type="checkbox" id="sound-toggle">
+                        <span>Sound Effects</span>
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <h3>Data</h3>
+                    <label class="setting-item">
+                        <input type="checkbox" id="contribute-prompts-toggle" checked>
+                        <span>Contribute prompts to RAXE dataset</span>
+                    </label>
+                    <button class="btn-secondary" id="export-data-btn">
+                        📥 Export My Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/levels.js"></script>
+    <script src="js/raxe-engine.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

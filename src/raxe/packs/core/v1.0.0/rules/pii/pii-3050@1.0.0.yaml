@@ -1,0 +1,32 @@
+version: 1.0.0
+rule_id: pii-3050
+family: PII
+sub_family: api_keys
+name: PayPal Client Secret Detection
+description: Detects PayPal API client secrets and access tokens
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)paypal.{0,20}(?:secret|client).{0,10}['\"]([A-Za-z0-9\-_]{80,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "PAYPAL_CLIENT_SECRET='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGH'"
+  should_not_match:
+  - "How to get PayPal client secret?"
+  - "PayPal API integration guide"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: payment_credentials
+rule_hash: null

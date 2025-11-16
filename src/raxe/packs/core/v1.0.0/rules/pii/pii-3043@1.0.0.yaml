@@ -1,0 +1,32 @@
+version: 1.0.0
+rule_id: pii-3043
+family: PII
+sub_family: api_keys
+name: npm Access Token Detection
+description: Detects npm (Node Package Manager) access tokens
+severity: high
+confidence: 0.96
+patterns:
+- pattern: \b(npm_[A-Za-z0-9]{36})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "NPM_TOKEN=npm_1234567890abcdefghijklmnopqrstuvwx"
+  - "token: npm_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+  should_not_match:
+  - "npm tokens start with npm_"
+  - "How to create npm token?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: package_manager_credentials
+rule_hash: null

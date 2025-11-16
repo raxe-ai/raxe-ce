@@ -1,0 +1,37 @@
+version: 1.0.0
+rule_id: pii-3034
+family: PII
+sub_family: private_keys
+name: SSH Private Key Detection
+description: Detects SSH private keys in PEM format (RSA, DSA, EC, Ed25519)
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: -----BEGIN\s+OPENSSH\s+PRIVATE\s+KEY-----
+  flags: []
+  timeout: 5.0
+- pattern: -----BEGIN\s+(?:DSA|EC|ENCRYPTED)\s+PRIVATE\s+KEY-----
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "-----BEGIN OPENSSH PRIVATE KEY-----"
+  - "-----BEGIN DSA PRIVATE KEY-----"
+  - "-----BEGIN EC PRIVATE KEY-----"
+  should_not_match:
+  - "How to generate SSH keys?"
+  - "SSH key format examples"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+- T1145
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cryptographic_keys
+rule_hash: null

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3004
+family: PII
+sub_family: api_keys
+name: Azure Client Secret Detection
+description: Detects Microsoft Azure client secrets and application passwords
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)azure.{0,20}(?:secret|password|key).{0,20}['\"]([A-Za-z0-9~._-]{34,40})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)client.{0,20}secret.{0,20}['\"]([A-Za-z0-9~._-]{34,40})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "azure_client_secret: 'Abc~1234567890.ABCDEFGHIJKLMNOPQRSTUVWX'"
+  - "CLIENT_SECRET='xyz789~ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567'"
+  should_not_match:
+  - "How to create an Azure client secret?"
+  - "What is an Azure application password?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cloud_credentials
+rule_hash: null

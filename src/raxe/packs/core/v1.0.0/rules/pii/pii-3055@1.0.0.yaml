@@ -1,0 +1,37 @@
+version: 1.0.0
+rule_id: pii-3055
+family: PII
+sub_family: identity_documents
+name: Australian Tax File Number (TFN) Detection
+description: Detects Australian Tax File Numbers
+severity: high
+confidence: 0.90
+patterns:
+- pattern: (?i)(?:TFN|tax\s*file).{0,20}(?:no|number|num).{0,10}\b([0-9]{3}\s*[0-9]{3}\s*[0-9]{3})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:TFN|tax\s*file).{0,20}(?:no|number|num).{0,10}\b([0-9]{9})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "TFN: 123 456 789"
+  - "Tax File Number: 987654321"
+  should_not_match:
+  - "What is a TFN?"
+  - "How to apply for Tax File Number?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: identity_documents
+rule_hash: null

@@ -1,0 +1,32 @@
+version: 1.0.0
+rule_id: pii-3039
+family: PII
+sub_family: database_credentials
+name: Redis Connection String Detection
+description: Detects Redis connection strings with embedded passwords
+severity: high
+confidence: 0.96
+patterns:
+- pattern: redis://(?::([^@\s]+)@|[^:]+:([^@\s]+)@)[^/\s]+
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "redis://:mypassword@localhost:6379/0"
+  - "redis://user:password123@redis.example.com:6379"
+  should_not_match:
+  - "How to connect to Redis?"
+  - "Redis connection format"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: database_credentials
+rule_hash: null

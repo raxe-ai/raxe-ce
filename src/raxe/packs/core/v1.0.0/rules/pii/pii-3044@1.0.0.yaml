@@ -1,0 +1,31 @@
+version: 1.0.0
+rule_id: pii-3044
+family: PII
+sub_family: api_keys
+name: PyPI API Token Detection
+description: Detects PyPI (Python Package Index) API tokens
+severity: high
+confidence: 0.97
+patterns:
+- pattern: \b(pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{70,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "PYPI_TOKEN=pypi-AgEIcHlwaS5vcmcCJGFiY2RlZi0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2Nzg"
+  should_not_match:
+  - "How to get PyPI token?"
+  - "PyPI token format"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: package_manager_credentials
+rule_hash: null

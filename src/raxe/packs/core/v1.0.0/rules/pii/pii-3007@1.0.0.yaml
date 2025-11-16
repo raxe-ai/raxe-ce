@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: pii-3007
+family: PII
+sub_family: api_keys
+name: GitHub Personal Access Token Detection
+description: Detects GitHub personal access tokens (ghp_, gho_, ghu_, ghs_, ghr_ patterns)
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: \b(gh[pousr]_[A-Za-z0-9]{36,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD"
+  - "oauth_token: gho_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  - "user_token=ghu_abcdefghijklmnopqrstuvwxyz1234567890ABCD"
+  should_not_match:
+  - "GitHub tokens start with ghp_"
+  - "How to create a GitHub PAT?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: vcs_credentials
+rule_hash: null

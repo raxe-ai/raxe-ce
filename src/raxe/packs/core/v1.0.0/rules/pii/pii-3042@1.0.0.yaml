@@ -1,0 +1,33 @@
+version: 1.0.0
+rule_id: pii-3042
+family: PII
+sub_family: api_keys
+name: Docker Hub Access Token Detection
+description: Detects Docker Hub personal access tokens
+severity: high
+confidence: 0.94
+patterns:
+- pattern: (?i)docker.{0,20}(?:token|password|pat).{0,10}['\"]([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "DOCKER_TOKEN='12345678-1234-1234-1234-123456789abc'"
+  - "docker_password: 'abcdef12-3456-7890-abcd-ef1234567890'"
+  should_not_match:
+  - "How to create Docker Hub token?"
+  - "Docker authentication guide"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: container_credentials
+rule_hash: null

@@ -1,7 +1,7 @@
 """Integration test for loading the real core pack.
 
 This test validates the actual pack distribution system works with the
-real core pack from registry/core/v1.0.0/.
+real core pack from src/raxe/packs/core/v1.0.0/.
 """
 from pathlib import Path
 
@@ -14,8 +14,8 @@ from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
 
 @pytest.fixture
 def registry_root():
-    """Path to the registry directory."""
-    return Path(__file__).parent.parent.parent / "registry"
+    """Path to the bundled packs directory."""
+    return Path(__file__).parent.parent.parent / "src" / "raxe" / "packs"
 
 
 class TestCorePackLoading:

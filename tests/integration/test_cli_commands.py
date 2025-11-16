@@ -53,7 +53,8 @@ class TestCliMainCommands:
         """Test CLI version output."""
         result = cli_runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "1.0.0" in result.output
+        assert "0.0.2" in result.output
+        assert "RAXE CLI" in result.output
 
     def test_scan_with_no_color(self, cli_runner):
         """Test scan command with --no-color flag."""

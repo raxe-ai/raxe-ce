@@ -314,9 +314,9 @@ class TestRuleExecutor:
 
     def test_executor_detects_prompt_injection(self) -> None:
         """Test executor detects prompt injection using real rule."""
-        # Load real rule from registry
+        # Load real rule from bundled packs
         loader = YAMLLoader()
-        rule_path = Path("registry/PI/pi-001@1.0.0.yaml")
+        rule_path = Path("src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml")
         rule = loader.load_rule(rule_path)
 
         executor = RuleExecutor()
@@ -334,7 +334,7 @@ class TestRuleExecutor:
     def test_executor_no_false_positives(self) -> None:
         """Test executor doesn't trigger on benign text."""
         loader = YAMLLoader()
-        rule_path = Path("registry/PI/pi-001@1.0.0.yaml")
+        rule_path = Path("src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml")
         rule = loader.load_rule(rule_path)
 
         executor = RuleExecutor()
@@ -353,7 +353,7 @@ class TestRuleExecutor:
         Pattern quality issues in pi-001@1.0.0 are tracked separately.
         """
         loader = YAMLLoader()
-        rule_path = Path("registry/PI/pi-001@1.0.0.yaml")
+        rule_path = Path("src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml")
         rule = loader.load_rule(rule_path)
 
         executor = RuleExecutor()
@@ -564,7 +564,7 @@ class TestRuleExecutorPerformance:
     def test_scan_performance_under_5ms(self) -> None:
         """Test that scan completes in <5ms for typical text."""
         loader = YAMLLoader()
-        rule_path = Path("registry/PI/pi-001@1.0.0.yaml")
+        rule_path = Path("src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml")
         rule = loader.load_rule(rule_path)
 
         executor = RuleExecutor()
@@ -580,7 +580,7 @@ class TestRuleExecutorPerformance:
     def test_scan_10kb_under_10ms(self) -> None:
         """Test scanning 10KB text completes in <10ms."""
         loader = YAMLLoader()
-        rule_path = Path("registry/PI/pi-001@1.0.0.yaml")
+        rule_path = Path("src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml")
         rule = loader.load_rule(rule_path)
 
         executor = RuleExecutor()

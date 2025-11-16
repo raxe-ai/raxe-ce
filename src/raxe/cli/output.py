@@ -93,6 +93,7 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
     table.add_column("Confidence", justify="right", width=12)
     table.add_column("Description", style="white")
 
+    # Add L1 detections
     for detection in result.scan_result.l1_result.detections:
         severity_color = get_severity_color(detection.severity)
         severity_text = Text(detection.severity.value.upper(), style=severity_color)
@@ -107,13 +108,42 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
 
         table.add_row(detection.rule_id, severity_text, confidence_pct, message)
 
+    # Add L2 predictions
+    if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
+        for prediction in result.scan_result.l2_result.predictions:
+            # Map L2 confidence to severity (simple heuristic)
+            if prediction.confidence >= 0.8:
+                pred_severity = Severity.HIGH
+            elif prediction.confidence >= 0.6:
+                pred_severity = Severity.MEDIUM
+            else:
+                pred_severity = Severity.LOW
+
+            severity_color = get_severity_color(pred_severity)
+            severity_text = Text(pred_severity.value.upper(), style=severity_color)
+
+            # Format confidence as percentage
+            confidence_pct = f"{prediction.confidence * 100:.1f}%"
+
+            # Use threat type as rule ID and explanation as message
+            rule_id = f"L2-{prediction.threat_type.value}"
+            message = prediction.explanation or f"{prediction.threat_type.value} detected"
+            if len(message) > 60:
+                message = message[:57] + "..."
+
+            table.add_row(rule_id, severity_text, confidence_pct, message)
+
     console.print(table)
     console.print()
 
     # Summary with cleaner layout
+    total_detections = len(result.scan_result.l1_result.detections)
+    if result.scan_result.l2_result:
+        total_detections += len(result.scan_result.l2_result.predictions)
+
     summary = Text()
     summary.append("Summary: ", style="bold")
-    summary.append(f"{len(result.scan_result.l1_result.detections)} detection(s) • ", style="")
+    summary.append(f"{total_detections} detection(s) • ", style="")
     summary.append(f"Severity: ", style="dim")
     summary.append(f"{highest.value.upper()}", style=get_severity_color(highest))
     summary.append(f" • Scan time: {result.duration_ms:.2f}ms", style="dim")

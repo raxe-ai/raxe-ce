@@ -27,6 +27,7 @@ class ScanConfig:
         use_production_l2: Use production ML model instead of stub (default: True)
         l2_confidence_threshold: Minimum confidence for L2 predictions (default: 0.5)
         fail_fast_on_critical: Skip L2 if CRITICAL detected
+        min_confidence_for_skip: Minimum L1 confidence to skip L2 on CRITICAL (default: 0.7)
         enable_schema_validation: Enable runtime schema validation (default: False)
         schema_validation_mode: How to handle validation failures ('log_only', 'warn', 'enforce')
         policy: Scan policy for decision making
@@ -40,6 +41,7 @@ class ScanConfig:
     use_production_l2: bool = True
     l2_confidence_threshold: float = 0.5
     fail_fast_on_critical: bool = True
+    min_confidence_for_skip: float = 0.7
     enable_schema_validation: bool = False
     schema_validation_mode: str = "log_only"  # log_only, warn, enforce
     policy: ScanPolicy = field(default_factory=ScanPolicy)
@@ -53,6 +55,12 @@ class ScanConfig:
         # Ensure packs_root is absolute
         if not self.packs_root.is_absolute():
             self.packs_root = self.packs_root.resolve()
+
+        # Validate confidence thresholds
+        if not (0.0 <= self.l2_confidence_threshold <= 1.0):
+            raise ValueError(f"l2_confidence_threshold must be 0-1, got {self.l2_confidence_threshold}")
+        if not (0.0 <= self.min_confidence_for_skip <= 1.0):
+            raise ValueError(f"min_confidence_for_skip must be 0-1, got {self.min_confidence_for_skip}")
 
     @classmethod
     def from_file(cls, config_path: Path) -> "ScanConfig":
@@ -121,6 +129,7 @@ class ScanConfig:
             use_production_l2=scan_data.get("use_production_l2", True),
             l2_confidence_threshold=scan_data.get("l2_confidence_threshold", 0.5),
             fail_fast_on_critical=scan_data.get("fail_fast_on_critical", True),
+            min_confidence_for_skip=scan_data.get("min_confidence_for_skip", 0.7),
             enable_schema_validation=scan_data.get("enable_schema_validation", False),
             schema_validation_mode=scan_data.get("schema_validation_mode", "log_only"),
             policy=policy,
@@ -137,6 +146,8 @@ class ScanConfig:
         Environment variables:
             RAXE_PACKS_ROOT: Pack root directory
             RAXE_ENABLE_L2: Enable L2 detection
+            RAXE_FAIL_FAST_ON_CRITICAL: Skip L2 on CRITICAL detections
+            RAXE_MIN_CONFIDENCE_FOR_SKIP: Min L1 confidence to skip L2 (default: 0.7)
             RAXE_API_KEY: RAXE API key
             RAXE_TELEMETRY_ENABLED: Enable telemetry
             RAXE_PERFORMANCE_MODE: Performance mode
@@ -150,6 +161,7 @@ class ScanConfig:
         use_production_l2 = os.getenv("RAXE_USE_PRODUCTION_L2", "true").lower() == "true"
         l2_confidence_threshold = float(os.getenv("RAXE_L2_CONFIDENCE_THRESHOLD", "0.5"))
         fail_fast = os.getenv("RAXE_FAIL_FAST_ON_CRITICAL", "true").lower() == "true"
+        min_confidence_for_skip = float(os.getenv("RAXE_MIN_CONFIDENCE_FOR_SKIP", "0.7"))
         enable_schema_validation = os.getenv("RAXE_ENABLE_SCHEMA_VALIDATION", "false").lower() == "true"
         schema_validation_mode = os.getenv("RAXE_SCHEMA_VALIDATION_MODE", "log_only")
         api_key = os.getenv("RAXE_API_KEY")
@@ -183,6 +195,7 @@ class ScanConfig:
             use_production_l2=use_production_l2,
             l2_confidence_threshold=l2_confidence_threshold,
             fail_fast_on_critical=fail_fast,
+            min_confidence_for_skip=min_confidence_for_skip,
             enable_schema_validation=enable_schema_validation,
             schema_validation_mode=schema_validation_mode,
             policy=policy,

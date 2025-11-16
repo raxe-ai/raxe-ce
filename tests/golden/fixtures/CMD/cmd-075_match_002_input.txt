@@ -1,0 +1,1 @@
+wget http://metadata.google.internal/computeMetadata/v1/

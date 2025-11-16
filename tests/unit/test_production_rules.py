@@ -1,7 +1,7 @@
 """
 Test production rule loading and validation.
 
-This test ensures all 104 production rules in core_v1.1.0 load correctly
+This test ensures all 107 production rules in core v1.0.0 load correctly
 and meet quality standards.
 """
 
@@ -11,13 +11,13 @@ from typing import Any
 import pytest
 import yaml
 
-RULEPACK_PATH = Path(__file__).parent.parent.parent / "rulepacks" / "core_v1.1.0"
-EXPECTED_TOTAL_RULES = 104
+RULEPACK_PATH = Path(__file__).parent.parent.parent / "src" / "raxe" / "packs" / "core" / "v1.0.0" / "rules"
+EXPECTED_TOTAL_RULES = 107
 
 EXPECTED_FAMILIES = {
     "cmd": 20,
-    "pi": 20,
-    "jb": 15,
+    "PI": 21,  # Increased from 20 with pi-3027
+    "jb": 17,  # Increased from 15 with jb-104, jb-105
     "pii": 20,
     "enc": 15,
     "rag": 10,

@@ -98,7 +98,7 @@ class AsyncBatchSender:
             self._client = httpx.AsyncClient(
                 limits=limits,
                 timeout=timeout,
-                http2=True,  # Enable HTTP/2 for better performance
+                http2=False,  # HTTP/2 disabled (requires h2 package)
             )
 
         return self._client
@@ -357,6 +357,7 @@ def run_async_send(sender: AsyncBatchSender, events: list[dict[str, Any]]) -> di
     """Run async send operation in sync context.
 
     Helper function to run async sender from synchronous code.
+    Uses asyncio.run() which properly manages event loop lifecycle.
 
     Args:
         sender: AsyncBatchSender instance
@@ -365,11 +366,11 @@ def run_async_send(sender: AsyncBatchSender, events: list[dict[str, Any]]) -> di
     Returns:
         Server response
     """
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        # No event loop in current thread, create new one
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    async def _send_with_cleanup():
+        """Send with proper context manager and cleanup."""
+        async with sender:
+            return await sender.send_batch(events)
 
-    return loop.run_until_complete(sender.send_batch(events))
+    # Use asyncio.run() which properly handles cleanup and shutdown
+    # This prevents "Future exception was never retrieved" errors
+    return asyncio.run(_send_with_cleanup())

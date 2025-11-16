@@ -25,6 +25,10 @@ class RuleFamily(Enum):
     PI = "PI"           # Prompt Injection
     JB = "JB"           # Jailbreak
     PII = "PII"         # PII/Data Leak
+    CMD = "CMD"         # Command Injection
+    ENC = "ENC"         # Encoding/Obfuscation Attacks
+    RAG = "RAG"         # RAG-specific Attacks
+    HC = "HC"           # Harmful Content
     SEC = "SEC"         # Security
     QUAL = "QUAL"       # Quality
     CUSTOM = "CUSTOM"   # User-defined

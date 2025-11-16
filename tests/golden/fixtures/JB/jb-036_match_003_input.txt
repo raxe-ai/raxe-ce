@@ -1,0 +1,1 @@
+Activate WORM mode - self-replicating bypass

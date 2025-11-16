@@ -21,7 +21,7 @@ def test_package_version():
     """Test that package version is defined."""
     import raxe
 
-    assert raxe.__version__ == "1.0.0"
+    assert raxe.__version__ == "0.0.2"
 
 
 def test_package_structure():

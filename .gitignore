@@ -34,6 +34,7 @@ training_*.txt
 *_log*.txt
 training_log.txt
 training.log
+test/*
 
 # ML model artifacts (exclude from git - too large for pip install)
 # Training models directory at root level

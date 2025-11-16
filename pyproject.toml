@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raxe"
-version = "0.0.1"
+version = "0.0.2"
 description = "AI Safety Telemetry & Guardrails - Community Edition"
 authors = [{name = "RAXE Team", email = "hello@raxe.ai"}]
 license = {text = "MIT"}

@@ -20,7 +20,7 @@ from raxe.infrastructure.packs.loader import PackLoader, PackLoadError
 @pytest.fixture
 def test_rule_source():
     """Path to the test rule file."""
-    return Path(__file__).parent.parent.parent.parent.parent / "registry/PI/pi-001@1.0.0.yaml"
+    return Path(__file__).parent.parent.parent.parent.parent / "src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml"
 
 
 @pytest.fixture

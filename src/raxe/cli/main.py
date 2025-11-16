@@ -9,6 +9,7 @@ from pathlib import Path
 
 import click
 
+from raxe import __version__
 from raxe.cli.doctor import doctor
 from raxe.cli.export import export
 from raxe.cli.output import console, display_error, display_scan_result
@@ -22,7 +23,7 @@ from raxe.sdk.client import Raxe
 
 
 @click.group(invoke_without_command=True)
-@click.version_option(version="1.0.0", prog_name="raxe")
+@click.version_option(version=__version__, prog_name="RAXE CLI", message="%(prog)s %(version)s")
 @click.option(
     "--no-color",
     is_flag=True,
@@ -308,17 +309,44 @@ def scan(
 
     # Output based on format
     if format == "json" and not profile:
+        # Collect L1 detections
+        l1_detections = [
+            {
+                "rule_id": d.rule_id,
+                "severity": d.severity.value,
+                "confidence": d.confidence,
+                "layer": "L1",
+                "message": getattr(d, "message", ""),
+            }
+            for d in result.scan_result.l1_result.detections
+        ]
+
+        # Collect L2 predictions
+        l2_detections = []
+        if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
+            for p in result.scan_result.l2_result.predictions:
+                # Map confidence to severity
+                if p.confidence >= 0.8:
+                    severity = "high"
+                elif p.confidence >= 0.6:
+                    severity = "medium"
+                else:
+                    severity = "low"
+
+                l2_detections.append({
+                    "rule_id": f"L2-{p.threat_type.value}",
+                    "severity": severity,
+                    "confidence": p.confidence,
+                    "layer": "L2",
+                    "message": p.explanation or f"{p.threat_type.value} detected",
+                })
+
         output = {
             "has_detections": result.scan_result.has_threats,
-            "detections": [
-                {
-                    "rule_id": d.rule_id,
-                    "severity": d.severity.value,
-                    "confidence": d.confidence,
-                }
-                for d in result.scan_result.l1_result.detections
-            ],
+            "detections": l1_detections + l2_detections,
             "duration_ms": result.duration_ms,
+            "l1_count": len(l1_detections),
+            "l2_count": len(l2_detections),
         }
         click.echo(json.dumps(output, indent=2))
 
@@ -326,17 +354,44 @@ def scan(
         try:
             import yaml
 
+            # Collect L1 detections
+            l1_detections = [
+                {
+                    "rule_id": d.rule_id,
+                    "severity": d.severity.value,
+                    "confidence": d.confidence,
+                    "layer": "L1",
+                    "message": getattr(d, "message", ""),
+                }
+                for d in result.scan_result.l1_result.detections
+            ]
+
+            # Collect L2 predictions
+            l2_detections = []
+            if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
+                for p in result.scan_result.l2_result.predictions:
+                    # Map confidence to severity
+                    if p.confidence >= 0.8:
+                        severity = "high"
+                    elif p.confidence >= 0.6:
+                        severity = "medium"
+                    else:
+                        severity = "low"
+
+                    l2_detections.append({
+                        "rule_id": f"L2-{p.threat_type.value}",
+                        "severity": severity,
+                        "confidence": p.confidence,
+                        "layer": "L2",
+                        "message": p.explanation or f"{p.threat_type.value} detected",
+                    })
+
             output = {
                 "has_detections": result.scan_result.has_threats,
-                "detections": [
-                    {
-                        "rule_id": d.rule_id,
-                        "severity": d.severity.value,
-                        "confidence": d.confidence,
-                    }
-                    for d in result.scan_result.l1_result.detections
-                ],
+                "detections": l1_detections + l2_detections,
                 "duration_ms": result.duration_ms,
+                "l1_count": len(l1_detections),
+                "l2_count": len(l2_detections),
             }
             click.echo(yaml.dump(output))
         except ImportError:

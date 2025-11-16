@@ -135,7 +135,7 @@ class RuleSchema(BaseModel):
         Raises:
             ValueError: If family is not recognized
         """
-        valid_families = {'PI', 'JB', 'PII', 'SEC', 'QUAL', 'CUSTOM'}
+        valid_families = {'PI', 'JB', 'PII', 'CMD', 'ENC', 'RAG', 'HC', 'SEC', 'QUAL', 'CUSTOM'}
         v_upper = v.upper()
         if v_upper not in valid_families:
             raise ValueError(f"Family must be one of {valid_families}, got '{v}'")

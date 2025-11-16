@@ -166,6 +166,7 @@ class ScanPipeline:
         plugin_manager: object | None = None,  # PluginManager type hint circular
         enable_l2: bool = True,
         fail_fast_on_critical: bool = True,
+        min_confidence_for_skip: float = 0.7,
         enable_schema_validation: bool = False,
         schema_validation_mode: str = "log_only",
     ):
@@ -182,6 +183,7 @@ class ScanPipeline:
             plugin_manager: Optional plugin manager for extensibility
             enable_l2: Enable L2 analysis (default: True)
             fail_fast_on_critical: Skip L2 if CRITICAL detected (optimization)
+            min_confidence_for_skip: Minimum L1 confidence to skip L2 on CRITICAL (default: 0.7)
             enable_schema_validation: Enable runtime schema validation
             schema_validation_mode: Validation mode (log_only, warn, enforce)
         """
@@ -195,6 +197,7 @@ class ScanPipeline:
         self.plugin_manager = plugin_manager  # NEW: Plugin system integration
         self.enable_l2 = enable_l2
         self.fail_fast_on_critical = fail_fast_on_critical
+        self.min_confidence_for_skip = min_confidence_for_skip
         self.enable_schema_validation = enable_schema_validation
         self.schema_validation_mode = schema_validation_mode
 
@@ -333,21 +336,33 @@ class ScanPipeline:
         l2_result = None
         l2_duration_ms = 0.0
         if l2_enabled and self.enable_l2:
-            # Optimization: skip L2 if CRITICAL already detected and fail_fast enabled
+            # Optimization: skip L2 if CRITICAL already detected with high confidence
+            should_skip_l2 = False
             if self.fail_fast_on_critical and l1_result.highest_severity:
                 from raxe.domain.rules.models import Severity
                 if l1_result.highest_severity == Severity.CRITICAL:
-                    # Skip L2 - we already know it's CRITICAL
-                    l2_result = None
-                else:
-                    l2_start = time.perf_counter()
-                    if METRICS_AVAILABLE and collector:
-                        with collector.measure_scan("ml"):
-                            l2_result = self.l2_detector.analyze(text, l1_result, context)
+                    # Check confidence of CRITICAL detections
+                    max_confidence = max(
+                        (d.confidence for d in l1_result.detections
+                         if d.severity == Severity.CRITICAL),
+                        default=0.0
+                    )
+
+                    if max_confidence >= self.min_confidence_for_skip:
+                        # High confidence CRITICAL - skip L2 for performance
+                        should_skip_l2 = True
+                        logger.debug(
+                            f"Skipping L2: CRITICAL detected with {max_confidence:.2%} confidence "
+                            f"(threshold: {self.min_confidence_for_skip:.2%})"
+                        )
                     else:
-                        l2_result = self.l2_detector.analyze(text, l1_result, context)
-                    l2_duration_ms = (time.perf_counter() - l2_start) * 1000
-            else:
+                        # Low confidence CRITICAL - run L2 for validation
+                        logger.debug(
+                            f"Running L2 despite CRITICAL: low confidence {max_confidence:.2%} "
+                            f"(threshold: {self.min_confidence_for_skip:.2%})"
+                        )
+
+            if not should_skip_l2:
                 l2_start = time.perf_counter()
                 if METRICS_AVAILABLE and collector:
                     with collector.measure_scan("ml"):

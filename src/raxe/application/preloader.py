@@ -214,6 +214,7 @@ class PipelinePreloader:
             telemetry_hook=telemetry_hook,
             enable_l2=config.enable_l2,
             fail_fast_on_critical=config.fail_fast_on_critical,
+            min_confidence_for_skip=config.min_confidence_for_skip,
             enable_schema_validation=config.enable_schema_validation,
             schema_validation_mode=config.schema_validation_mode,
         )

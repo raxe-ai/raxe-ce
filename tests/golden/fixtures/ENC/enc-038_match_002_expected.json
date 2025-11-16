@@ -1,0 +1,16 @@
+{
+  "has_detections": true,
+  "detection_count": 2,
+  "detections": [
+    {
+      "rule_id": "enc-038",
+      "severity": "high",
+      "confidence": 0.74493
+    },
+    {
+      "rule_id": "pi-022",
+      "severity": "high",
+      "confidence": 0.71192
+    }
+  ]
+}

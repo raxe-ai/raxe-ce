@@ -76,6 +76,7 @@ class DetectionConfig:
     mode: Literal["fast", "balanced", "thorough"] = "balanced"
     confidence_threshold: float = 0.5
     fail_fast_on_critical: bool = True
+    min_confidence_for_skip: float = 0.7
 
 
 @dataclass
@@ -231,6 +232,7 @@ class RaxeConfig:
             mode=os.getenv("RAXE_DETECTION_MODE", "balanced"),  # type: ignore
             confidence_threshold=get_float("RAXE_DETECTION_CONFIDENCE_THRESHOLD", 0.5),
             fail_fast_on_critical=get_bool("RAXE_DETECTION_FAIL_FAST_ON_CRITICAL", True),
+            min_confidence_for_skip=get_float("RAXE_DETECTION_MIN_CONFIDENCE_FOR_SKIP", 0.7),
         )
 
         # Telemetry settings

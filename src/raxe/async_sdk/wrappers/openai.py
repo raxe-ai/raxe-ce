@@ -14,7 +14,10 @@ The wrapper intercepts chat.completions.create calls, scans user messages
 before sending to OpenAI, and optionally scans responses.
 """
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from raxe.async_sdk.client import AsyncRaxe
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +89,7 @@ class AsyncRaxeOpenAI:
             raise ImportError(
                 "openai package is required for AsyncRaxeOpenAI. "
                 "Install with: pip install openai"
-            )
+            ) from None
 
         # Initialize AsyncOpenAI client
         self._openai_client = AsyncOpenAI(*args, **kwargs)

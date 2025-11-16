@@ -144,7 +144,7 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
     summary = Text()
     summary.append("Summary: ", style="bold")
     summary.append(f"{total_detections} detection(s) • ", style="")
-    summary.append(f"Severity: ", style="dim")
+    summary.append("Severity: ", style="dim")
     summary.append(f"{highest.value.upper()}", style=get_severity_color(highest))
     summary.append(f" • Scan time: {result.duration_ms:.2f}ms", style="dim")
 

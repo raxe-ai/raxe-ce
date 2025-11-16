@@ -3,6 +3,10 @@
 Custom exception hierarchy for RAXE SDK operations.
 All RAXE exceptions inherit from RaxeException for easy catching.
 """
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from raxe.application.scan_pipeline import ScanPipelineResult
 
 
 class RaxeException(Exception):
@@ -23,7 +27,7 @@ class SecurityException(RaxeException):
         result: The ScanPipelineResult that triggered the exception
     """
 
-    def __init__(self, result):
+    def __init__(self, result: "ScanPipelineResult") -> None:
         """Initialize security exception.
 
         Args:
@@ -43,7 +47,7 @@ class RaxeBlockedError(SecurityException):
     the request was explicitly blocked by policy evaluation.
     """
 
-    def __init__(self, result):
+    def __init__(self, result: "ScanPipelineResult") -> None:
         """Initialize blocked error.
 
         Args:

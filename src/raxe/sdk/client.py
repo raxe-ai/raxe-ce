@@ -9,8 +9,9 @@ This class is the foundation for all RAXE integrations:
 ALL scanning MUST go through the Raxe.scan() method to ensure
 consistency and proper configuration cascade.
 """
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from raxe.application.preloader import preload_pipeline
 from raxe.application.scan_pipeline import ScanPipelineResult

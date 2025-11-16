@@ -11,6 +11,7 @@ The merger preserves both L1 and L2 results while providing a unified
 view for downstream processing (logging, blocking, alerting, etc.).
 """
 from dataclasses import dataclass
+from typing import ClassVar
 
 from raxe.domain.engine.executor import ScanResult as L1ScanResult
 from raxe.domain.ml.protocol import L2Result
@@ -39,7 +40,9 @@ class CombinedScanResult:
     def __post_init__(self) -> None:
         """Validate combined result."""
         if self.total_processing_ms < 0:
-            raise ValueError(f"total_processing_ms must be non-negative, got {self.total_processing_ms}")
+            raise ValueError(
+                f"total_processing_ms must be non-negative, got {self.total_processing_ms}"
+            )
 
     @property
     def has_threats(self) -> bool:
@@ -184,7 +187,7 @@ class ScanMerger:
 
     # Confidence thresholds for mapping L2 predictions to severity
     # These are conservative - L2 must be quite confident to elevate severity
-    SEVERITY_CONFIDENCE_THRESHOLDS = {
+    SEVERITY_CONFIDENCE_THRESHOLDS: ClassVar[dict[Severity, float]] = {
         Severity.CRITICAL: 0.95,  # Very high confidence required for CRITICAL
         Severity.HIGH: 0.85,      # High confidence for HIGH
         Severity.MEDIUM: 0.70,    # Moderate confidence for MEDIUM

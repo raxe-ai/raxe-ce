@@ -18,7 +18,7 @@
     },
     "family": {
       "type": "string",
-      "enum": ["PI", "JB", "PII", "SEC", "QUAL", "CUSTOM"],
+      "enum": ["PI", "JB", "PII", "CMD", "ENC", "HC", "RAG", "SEC", "QUAL", "CUSTOM"],
       "description": "Rule family category"
     },
     "sub_family": {

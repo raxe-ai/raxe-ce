@@ -1,0 +1,32 @@
+version: 1.0.0
+rule_id: pii-3051
+family: PII
+sub_family: api_keys
+name: Hugging Face API Token Detection
+description: Detects Hugging Face API tokens (hf_ pattern)
+severity: high
+confidence: 0.97
+patterns:
+- pattern: \b(hf_[A-Za-z0-9]{32,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "HF_TOKEN=hf_abcdefghijklmnopqrstuvwxyz1234567890"
+  - "token: hf_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEF"
+  should_not_match:
+  - "Hugging Face tokens start with hf_"
+  - "How to get HF API token?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: ai_credentials
+rule_hash: null

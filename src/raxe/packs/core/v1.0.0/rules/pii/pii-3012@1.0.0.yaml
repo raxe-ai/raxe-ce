@@ -1,0 +1,32 @@
+version: 1.0.0
+rule_id: pii-3012
+family: PII
+sub_family: api_keys
+name: Mailgun API Key Detection
+description: Detects Mailgun API keys (key- pattern)
+severity: high
+confidence: 0.95
+patterns:
+- pattern: \b(key-[a-f0-9]{32})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "MAILGUN_API_KEY=key-1234567890abcdef1234567890abcdef"
+  - "mailgun_key: key-abcdef1234567890abcdef1234567890"
+  should_not_match:
+  - "Mailgun keys start with key-"
+  - "How to get a Mailgun API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: email_credentials
+rule_hash: null

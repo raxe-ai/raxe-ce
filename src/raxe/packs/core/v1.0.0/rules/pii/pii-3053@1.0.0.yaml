@@ -1,0 +1,32 @@
+version: 1.0.0
+rule_id: pii-3053
+family: PII
+sub_family: api_keys
+name: Replicate API Token Detection
+description: Detects Replicate AI platform API tokens
+severity: high
+confidence: 0.95
+patterns:
+- pattern: \b(r8_[A-Za-z0-9]{40,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "REPLICATE_API_TOKEN=r8_1234567890abcdefghijklmnopqrstuvwxyzABCDEF"
+  - "token: r8_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgh"
+  should_not_match:
+  - "Replicate tokens start with r8_"
+  - "How to use Replicate API?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: ai_credentials
+rule_hash: null

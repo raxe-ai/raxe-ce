@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: cmd-201
+family: CMD
+sub_family: file_inclusion
+name: Local File Inclusion (LFI) Attack Detection
+description: Detects Local File Inclusion attempts using path traversal
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)(?:\.\.\/|\.\.\\){2,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:file|include|require|load).*(?:\/etc\/passwd|\/etc\/shadow|\/windows\/system32)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:\.\.\/){3,}.*(?:etc|var|usr|windows)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "include ../../../etc/passwd"
+  - "file=../../../../windows/system32/config/sam"
+  - "load ../../../../../../etc/shadow"
+  should_not_match:
+  - "What is path traversal?"
+  - "How to prevent LFI attacks?"
+  - "Relative paths in applications"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1083
+- T1005
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3023
+family: PII
+sub_family: financial
+name: US Bank Account Number Detection
+description: Detects US bank account numbers in context (6-17 digits)
+severity: high
+confidence: 0.89
+patterns:
+- pattern: (?i)(?:bank|checking|savings).{0,20}account.{0,20}(?:no|number|num|#).{0,10}\b([0-9]{6,17})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:account|acct).{0,10}(?:no|number|num|#).{0,10}\b([0-9]{10,17})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Bank account number: 1234567890123"
+  - "Checking acct #: 987654321012"
+  - "Savings account no: 12345678901234"
+  should_not_match:
+  - "What is a bank account number?"
+  - "How many digits in account number?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: financial
+rule_hash: null

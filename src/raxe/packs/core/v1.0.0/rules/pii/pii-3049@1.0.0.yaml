@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3049
+family: PII
+sub_family: api_keys
+name: Square Access Token Detection
+description: Detects Square payment API access tokens
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: \bsq0atp-[0-9A-Za-z\-_]{22,}
+  flags: []
+  timeout: 5.0
+- pattern: \bsq0csp-[0-9A-Za-z\-_]{43,}
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "SQUARE_ACCESS_TOKEN=sq0atp-1234567890abcdefghijklmnop"
+  - "square_token: sq0csp-ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefg"
+  should_not_match:
+  - "Square tokens start with sq0"
+  - "How to get Square API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: payment_credentials
+rule_hash: null

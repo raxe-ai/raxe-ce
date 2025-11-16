@@ -1,0 +1,33 @@
+version: 1.0.0
+rule_id: pii-3052
+family: PII
+sub_family: api_keys
+name: Cohere API Key Detection
+description: Detects Cohere AI API keys
+severity: high
+confidence: 0.96
+patterns:
+- pattern: (?i)cohere.{0,20}(?:api|key|token).{0,10}['\"]([A-Za-z0-9]{40,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "COHERE_API_KEY='1234567890abcdefghijklmnopqrstuvwxyzABCD'"
+  - "cohere_key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgh'"
+  should_not_match:
+  - "How to get Cohere API key?"
+  - "Cohere API documentation"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: ai_credentials
+rule_hash: null

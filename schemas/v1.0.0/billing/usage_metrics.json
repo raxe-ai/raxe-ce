@@ -1,0 +1,348 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/billing/usage_metrics.json",
+  "title": "RAXE Usage Metrics",
+  "description": "Usage tracking for billing and quota management",
+  "type": "object",
+  "required": ["tenant_id", "period", "metrics"],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^org-[a-z0-9]{16}$",
+      "description": "Organization identifier"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^proj-[a-z0-9]{16}$",
+      "description": "Project identifier (null for organization-level metrics)"
+    },
+    "period": {
+      "$ref": "#/definitions/period"
+    },
+    "metrics": {
+      "$ref": "#/definitions/metrics"
+    },
+    "tier_limits": {
+      "$ref": "#/definitions/tier_limits"
+    },
+    "cost": {
+      "$ref": "#/definitions/cost"
+    },
+    "billing_status": {
+      "type": "string",
+      "enum": ["within_limits", "approaching_limit", "limit_exceeded", "overage"],
+      "description": "Current billing status"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["quota_warning", "overage_warning", "limit_exceeded"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "threshold": {
+            "type": "number",
+            "description": "Threshold that triggered warning (e.g., 0.8 for 80%)"
+          }
+        }
+      },
+      "description": "Active warnings about usage or limits"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When these metrics were generated (ISO 8601)"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional usage metadata"
+    }
+  },
+  "definitions": {
+    "period": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Period start timestamp (ISO 8601)"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Period end timestamp (ISO 8601)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly", "annual", "custom"],
+          "default": "monthly",
+          "description": "Period type"
+        },
+        "timezone": {
+          "type": "string",
+          "default": "UTC",
+          "description": "Timezone for period boundaries"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Usage metrics for billing",
+      "properties": {
+        "scans_performed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of scans performed"
+        },
+        "l1_detections": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of L1 (regex) detections"
+        },
+        "l2_detections": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of L2 (ML) detections"
+        },
+        "l2_inferences": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of L2 model inferences (may be higher than detections)"
+        },
+        "api_calls": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total API calls made"
+        },
+        "events_sent": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of telemetry events sent to cloud"
+        },
+        "total_text_scanned_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total bytes of text scanned"
+        },
+        "unique_sessions": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unique sessions"
+        },
+        "unique_users": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unique users (if tracked)"
+        },
+        "custom_rules_used": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of custom rules in use"
+        },
+        "threats_blocked": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of threats that triggered blocking"
+        },
+        "severity_breakdown": {
+          "type": "object",
+          "properties": {
+            "critical": {"type": "integer", "minimum": 0},
+            "high": {"type": "integer", "minimum": 0},
+            "medium": {"type": "integer", "minimum": 0},
+            "low": {"type": "integer", "minimum": 0},
+            "info": {"type": "integer", "minimum": 0}
+          }
+        },
+        "performance": {
+          "type": "object",
+          "properties": {
+            "avg_scan_duration_ms": {"type": "number", "minimum": 0},
+            "p95_scan_duration_ms": {"type": "number", "minimum": 0},
+            "avg_queue_depth": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "tier_limits": {
+      "type": "object",
+      "description": "Limits based on subscription tier",
+      "properties": {
+        "scans_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Monthly scan limit (0 = unlimited)"
+        },
+        "scans_used": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Scans used this period"
+        },
+        "scans_remaining": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Scans remaining this period (null if unlimited)"
+        },
+        "scans_overage": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Scans over the limit"
+        },
+        "l2_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "L2 inference limit (0 = unlimited)"
+        },
+        "l2_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "l2_remaining": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "custom_rules_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Custom rule limit"
+        },
+        "custom_rules_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "projects_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "projects_used": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "description": "Cost breakdown for billing",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "default": "USD",
+          "description": "Currency code (ISO 4217)"
+        },
+        "base_fee": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Base subscription fee"
+        },
+        "scan_overage_cost": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Cost for scans over limit"
+        },
+        "l2_overage_cost": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Cost for L2 inferences over limit"
+        },
+        "other_charges": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Other charges (support, SLA, etc.)"
+        },
+        "subtotal": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Subtotal before tax"
+        },
+        "tax": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Tax amount"
+        },
+        "total": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total cost"
+        },
+        "credits_applied": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Credits applied to this period"
+        },
+        "amount_due": {
+          "type": "number",
+          "description": "Final amount due (can be negative if credits exceed charges)"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "org-3f8a9b2c1d5e6f7a",
+      "project_id": "proj-a1b2c3d4e5f6g7h8",
+      "period": {
+        "start": "2025-11-01T00:00:00Z",
+        "end": "2025-11-30T23:59:59Z",
+        "type": "monthly",
+        "timezone": "UTC"
+      },
+      "metrics": {
+        "scans_performed": 45230,
+        "l1_detections": 342,
+        "l2_detections": 23,
+        "l2_inferences": 1245,
+        "api_calls": 45230,
+        "events_sent": 365,
+        "total_text_scanned_bytes": 123456789,
+        "unique_sessions": 1523,
+        "threats_blocked": 87,
+        "severity_breakdown": {
+          "critical": 5,
+          "high": 23,
+          "medium": 98,
+          "low": 216,
+          "info": 23
+        }
+      },
+      "tier_limits": {
+        "scans_limit": 50000,
+        "scans_used": 45230,
+        "scans_remaining": 4770,
+        "scans_overage": 0,
+        "l2_limit": 1000,
+        "l2_used": 1245,
+        "l2_remaining": 0,
+        "custom_rules_limit": 100,
+        "custom_rules_used": 23
+      },
+      "cost": {
+        "currency": "USD",
+        "base_fee": 99.00,
+        "scan_overage_cost": 0.00,
+        "l2_overage_cost": 12.25,
+        "subtotal": 111.25,
+        "tax": 8.90,
+        "total": 120.15,
+        "credits_applied": 0.00,
+        "amount_due": 120.15
+      },
+      "billing_status": "overage",
+      "warnings": [
+        {
+          "type": "overage_warning",
+          "message": "L2 inference limit exceeded by 245 inferences",
+          "threshold": 1.0
+        }
+      ],
+      "generated_at": "2025-11-15T12:00:00Z"
+    }
+  ]
+}

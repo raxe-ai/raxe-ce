@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/identity/organization.json",
+  "title": "RAXE Organization",
+  "description": "Multi-tenant organization structure supporting enterprise deployments",
+  "type": "object",
+  "required": ["tenant_id", "name", "settings", "subscription", "created_at"],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^org-[a-z0-9]{16}$",
+      "description": "Unique organization identifier (e.g., org-3f8a9b2c1d5e6f7a)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Legal organization name"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "User-friendly display name"
+    },
+    "settings": {
+      "$ref": "#/definitions/organization_settings"
+    },
+    "subscription": {
+      "$ref": "#/definitions/subscription"
+    },
+    "billing_contact": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phone": {
+          "type": "string",
+          "pattern": "^\\+?[1-9]\\d{1,14}$"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of organization creation"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last update"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Custom fields for organization-specific data"
+    }
+  },
+  "definitions": {
+    "organization_settings": {
+      "type": "object",
+      "required": ["risk_tolerance", "data_retention_days"],
+      "properties": {
+        "risk_tolerance": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"],
+          "description": "Organization risk tolerance level affecting policy decisions"
+        },
+        "data_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2555,
+          "default": 90,
+          "description": "Number of days to retain event data (1-2555, 7 years max)"
+        },
+        "allowed_environments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["local", "development", "staging", "production", "custom"]
+          },
+          "default": ["local", "development", "staging", "production"],
+          "description": "Permitted deployment environments"
+        },
+        "require_mfa": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require multi-factor authentication for all users"
+        },
+        "ip_whitelist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(/[0-9]{1,2})?$"
+          },
+          "description": "IP addresses/CIDR ranges allowed to access API"
+        },
+        "sso_enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Single sign-on enabled"
+        },
+        "sso_provider": {
+          "type": "string",
+          "enum": ["okta", "auth0", "azure_ad", "google", "custom"],
+          "description": "SSO provider configuration"
+        }
+      }
+    },
+    "subscription": {
+      "type": "object",
+      "required": ["tier", "status"],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "enum": ["FREE", "PRO", "ENTERPRISE", "TRIAL"],
+          "description": "Subscription tier"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "suspended", "cancelled", "trial", "expired"],
+          "description": "Current subscription status"
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "scans_per_month": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Monthly scan limit (0 = unlimited)"
+            },
+            "projects": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "description": "Maximum number of projects"
+            },
+            "api_keys": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Maximum number of API keys per project"
+            },
+            "custom_rules": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "description": "Maximum number of custom rules"
+            },
+            "users": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "description": "Maximum number of users in organization"
+            }
+          }
+        },
+        "trial_ends_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Trial expiration timestamp (if applicable)"
+        },
+        "billing_period_start": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start of current billing period"
+        },
+        "billing_period_end": {
+          "type": "string",
+          "format": "date-time",
+          "description": "End of current billing period"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/security/audit_log.json",
+  "title": "RAXE Audit Log Entry",
+  "description": "Comprehensive audit log for security and compliance tracking",
+  "type": "object",
+  "required": ["event_id", "timestamp", "actor", "action", "resource", "result"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique audit event identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event timestamp (ISO 8601)"
+    },
+    "actor": {
+      "$ref": "#/definitions/actor"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "rule_created",
+        "rule_updated",
+        "rule_deleted",
+        "rule_enabled",
+        "rule_disabled",
+        "policy_created",
+        "policy_updated",
+        "policy_deleted",
+        "policy_applied",
+        "config_updated",
+        "api_key_created",
+        "api_key_revoked",
+        "api_key_rotated",
+        "project_created",
+        "project_deleted",
+        "user_invited",
+        "user_removed",
+        "role_changed",
+        "scan_performed",
+        "threat_detected",
+        "threat_blocked",
+        "data_exported",
+        "data_deleted",
+        "integration_enabled",
+        "integration_disabled",
+        "auth_success",
+        "auth_failure",
+        "permission_denied",
+        "rate_limit_exceeded",
+        "circuit_breaker_opened",
+        "system_error"
+      ],
+      "description": "Type of action performed"
+    },
+    "resource": {
+      "$ref": "#/definitions/resource"
+    },
+    "result": {
+      "type": "string",
+      "enum": ["success", "failure", "partial", "denied"],
+      "description": "Action result"
+    },
+    "changes": {
+      "$ref": "#/definitions/changes"
+    },
+    "context": {
+      "$ref": "#/definitions/context"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"],
+      "default": "info",
+      "description": "Audit event severity"
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message"
+        },
+        "stack_trace": {
+          "type": "string",
+          "description": "Stack trace (if applicable)"
+        }
+      },
+      "description": "Error information (if result is failure)"
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^org-[a-z0-9]{16}$",
+      "description": "Organization identifier (for multi-tenant filtering)"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^proj-[a-z0-9]{16}$",
+      "description": "Project identifier"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional audit metadata"
+    }
+  },
+  "definitions": {
+    "actor": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["user", "service_account", "api_key", "system"],
+          "description": "Actor type"
+        },
+        "user_id": {
+          "type": "string",
+          "description": "User identifier (if type=user)"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email (if type=user)"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "admin", "developer", "viewer", "service_account"],
+          "description": "Actor role"
+        },
+        "api_key_id": {
+          "type": "string",
+          "pattern": "^key-[a-z0-9]{16}$",
+          "description": "API key identifier (if type=api_key)"
+        },
+        "service_account_id": {
+          "type": "string",
+          "description": "Service account identifier (if type=service_account)"
+        },
+        "ip_address": {
+          "type": "string",
+          "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$",
+          "description": "Source IP address"
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "User agent string"
+        },
+        "session_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Session identifier"
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rule",
+            "policy",
+            "config",
+            "api_key",
+            "project",
+            "organization",
+            "user",
+            "integration",
+            "scan",
+            "event",
+            "data"
+          ],
+          "description": "Resource type"
+        },
+        "id": {
+          "type": "string",
+          "description": "Resource identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Resource name"
+        },
+        "version": {
+          "type": "string",
+          "description": "Resource version (if applicable)"
+        }
+      }
+    },
+    "changes": {
+      "type": "object",
+      "description": "Before/after values for update actions",
+      "properties": {
+        "before": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Resource state before change"
+        },
+        "after": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Resource state after change"
+        },
+        "fields_changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of fields that changed"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "description": "Additional context about the action",
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "API request identifier"
+        },
+        "trace_id": {
+          "type": "string",
+          "description": "Distributed trace identifier"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["local", "development", "staging", "production", "custom"]
+        },
+        "sdk_version": {
+          "type": "string",
+          "description": "RAXE SDK version"
+        },
+        "client_version": {
+          "type": "string",
+          "description": "Client application version"
+        },
+        "geo_location": {
+          "type": "object",
+          "properties": {
+            "country": {"type": "string"},
+            "region": {"type": "string"},
+            "city": {"type": "string"}
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "event_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+      "timestamp": "2025-11-15T11:45:23Z",
+      "actor": {
+        "type": "user",
+        "user_id": "user-abc123",
+        "email": "admin@example.com",
+        "role": "admin",
+        "ip_address": "203.0.113.42",
+        "session_id": "550e8400-e29b-41d4-a716-446655440000"
+      },
+      "action": "rule_updated",
+      "resource": {
+        "type": "rule",
+        "id": "pi-042",
+        "name": "Prompt Injection - Ignore Pattern",
+        "version": "1.2.0"
+      },
+      "result": "success",
+      "changes": {
+        "before": {
+          "severity": "medium",
+          "confidence": 0.75
+        },
+        "after": {
+          "severity": "high",
+          "confidence": 0.85
+        },
+        "fields_changed": ["severity", "confidence"]
+      },
+      "context": {
+        "request_id": "req-8f3a9c2d-1b5e",
+        "environment": "production",
+        "sdk_version": "1.2.0"
+      },
+      "severity": "medium",
+      "tenant_id": "org-3f8a9b2c1d5e6f7a",
+      "project_id": "proj-a1b2c3d4e5f6g7h8"
+    }
+  ]
+}

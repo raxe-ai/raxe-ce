@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: enc-067
+family: ENC
+sub_family: mixed_encoding
+name: Detects base64 in echo/bash context (common backdoor pattern)
+description: Detects base64 in echo/bash context (common backdoor pattern)
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)echo\s+(?:[A-Za-z0-9+/]{20,}={0,2})\s*\|\s*base64\s+-d\s*\|\s*(?:bash|sh)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)ZWNobyAicm0gLXJmIC8iIHwgYmFzaA==
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - ZWNobyAicm0gLXJmIC8iIHwgYmFzaA==
+  - echo cG93ZXJzaGVsbCAtYyBieXBhc3M= | base64 -d | bash
+  - echo Y2F0IC9ldGMvcGFzc3dk | base64 -d | sh
+  should_not_match:
+  - Base64 encoding examples
+  - Echo command documentation
+  - Bash piping tutorial
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0067
+rule_hash: sha256:9bb2ee33f949e5f9eed16fb754e78cd2160bcc604f4503e36f80b815041d2e0f

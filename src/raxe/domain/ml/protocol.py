@@ -1,0 +1,228 @@
+"""L2 ML detection protocol.
+
+Defines the interface contract between L1 (rules) and L2 (ML models).
+
+This is a PURE DOMAIN INTERFACE - no I/O operations.
+Implementations may do I/O (loading models, etc.) but the protocol itself
+defines pure transformation: text + L1 results → L2 predictions.
+
+Performance requirement: <5ms for production implementations.
+"""
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Protocol
+
+from raxe.domain.engine.executor import ScanResult as L1ScanResult
+
+
+class L2ThreatType(Enum):
+    """ML-detected threat types.
+
+    These are semantic/contextual threats that rule-based detection might miss.
+    L2 complements L1 by catching threats that require understanding context,
+    encoding, or subtle manipulation.
+    """
+    SEMANTIC_JAILBREAK = "semantic_jailbreak"      # Subtle jailbreak attempts
+    ENCODED_INJECTION = "encoded_injection"        # Base64/hex/unicode encoded attacks
+    CONTEXT_MANIPULATION = "context_manipulation"  # Conversation hijacking
+    PRIVILEGE_ESCALATION = "privilege_escalation"  # Role/permission elevation attempts
+    DATA_EXFIL_PATTERN = "data_exfil_pattern"     # Data extraction patterns
+    OBFUSCATED_COMMAND = "obfuscated_command"     # Hidden commands in text
+    UNKNOWN = "unknown"                            # Model detects anomaly but can't classify
+
+
+@dataclass(frozen=True)
+class L2Prediction:
+    """A single ML prediction.
+
+    Represents one threat detected by the ML model with confidence score.
+
+    Attributes:
+        threat_type: Type of threat detected
+        confidence: Confidence score (0.0-1.0) - higher means more certain
+        explanation: Human-readable explanation of why this was flagged
+        features_used: List of feature names that triggered this prediction
+        metadata: Additional prediction metadata (model-specific)
+    """
+    threat_type: L2ThreatType
+    confidence: float
+    explanation: str | None = None
+    features_used: list[str] | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate prediction."""
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError(f"Confidence must be 0-1, got {self.confidence}")
+
+
+@dataclass(frozen=True)
+class L2Result:
+    """Result from L2 ML detector.
+
+    Contains all predictions from the ML model plus metadata about the
+    inference process.
+
+    Attributes:
+        predictions: List of threat predictions (may be empty)
+        confidence: Overall confidence in the analysis (0.0-1.0)
+        processing_time_ms: L2 inference time in milliseconds
+        model_version: Identifier of the model that produced this result
+        features_extracted: Dictionary of features extracted for analysis
+        metadata: Additional result metadata (model-specific)
+    """
+    predictions: list[L2Prediction]
+    confidence: float
+    processing_time_ms: float
+    model_version: str
+    features_extracted: dict[str, Any] | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate result."""
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError(f"Confidence must be 0-1, got {self.confidence}")
+        if self.processing_time_ms < 0:
+            raise ValueError(f"processing_time_ms must be non-negative, got {self.processing_time_ms}")
+
+    @property
+    def has_predictions(self) -> bool:
+        """True if any threats were predicted."""
+        return len(self.predictions) > 0
+
+    @property
+    def prediction_count(self) -> int:
+        """Number of threats predicted."""
+        return len(self.predictions)
+
+    @property
+    def highest_confidence(self) -> float:
+        """Highest confidence across all predictions.
+
+        Returns:
+            Maximum confidence score, or 0.0 if no predictions
+        """
+        if not self.predictions:
+            return 0.0
+        return max(p.confidence for p in self.predictions)
+
+    def get_predictions_by_type(self, threat_type: L2ThreatType) -> list[L2Prediction]:
+        """Get all predictions of a specific threat type.
+
+        Args:
+            threat_type: The threat type to filter by
+
+        Returns:
+            List of predictions matching the threat type
+        """
+        return [p for p in self.predictions if p.threat_type == threat_type]
+
+    def to_summary(self) -> str:
+        """Generate human-readable summary.
+
+        Returns:
+            Summary string like "2 ML predictions (0.85 confidence) in 3.2ms"
+        """
+        if not self.has_predictions:
+            return f"No ML predictions ({self.processing_time_ms:.2f}ms)"
+
+        return (
+            f"{self.prediction_count} ML prediction{'s' if self.prediction_count > 1 else ''} "
+            f"(max confidence: {self.highest_confidence:.2f}) "
+            f"in {self.processing_time_ms:.2f}ms"
+        )
+
+
+class L2Detector(Protocol):
+    """Protocol for L2 ML-based threat detectors.
+
+    This defines the interface contract that all L2 implementations must follow,
+    whether it's a stub, ONNX model, or cloud API.
+
+    Design principles:
+    1. L2 AUGMENTS L1, never replaces it
+    2. L2 receives L1 results as features (can learn from rule detections)
+    3. L2 must complete in <5ms for production use
+    4. L2 returns probabilistic predictions, not binary decisions
+    5. L2 implementations can be swapped (stub → ONNX → cloud)
+
+    Example implementations:
+    - StubL2Detector: Simple heuristics for MVP
+    - ONNXDetector: Optimized ML model for production
+    - CloudDetector: Remote API for complex analysis
+    """
+
+    def analyze(
+        self,
+        text: str,
+        l1_results: L1ScanResult,
+        context: dict[str, Any] | None = None
+    ) -> L2Result:
+        """Analyze text for semantic threats using ML.
+
+        This is the core method of the L2 protocol. It receives:
+        1. Raw text to analyze
+        2. L1 rule-based detection results (as features)
+        3. Optional context (model name, user ID, session, etc.)
+
+        And returns:
+        1. List of ML predictions
+        2. Confidence scores
+        3. Processing metadata
+
+        Args:
+            text: Original prompt/response text to analyze
+            l1_results: Results from L1 rule-based detection
+            context: Optional context dictionary with keys like:
+                - 'model': LLM model name (e.g., 'gpt-4')
+                - 'user_id': User identifier (hashed)
+                - 'session_id': Session identifier
+                - 'conversation_history': Prior messages
+                - etc.
+
+        Returns:
+            L2Result with ML predictions and metadata
+
+        Performance:
+            - MUST complete in <5ms (P95 latency)
+            - Should be <3ms average
+            - Failures should degrade gracefully (return empty predictions)
+
+        Notes:
+            - L2 can use L1 results as features
+            - L2 should NOT block on L1 failures (defensive programming)
+            - L2 predictions are probabilistic, not definitive
+            - Higher confidence doesn't mean "block" - let application layer decide
+        """
+        ...
+
+    @property
+    def model_info(self) -> dict[str, Any]:
+        """Information about the model.
+
+        Returns:
+            Dictionary with model metadata. Recommended keys:
+                - 'name': Model name
+                - 'version': Model version
+                - 'type': 'heuristic' | 'ml' | 'cloud'
+                - 'size_mb': Model size in megabytes
+                - 'is_stub': True if this is a placeholder implementation
+                - 'latency_p95_ms': Expected P95 latency
+                - 'accuracy': Expected accuracy (if known)
+                - 'description': Human-readable description
+
+        Example:
+            {
+                'name': 'RAXE Stub L2 Detector',
+                'version': 'stub-1.0.0',
+                'type': 'heuristic',
+                'is_stub': True,
+                'latency_p95_ms': 1.0,
+                'description': 'Simple pattern-based stub for MVP'
+            }
+        """
+        ...
+
+
+# Type alias for convenience
+L2DetectorType = L2Detector

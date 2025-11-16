@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/api/scan_request.json",
+  "title": "Scan API Request",
+  "type": "object",
+  "required": ["text"],
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000000,
+      "description": "Text to scan for threats"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "session_id": {"type": "string"},
+        "user_id": {"type": "string"},
+        "conversation_id": {"type": "string"}
+      },
+      "additionalProperties": {"type": "string"}
+    },
+    "rule_filters": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Specific rule IDs to apply (null = all)"
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "skip_l2": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip ML model inference"
+        },
+        "apply_policies": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply customer policies"
+        },
+        "return_positions": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include match positions in response"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 5000,
+          "default": 1000
+        }
+      }
+    }
+  }
+}

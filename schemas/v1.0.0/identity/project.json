@@ -1,0 +1,235 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/identity/project.json",
+  "title": "RAXE Project",
+  "description": "Project within an organization for managing API keys and configurations",
+  "type": "object",
+  "required": ["project_id", "tenant_id", "name", "environments", "created_at"],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^proj-[a-z0-9]{16}$",
+      "description": "Unique project identifier (e.g., proj-a1b2c3d4e5f6g7h8)"
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^org-[a-z0-9]{16}$",
+      "description": "Parent organization identifier (foreign key)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Project name (e.g., 'Production API', 'Customer Support Bot')"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Project description and purpose"
+    },
+    "environments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["local", "development", "staging", "production", "custom"]
+      },
+      "description": "Active environments for this project",
+      "default": ["local", "development", "production"]
+    },
+    "api_keys": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/api_key"
+      },
+      "description": "API keys associated with this project"
+    },
+    "integrations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/integration"
+      },
+      "description": "Third-party integrations enabled for this project"
+    },
+    "default_config": {
+      "type": "object",
+      "description": "Default scan configuration for this project",
+      "properties": {
+        "scan_config_id": {
+          "type": "string",
+          "description": "Reference to default scan configuration"
+        },
+        "telemetry_config_id": {
+          "type": "string",
+          "description": "Reference to default telemetry configuration"
+        },
+        "performance_config_id": {
+          "type": "string",
+          "description": "Reference to default performance configuration"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of project creation"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last update"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "User ID who created this project"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Custom fields for project-specific data"
+    }
+  },
+  "definitions": {
+    "api_key": {
+      "type": "object",
+      "required": ["key_id", "environment", "scopes", "created_at"],
+      "properties": {
+        "key_id": {
+          "type": "string",
+          "pattern": "^key-[a-z0-9]{16}$",
+          "description": "API key identifier"
+        },
+        "key_prefix": {
+          "type": "string",
+          "pattern": "^raxe_[a-z0-9]{8}$",
+          "description": "First 13 characters of API key (for display)"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Human-readable key name"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["local", "development", "staging", "production", "custom"],
+          "description": "Environment this key is used in"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "events:write",
+              "events:read",
+              "rules:read",
+              "rules:write",
+              "policies:read",
+              "policies:write",
+              "admin:read",
+              "admin:write"
+            ]
+          },
+          "description": "Permissions granted to this API key"
+        },
+        "rate_limit": {
+          "type": "object",
+          "properties": {
+            "requests_per_second": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 100
+            },
+            "burst_size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 200
+            }
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Expiration timestamp (null = never expires)"
+        },
+        "last_used_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last time this key was used"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "revoked", "expired"],
+          "default": "active"
+        },
+        "created_by": {
+          "type": "string",
+          "description": "User ID who created this key"
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "required": ["type", "enabled"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "openai",
+            "anthropic",
+            "langchain",
+            "llamaindex",
+            "slack",
+            "pagerduty",
+            "datadog",
+            "prometheus",
+            "custom"
+          ],
+          "description": "Integration type"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Integration-specific configuration (encrypted if contains secrets)"
+        },
+        "webhook_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Webhook URL for event notifications"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "threat_detected",
+              "critical_threat",
+              "policy_violated",
+              "scan_completed",
+              "rule_updated"
+            ]
+          },
+          "description": "Events that trigger this integration"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

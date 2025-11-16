@@ -1,0 +1,41 @@
+# Coverage configuration for RAXE CE
+
+[run]
+source = src/raxe
+omit =
+    */tests/*
+    */__init__.py
+    */plugins/*
+    # Omit during initial setup
+    setup.py
+
+[report]
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code
+    def __repr__
+
+    # Don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+
+    # Don't complain about abstract methods
+    @abstractmethod
+
+# Coverage requirement
+fail_under = 80
+
+# Show missing lines
+show_missing = True
+
+# Precision
+precision = 2
+
+[html]
+directory = htmlcov

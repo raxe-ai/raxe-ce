@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.1.0/rules/rule.json",
+  "title": "RAXE Detection Rule",
+  "description": "Threat detection rule specification v1.1",
+  "type": "object",
+  "required": ["rule_id", "version", "family", "sub_family", "name", "description", "severity", "confidence", "patterns"],
+  "properties": {
+    "rule_id": {
+      "type": "string",
+      "pattern": "^[a-z]+-[0-9]{3}$",
+      "description": "Unique rule identifier (e.g., pi-001)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version (e.g., 1.0.0)"
+    },
+    "family": {
+      "type": "string",
+      "enum": ["PI", "JB", "PII", "SEC", "QUAL", "CUSTOM"],
+      "description": "Rule family category"
+    },
+    "sub_family": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Subcategory within family"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Human-readable rule name"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Detailed description of what the rule detects"
+    },
+    "severity": {
+      "$ref": "#/definitions/severity"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Confidence score in detection accuracy"
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/pattern"
+      }
+    },
+    "examples": {
+      "$ref": "#/definitions/examples"
+    },
+    "metrics": {
+      "$ref": "#/definitions/metrics"
+    },
+    "mitre_attack": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$"
+      },
+      "description": "MITRE ATT&CK technique IDs"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "author": {"type": "string"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "updated_at": {"type": "string", "format": "date-time"},
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "rule_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash of rule content"
+    }
+  },
+  "definitions": {
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"],
+      "description": "Threat severity level"
+    },
+    "pattern": {
+      "type": "object",
+      "required": ["pattern"],
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Regex pattern string"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["IGNORECASE", "MULTILINE", "DOTALL", "UNICODE", "VERBOSE"]
+          }
+        },
+        "timeout": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10.0,
+          "default": 5.0,
+          "description": "Maximum time in seconds for pattern matching"
+        }
+      }
+    },
+    "examples": {
+      "type": "object",
+      "properties": {
+        "should_match": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Examples that should trigger the rule"
+        },
+        "should_not_match": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Examples that should not trigger the rule"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "precision": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "recall": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "f1_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "last_evaluated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "counts_30d": {
+          "type": "object",
+          "properties": {
+            "true_positive": {"type": "integer", "minimum": 0},
+            "false_positive": {"type": "integer", "minimum": 0},
+            "false_negative": {"type": "integer", "minimum": 0},
+            "true_negative": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

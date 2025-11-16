@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: cmd-052
+family: CMD
+sub_family: shell_commands
+name: Detects SSH key manipulation and authorized_keys modification
+description: Detects SSH key manipulation and authorized_keys modification
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: ;\s*echo\s+['"]ssh-rsa\s+[A-Za-z0-9+/]+
+  flags: []
+  timeout: 5.0
+- pattern: '>>\s*(?:~/|\.ssh/|/[^\s]+/\.ssh/)?authorized_keys'
+  flags: []
+  timeout: 5.0
+- pattern: '[;&]\s*cat\s+[^\s]*\.pub\s+>>\s*(?:/[^\s]+/)?authorized_keys'
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - ; echo 'ssh-rsa AAAAB3...' >> ~/.ssh/authorized_keys
+  - '&& cat attacker.pub >> /root/.ssh/authorized_keys'
+  - ; echo 'ssh-ed25519...' >> authorized_keys
+  should_not_match:
+  - SSH key management
+  - Adding SSH keys for access
+  - authorized_keys file format
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0052
+rule_hash: sha256:8f42f5d47f5388586135206e4a3ac96a94d17b4715b3914f039c65f426d995f0

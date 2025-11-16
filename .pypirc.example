@@ -1,0 +1,17 @@
+# PyPI Configuration Example
+# Copy to ~/.pypirc and fill in your tokens
+# DO NOT commit this file with real tokens!
+
+[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+username = __token__
+password = pypi-YOUR_PRODUCTION_TOKEN_HERE
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = pypi-YOUR_TEST_TOKEN_HERE

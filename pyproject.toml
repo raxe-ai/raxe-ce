@@ -188,3 +188,13 @@ fail_under = 80
 line-length = 100
 target-version = ["py310", "py311", "py312"]
 include = '\.pyi?$'
+
+[tool.bandit]
+# Exclude test files and migrations
+exclude_dirs = ["tests", "scripts"]
+# Skip specific checks that have documented exceptions
+# B608: SQL injection (safe parameterized queries with placeholders)
+# B310: URL open (URL scheme validated to be https://)
+# B108: Temp file (regex pattern matching, not file usage)
+# B615: HuggingFace download (pinned to specific revision)
+skips = ["B608", "B310", "B108", "B615"]

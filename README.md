@@ -33,6 +33,7 @@ RAXE is a **privacy-first, developer-friendly AI security tool** that scans LLM 
 - 🔬 Free RAXE Playground for testing
 - 📱 Mobile-friendly, 100% browser-based
 
+#Update below with repo/url
 [**🚀 Play Now →**](game-raxe-arena/) | [**📖 Game Docs →**](game-raxe-arena/README.md)
 
 ---

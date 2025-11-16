@@ -1,0 +1,77 @@
+{
+  "version": "2.0.0",
+  "created": "2025-11-16",
+  "total_examples": 199997,
+  "splits": {
+    "train": 149997,
+    "val": 24999,
+    "test": 25001
+  },
+  "families": [
+    "CMD",
+    "PII",
+    "JB",
+    "HC",
+    "PI",
+    "ENC",
+    "RAG",
+    "benign"
+  ],
+  "family_mapping": {
+    "CMD": 0,
+    "PII": 1,
+    "JB": 2,
+    "HC": 3,
+    "PI": 4,
+    "ENC": 5,
+    "RAG": 6,
+    "benign": 7
+  },
+  "contexts": [
+    "technical",
+    "conversational",
+    "educational",
+    "attack"
+  ],
+  "context_mapping": {
+    "technical": 0,
+    "conversational": 1,
+    "educational": 2,
+    "attack": 3
+  },
+  "data_sources": {
+    "rule_examples": "219 YAML rules with positive and negative examples",
+    "research_dataset": "Advanced threats from Protect AI, Lakera, CalypsoAI, OWASP, Microsoft MSRC",
+    "academic_papers": "100+ papers on prompt injection, jailbreaking, multi-turn attacks",
+    "synthetic_variations": "Obfuscation, multi-turn, encoding, payload splitting variations",
+    "synthetic_benign": "Technical, conversational, educational contexts with hard negatives"
+  },
+  "weighting_strategy": {
+    "rule_examples": 3.0,
+    "hard_negatives": 4.0,
+    "research_examples": 2.5,
+    "attack_variations": "0.8-1.3x based on sophistication",
+    "benign_examples": 2.0,
+    "edge_cases": 4.0
+  },
+  "attack_techniques": [
+    "Direct prompt injection",
+    "Indirect prompt injection (markdown, HTML)",
+    "Jailbreak (DAN, roleplay, refusal suppression)",
+    "Multi-turn attacks (Crescendo, SequentialBreak)",
+    "Obfuscation (leetspeak, case manipulation)",
+    "Encoding (base64, hex)",
+    "Payload splitting",
+    "RAG poisoning",
+    "Agent exploitation",
+    "Data exfiltration"
+  ],
+  "research_sources": [
+    "Protect AI (LLM Guard, Rebuff)",
+    "Lakera Guard (Mosscap, Gandalf)",
+    "CalypsoAI (FlipAttack, MathPrompt, FRAME)",
+    "OWASP LLM Top 10 2025",
+    "Microsoft MSRC (Crescendo, Spotlighting, PyRIT, BIPIA)",
+    "100+ academic papers (arXiv, USENIX, ACL, NeurIPS)"
+  ]
+}

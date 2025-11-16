@@ -74,18 +74,24 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
     color = get_severity_color(highest)
 
     header = Text()
-    header.append(f"{icon} ", style=color)
+    header.append(f"{icon} ", style=f"{color} bold")
     header.append("THREAT DETECTED", style=f"{color} bold")
 
-    console.print(Panel(header, border_style=color))
+    console.print(Panel(header, border_style=color, width=80, padding=(0, 1)))
     console.print()
 
-    # Detections table
-    table = Table(title="Detection Details", show_header=True, header_style="bold cyan")
-    table.add_column("Rule ID", style="cyan", no_wrap=True)
-    table.add_column("Severity", style="bold")
-    table.add_column("Confidence", justify="right")
-    table.add_column("Message", style="white")
+    # Detections table with modern styling
+    table = Table(
+        show_header=True,
+        header_style="bold cyan",
+        border_style="dim",
+        box=None,  # Cleaner look without box
+        padding=(0, 1)
+    )
+    table.add_column("Rule", style="cyan", no_wrap=True, width=10)
+    table.add_column("Severity", style="bold", width=10)
+    table.add_column("Confidence", justify="right", width=12)
+    table.add_column("Description", style="white")
 
     for detection in result.scan_result.l1_result.detections:
         severity_color = get_severity_color(detection.severity)
@@ -94,33 +100,45 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
         # Format confidence as percentage
         confidence_pct = f"{detection.confidence * 100:.1f}%"
 
-        # Message
+        # Message - truncate if too long
         message = getattr(detection, "message", "No description available")
+        if len(message) > 60:
+            message = message[:57] + "..."
 
         table.add_row(detection.rule_id, severity_text, confidence_pct, message)
 
     console.print(table)
     console.print()
 
-    # Summary
-    console.print("[bold]Summary:[/bold]")
-    console.print(f"  Total detections: {len(result.scan_result.l1_result.detections)}")
-    console.print(f"  Highest severity: [{get_severity_color(highest)}]{highest.value}[/]")
-    console.print(f"  Scan time: {result.duration_ms:.2f}ms")
+    # Summary with cleaner layout
+    summary = Text()
+    summary.append("Summary: ", style="bold")
+    summary.append(f"{len(result.scan_result.l1_result.detections)} detection(s) • ", style="")
+    summary.append(f"Severity: ", style="dim")
+    summary.append(f"{highest.value.upper()}", style=get_severity_color(highest))
+    summary.append(f" • Scan time: {result.duration_ms:.2f}ms", style="dim")
+
+    console.print(summary)
     console.print()
 
 
 def _display_safe(result: ScanPipelineResult, console: Console) -> None:
     """Display safe scan results."""
-    # Header
-    header = Text()
-    header.append("🟢 ", style="green")
-    header.append("SAFE", style="green bold")
+    # Create content with scan details
+    content = Text()
+    content.append("🟢 ", style="green bold")
+    content.append("SAFE", style="green bold")
+    content.append("\n\n", style="")
+    content.append("No threats detected", style="green")
+    content.append("\n", style="")
+    content.append(f"Scan time: {result.duration_ms:.2f}ms", style="dim")
 
-    console.print(Panel(header, border_style="green"))
-    console.print()
-    console.print("[green]No threats detected[/green]")
-    console.print(f"  Scan time: {result.duration_ms:.2f}ms")
+    console.print(Panel(
+        content,
+        border_style="green",
+        width=80,
+        padding=(1, 2)
+    ))
     console.print()
 
 
@@ -176,7 +194,7 @@ def display_error(message: str, details: str | None = None) -> None:
     error_text.append("❌ ", style="red bold")
     error_text.append("ERROR", style="red bold")
 
-    console.print(Panel(error_text, border_style="red"))
+    console.print(Panel(error_text, border_style="red", width=80, padding=(0, 1)))
     console.print()
     console.print(f"[red]{message}[/red]")
 

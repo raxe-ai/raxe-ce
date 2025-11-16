@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/config/scan_config.json",
+  "title": "RAXE Scan Configuration",
+  "description": "Configuration for threat scanning behavior and rule selection",
+  "type": "object",
+  "required": ["enabled_tiers", "performance_mode"],
+  "properties": {
+    "enabled_tiers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["core", "community", "industry", "custom"]
+      },
+      "default": ["core", "community"],
+      "description": "Rule tiers to use during scanning"
+    },
+    "l1_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable L1 (regex-based) detection"
+    },
+    "l2_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable L2 (ML model) detection"
+    },
+    "l2_confidence_threshold": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "default": 0.7,
+      "description": "Minimum confidence score for L2 detections (0.0-1.0)"
+    },
+    "performance_mode": {
+      "type": "string",
+      "enum": ["fail_open", "fail_closed", "sample", "adaptive"],
+      "default": "fail_open",
+      "description": "How to behave under load or errors"
+    },
+    "sample_rate": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "default": 1.0,
+      "description": "Fraction of requests to scan (1.0 = all, 0.1 = 10%)"
+    },
+    "max_scan_duration_ms": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 10000,
+      "default": 1000,
+      "description": "Maximum time allowed for a single scan (milliseconds)"
+    },
+    "max_text_length": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000,
+      "default": 100000,
+      "description": "Maximum text length to scan (characters)"
+    },
+    "rules_to_include": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+-[0-9]{3}$"
+      },
+      "description": "Specific rule IDs to include (null = all enabled tiers)"
+    },
+    "rules_to_exclude": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+-[0-9]{3}$"
+      },
+      "description": "Specific rule IDs to exclude from scanning"
+    },
+    "severity_threshold": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"],
+      "default": "info",
+      "description": "Minimum severity to report (filters out lower severities)"
+    },
+    "block_on_threat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically block requests containing threats"
+    },
+    "block_threshold": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "default": "high",
+      "description": "Minimum severity required to trigger blocking"
+    },
+    "return_positions": {
+      "type": "boolean",
+      "default": false,
+      "description": "Include match positions in detection results"
+    },
+    "return_redacted_text": {
+      "type": "boolean",
+      "default": false,
+      "description": "Return text with detected threats redacted"
+    },
+    "cache_rules": {
+      "type": "boolean",
+      "default": true,
+      "description": "Cache compiled rules in memory"
+    },
+    "cache_ttl_seconds": {
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 86400,
+      "default": 3600,
+      "description": "How long to cache rules (1 hour default)"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Custom configuration metadata"
+    }
+  },
+  "examples": [
+    {
+      "enabled_tiers": ["core", "community", "custom"],
+      "l1_enabled": true,
+      "l2_enabled": true,
+      "l2_confidence_threshold": 0.8,
+      "performance_mode": "adaptive",
+      "sample_rate": 1.0,
+      "max_scan_duration_ms": 500,
+      "max_text_length": 50000,
+      "rules_to_exclude": ["pi-042", "jb-015"],
+      "severity_threshold": "medium",
+      "block_on_threat": true,
+      "block_threshold": "high",
+      "return_positions": true,
+      "cache_rules": true,
+      "cache_ttl_seconds": 1800
+    }
+  ]
+}

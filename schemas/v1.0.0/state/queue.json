@@ -1,0 +1,246 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/state/queue.json",
+  "title": "RAXE Event Queue State",
+  "description": "Local event queue state for telemetry batching and retry",
+  "type": "object",
+  "required": ["queue_id", "status"],
+  "properties": {
+    "queue_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique queue identifier"
+    },
+    "install_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Installation this queue belongs to"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "paused", "error", "draining", "stopped"],
+      "description": "Current queue operational status"
+    },
+    "pending_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of events waiting to be sent"
+    },
+    "processing_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of events currently being processed"
+    },
+    "failed_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of failed events (will retry)"
+    },
+    "dead_letter_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of events moved to dead letter queue (max retries exceeded)"
+    },
+    "total_queued": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Total events queued since queue creation"
+    },
+    "total_sent": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Total events successfully sent"
+    },
+    "total_dropped": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Total events dropped (queue full)"
+    },
+    "priority_breakdown": {
+      "$ref": "#/definitions/priority_breakdown"
+    },
+    "last_flush_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last successful flush (ISO 8601)"
+    },
+    "next_flush_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Scheduled timestamp for next flush (ISO 8601)"
+    },
+    "last_error": {
+      "$ref": "#/definitions/error_info"
+    },
+    "consecutive_failures": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of consecutive flush failures"
+    },
+    "backoff_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Backoff period end time (ISO 8601, null if not in backoff)"
+    },
+    "performance": {
+      "$ref": "#/definitions/performance_metrics"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Queue creation timestamp (ISO 8601)"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last state update timestamp (ISO 8601)"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Custom queue metadata"
+    }
+  },
+  "definitions": {
+    "priority_breakdown": {
+      "type": "object",
+      "description": "Events grouped by priority level",
+      "properties": {
+        "critical": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Critical priority events (sent immediately)"
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "High priority events"
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Medium priority events"
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Low priority events (batched aggressively)"
+        }
+      }
+    },
+    "error_info": {
+      "type": "object",
+      "description": "Information about last error",
+      "properties": {
+        "error_type": {
+          "type": "string",
+          "description": "Error type (e.g., NetworkError, AuthError)"
+        },
+        "error_message": {
+          "type": "string",
+          "description": "Error message"
+        },
+        "status_code": {
+          "type": "integer",
+          "description": "HTTP status code (if network error)"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When error occurred (ISO 8601)"
+        },
+        "retry_after": {
+          "type": "integer",
+          "description": "Retry-After header value (seconds)"
+        }
+      }
+    },
+    "performance_metrics": {
+      "type": "object",
+      "description": "Queue performance metrics",
+      "properties": {
+        "avg_flush_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average flush duration (milliseconds)"
+        },
+        "p95_flush_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "P95 flush duration (milliseconds)"
+        },
+        "avg_batch_size": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average batch size"
+        },
+        "success_rate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Flush success rate (0.0-1.0)"
+        },
+        "avg_queue_depth": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average queue depth"
+        },
+        "peak_queue_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Peak queue depth observed"
+        },
+        "measurement_window_start": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start of measurement window (ISO 8601)"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "queue_id": "8f3a9c2d-1b5e-4f7a-9d8c-2e6b3f1a5c7d",
+      "install_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "status": "active",
+      "pending_count": 47,
+      "processing_count": 0,
+      "failed_count": 3,
+      "dead_letter_count": 0,
+      "total_queued": 1523,
+      "total_sent": 1470,
+      "total_dropped": 6,
+      "priority_breakdown": {
+        "critical": 2,
+        "high": 15,
+        "medium": 25,
+        "low": 5
+      },
+      "last_flush_at": "2025-11-15T11:45:00Z",
+      "next_flush_at": "2025-11-15T11:45:05Z",
+      "consecutive_failures": 0,
+      "performance": {
+        "avg_flush_duration_ms": 234.5,
+        "p95_flush_duration_ms": 450.2,
+        "avg_batch_size": 52.3,
+        "success_rate": 0.997,
+        "avg_queue_depth": 32.1,
+        "peak_queue_depth": 156
+      },
+      "created_at": "2025-11-15T10:30:00Z",
+      "updated_at": "2025-11-15T11:45:23Z"
+    }
+  ]
+}

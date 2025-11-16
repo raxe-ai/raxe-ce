@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/security/rule_signature.json",
+  "title": "RAXE Rule Cryptographic Signature",
+  "description": "Digital signature for rule authenticity and integrity verification",
+  "type": "object",
+  "required": ["rule_id", "version", "signature", "signer", "signed_at", "algorithm"],
+  "properties": {
+    "rule_id": {
+      "type": "string",
+      "pattern": "^[a-z]+-[0-9]{3}$",
+      "description": "Rule identifier being signed (e.g., pi-001)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Rule version (semver)"
+    },
+    "rule_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash of rule content (what was signed)"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64-encoded cryptographic signature"
+    },
+    "signer": {
+      "$ref": "#/definitions/signer"
+    },
+    "signed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when signature was created (ISO 8601)"
+    },
+    "algorithm": {
+      "type": "string",
+      "enum": ["Ed25519", "RSA-PSS-SHA256", "ECDSA-P256-SHA256"],
+      "default": "Ed25519",
+      "description": "Signature algorithm used"
+    },
+    "key_id": {
+      "type": "string",
+      "description": "Key identifier for key rotation support"
+    },
+    "certificate_chain": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Base64-encoded X.509 certificate"
+      },
+      "description": "Certificate chain for signature verification (optional)"
+    },
+    "signature_format": {
+      "type": "string",
+      "enum": ["raw", "DER", "JWS"],
+      "default": "raw",
+      "description": "Signature encoding format"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional signature metadata"
+    }
+  },
+  "definitions": {
+    "signer": {
+      "type": "object",
+      "required": ["name", "public_key"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Signer name (e.g., 'RAXE Official', 'Community Contributor')"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Signer email address"
+        },
+        "organization": {
+          "type": "string",
+          "description": "Signer organization"
+        },
+        "public_key": {
+          "type": "string",
+          "description": "Base64-encoded public key for signature verification"
+        },
+        "public_key_format": {
+          "type": "string",
+          "enum": ["raw", "PEM", "JWK"],
+          "default": "raw",
+          "description": "Public key format"
+        },
+        "key_fingerprint": {
+          "type": "string",
+          "pattern": "^[A-F0-9]{40}$",
+          "description": "SHA1 fingerprint of public key (for verification)"
+        },
+        "trust_level": {
+          "type": "string",
+          "enum": ["official", "verified", "community", "unverified"],
+          "description": "Trust level of the signer"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "rule_id": "pi-001",
+      "version": "1.0.0",
+      "rule_hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+      "signature": "iKqiI8/J6viE/qSf8Qz4nKaP2r8VaG1Jvt1xw3Qq9F2xg7S9K0pLmN1oP2qR3sT4uV5wX6yZ7aB8cC9dD0eE1fF2==",
+      "signer": {
+        "name": "RAXE Official",
+        "email": "security@raxe.ai",
+        "organization": "RAXE AI",
+        "public_key": "MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZmE=",
+        "public_key_format": "raw",
+        "key_fingerprint": "D3B07384D113EDEC49EADCE789AF9BBD3D2A57A5",
+        "trust_level": "official"
+      },
+      "signed_at": "2025-11-15T10:00:00Z",
+      "algorithm": "Ed25519",
+      "key_id": "raxe-signing-key-2025-01",
+      "signature_format": "raw"
+    }
+  ]
+}

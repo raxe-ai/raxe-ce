@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/api/scan_response.json",
+  "title": "Scan API Response",
+  "type": "object",
+  "required": ["scan_id", "timestamp", "has_threats", "action"],
+  "properties": {
+    "scan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "has_threats": {
+      "type": "boolean"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["ALLOW", "BLOCK", "FLAG", "LOG"]
+    },
+    "detections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/detection"
+      }
+    },
+    "highest_severity": {
+      "type": ["string", "null"],
+      "enum": ["critical", "high", "medium", "low", "info", null]
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "total_ms": {"type": "number"},
+        "l1_ms": {"type": "number"},
+        "l2_ms": {"type": "number"},
+        "policy_ms": {"type": "number"}
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "detection": {
+      "type": "object",
+      "required": ["type", "severity", "confidence", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["rule", "ml"]
+        },
+        "rule_id": {"type": "string"},
+        "threat_type": {"type": "string"},
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low", "info"]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "match_positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": {"type": "integer"},
+              "end": {"type": "integer"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

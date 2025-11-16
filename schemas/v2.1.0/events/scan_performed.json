@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v2.1.0/events/scan_performed.json",
+  "title": "Scan Performed Event",
+  "type": "object",
+  "required": ["event_id", "timestamp", "customer_id", "scan_result"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "customer_id": {
+      "type": "string",
+      "pattern": "^cust-[a-z0-9]{8}$"
+    },
+    "api_key_id": {
+      "type": "string",
+      "pattern": "^raxe_[a-z0-9]{32}$"
+    },
+    "scan_result": {
+      "$ref": "#/definitions/scan_result"
+    },
+    "performance": {
+      "$ref": "#/definitions/performance_metrics"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "session_id": {"type": "string"},
+        "user_id": {"type": "string"},
+        "app_name": {"type": "string"},
+        "sdk_version": {"type": "string"},
+        "environment": {
+          "type": "string",
+          "enum": ["production", "staging", "development", "test"]
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "scan_result": {
+      "type": "object",
+      "required": ["text_hash", "threat_detected", "detection_count"],
+      "properties": {
+        "text_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 hash of scanned text (PII protection)"
+        },
+        "text_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "threat_detected": {
+          "type": "boolean"
+        },
+        "detection_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "highest_severity": {
+          "type": ["string", "null"],
+          "enum": ["critical", "high", "medium", "low", "info", null]
+        },
+        "l1_detections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule_id": {"type": "string"},
+              "severity": {"type": "string"},
+              "confidence": {"type": "number"}
+            }
+          }
+        },
+        "l2_predictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "threat_type": {"type": "string"},
+              "confidence": {"type": "number"}
+            }
+          }
+        },
+        "policy_decision": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["ALLOW", "BLOCK", "FLAG", "LOG"]
+            },
+            "matched_policies": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "performance_metrics": {
+      "type": "object",
+      "properties": {
+        "total_ms": {"type": "number", "minimum": 0},
+        "l1_ms": {"type": "number", "minimum": 0},
+        "l2_ms": {"type": "number", "minimum": 0},
+        "policy_ms": {"type": "number", "minimum": 0},
+        "queue_depth": {"type": "integer", "minimum": 0},
+        "circuit_breaker_status": {
+          "type": "string",
+          "enum": ["closed", "open", "half-open"]
+        }
+      }
+    }
+  }
+}

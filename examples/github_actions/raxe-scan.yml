@@ -1,0 +1,65 @@
+name: RAXE Security Scan
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install raxe
+
+      - name: Scan prompts in codebase
+        run: |
+          python .github/scripts/scan_prompts.py
+
+      - name: Check scan results
+        run: |
+          if [ -f scan_results.json ]; then
+            python .github/scripts/check_threats.py
+          fi
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: raxe-scan-results
+          path: scan_results.json
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('scan_results.json', 'utf8'));
+
+            const comment = `## 🛡️ RAXE Security Scan Results
+
+            ⚠️ Security threats detected in this PR:
+
+            ${results.threats.map(t => `- **${t.severity}**: ${t.file}:${t.line}`).join('\n')}
+
+            Please review and fix before merging.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

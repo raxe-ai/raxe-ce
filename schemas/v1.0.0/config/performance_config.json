@@ -1,0 +1,306 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/config/performance_config.json",
+  "title": "RAXE Performance Configuration",
+  "description": "Performance tuning, circuit breaker, and rate limiting configuration",
+  "type": "object",
+  "required": ["circuit_breaker", "rate_limit"],
+  "properties": {
+    "circuit_breaker": {
+      "$ref": "#/definitions/circuit_breaker"
+    },
+    "rate_limit": {
+      "$ref": "#/definitions/rate_limit"
+    },
+    "cache": {
+      "$ref": "#/definitions/cache"
+    },
+    "timeout_ms": {
+      "$ref": "#/definitions/timeout_ms"
+    },
+    "thread_pool": {
+      "$ref": "#/definitions/thread_pool"
+    },
+    "memory_limits": {
+      "$ref": "#/definitions/memory_limits"
+    },
+    "degradation_strategy": {
+      "type": "string",
+      "enum": ["fail_open", "fail_closed", "sample", "adaptive"],
+      "default": "fail_open",
+      "description": "Behavior when performance degrades"
+    },
+    "metrics_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable performance metrics collection"
+    }
+  },
+  "definitions": {
+    "circuit_breaker": {
+      "type": "object",
+      "description": "Circuit breaker configuration to prevent cascade failures",
+      "properties": {
+        "failure_threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 5,
+          "description": "Number of consecutive failures before opening circuit"
+        },
+        "success_threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 2,
+          "description": "Consecutive successes needed to close circuit from half-open"
+        },
+        "reset_timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000,
+          "default": 30000,
+          "description": "Time to wait before attempting to close circuit (milliseconds)"
+        },
+        "half_open_requests": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 3,
+          "description": "Number of test requests in half-open state"
+        },
+        "failure_window_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000,
+          "default": 10000,
+          "description": "Time window for counting failures (milliseconds)"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable circuit breaker"
+        }
+      }
+    },
+    "rate_limit": {
+      "type": "object",
+      "description": "Token bucket rate limiting configuration",
+      "properties": {
+        "max_requests_per_second": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 100,
+          "description": "Maximum requests per second"
+        },
+        "burst_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 200,
+          "description": "Maximum burst of requests allowed"
+        },
+        "per_project": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply rate limit per project (vs global)"
+        },
+        "per_user": {
+          "type": "boolean",
+          "default": false,
+          "description": "Apply rate limit per user"
+        },
+        "rejection_strategy": {
+          "type": "string",
+          "enum": ["drop", "queue", "http_429"],
+          "default": "http_429",
+          "description": "How to handle rate-limited requests"
+        }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "description": "Caching configuration for rules and results",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable caching"
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400,
+          "default": 3600,
+          "description": "Cache time-to-live (seconds)"
+        },
+        "max_size_mb": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 100,
+          "description": "Maximum cache size (megabytes)"
+        },
+        "eviction_policy": {
+          "type": "string",
+          "enum": ["LRU", "LFU", "FIFO", "TTL"],
+          "default": "LRU",
+          "description": "Cache eviction strategy"
+        },
+        "cache_compiled_rules": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cache compiled regex patterns"
+        },
+        "cache_scan_results": {
+          "type": "boolean",
+          "default": false,
+          "description": "Cache scan results (by text hash)"
+        },
+        "cache_result_ttl_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 60,
+          "description": "Result cache TTL (shorter than rule cache)"
+        }
+      }
+    },
+    "timeout_ms": {
+      "type": "object",
+      "description": "Timeout configurations for various operations",
+      "properties": {
+        "scan": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 1000,
+          "description": "Overall scan timeout (milliseconds)"
+        },
+        "l1_detection": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 5000,
+          "default": 500,
+          "description": "L1 regex detection timeout (milliseconds)"
+        },
+        "l2_inference": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 2000,
+          "description": "L2 ML inference timeout (milliseconds)"
+        },
+        "api_call": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 30000,
+          "default": 5000,
+          "description": "Cloud API call timeout (milliseconds)"
+        },
+        "database_query": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 1000,
+          "description": "Database query timeout (milliseconds)"
+        }
+      }
+    },
+    "thread_pool": {
+      "type": "object",
+      "description": "Thread pool configuration for concurrent processing",
+      "properties": {
+        "min_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 2,
+          "description": "Minimum number of threads"
+        },
+        "max_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 10,
+          "description": "Maximum number of threads"
+        },
+        "queue_size": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 100000,
+          "default": 1000,
+          "description": "Task queue size"
+        },
+        "keep_alive_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 60,
+          "description": "Idle thread keep-alive time (seconds)"
+        }
+      }
+    },
+    "memory_limits": {
+      "type": "object",
+      "description": "Memory usage limits and warnings",
+      "properties": {
+        "max_heap_mb": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 100000,
+          "default": 512,
+          "description": "Maximum heap size (megabytes)"
+        },
+        "warning_threshold_percent": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 95,
+          "default": 80,
+          "description": "Memory usage warning threshold (%)"
+        },
+        "gc_strategy": {
+          "type": "string",
+          "enum": ["default", "aggressive", "conservative"],
+          "default": "default",
+          "description": "Garbage collection strategy"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "circuit_breaker": {
+        "failure_threshold": 5,
+        "success_threshold": 2,
+        "reset_timeout_ms": 30000,
+        "half_open_requests": 3,
+        "enabled": true
+      },
+      "rate_limit": {
+        "max_requests_per_second": 100,
+        "burst_size": 200,
+        "per_project": true,
+        "rejection_strategy": "http_429"
+      },
+      "cache": {
+        "enabled": true,
+        "ttl_seconds": 3600,
+        "max_size_mb": 100,
+        "eviction_policy": "LRU",
+        "cache_compiled_rules": true,
+        "cache_scan_results": false
+      },
+      "timeout_ms": {
+        "scan": 1000,
+        "l1_detection": 500,
+        "l2_inference": 2000,
+        "api_call": 5000,
+        "database_query": 1000
+      },
+      "degradation_strategy": "adaptive",
+      "metrics_enabled": true
+    }
+  ]
+}

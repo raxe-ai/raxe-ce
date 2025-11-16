@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.0.0/state/session.json",
+  "title": "RAXE Session State",
+  "description": "User session state tracking for local agent and analytics",
+  "type": "object",
+  "required": ["session_id", "install_id", "started_at"],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique session identifier"
+    },
+    "install_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique installation identifier (persists across sessions)"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User identifier (if authenticated, null for anonymous)"
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^org-[a-z0-9]{16}$",
+      "description": "Organization identifier (if multi-tenant deployment)"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^proj-[a-z0-9]{16}$",
+      "description": "Project identifier"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Session start timestamp (ISO 8601)"
+    },
+    "last_active_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last activity timestamp (ISO 8601)"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Session end timestamp (ISO 8601, null if active)"
+    },
+    "scan_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of scans performed in this session"
+    },
+    "threat_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of threats detected in this session"
+    },
+    "l1_detection_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of L1 (regex) detections"
+    },
+    "l2_detection_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of L2 (ML) detections"
+    },
+    "blocked_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of requests blocked due to threats"
+    },
+    "active_config": {
+      "$ref": "#/definitions/active_config"
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["local", "development", "staging", "production", "custom"],
+      "description": "Deployment environment"
+    },
+    "sdk_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "RAXE SDK version (semver)"
+    },
+    "platform": {
+      "type": "object",
+      "properties": {
+        "os": {
+          "type": "string",
+          "description": "Operating system (e.g., linux, darwin, win32)"
+        },
+        "arch": {
+          "type": "string",
+          "description": "Architecture (e.g., x64, arm64)"
+        },
+        "python_version": {
+          "type": "string",
+          "description": "Python version"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Custom session metadata"
+    }
+  },
+  "definitions": {
+    "active_config": {
+      "type": "object",
+      "description": "Current active configuration for this session",
+      "properties": {
+        "scan_config_id": {
+          "type": "string",
+          "description": "Active scan configuration ID"
+        },
+        "telemetry_config_id": {
+          "type": "string",
+          "description": "Active telemetry configuration ID"
+        },
+        "performance_config_id": {
+          "type": "string",
+          "description": "Active performance configuration ID"
+        },
+        "scan_config": {
+          "type": "object",
+          "description": "Snapshot of scan config (optional, for offline sessions)"
+        },
+        "telemetry_config": {
+          "type": "object",
+          "description": "Snapshot of telemetry config (optional)"
+        },
+        "performance_config": {
+          "type": "object",
+          "description": "Snapshot of performance config (optional)"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "session_id": "550e8400-e29b-41d4-a716-446655440000",
+      "install_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "user_id": "user-abc123",
+      "tenant_id": "org-3f8a9b2c1d5e6f7a",
+      "project_id": "proj-a1b2c3d4e5f6g7h8",
+      "started_at": "2025-11-15T10:30:00Z",
+      "last_active_at": "2025-11-15T11:45:23Z",
+      "scan_count": 342,
+      "threat_count": 12,
+      "l1_detection_count": 10,
+      "l2_detection_count": 2,
+      "blocked_count": 3,
+      "environment": "production",
+      "sdk_version": "1.2.0",
+      "platform": {
+        "os": "linux",
+        "arch": "x64",
+        "python_version": "3.11.5"
+      }
+    }
+  ]
+}

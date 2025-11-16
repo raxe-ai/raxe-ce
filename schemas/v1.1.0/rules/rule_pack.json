@@ -1,0 +1,363 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/v1.1.0/rules/rule_pack.json",
+  "title": "RAXE Rule Pack",
+  "description": "Distributable collection of rules for community sharing and industry-specific use cases",
+  "type": "object",
+  "required": ["pack_id", "name", "version", "type", "threat_types", "rules", "maintainer"],
+  "properties": {
+    "pack_id": {
+      "type": "string",
+      "pattern": "^pack-[a-z0-9-]+$",
+      "description": "Unique pack identifier (e.g., pack-finance-pii, pack-healthcare-hipaa)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Human-readable pack name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Pack version (semver)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["OFFICIAL", "COMMUNITY", "INDUSTRY", "CUSTOMER"],
+      "description": "Pack type and source"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Detailed description of pack purpose and use cases"
+    },
+    "threat_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["PI", "JB", "PII", "SEC", "QUAL", "CUSTOM"]
+      },
+      "description": "Threat families covered by this pack"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "general",
+        "finance",
+        "healthcare",
+        "government",
+        "education",
+        "legal",
+        "retail",
+        "technology",
+        "manufacturing"
+      ],
+      "description": "Target industry (if industry-specific)"
+    },
+    "compliance_frameworks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "GDPR",
+          "HIPAA",
+          "PCI-DSS",
+          "SOC2",
+          "ISO27001",
+          "NIST",
+          "CCPA",
+          "FERPA",
+          "GLBA",
+          "FedRAMP"
+        ]
+      },
+      "description": "Compliance frameworks addressed by this pack"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/pack_rule"
+      },
+      "description": "Rules included in this pack"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pack_id": {
+            "type": "string",
+            "pattern": "^pack-[a-z0-9-]+$"
+          },
+          "min_version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          }
+        }
+      },
+      "description": "Required pack dependencies"
+    },
+    "maintainer": {
+      "$ref": "#/definitions/maintainer"
+    },
+    "signature": {
+      "$ref": "#/definitions/signature"
+    },
+    "statistics": {
+      "$ref": "#/definitions/statistics"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags for pack discovery"
+    },
+    "changelog_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to changelog documentation"
+    },
+    "documentation_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to full documentation"
+    },
+    "repository_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Source code repository URL"
+    },
+    "license": {
+      "type": "string",
+      "enum": ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "CC-BY-4.0", "Proprietary"],
+      "default": "MIT",
+      "description": "Pack license"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Pack creation timestamp (ISO 8601)"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp (ISO 8601)"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional pack metadata"
+    }
+  },
+  "definitions": {
+    "pack_rule": {
+      "type": "object",
+      "required": ["rule_id", "version"],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-z]+-[0-9]{3}$",
+          "description": "Rule identifier"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Rule version (semver)"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether rule is enabled by default in pack"
+        },
+        "override_config": {
+          "type": "object",
+          "properties": {
+            "severity": {
+              "type": "string",
+              "enum": ["critical", "high", "medium", "low", "info"]
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            }
+          },
+          "description": "Pack-specific overrides for rule configuration"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this rule is required (cannot be disabled)"
+        }
+      }
+    },
+    "maintainer": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Maintainer name or organization"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Contact email"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Maintainer website or profile URL"
+        },
+        "organization": {
+          "type": "string",
+          "description": "Organization name (if applicable)"
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether maintainer is verified by RAXE"
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "description": "Cryptographic signature for pack verification",
+      "properties": {
+        "signature": {
+          "type": "string",
+          "description": "Base64-encoded signature of pack content"
+        },
+        "public_key": {
+          "type": "string",
+          "description": "Base64-encoded public key for verification"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": ["Ed25519", "RSA-PSS-SHA256"],
+          "default": "Ed25519"
+        },
+        "signed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "description": "Pack usage and effectiveness statistics",
+      "properties": {
+        "downloads": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total downloads"
+        },
+        "active_installations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Active installations"
+        },
+        "avg_detections_per_install": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average detections per installation (30-day)"
+        },
+        "avg_precision": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Average precision across all rules"
+        },
+        "avg_recall": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Average recall across all rules"
+        },
+        "user_rating": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 5.0,
+          "description": "Average user rating (0-5 stars)"
+        },
+        "rating_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of ratings"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "pack_id": "pack-finance-pii",
+      "name": "Financial Services PII Protection",
+      "version": "2.3.0",
+      "type": "INDUSTRY",
+      "description": "Comprehensive PII detection rules for financial services including credit cards, SSNs, account numbers, and financial data patterns.",
+      "threat_types": ["PII", "SEC"],
+      "industry": "finance",
+      "compliance_frameworks": ["PCI-DSS", "GLBA", "SOC2"],
+      "rules": [
+        {
+          "rule_id": "pii-001",
+          "version": "1.2.0",
+          "enabled": true,
+          "required": true
+        },
+        {
+          "rule_id": "pii-015",
+          "version": "1.0.3",
+          "enabled": true,
+          "override_config": {
+            "severity": "critical",
+            "confidence": 0.95
+          },
+          "required": true
+        },
+        {
+          "rule_id": "sec-042",
+          "version": "2.1.0",
+          "enabled": true
+        }
+      ],
+      "dependencies": [
+        {
+          "pack_id": "pack-core",
+          "min_version": "1.0.0"
+        }
+      ],
+      "maintainer": {
+        "name": "RAXE Financial Team",
+        "email": "finance@raxe.ai",
+        "organization": "RAXE AI",
+        "verified": true
+      },
+      "signature": {
+        "signature": "iKqiI8/J6viE/qSf8Qz4nKaP2r8VaG1Jvt1xw3Qq9F2xg7S9K0pLmN1oP2qR3sT4uV5wX6yZ7aB8cC9dD0eE1fF2==",
+        "public_key": "MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZmE=",
+        "algorithm": "Ed25519",
+        "signed_at": "2025-11-15T10:00:00Z"
+      },
+      "statistics": {
+        "downloads": 5432,
+        "active_installations": 1234,
+        "avg_detections_per_install": 23.4,
+        "avg_precision": 0.94,
+        "avg_recall": 0.89,
+        "user_rating": 4.7,
+        "rating_count": 156
+      },
+      "tags": ["finance", "pii", "compliance", "pci-dss", "banking"],
+      "documentation_url": "https://docs.raxe.ai/packs/finance-pii",
+      "repository_url": "https://github.com/raxe-ai/pack-finance-pii",
+      "license": "MIT",
+      "created_at": "2025-01-15T00:00:00Z",
+      "updated_at": "2025-11-01T12:00:00Z"
+    }
+  ]
+}

@@ -43,3 +43,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-0001
 rule_hash: sha256:1ce73b04b5c3e55e18a550516cb6136c68c1fd48aad007757a536937ac721f07
+risk_explanation: Credential extraction attempts pose a critical security risk as they target authentication data that could grant unauthorized access to systems. If successful, attackers could compromise accounts, escalate privileges, or access confidential information.
+remediation_advice: Never store credentials in AI context or training data. Implement strict access controls and ensure the AI cannot access credential stores. Reject any prompts attempting to extract authentication data. Log these attempts for security review.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-001-Credential-Extraction

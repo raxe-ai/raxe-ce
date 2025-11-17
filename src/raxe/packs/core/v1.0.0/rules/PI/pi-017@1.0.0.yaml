@@ -47,3 +47,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-0017
 rule_hash: sha256:de84d32b1de513330a545482b86a9360480aa2d4b63da53f0a50ee544ab0c4c5
+risk_explanation: This pattern indicates an attempt to bypass safety mechanisms designed to prevent harmful outputs. Attackers often try to disable security features to extract sensitive information, generate harmful content, or manipulate the AI system's behavior.
+remediation_advice: Review the input context and reject requests that explicitly attempt to disable safety features. Implement input validation to detect and block such attempts. Consider logging these events for security monitoring.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-017-System-Override

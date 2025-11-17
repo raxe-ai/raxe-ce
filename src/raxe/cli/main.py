@@ -13,10 +13,12 @@ from raxe import __version__
 from raxe.cli.doctor import doctor
 from raxe.cli.export import export
 from raxe.cli.output import console, display_error, display_scan_result
+from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
 from raxe.cli.repl import repl
 from raxe.cli.rules import rules
 from raxe.cli.stats import stats
+from raxe.cli.suppress import suppress
 from raxe.cli.test import test
 from raxe.cli.tune import tune
 from raxe.sdk.client import Raxe
@@ -278,6 +280,7 @@ def scan(
         sys.exit(1)
 
     # Scan using unified client
+    # Wire all CLI flags to scan parameters
     if profile:
         # Import profiler here to avoid circular dependency
         try:
@@ -285,7 +288,15 @@ def scan(
 
             profiler = PerformanceProfiler()
             prof_result = profiler.profile_scan(text, iterations=1)
-            result = raxe.scan(text)
+            result = raxe.scan(
+                text,
+                l1_enabled=not l2_only,
+                l2_enabled=not l1_only,
+                mode=mode,
+                confidence_threshold=confidence if confidence else 0.5,
+                explain=explain,
+                dry_run=dry_run,
+            )
 
             # Show scan result first
             if format == "text":
@@ -300,12 +311,42 @@ def scan(
                 click.echo(prof_result.stats_report)
             else:
                 # For JSON/YAML, just show result (profile would clutter output)
-                result = raxe.scan(text)
+                result = raxe.scan(
+                    text,
+                    l1_enabled=not l2_only,
+                    l2_enabled=not l1_only,
+                    mode=mode,
+                    confidence_threshold=confidence if confidence else 0.5,
+                    explain=explain,
+                    dry_run=dry_run,
+                )
         except ImportError:
             console.print("[yellow]Warning: Profiling not available[/yellow]")
-            result = raxe.scan(text)
+            result = raxe.scan(
+                text,
+                l1_enabled=not l2_only,
+                l2_enabled=not l1_only,
+                mode=mode,
+                confidence_threshold=confidence if confidence else 0.5,
+                explain=explain,
+                dry_run=dry_run,
+            )
     else:
-        result = raxe.scan(text)
+        result = raxe.scan(
+            text,
+            l1_enabled=not l2_only,
+            l2_enabled=not l1_only,
+            mode=mode,
+            confidence_threshold=confidence if confidence else 0.5,
+            explain=explain,
+            dry_run=dry_run,
+        )
+
+    # Show dry-run notice if applicable
+    if dry_run:
+        console.print()
+        console.print("[yellow]NOTE:[/yellow] Dry-run mode - results not saved to database")
+        console.print()
 
     # Output based on format
     if format == "json" and not profile:
@@ -827,6 +868,8 @@ cli.add_command(repl)
 cli.add_command(rules)
 cli.add_command(doctor)
 cli.add_command(profile_command)
+cli.add_command(privacy_command)
+cli.add_command(suppress)
 cli.add_command(tune)
 
 

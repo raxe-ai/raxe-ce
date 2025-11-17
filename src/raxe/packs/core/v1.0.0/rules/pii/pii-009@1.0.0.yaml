@@ -43,3 +43,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-0009
 rule_hash: sha256:d7b7d17ea08b8423dc5aadee1d28fc70de102b9f0c639f7c2168ea465f254c04
+risk_explanation: Social Security Numbers are highly sensitive personally identifiable information (PII). Unauthorized access to SSNs can lead to identity theft, financial fraud, and severe privacy violations with legal and regulatory consequences.
+remediation_advice: Never store SSNs in AI training data or context. Implement strict data classification policies. Ensure the AI system has no access to SSN databases. Reject all requests to extract or display SSNs. Report extraction attempts to security teams.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-009-SSN-Extraction

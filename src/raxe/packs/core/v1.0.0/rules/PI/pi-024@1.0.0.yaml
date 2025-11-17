@@ -75,3 +75,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: null
 rule_hash: sha256:NEW_RULE_BASE64_HEX_ENCODED_INJECTION
+risk_explanation: Encoding injection payloads in Base64, hexadecimal, or other formats allows attackers to evade simple text-based detection while AI models can still decode and execute the malicious instructions. This is a sophisticated evasion technique.
+remediation_advice: Implement encoding-aware input validation that decodes and inspects Base64, hex, and other common encodings. Block requests containing encoded versions of known malicious patterns. Consider rejecting unusual encoding patterns entirely.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-024-Encoded-Injection

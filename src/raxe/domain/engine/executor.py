@@ -33,6 +33,9 @@ class Detection:
         category: Category of threat (e.g., prompt_injection, jailbreak)
         message: Human-readable message describing the detection
         explanation: Optional explanation of why this was detected
+        risk_explanation: Explanation of why this pattern is dangerous
+        remediation_advice: How to fix or mitigate this threat
+        docs_url: Link to documentation for learning more
     """
     rule_id: str
     rule_version: str
@@ -45,6 +48,9 @@ class Detection:
     category: str = "unknown"
     message: str = ""
     explanation: str | None = None
+    risk_explanation: str = ""
+    remediation_advice: str = ""
+    docs_url: str = ""
 
     def __post_init__(self) -> None:
         """Validate detection after construction."""
@@ -102,6 +108,9 @@ class Detection:
             "category": self.category,
             "message": self.message,
             "explanation": self.explanation,
+            "risk_explanation": self.risk_explanation,
+            "remediation_advice": self.remediation_advice,
+            "docs_url": self.docs_url,
         }
 
 
@@ -232,7 +241,7 @@ class RuleExecutor:
         # Create message from rule
         message = f"{rule.name}: {rule.description[:100]}"  # Truncate long descriptions
 
-        # Create detection
+        # Create detection with explainability fields from rule
         return Detection(
             rule_id=rule.rule_id,
             rule_version=rule.version,
@@ -245,6 +254,9 @@ class RuleExecutor:
             category=category,
             message=message,
             explanation=None,
+            risk_explanation=rule.risk_explanation,
+            remediation_advice=rule.remediation_advice,
+            docs_url=rule.docs_url,
         )
 
     def execute_rules(

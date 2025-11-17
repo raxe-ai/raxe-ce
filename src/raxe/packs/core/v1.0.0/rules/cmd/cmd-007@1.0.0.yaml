@@ -43,3 +43,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-0007
 rule_hash: sha256:8fc8200232dfe9e1d4a61930931389c622d2fc7c1396b67c2480578231e75093
+risk_explanation: SQL EXEC and stored procedure injections can execute arbitrary system commands (especially xp_cmdshell), create backdoor accounts, or escalate privileges. These attacks can completely compromise the database server and underlying operating system.
+remediation_advice: Disable dangerous stored procedures like xp_cmdshell unless absolutely necessary. Use parameterized queries exclusively. Implement strict database permissions with least privilege. Monitor for suspicious stored procedure executions.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-007-SQL-Stored-Proc-Injection

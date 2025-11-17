@@ -1,0 +1,90 @@
+# RAXE Suppression File (.raxeignore)
+#
+# This file allows you to suppress false positive detections from RAXE scans.
+# Similar to .gitignore, it uses pattern matching to suppress specific rules.
+#
+# Format: <pattern>  # <reason>
+#
+# Patterns support wildcards:
+#   - pi-*          : Matches all prompt injection rules (pi-001, pi-002, etc.)
+#   - *-injection   : Matches all injection-related rules
+#   - pi-00*        : Matches pi-001, pi-002, etc.
+#   - jb-regex-*    : Matches all jailbreak regex rules
+#
+# Examples:
+
+# ============================================================================
+# Suppress specific rules by exact ID
+# ============================================================================
+
+# False positive in our documentation examples
+# pi-001  # Instruction patterns appear in code examples
+
+# Too sensitive for our knowledge base content
+# jb-regex-basic  # Common phrases in support documentation
+
+# Known safe pattern in our codebase
+# cmd-injection-001  # CLI argument parsing uses expected patterns
+
+
+# ============================================================================
+# Suppress entire rule families
+# ============================================================================
+
+# Disable all prompt injection detection (NOT RECOMMENDED for production)
+# pi-*  # Disable all prompt injection rules
+
+# Disable all jailbreak detection
+# jb-*  # Disable all jailbreak rules
+
+# Disable all PII detection
+# pii-*  # Disable all PII detection rules
+
+
+# ============================================================================
+# Suppress specific sub-families
+# ============================================================================
+
+# Disable regex-based jailbreak detection
+# jb-regex-*  # Regex jailbreak rules too sensitive
+
+# Disable all injection detection (PI, CMD, etc.)
+# *-injection  # All injection detection rules
+
+
+# ============================================================================
+# Temporary suppressions (use --expires flag in CLI)
+# ============================================================================
+
+# Suppress during migration period
+# pi-advanced-001  # Temporary: migrating to new prompt template
+
+# Suppress while investigating
+# pii-email  # Investigating false positives in email validation
+
+
+# ============================================================================
+# Context-specific suppressions
+# ============================================================================
+
+# Safe in testing environment
+# jb-dan-prompt  # DAN prompts used in testing/red-teaming
+
+# Expected in code review comments
+# pi-system-override  # Code review uses system override examples
+
+
+# ============================================================================
+# BEST PRACTICES
+# ============================================================================
+#
+# 1. Always provide a reason - helps with audit trail
+# 2. Be specific - suppress individual rules when possible
+# 3. Review regularly - suppressions can hide real threats
+# 4. Use expiration dates - temporary fixes shouldn't be permanent
+# 5. Document context - why is this pattern safe in your use case?
+# 6. Audit suppressions - use `raxe suppress audit` to review
+#
+# ============================================================================
+
+# Your suppressions below:

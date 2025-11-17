@@ -38,3 +38,6 @@ metadata:
   author: raxe-ce
   category: web_attacks
 rule_hash: null
+risk_explanation: XML External Entity (XXE) attacks exploit XML parsing to read files, perform SSRF attacks, or cause denial of service. XXE can expose sensitive data, enable internal network scanning, or consume excessive system resources.
+remediation_advice: Disable external entity processing in XML parsers. Use safe XML parsing configurations. Implement input validation for XML content. Deploy XXE-specific detection and blocking. Consider using safer data formats like JSON.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-203-Xml-External-Entity-(Xxe)

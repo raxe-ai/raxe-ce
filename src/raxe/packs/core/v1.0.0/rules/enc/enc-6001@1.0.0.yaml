@@ -48,3 +48,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-6001
 rule_hash: sha256:ea78a0c70ee3fe4ff4cf554287f36700df8ed9e0e4961f759e8211a4fd3ac60f
+risk_explanation: Homoglyphs use visually similar characters from different Unicode blocks (Cyrillic, Greek) to spoof legitimate text or evade detection. This can trick both humans and simple security systems.
+remediation_advice: Implement visual similarity detection and confusable character analysis. Normalize text to single scripts when possible. Use homoglyph detection libraries. Apply strict allowlisting for permitted character sets in security-sensitive contexts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-6001-Cyrillic-Homoglyph-Substitution-In

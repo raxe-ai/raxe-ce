@@ -49,3 +49,6 @@ metadata:
   - https://arxiv.org/html/2405.05990v2
   - https://arxiv.org/abs/2012.07805
 rule_hash: sha256:d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3
+risk_explanation: Training data extraction uses techniques like repetition attacks to force AI models to regurgitate memorized training data. This can expose PII, credentials, or proprietary information that was present in training datasets.
+remediation_advice: Use differential privacy in training. Implement output filtering to detect training data regurgitation. Apply data sanitization before training. Monitor for repetition patterns indicative of extraction attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3063-Training-Data-Extraction

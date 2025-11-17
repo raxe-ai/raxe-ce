@@ -65,3 +65,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-HC-0004
 rule_hash: sha256:9780f7f92a250c8aef9f09cc73da6c072802a3671e9a96c7f47f4bd9a52fd5bd
+risk_explanation: Multi-turn turnkey attacks gradually escalate from benign requests to harmful objectives across multiple interactions. Each individual turn appears acceptable, but the cumulative effect bypasses safety controls.
+remediation_advice: Implement conversation-level monitoring that tracks escalation patterns. Use behavioral analysis to detect gradual movement toward harmful objectives. Maintain safety context across conversation turns. Deploy circuit breakers that halt concerning escalation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-004-Multi-Turn-Turnkey-Attacks

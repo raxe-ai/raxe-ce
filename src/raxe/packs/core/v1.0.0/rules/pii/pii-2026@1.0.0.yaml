@@ -34,3 +34,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-2026
 rule_hash: sha256:6cd7922d3c9b25347f2f5e172c6f943d2296a1044af0749de3d5e2687040944f
+risk_explanation: Direct requests for PII (SSNs, credit cards, etc.) probe for data access vulnerabilities and security control weaknesses. Successful requests indicate critical privacy breaches requiring immediate response.
+remediation_advice: Reject all direct PII requests and log them as security incidents. Implement data access auditing and anomaly detection. Use these attempts to identify potential data security gaps requiring remediation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-2026-Requests-Credit

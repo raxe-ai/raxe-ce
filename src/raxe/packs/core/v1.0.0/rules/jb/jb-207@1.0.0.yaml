@@ -44,3 +44,6 @@ metadata:
   references:
   - https://arxiv.org/html/2310.04451v2
 rule_hash: sha256:c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8
+risk_explanation: Token manipulation attacks (like AutoDAN) use adversarial optimization of token sequences to craft inputs that bypass safety controls while achieving malicious objectives. These attacks exploit the mathematical properties of language models to find optimal bypass patterns.
+remediation_advice: Implement adversarial robustness training to defend against optimized attacks. Use ensemble defenses that are harder to optimize against. Deploy runtime analysis that detects adversarially crafted inputs. Monitor for unusual token patterns indicative of optimization.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-207-Autodan-Token-Level

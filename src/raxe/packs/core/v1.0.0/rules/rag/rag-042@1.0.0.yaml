@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-0042
 rule_hash: sha256:d74de70ba4def699bf18f68e4c17616b49435ae9b996223adab4cf2e6fd01e41
+risk_explanation: Document injection embeds malicious prompt templates or instructions in documents that are later retrieved and processed. This can achieve persistent prompt injection that affects multiple users and queries.
+remediation_advice: Sanitize and validate all documents before indexing. Use content security scanning to detect embedded instructions or malicious templates. Implement strict separation between document content and system instructions.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-042-Malicious-Prompt-Template

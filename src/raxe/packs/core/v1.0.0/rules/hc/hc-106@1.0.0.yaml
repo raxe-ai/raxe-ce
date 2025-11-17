@@ -35,3 +35,6 @@ metadata:
   category: response_quality
   scan_target: response
 rule_hash: null
+risk_explanation: Factual inconsistencies and hallucinations erode trust in AI systems and can cause harm when users rely on inaccurate information. While not always malicious, consistent hallucination patterns indicate system weaknesses.
+remediation_advice: Implement fact-checking and verification where possible. Use confidence scoring and uncertainty quantification. Provide source citations and attribution. Deploy hallucination detection and warning systems.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-106-Factual-Inconsistency-Pattern-Detection

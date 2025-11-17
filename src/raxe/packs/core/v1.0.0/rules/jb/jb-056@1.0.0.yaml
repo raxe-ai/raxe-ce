@@ -33,3 +33,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-JB-0056
 rule_hash: sha256:a5e46edef293c5aa0f6abe259a048e19f87d60ba8f3dac4223179a0ac1579122
+risk_explanation: Extended role-playing combines persona adoption with additional attack vectors like data exfiltration or privilege escalation. These sophisticated attacks use roleplay as a foundation for more complex multi-stage exploits.
+remediation_advice: Apply defense-in-depth that addresses both roleplay and secondary attack vectors. Use behavioral monitoring to detect escalation from roleplay to malicious actions. Implement strict data access controls regardless of roleplay context.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-056-Combined-Jailbreak

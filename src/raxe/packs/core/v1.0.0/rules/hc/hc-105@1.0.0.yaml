@@ -43,3 +43,6 @@ metadata:
   category: response_safety
   scan_target: response
 rule_hash: null
+risk_explanation: Harmful code outputs include malware, exploits, or code designed to cause damage. Generated harmful code can be used in attacks even if the AI didn't intend malicious results.
+remediation_advice: Scan all code outputs for malicious patterns. Use static analysis and behavior prediction for generated code. Implement policies against generating code with harmful capabilities. Deploy malware detection in code generation pipelines.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-105-Malicious-Code-Output-Detection

@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-5016
 rule_hash: sha256:60135393bfed21281495269fb2e94f861c6d930ac26f6bf8fe610a7cf3def95b
+risk_explanation: Punycode encoding disguises internationalized domain names and can facilitate phishing or obfuscation attacks. This encoding is legitimate for IDNs but can be weaponized.
+remediation_advice: Decode and analyze Punycode domains. Implement homoglyph detection for domain names. Use visual similarity checking. Deploy phishing detection that examines decoded forms.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-5016-Punycode-Encoded-Text-Often

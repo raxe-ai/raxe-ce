@@ -42,3 +42,6 @@ metadata:
   category: response_safety
   scan_target: both
 rule_hash: null
+risk_explanation: Child Sexual Abuse Material (CSAM) references or generation represent severe illegal content that causes extreme harm. Any CSAM-related output creates critical legal and ethical violations.
+remediation_advice: Implement zero-tolerance policies for CSAM content. Use specialized detection models for CSAM patterns. Deploy immediate blocking and mandatory reporting. Maintain strict compliance with child safety laws and regulations.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-107-Child-Sexual-Abuse-Material

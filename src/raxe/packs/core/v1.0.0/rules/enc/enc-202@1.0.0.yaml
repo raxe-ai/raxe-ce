@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: evasion
 rule_hash: null
+risk_explanation: Unicode normalization differences between systems can be exploited to bypass security controls. Text that appears safe in one normalization form may be malicious in another.
+remediation_advice: Use consistent Unicode normalization (NFC) throughout the system. Implement validation at normalization boundaries. Deploy normalization-aware security analysis.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-202-Unicode-Normalization-Evasion-Detection

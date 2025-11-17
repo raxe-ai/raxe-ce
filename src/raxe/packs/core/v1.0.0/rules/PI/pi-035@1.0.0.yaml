@@ -45,3 +45,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-0035
 rule_hash: sha256:51b80fc89d053d00a479d63ae8a154e500fba84406a759d9ece44be8ed39a130
+risk_explanation: System override attacks attempt to manipulate the AI into entering privileged operational modes that bypass normal security constraints. This can enable unauthorized access to restricted functionality, exposure of sensitive system information, or execution of dangerous operations.
+remediation_advice: Enforce strict mode controls and never allow user input to modify operational states. Implement authentication and authorization checks before any mode changes. Use allowlisting for valid operational modes and reject any attempts to activate undocumented or privileged modes.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-035-Bypass

@@ -37,3 +37,6 @@ metadata:
   category: hipaa
   compliance: HIPAA
 rule_hash: null
+risk_explanation: Medical and health information exposure violates HIPAA regulations and patient privacy rights. Leaked health data can be used for discrimination, identity theft, or blackmail, and creates severe legal liabilities for healthcare organizations.
+remediation_advice: Comply with HIPAA and healthcare privacy regulations. Implement strong access controls and encryption for medical records. Use de-identification and anonymization techniques. Audit all access to protected health information (PHI).
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3028-Prescription-Number-Detection-(Dea)

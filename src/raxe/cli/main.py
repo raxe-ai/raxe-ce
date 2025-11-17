@@ -21,6 +21,7 @@ from raxe.cli.stats import stats
 from raxe.cli.suppress import suppress
 from raxe.cli.test import test
 from raxe.cli.tune import tune
+from raxe.cli.validate import validate_rule_command
 from raxe.sdk.client import Raxe
 
 
@@ -871,6 +872,7 @@ cli.add_command(profile_command)
 cli.add_command(privacy_command)
 cli.add_command(suppress)
 cli.add_command(tune)
+cli.add_command(validate_rule_command)
 
 
 if __name__ == "__main__":

@@ -45,3 +45,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-0078
 rule_hash: sha256:66423f3cceb43ab48198636c82e79adab57fe1ac80541ef35d710881eab3e6bb
+risk_explanation: Obfuscation techniques disguise malicious prompts to evade detection while retaining their harmful intent. This includes character substitution, homoglyphs, and visual deception that can bypass pattern-based security controls and trick the AI into executing dangerous instructions.
+remediation_advice: Implement normalization of input text to resolve obfuscation before processing. Use visual similarity detection for homoglyphs and character substitutions. Apply semantic analysis that identifies malicious intent regardless of textual representation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-078-Cyrillic-Homoglyph-Obfuscation

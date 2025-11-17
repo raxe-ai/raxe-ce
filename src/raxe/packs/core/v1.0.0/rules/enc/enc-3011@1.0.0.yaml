@@ -35,3 +35,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-3011
 rule_hash: sha256:359d7ffd9febe375ec0302ff1500a10b1d85366f11ebf13143c94c88c96b14b4
+risk_explanation: Mathematical Unicode variants (bold, italic) of attack keywords evade ASCII-based pattern matching. These characters appear similar but have different Unicode codepoints.
+remediation_advice: Normalize mathematical Unicode to standard ASCII equivalents. Implement Unicode folding and case folding. Use semantic analysis that works across Unicode variants.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-3011-Mathematical-Bold

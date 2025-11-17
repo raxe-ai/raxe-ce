@@ -60,3 +60,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-HC-0003
 rule_hash: sha256:37cf8a8084cceb1b04e17117ebbbe298e2aa899d9c3b4e0b5f54e80129d79286
+risk_explanation: Specific weapon instruction requests target detailed information about creating or using weapons. This information can directly enable violence and poses severe safety risks.
+remediation_advice: Block all specific weapon instruction requests. Implement specialized detection for weapon-related terminology and concepts. Use semantic analysis to identify weapon requests regardless of phrasing. Alert security teams of such requests.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-003-Requests-Instructions

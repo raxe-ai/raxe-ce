@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-0044
 rule_hash: sha256:33adcd2f6abe520917bfb23b51e82a00764299fd9a36847cca1bb035f8e2beb6
+risk_explanation: XOR and other simple ciphers encode malicious payloads to evade detection. While cryptographically weak, these encodings can bypass signature-based security controls.
+remediation_advice: Detect and analyze common cipher patterns. Implement heuristic analysis for encoded content. Use entropy analysis to identify encrypted or encoded data. Deploy behavioral monitoring that detects malicious actions regardless of encoding.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-044-Xor-Encoding-Patterns

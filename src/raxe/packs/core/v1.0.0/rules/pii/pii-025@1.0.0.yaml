@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-0025
 rule_hash: sha256:f979e0247d21af3a9e814efd7abe99ddd08a83f4f8a0f584a85ef0ddf754034e
+risk_explanation: Credential extraction attacks attempt to retrieve authentication secrets (passwords, API keys, tokens) from AI systems or their accessible data. Successful extraction grants attackers unauthorized access to accounts, systems, and services, enabling further compromise.
+remediation_advice: Never store credentials in AI-accessible contexts, training data, or knowledge bases. Implement strict access controls that prevent AI from reading credential stores. Reject all prompts attempting to extract authentication data. Log extraction attempts for security review.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-025-Encryption-Key

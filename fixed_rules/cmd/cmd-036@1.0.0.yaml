@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: cmd-036
+family: CMD
+sub_family: shell_commands
+name: Detects command chaining with semicolon for destructive commands
+description: Detects command chaining with semicolon for destructive commands
+severity: critical
+confidence: 0.98
+patterns:
+# REDOS FIX: Replaced (?:/[a-z]\s*)+ with (?:/[a-z](?:\s+|$))+ to eliminate nested quantifier backtracking
+# Original pattern had inner \s* and outer + creating O(2^n) complexity; new pattern is O(n)
+- pattern: (?i);\s*(?:rm|del|format)\s+(?:-[rf]+|(?:/[a-z](?:\s+|$))+)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i);\s*shutdown\s+(?:-[hrsp]|/[srp])
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i);\s*(?:mkfs|dd\s+if=)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - ; rm -rf /
+  - ; del /f /s /q C:\
+  - ; shutdown -r now
+  - ; mkfs.ext4 /dev/sda1
+  should_not_match:
+  - Command chaining in bash scripts
+  - How to use semicolon in shell
+  - Shutdown command for maintenance
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0036
+  redos_fix: 'Pattern 1 fixed on 2025-11-17 to prevent nested quantifier backtracking'
+rule_hash: sha256:9e54a0d1dcaab2b37a92cc57d252ec0e7cf87154d2781db6b3a57703784914be

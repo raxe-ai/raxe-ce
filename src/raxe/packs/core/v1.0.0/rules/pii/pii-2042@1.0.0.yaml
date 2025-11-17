@@ -34,3 +34,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-2042
 rule_hash: sha256:362b165ed2f5c9446888820bf40149cb50f4edfa63d8e16f0d2e0290ec97cdba
+risk_explanation: Combined or bulk data export requests attempt to extract multiple types of sensitive information simultaneously. These sophisticated attacks aim to maximize data exposure through comprehensive extraction commands.
+remediation_advice: Implement rate limiting and anomaly detection for data access patterns. Use data loss prevention (DLP) that detects bulk export attempts. Apply strict access controls and audit logging for data export operations.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-2042-Export-Requests

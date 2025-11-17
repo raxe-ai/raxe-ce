@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-0022
 rule_hash: sha256:e75f179274a7d056e3436ed63cc1c821b5f1d3454ddb9d1d320ae9316bc36b95
+risk_explanation: SQL injection attacks inject malicious SQL commands to manipulate database queries, enabling data theft, unauthorized modifications, or complete database compromise. Critical commands like DROP, DELETE, and TRUNCATE can cause catastrophic data loss.
+remediation_advice: Always use parameterized queries and prepared statements. Never concatenate user input into SQL commands. Implement input validation and sanitization. Use database accounts with minimal required privileges. Deploy SQL injection detection and blocking at multiple layers.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-022-Sql-Waitfor-Delay

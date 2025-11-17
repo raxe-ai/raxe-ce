@@ -39,3 +39,6 @@ metadata:
   author: raxe-ce
   category: web_attacks
 rule_hash: null
+risk_explanation: Server-Side Template Injection (SSTI) exploits template engines to execute arbitrary code. Attackers inject malicious template syntax to gain code execution, access sensitive data, or compromise the application server.
+remediation_advice: Never use user input directly in templates without sanitization. Use template sandboxing when available. Implement strict input validation. Consider using logic-less template engines. Deploy template injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-205-Server-Side-Template-Injection-(Ssti)

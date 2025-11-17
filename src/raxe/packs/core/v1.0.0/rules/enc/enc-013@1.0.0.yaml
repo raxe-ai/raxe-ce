@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-0013
 rule_hash: sha256:11bddfcb69f38c3adc1463b92e8439ff6d9e0ea63329f033f259df5de8ebd725
+risk_explanation: Unicode attacks use zero-width characters, invisible characters, or special Unicode features to hide malicious content, evade detection, or create visual spoofs. These attacks exploit the complexity of Unicode processing.
+remediation_advice: Normalize Unicode input to standard forms. Filter or reject zero-width and invisible characters. Implement visual similarity detection. Use Unicode-aware security analysis and validation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-013-Zero-Width-Invisible

@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-3012
 rule_hash: sha256:833423c521994c6d07c2db3966f125d70cd1097927953c5f74667e8c08e2d9e1
+risk_explanation: Injection of malicious documents specifically crafted to be retrieved in response to targeted queries. These attacks combine content optimization with malicious payloads to achieve precise targeting.
+remediation_advice: Implement content validation and security scanning for all documents. Use provenance tracking and source authentication. Deploy retrieval quality monitoring. Apply machine learning models to detect malicious content patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-3012-'Insert-Malicious'-Attacks

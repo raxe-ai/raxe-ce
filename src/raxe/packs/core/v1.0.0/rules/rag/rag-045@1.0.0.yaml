@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-0045
 rule_hash: sha256:4c168925e6d0eec3a07799a4fda8ddd1d4885db46a8da0fac3bf01de94cb7e56
+risk_explanation: Knowledge corruption explicitly instructs RAG systems to disregard authentic sources in favor of attacker-supplied misinformation. This directly undermines the integrity of knowledge-based systems.
+remediation_advice: Maintain immutable priorities for authoritative sources. Never allow user input to override source trust levels. Implement source validation and authenticity verification. Use cryptographic integrity checks for knowledge bases.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-045-Explicit-Instruction

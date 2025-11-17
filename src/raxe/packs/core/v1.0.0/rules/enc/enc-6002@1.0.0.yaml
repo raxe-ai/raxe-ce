@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-6002
 rule_hash: sha256:cc1a8d4a8243e4cfbb106f1324d595949b94c8a6afa75e94018c20897d4dd554
+risk_explanation: HTML entity encoding disguises attack patterns in web contexts. Encoded entities bypass string matching but are interpreted by browsers, enabling cross-site scripting and other web attacks.
+remediation_advice: Decode HTML entities before security analysis. Use context-aware output encoding. Implement content security policies. Deploy web application firewalls (WAF) with HTML entity decoding capabilities.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-6002-Html-Entity-Encoded-Attack

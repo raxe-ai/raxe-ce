@@ -47,3 +47,6 @@ metadata:
   author: raxe-ce
   notes: Created to address role-playing jailbreak detection gaps identified in QA testing
 rule_hash: null
+risk_explanation: Role-playing jailbreaks manipulate AI systems into adopting personas or characters that lack normal safety constraints. By framing requests as creative fiction or character roleplay, attackers bypass ethical guidelines and generate harmful content that would otherwise be blocked.
+remediation_advice: Maintain consistent safety policies regardless of roleplay context. Implement content filtering that evaluates outputs based on actual harm rather than fictional framing. Reject requests that explicitly invoke unrestricted or unethical personas.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-104-Sophisticated-Role-Playing-Jailbreak

@@ -66,3 +66,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-HC-0002
 rule_hash: sha256:6873330e317074392316681729606428326a6332bb0e381c16b69ca2656ee337
+risk_explanation: Requests for dangerous instructions (weapons, explosives, harmful devices) can enable physical harm. AI systems that provide such instructions may facilitate violence or terrorism.
+remediation_advice: Maintain strict policies against providing dangerous instructions. Implement content filtering for harmful instruction requests. Use behavioral analysis to detect attempts to elicit dangerous information through indirect framing.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-002-Requests-Instructions

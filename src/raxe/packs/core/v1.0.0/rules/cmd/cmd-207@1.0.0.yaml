@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   category: web_attacks
 rule_hash: null
+risk_explanation: NoSQL injection attacks manipulate queries to NoSQL databases (MongoDB, etc.) to bypass authentication, extract data, or modify records. These attacks exploit different syntax than SQL but can be equally devastating.
+remediation_advice: Use parameterized queries and prepared statements for NoSQL databases. Implement input validation and type checking. Use database security features like role-based access control. Never concatenate user input into queries.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-207-Nosql-Injection-Detection

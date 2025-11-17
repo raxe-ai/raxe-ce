@@ -548,7 +548,7 @@ Golden file tests run automatically in CI:
 - `scripts/generate_golden_files.py` - Generation script source code
 - `test_golden.py` - Test runner source code
 - Rule YAML Schema: `docs/rule_schema.md`
-- RAXE Testing Guide: `docs/testing.md`
+- RAXE Testing Guide: `../../QUICK_START_TESTING.md`
 
 ---
 

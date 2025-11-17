@@ -12,7 +12,7 @@ Thank you for your interest in contributing to RAXE CE! We welcome contributions
 - Enhance documentation
 
 ### 2. Rules & Detection Logic
-- Contribute new detection rules to [raxe-rules](https://github.com/raxe-ai/raxe-rules)
+- Contribute new detection rules to `src/raxe/packs/core/v1.0.0/rules/` (see [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
 - Improve existing rules
 - Add test cases for edge cases
 - Report false positives/negatives
@@ -76,7 +76,7 @@ git checkout -b fix/your-bug-fix
 
 ### Code Standards
 
-We follow strict code quality standards (see `CLAUDE.md` for details):
+We follow strict code quality standards:
 
 - **Python 3.10+** with type hints required
 - **Ruff** for linting and formatting

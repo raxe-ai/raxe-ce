@@ -133,7 +133,7 @@ class RaxePlugin(Protocol):
         """Initialize plugin with configuration.
 
         Called once when the plugin is loaded. Configuration comes from
-        the [plugins.{name}] section of the user's config.toml file.
+        the plugins.{name} section of the user's config.yaml file.
 
         Args:
             config: Plugin-specific configuration dictionary

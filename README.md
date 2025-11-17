@@ -491,9 +491,9 @@ raxe init --load-custom-rules
 ### Quick Tutorials
 
 - 📹 [5-Minute Setup Video](https://www.youtube.com/watch?v=xxx) (Coming Soon)
-- 📝 [Getting Started Guide](docs/getting-started.md)
+- 📝 [Quick Start Guide](docs/quickstart.md)
 - 🔧 [Integration Examples](examples/)
-- 🧪 [Testing Best Practices](docs/testing.md)
+- 🧪 [Testing Guide](QUICK_START_TESTING.md)
 
 ### Documentation
 

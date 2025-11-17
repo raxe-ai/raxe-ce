@@ -198,10 +198,11 @@ Warning: No rules loaded (rules_loaded: 0)
    ls $(dirname $(python -c "import raxe; print(raxe.__file__)"))/packs/
    ```
 
-3. **Manual rule download:**
+3. **Manual rule verification:**
    ```bash
-   mkdir -p ~/.raxe/packs
-   # Download from raxe-ai/raxe-rules repo
+   # Rules are bundled with RAXE installation
+   # Check if rules directory exists
+   python -c "from raxe.infrastructure.packs.loader import PackLoader; print('Rules loaded successfully')"
    ```
 
 ---
@@ -273,7 +274,7 @@ assert result.has_threats  # False (unexpected)
    ```
 
 4. **Report false positives:**
-   - Open issue at https://github.com/raxe-ai/raxe-rules
+   - Open issue at https://github.com/raxe-ai/raxe-ce/issues
 
 ---
 

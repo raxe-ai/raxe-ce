@@ -7,7 +7,9 @@ description: Detects Redis connection strings with embedded passwords
 severity: high
 confidence: 0.96
 patterns:
-- pattern: redis://(?::([^@\s]+)@|[^:]+:([^@\s]+)@)[^/\s]+
+# REDOS FIX: Added maximum bounds to prevent infinite backtracking on negated character classes
+# Replaced unbounded [^X]+ with bounded [^X]{1,N} for all components
+- pattern: redis://(?::([^\s@]{1,256})@|[^:\s]{1,64}:([^\s@]{1,256})@)[^\s/]{1,256}
   flags: []
   timeout: 5.0
 examples:
@@ -26,10 +28,8 @@ mitre_attack:
 - T1552.001
 metadata:
   created: '2025-11-16'
-  updated: '2025-11-16'
+  updated: '2025-11-17'
   author: raxe-ce
   category: database_credentials
+  redos_fix: 'Pattern fixed on 2025-11-17 to add bounds and prevent backtracking on negated character classes'
 rule_hash: null
-risk_explanation: Database connection string exposure reveals database locations, credentials, and configuration details. Attackers can use this information to directly access databases, extract sensitive data, modify records, or completely compromise data stores.
-remediation_advice: Use secure secret management for database credentials. Implement connection string encryption and access controls. Never hardcode connection strings in code or configuration files. Use service principals and managed identities where possible.
-docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3039-Redis-Connection-String-Detection

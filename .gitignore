@@ -24,6 +24,9 @@ data/*
 ANALYTICS_IMPLEMENTATION.md
 IMPLEMENTATION_SUMMARY.md
 
+# Internal files not for public release
+_not_for_public/
+
 # ============================================================================
 # RAXE-SPECIFIC - Training and Data Files
 # ============================================================================

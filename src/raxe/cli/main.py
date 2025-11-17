@@ -723,51 +723,8 @@ def plugins():
     console.print("Enable plugins in ~/.raxe/config.toml under [plugins.enabled]")
 
 
-@cli.command()
-@click.argument("prompt")
-@click.option(
-    "--iterations",
-    "-n",
-    default=100,
-    help="Number of iterations to run",
-    show_default=True,
-)
-@click.option(
-    "--output",
-    "-o",
-    help="Save profile to file (for snakeviz visualization)",
-)
-def profile_cmd(prompt: str, iterations: int, output: str):
-    """Profile scan performance."""
-    try:
-        from raxe.cli.profile import profile
-
-        # Delegate to profile command implementation
-        ctx = click.get_current_context()
-        ctx.invoke(profile, prompt=prompt, iterations=iterations, output=output, memory=False)
-    except ImportError:
-        console.print("[red]Error: Profiling not available[/red]")
-        sys.exit(1)
-
-
-@cli.command()
-@click.option(
-    "--port",
-    "-p",
-    default=9090,
-    help="Port for metrics server",
-    show_default=True,
-)
-def metrics_server(port: int):
-    """Start Prometheus metrics server."""
-    try:
-        from raxe.cli.profile import metrics_server as metrics_server_cmd
-
-        ctx = click.get_current_context()
-        ctx.invoke(metrics_server_cmd, port=port, host="")
-    except ImportError:
-        console.print("[red]Error: Metrics server not available[/red]")
-        sys.exit(1)
+# Note: profile_cmd removed - use 'raxe profile' command instead
+# Note: metrics_server removed - functionality consolidated into monitoring module
 
 
 @cli.command("completion")

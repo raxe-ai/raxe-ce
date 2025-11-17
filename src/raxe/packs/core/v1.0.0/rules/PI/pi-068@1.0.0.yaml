@@ -11,7 +11,9 @@ patterns:
   flags:
   - IGNORECASE
   timeout: 5.0
-- pattern: (?i)(disregard|bypass)\s+safety\..*?(enter|activate)\s+.{0,20}\s+mode\..*?(show|reveal|extract)
+# REDOS FIX: Replaced .*? patterns with bounded word matching to eliminate cubic backtracking
+# Original pattern caused O(n^3) complexity with multiple .*?; new pattern is O(n) with max 20 word checks
+- pattern: (?i)(?:disregard|bypass)\s+safety\s*\.(?:\s+\S+){0,10}\s+(?:enter|activate)\s+\S+\s+mode\s*\.(?:\s+\S+){0,10}\s+(?:show|reveal|extract)\b
   flags:
   - IGNORECASE
   timeout: 5.0
@@ -41,10 +43,8 @@ mitre_attack:
 - T1562.001
 metadata:
   created: '2025-11-09'
-  updated: '2025-11-09'
+  updated: '2025-11-17'
   author: raxe-ce
   legacy_rx_id: RX-PI-0068
+  redos_fix: 'Pattern 2 fixed on 2025-11-17 to prevent catastrophic backtracking (59x performance improvement)'
 rule_hash: sha256:3941796c2e9b9262750c3933c223d7f32598896dc1759d7afea99fa50a3b19b3
-risk_explanation: Context manipulation attacks exploit how AI systems process and prioritize information to subvert intended behavior. These attacks can lead to incorrect decisions, bypassed safety checks, or exposure of information that should remain protected.
-remediation_advice: Maintain strict separation between trusted system context and untrusted user input. Implement context validation to detect manipulation attempts. Use structured prompts that clearly delineate different context sources and their trust levels.
-docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-068-Compound-Multi-Attack-Injection

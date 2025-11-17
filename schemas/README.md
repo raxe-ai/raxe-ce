@@ -344,7 +344,7 @@ def validate_rule(mapper, connection, target):
 1. Determine if change is breaking (see versioning rules)
 2. Create new version directory if breaking
 3. Update schema file
-4. Add migration guide if needed
+4. Update documentation as needed
 5. Update tests
 6. Document changes in CHANGELOG
 

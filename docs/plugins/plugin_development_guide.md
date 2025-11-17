@@ -65,13 +65,16 @@ plugin = MyDetector()
 ```
 
 3. **Configure plugin:**
-```toml
-# ~/.raxe/config.toml
-[plugins]
-enabled = ["my_detector"]
-
-[plugins.my_detector]
-patterns = ["secret", "confidential", "internal"]
+```yaml
+# ~/.raxe/config.yaml
+plugins:
+  enabled:
+    - my_detector
+  my_detector:
+    patterns:
+      - secret
+      - confidential
+      - internal
 ```
 
 4. **Test plugin:**
@@ -447,15 +450,15 @@ raxe plugin install raxe-plugin-name
 
 ### Configuration
 
-```toml
-# ~/.raxe/config.toml
-[plugins]
-enabled = ["my_plugin"]
-timeout_seconds = 5.0
-
-[plugins.my_plugin]
-setting1 = "value1"
-setting2 = true
+```yaml
+# ~/.raxe/config.yaml
+plugins:
+  enabled:
+    - my_plugin
+  timeout_seconds: 5.0
+  my_plugin:
+    setting1: "value1"
+    setting2: true
 ```
 
 ## Troubleshooting
@@ -484,7 +487,7 @@ raxe scan "test" --verbose
 
 **Verify enabled:**
 ```bash
-grep -A5 "\\[plugins\\]" ~/.raxe/config.toml
+grep -A5 "plugins:" ~/.raxe/config.yaml
 # Should list your plugin
 ```
 

@@ -343,8 +343,8 @@ raxe publish-pack ./my-raxe-rules \
 
 To contribute rules to the official RAXE registry:
 
-1. Fork the `raxe-rules` repository
-2. Add your rule to the appropriate category
+1. Fork the RAXE CE repository
+2. Add your rule to `src/raxe/packs/core/v1.0.0/rules/<category>/`
 3. Ensure all tests pass
 4. Submit a pull request with:
    - Rule file

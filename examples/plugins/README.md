@@ -20,15 +20,17 @@ Regex-based threat detector that allows you to define custom patterns for organi
 # Copy to plugins directory
 cp -r custom_detector ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
-enabled = ["custom_detector"]
-
-[plugins.custom_detector]
-patterns = [
-    { name = "api_key", pattern = "sk-[a-zA-Z0-9]{48}", severity = "HIGH", message = "API key detected" }
-]
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
+  enabled:
+    - custom_detector
+  custom_detector:
+    patterns:
+      - name: api_key
+        pattern: "sk-[a-zA-Z0-9]{48}"
+        severity: HIGH
+        message: "API key detected"
 EOF
 
 # Test
@@ -50,15 +52,15 @@ Sends threat alerts to a Slack channel via incoming webhooks.
 # Copy to plugins directory
 cp -r slack_notifier ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
-enabled = ["slack_notifier"]
-
-[plugins.slack_notifier]
-webhook_url = "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-channel = "#security-alerts"
-min_severity = "HIGH"
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
+  enabled:
+    - slack_notifier
+  slack_notifier:
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+    channel: "#security-alerts"
+    min_severity: HIGH
 EOF
 
 # Test - alerts will be sent to Slack when threats detected
@@ -81,15 +83,16 @@ Sends scan results to a custom HTTP endpoint for SIEM integration or custom proc
 # Copy to plugins directory
 cp -r webhook ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
-enabled = ["webhook"]
-
-[plugins.webhook]
-url = "https://your-endpoint.com/api/raxe/events"
-on_threat_only = true
-headers = { "Authorization" = "Bearer YOUR_TOKEN" }
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
+  enabled:
+    - webhook
+  webhook:
+    url: "https://your-endpoint.com/api/raxe/events"
+    on_threat_only: true
+    headers:
+      Authorization: "Bearer YOUR_TOKEN"
 EOF
 
 # Test - results will be POSTed to your endpoint
@@ -112,15 +115,15 @@ Logs scan results to a JSON Lines file for audit trails and offline analysis.
 # Copy to plugins directory
 cp -r file_logger ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
-enabled = ["file_logger"]
-
-[plugins.file_logger]
-path = "~/.raxe/logs/scan.jsonl"
-threats_only = false
-include_metadata = true
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
+  enabled:
+    - file_logger
+  file_logger:
+    path: "~/.raxe/logs/scan.jsonl"
+    threats_only: false
+    include_metadata: true
 EOF
 
 # Test - results will be logged to file
@@ -141,7 +144,7 @@ cp -r <plugin-name> ~/.raxe/plugins/
 raxe config set plugins.enabled '["<plugin-name>"]'
 
 # Or edit config manually
-vi ~/.raxe/config.toml
+vi ~/.raxe/config.yaml
 ```
 
 ### Option 2: Install All Examples
@@ -150,32 +153,38 @@ vi ~/.raxe/config.toml
 cp -r custom_detector slack_notifier webhook file_logger ~/.raxe/plugins/
 
 # Enable in config
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
-enabled = ["custom_detector", "slack_notifier", "webhook", "file_logger"]
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
+  enabled:
+    - custom_detector
+    - slack_notifier
+    - webhook
+    - file_logger
 EOF
 ```
 
 ## Configuration Format
 
-All plugins are configured in `~/.raxe/config.toml`:
+All plugins are configured in `~/.raxe/config.yaml`:
 
-```toml
-[plugins]
-# List of enabled plugins
-enabled = ["plugin1", "plugin2"]
+```yaml
+plugins:
+  # List of enabled plugins
+  enabled:
+    - plugin1
+    - plugin2
 
-# Global plugin settings
-timeout_seconds = 5.0
-parallel_execution = false
+  # Global plugin settings
+  timeout_seconds: 5.0
+  parallel_execution: false
 
-# Plugin-specific configuration
-[plugins.plugin1]
-setting1 = "value1"
-setting2 = true
+  # Plugin-specific configuration
+  plugin1:
+    setting1: "value1"
+    setting2: true
 
-[plugins.plugin2]
-setting1 = "value2"
+  plugin2:
+    setting1: "value2"
 ```
 
 ## Viewing Loaded Plugins
@@ -238,7 +247,7 @@ raxe scan "test" --verbose
 
 ### Plugin Errors
 - Check that `plugin = PluginClass()` is at the end of plugin.py
-- Verify configuration in ~/.raxe/config.toml
+- Verify configuration in ~/.raxe/config.yaml
 - Check that all required config fields are present
 - Review RAXE logs for detailed error messages
 

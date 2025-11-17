@@ -15,6 +15,7 @@ from typing import Any
 
 from raxe.application.preloader import preload_pipeline
 from raxe.application.scan_pipeline import ScanPipelineResult
+from raxe.domain.suppression import SuppressionManager
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.database.scan_history import ScanHistoryDB
 from raxe.infrastructure.tracking.usage import UsageTracker
@@ -109,11 +110,17 @@ class Raxe:
         self._scan_history: ScanHistoryDB | None = None
         self._streak_tracker = None
 
+        # Initialize suppression manager (auto-loads .raxeignore from cwd)
+        self.suppression_manager = SuppressionManager(auto_load=True)
+
         # Preload pipeline (one-time startup cost ~100-200ms)
         # This compiles patterns, loads packs, warms caches
         logger.info("raxe_client_init_start")
         try:
-            self.pipeline, self.preload_stats = preload_pipeline(config=self.config)
+            self.pipeline, self.preload_stats = preload_pipeline(
+                config=self.config,
+                suppression_manager=self.suppression_manager
+            )
             self._initialized = True
             logger.info(
                 "raxe_client_init_complete",
@@ -178,10 +185,16 @@ class Raxe:
         # Load configuration from file
         instance.config = ScanConfig.from_file(path)
 
+        # Initialize suppression manager
+        instance.suppression_manager = SuppressionManager(auto_load=True)
+
         # Preload pipeline
         logger.info("Initializing RAXE client from config file")
         try:
-            instance.pipeline, instance.preload_stats = preload_pipeline(config=instance.config)
+            instance.pipeline, instance.preload_stats = preload_pipeline(
+                config=instance.config,
+                suppression_manager=instance.suppression_manager
+            )
             instance._initialized = True
             logger.info(
                 f"RAXE client initialized: {instance.preload_stats.rules_loaded} rules loaded"
@@ -204,6 +217,7 @@ class Raxe:
         l2_enabled: bool = True,
         confidence_threshold: float = 0.5,
         explain: bool = False,
+        dry_run: bool = False,
     ) -> ScanPipelineResult:
         """Scan text for security threats with layer control.
 
@@ -225,6 +239,7 @@ class Raxe:
             l2_enabled: Enable L2 ML detection layer (default: True)
             confidence_threshold: Minimum confidence for reporting (0.0-1.0, default: 0.5)
             explain: Include explanations in detection results (default: False)
+            dry_run: Test scan without saving to database (default: False)
 
         Returns:
             ScanPipelineResult with:
@@ -313,42 +328,90 @@ class Raxe:
         # 1. Usage metrics (install tracking, time-to-first-scan)
         # 2. Scan history (privacy-preserving hashes only)
         # 3. Structured logging (no PII)
-        try:
-            # Track usage (creates install.json on first scan)
-            self.usage_tracker.record_scan(found_threats=result.has_threats)
+        # Skipped if dry_run=True
+        if not dry_run:
+            try:
+                # Track usage (creates install.json on first scan)
+                self.usage_tracker.record_scan(found_threats=result.has_threats)
 
-            # Track feature enablement (for product analytics)
-            if l2_enabled:
-                self.usage_tracker.record_feature("l2_detection")
-            if explain:
-                self.usage_tracker.record_feature("explain")
-            if mode != "balanced":
-                self.usage_tracker.record_feature(f"mode_{mode}")
-            if confidence_threshold != 0.5:
-                self.usage_tracker.record_feature("custom_confidence_threshold")
-            if block_on_threat:
-                self.usage_tracker.record_feature("block_on_threat")
+                # Track feature enablement (for product analytics)
+                if l2_enabled:
+                    self.usage_tracker.record_feature("l2_detection")
+                if explain:
+                    self.usage_tracker.record_feature("explain")
+                if mode != "balanced":
+                    self.usage_tracker.record_feature(f"mode_{mode}")
+                if confidence_threshold != 0.5:
+                    self.usage_tracker.record_feature("custom_confidence_threshold")
+                if block_on_threat:
+                    self.usage_tracker.record_feature("block_on_threat")
 
-            # Record in scan history (creates scan_history.db on first scan)
-            # Extract detections from result
-            detections = []
-            if result.scan_result and result.scan_result.l1_result:
-                detections.extend(result.scan_result.l1_result.detections)
-            if result.scan_result and result.scan_result.l2_result:
-                # L2 result has different structure - handle appropriately
-                pass  # L2 detections handled differently
+                # Record in scan history (creates scan_history.db on first scan)
+                # Extract detections from result
+                detections = []
+                if result.scan_result and result.scan_result.l1_result:
+                    detections.extend(result.scan_result.l1_result.detections)
+                if result.scan_result and result.scan_result.l2_result:
+                    # L2 result has different structure - handle appropriately
+                    pass  # L2 detections handled differently
 
-            self.scan_history.record_scan(
-                prompt=text,
-                detections=detections,
-                l1_duration_ms=result.scan_result.l1_result.scan_duration_ms if result.scan_result and result.scan_result.l1_result else None,
-                l2_duration_ms=None,  # Will be populated when L2 is integrated
-                version="1.0.0"
-            )
+                self.scan_history.record_scan(
+                    prompt=text,
+                    detections=detections,
+                    l1_duration_ms=result.scan_result.l1_result.scan_duration_ms if result.scan_result and result.scan_result.l1_result else None,
+                    l2_duration_ms=None,  # Will be populated when L2 is integrated
+                    version="1.0.0"
+                )
 
-            # Structured logging (privacy-preserving)
+                # Structured logging (privacy-preserving)
+                logger.info(
+                    "scan_completed",
+                    prompt_hash=result.text_hash,
+                    has_threats=result.has_threats,
+                    detection_count=result.total_detections,
+                    severity=result.severity if result.has_threats else "none",
+                    duration_ms=result.duration_ms,
+                    l1_enabled=l1_enabled,
+                    l2_enabled=l2_enabled,
+                    mode=mode
+                )
+
+                # Streak tracking and achievements (P2 gamification)
+                # Record scan for streak tracking
+                newly_unlocked = self.streak_tracker.record_scan()
+
+                # Check for achievements based on usage stats
+                usage_stats = self.usage_tracker.get_usage_stats()
+                achievement_unlocks = self.streak_tracker.check_achievements(
+                    total_scans=usage_stats.total_scans,
+                    threats_detected=usage_stats.scans_with_threats,
+                    avg_scan_time_ms=result.duration_ms,  # Use current scan time as proxy
+                    threats_blocked=0  # TODO: Track blocked threats when blocking is implemented
+                )
+                newly_unlocked.extend(achievement_unlocks)
+
+                # Log newly unlocked achievements
+                if newly_unlocked:
+                    for achievement in newly_unlocked:
+                        logger.info(
+                            "achievement_unlocked",
+                            achievement_id=achievement.id,
+                            name=achievement.name,
+                            points=achievement.points
+                        )
+
+            except Exception as e:
+                # Don't fail the scan if tracking/history fails
+                # Just log the error
+                logger.warning(
+                    "scan_tracking_failed",
+                    error=str(e),
+                    error_type=type(e).__name__
+                )
+        else:
+            # Log that dry_run scan skipped tracking
             logger.info(
-                "scan_completed",
+                "scan_completed_dry_run",
                 prompt_hash=result.text_hash,
                 has_threats=result.has_threats,
                 detection_count=result.total_detections,
@@ -357,39 +420,6 @@ class Raxe:
                 l1_enabled=l1_enabled,
                 l2_enabled=l2_enabled,
                 mode=mode
-            )
-
-            # Streak tracking and achievements (P2 gamification)
-            # Record scan for streak tracking
-            newly_unlocked = self.streak_tracker.record_scan()
-
-            # Check for achievements based on usage stats
-            usage_stats = self.usage_tracker.get_usage_stats()
-            achievement_unlocks = self.streak_tracker.check_achievements(
-                total_scans=usage_stats.total_scans,
-                threats_detected=usage_stats.scans_with_threats,
-                avg_scan_time_ms=result.duration_ms,  # Use current scan time as proxy
-                threats_blocked=0  # TODO: Track blocked threats when blocking is implemented
-            )
-            newly_unlocked.extend(achievement_unlocks)
-
-            # Log newly unlocked achievements
-            if newly_unlocked:
-                for achievement in newly_unlocked:
-                    logger.info(
-                        "achievement_unlocked",
-                        achievement_id=achievement.id,
-                        name=achievement.name,
-                        points=achievement.points
-                    )
-
-        except Exception as e:
-            # Don't fail the scan if tracking/history fails
-            # Just log the error
-            logger.warning(
-                "scan_tracking_failed",
-                error=str(e),
-                error_type=type(e).__name__
             )
 
         # Enforce blocking if requested

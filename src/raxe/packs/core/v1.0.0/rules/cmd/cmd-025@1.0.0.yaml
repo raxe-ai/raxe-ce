@@ -88,3 +88,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: null
 rule_hash: sha256:NEW_RULE_CREDENTIAL_HARVESTING
+risk_explanation: File access attacks target sensitive system files (passwords, SAM database, shadow files, cloud metadata) to extract credentials or configuration data. Successful access enables privilege escalation, account compromise, or cloud resource hijacking.
+remediation_advice: Implement strict file access controls and permissions. Use least-privilege principles for file system access. Deploy file integrity monitoring for sensitive files. Restrict AI access to file systems. Monitor for unauthorized file access attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-025-Credential-Harvesting

@@ -42,3 +42,6 @@ metadata:
   category: response_safety
   scan_target: response
 rule_hash: null
+risk_explanation: Toxic outputs (hate speech, violence glorification, self-harm encouragement) can cause psychological harm, promote dangerous behaviors, or violate content policies and regulations. These outputs damage users and create legal liabilities.
+remediation_advice: Implement comprehensive content filtering for toxic outputs across all categories. Use toxicity scoring and threshold-based blocking. Deploy classifier models trained on diverse toxic content. Maintain zero-tolerance policies for high-severity toxic content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-101-Hate-Speech-Detection-In

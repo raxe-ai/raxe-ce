@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-JB-0009
 rule_hash: sha256:15107d6b515f37231f8e21ceb29be65ccda81a95d5a6317b0dd650a079afb003
+risk_explanation: Fiction framing attacks attempt to trick AI into operating in a hypothetical context without ethical constraints. By framing requests as fictional scenarios, attackers try to bypass safety mechanisms and elicit harmful responses.
+remediation_advice: Maintain ethical guidelines regardless of fictional or hypothetical framing. Implement context-aware filtering that recognizes framing attempts. Train models to decline requests that invoke worlds without rules or ethics.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-009-Fiction-Framing

@@ -35,3 +35,6 @@ metadata:
   author: raxe-ce
   category: jailbreak
 rule_hash: null
+risk_explanation: Multi-language jailbreaks exploit language-specific vulnerabilities or gaps in multilingual safety training to bypass controls designed primarily for English. Attackers can craft prompts in languages with weaker safety coverage to achieve prohibited objectives.
+remediation_advice: Deploy comprehensive safety controls across all supported languages with equal rigor. Use language-agnostic safety principles and semantic analysis. Ensure multilingual training includes diverse attack patterns for all languages.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-201-Multi-Language-Jailbreak-Detection

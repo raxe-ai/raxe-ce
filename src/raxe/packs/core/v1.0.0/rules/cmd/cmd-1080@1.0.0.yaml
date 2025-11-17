@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-1080
 rule_hash: sha256:935f55ab5e9955e3d7dd28e1fba7dd5374f0605a607765d19c4a423b6385a9ec
+risk_explanation: Shell operator injection uses special characters (semicolons, pipes, redirects) to chain commands or modify command behavior. This enables attackers to execute multiple malicious operations or redirect output to exfiltrate data.
+remediation_advice: Sanitize or reject shell operator characters in user input. Use parameterized command execution that prevents operator interpretation. Implement strict allowlisting of permitted command structures. Monitor for command chaining attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-1080-Semicolon-Password

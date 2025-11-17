@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-2015
 rule_hash: sha256:2ce8c7e9cd6d8a4a7d1d4378dd7e1f158082d00cb937f6daf3a09d7fde09ab45
+risk_explanation: Explicit requests for credentials test whether AI systems will inappropriately disclose authentication secrets. Even failed attempts indicate security testing or reconnaissance that precedes more sophisticated attacks.
+remediation_advice: Configure AI systems to refuse all credential requests regardless of framing or justification. Implement request logging and alerting for credential extraction attempts. Use these attempts as indicators of potential security threats.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-2015-Requests-Ssh

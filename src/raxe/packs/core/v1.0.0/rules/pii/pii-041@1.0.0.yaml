@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-0041
 rule_hash: sha256:3914c0016d83f77b38b5557848cbf590273ab6d6aa1b6178e966e792ffa431cc
+risk_explanation: PII exposure attacks target personally identifiable information (SSNs, credit cards, health records) to facilitate identity theft, fraud, or privacy violations. Leaked PII can cause severe harm to individuals and create legal and regulatory liabilities.
+remediation_advice: Implement data classification and access controls that restrict AI access to PII. Use data masking and anonymization for training data. Deploy data loss prevention (DLP) controls that detect and block PII leakage. Audit all data access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-041-Bank-Account

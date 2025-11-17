@@ -37,3 +37,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-0069
 rule_hash: sha256:75c3a663ad4e33c46bb7d34184d41c126b3d92aab9b299cb6b0df84d1769323b
+risk_explanation: Mixed encoding combines multiple obfuscation techniques (base64 + shell, PowerShell encoding) to create complex payloads that evade single-layer detection. These sophisticated attacks exploit gaps between different security controls.
+remediation_advice: Implement recursive decoding and analysis across all encoding types. Use multi-layer security controls that examine content at each decoding stage. Deploy machine learning models that detect encoded attacks.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-069-Powershell-Base64-Encodedcommand

@@ -46,3 +46,6 @@ metadata:
   - https://crescendo-the-multiturn-jailbreak.github.io/
   - https://www.usenix.org/system/files/conference/usenixsecurity25/sec25cycle1-prepub-805-russinovich.pdf
 rule_hash: sha256:d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7
+risk_explanation: Multi-turn attacks (like Crescendo) gradually escalate harmful requests across multiple conversational turns to avoid detection. Each individual message appears benign, but the cumulative effect bypasses safety controls through incremental manipulation.
+remediation_advice: Implement conversation-level analysis that tracks escalation patterns across turns. Maintain safety context throughout conversations. Detect and block gradual escalation toward harmful objectives. Use behavioral analysis to identify multi-turn attack patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-203-Crescendo-Multi-Turn-Jailbreak

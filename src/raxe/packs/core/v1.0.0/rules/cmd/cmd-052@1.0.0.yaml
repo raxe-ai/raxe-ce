@@ -38,3 +38,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-0052
 rule_hash: sha256:8f42f5d47f5388586135206e4a3ac96a94d17b4715b3914f039c65f426d995f0
+risk_explanation: Shell command injection exploits enable arbitrary system command execution through vulnerable inputs. Attackers can read sensitive files, modify system configurations, escalate privileges, install backdoors, or completely compromise the underlying system.
+remediation_advice: Never execute shell commands with user-controlled input. If command execution is necessary, use strict allowlisting of permitted commands and arguments. Implement input validation and sanitization. Use least-privilege execution contexts. Deploy command injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-052-Ssh-Key-Manipulation

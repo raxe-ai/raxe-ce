@@ -35,3 +35,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-3006
 rule_hash: sha256:77fdd8476730c31d0546d5b261809b5a81cb08108420357ab08b9fdc5a329d03
+risk_explanation: Combining diacritical marks and decorations obfuscate attack keywords while preserving visual recognition. These Unicode features can bypass simple pattern matching.
+remediation_advice: Normalize Unicode to remove combining characters. Implement NFD/NFC normalization. Use visual rendering analysis. Deploy Unicode-aware security controls.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-3006-Combining-Underline

@@ -44,3 +44,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-0001
 rule_hash: sha256:58b50ad71618698a2b3d7effa6286424d0d699b889bed2880ec58a54c8a392cc
+risk_explanation: This is a classic prompt injection attack where malicious users attempt to override system instructions to make the AI ignore its safety guidelines. This can lead to data leakage, unauthorized actions, or generation of harmful content.
+remediation_advice: Strengthen system prompts with clear boundaries and implement input validation that flags override attempts. Use prompt engineering techniques that make instructions harder to override. Consider implementing a secondary validation layer.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-001-Instruction-Override

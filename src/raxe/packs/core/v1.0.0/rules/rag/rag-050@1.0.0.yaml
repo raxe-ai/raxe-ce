@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-0050
 rule_hash: sha256:86509aee2d169c9738b948e0e4fa9dca69a00eadcad1c1ce877bdde62abff68d
+risk_explanation: Adversarial embedding generation crafts documents optimized to be retrieved in response to specific queries, enabling targeted misinformation. These attacks exploit the mathematical properties of embedding spaces.
+remediation_advice: Implement adversarial robustness in embedding models. Use ensemble retrieval methods that are harder to optimize against. Deploy anomaly detection for unusual embedding patterns. Monitor retrieval quality metrics.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-050-Adversarial-Embedding-Generation

@@ -76,6 +76,11 @@ class RuleSchema(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     rule_hash: str | None = Field(None, description="SHA256 hash of rule content")
 
+    # Explainability fields
+    risk_explanation: str = Field(default="", description="Explanation of why this pattern is dangerous")
+    remediation_advice: str = Field(default="", description="How to fix or mitigate this threat")
+    docs_url: str = Field(default="", description="Link to documentation for learning more")
+
     @field_validator('version')
     @classmethod
     def validate_version_format(cls, v: str) -> str:

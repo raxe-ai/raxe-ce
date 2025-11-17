@@ -39,3 +39,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-0038
 rule_hash: sha256:05d6205ac0403b9499ceb101eb5ed593b25a38cb4976d518c9d75c4d663e731d
+risk_explanation: Zero-width spaces, joiners, and other invisible Unicode characters hide malicious content within seemingly benign text. This technique can evade visual inspection and simple pattern matching.
+remediation_advice: Strip or reject invisible Unicode characters before processing. Implement Unicode normalization. Use visual rendering analysis to detect hidden content. Monitor for unusual Unicode patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-038-Zero-Width-Space/Joiner-Obfuscation

@@ -38,3 +38,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-0056
 rule_hash: sha256:e8c7c93376529ceb3c466fdaf254d306a5fcb7eda679dd8558e4023092b96f10
+risk_explanation: Path traversal attacks use directory traversal sequences (../, etc.) to access files outside intended directories. This can expose sensitive files, configuration data, or enable reading of arbitrary files on the system.
+remediation_advice: Implement strict path validation and normalization. Use allowlisting for permitted file paths and reject traversal sequences. Deploy chroot jails or similar isolation. Never construct file paths from user input without validation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-056-Extensive-Directory-Traversal

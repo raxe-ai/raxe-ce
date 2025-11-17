@@ -45,3 +45,6 @@ metadata:
   references:
   - https://arxiv.org/abs/2502.16580
 rule_hash: sha256:a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4
+risk_explanation: Indirect prompt injection embeds malicious instructions in external content (documents, images, URLs) that the AI processes, allowing attackers to control AI behavior without directly crafting the prompt. This can lead to data exfiltration, unauthorized actions, or system compromise through trusted content channels.
+remediation_advice: Treat all external content as untrusted and apply strict content security policies. Sanitize and sandbox external content before processing. Implement content validation that detects embedded instructions or malicious payloads in documents, images, and other media.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-3030-Self-Replicating-Prompt-Injection

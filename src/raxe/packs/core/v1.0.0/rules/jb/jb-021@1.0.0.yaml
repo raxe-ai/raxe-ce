@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-JB-0021
 rule_hash: sha256:7693f01b2b814c6ec8b02f68ec01727ba0488d5617429b9edd6b2bbc1df1ad61
+risk_explanation: Named jailbreak techniques invoke well-known attack patterns (DAN, KEVIN, etc.) that have documented success in bypassing AI safety controls. These attacks leverage established methods that may have exploited vulnerabilities in earlier AI systems.
+remediation_advice: Maintain an updated database of known jailbreak names and patterns. Implement specific detection and blocking for documented jailbreak techniques. Monitor for new named jailbreaks and update defenses accordingly. Never allow activation of named bypass modes.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-021-Kevin,-Can,-Jailbreak

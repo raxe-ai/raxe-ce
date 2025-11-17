@@ -45,3 +45,6 @@ metadata:
   references:
   - https://genai.owasp.org/llmrisk/llm01-prompt-injection/
 rule_hash: sha256:f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5
+risk_explanation: RAG poisoning attacks inject malicious content into retrieval systems to manipulate AI responses across multiple interactions. Poisoned data can persist in knowledge bases, affecting many users and enabling long-term control over AI behavior.
+remediation_advice: Implement content validation and provenance tracking for all data sources. Use anomaly detection to identify suspicious content patterns in knowledge bases. Apply access controls and audit logging for knowledge base modifications. Regularly scan for and remove poisoned content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-3034-Rag-Database-Poisoning

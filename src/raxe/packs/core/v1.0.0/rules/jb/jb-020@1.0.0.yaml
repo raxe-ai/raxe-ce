@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-JB-0020
 rule_hash: sha256:24082e00e6d0cb3cc755e1a1b908518784d689e8f2748f9163ce8651a9fb6b28
+risk_explanation: Hypothetical scenario framing attempts to bypass safety controls by presenting harmful requests as theoretical exercises or thought experiments. This technique exploits the AI's willingness to engage with abstract concepts to generate content that would be blocked in direct requests.
+remediation_advice: Apply safety policies consistently to both hypothetical and direct requests. Evaluate all generated content for potential harm regardless of framing. Reject scenarios explicitly designed to bypass ethical guidelines or safety constraints.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-020-Freedom/Liberation-Scenario-Framing

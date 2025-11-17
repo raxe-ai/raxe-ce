@@ -45,3 +45,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-0050
 rule_hash: sha256:7952c06b7578af5601e6eb1a0a3dec4fce2d303ef099a8665928fa26b36b5ccf
+risk_explanation: Multilingual prompt injection exploits language processing vulnerabilities to bypass security controls designed primarily for English text. Attackers use non-English languages to evade detection while still achieving malicious objectives like instruction override or data extraction.
+remediation_advice: Deploy multilingual security controls that analyze prompts in all supported languages. Use language-agnostic detection patterns and semantic analysis rather than keyword matching. Ensure safety guidelines are enforced consistently across all languages.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-050-Japanese-Language-Prompt

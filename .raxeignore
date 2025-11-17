@@ -1,0 +1,7 @@
+# RAXE Suppression File (.raxeignore)
+# Format: <pattern>  # <reason>
+# Supports wildcards: pi-*, *-injection
+#
+# Auto-generated - DO NOT EDIT MANUALLY
+# Generated at: 2025-11-17T04:59:18.634708+00:00
+

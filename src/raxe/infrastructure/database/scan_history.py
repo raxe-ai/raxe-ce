@@ -80,9 +80,10 @@ class ScanHistoryDB:
     - Auto-migration on first use
     - Auto-cleanup of old scans (90 days)
     - Efficient queries with indexes
+    - Suppression tracking for audit trail
     """
 
-    SCHEMA_VERSION = 1
+    SCHEMA_VERSION = 2  # Bumped for suppressions table
     RETENTION_DAYS = 90
 
     def __init__(self, db_path: Path | None = None):
@@ -200,11 +201,26 @@ class ScanHistoryDB:
             )
         """)
 
+        # Suppressions table (for audit trail)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS suppressions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scan_id INTEGER,
+                rule_id TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                suppression_pattern TEXT,
+                FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE
+            )
+        """)
+
         # Indexes for performance
         cursor.execute("CREATE INDEX idx_scans_timestamp ON scans(timestamp)")
         cursor.execute("CREATE INDEX idx_scans_severity ON scans(highest_severity)")
         cursor.execute("CREATE INDEX idx_detections_scan_id ON detections(scan_id)")
         cursor.execute("CREATE INDEX idx_detections_severity ON detections(severity)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_scan_id ON suppressions(scan_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_rule_id ON suppressions(rule_id)")
 
         conn.commit()
 
@@ -216,8 +232,27 @@ class ScanHistoryDB:
             from_version: Current schema version
             to_version: Target schema version
         """
-        # Future migrations will go here
-        pass
+        cursor = conn.cursor()
+
+        # Migration from v1 to v2: Add suppressions table
+        if from_version < 2 <= to_version:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS suppressions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    scan_id INTEGER,
+                    rule_id TEXT NOT NULL,
+                    reason TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    suppression_pattern TEXT,
+                    FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE
+                )
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_scan_id ON suppressions(scan_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_rule_id ON suppressions(rule_id)")
+
+            # Update schema version
+            cursor.execute("UPDATE _metadata SET value = '2' WHERE key = 'schema_version'")
+            conn.commit()
 
     def hash_prompt(self, prompt: str) -> str:
         """Create privacy-preserving hash of prompt.
@@ -524,6 +559,82 @@ class ScanHistoryDB:
 
         return count
 
+    def log_suppression(
+        self,
+        scan_id: int | None,
+        rule_id: str,
+        reason: str,
+        suppression_pattern: str | None = None,
+    ) -> None:
+        """Log a suppression to the database for audit trail.
+
+        Args:
+            scan_id: Scan ID (optional, None for manual suppressions)
+            rule_id: Rule ID that was suppressed
+            reason: Reason for suppression
+            suppression_pattern: Pattern that matched (e.g., "pi-*")
+        """
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                INSERT INTO suppressions (
+                    scan_id, rule_id, reason, timestamp, suppression_pattern
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
+                scan_id,
+                rule_id,
+                reason,
+                datetime.now(timezone.utc).isoformat(),
+                suppression_pattern,
+            ))
+
+            conn.commit()
+
+    def get_suppressions(
+        self,
+        scan_id: int | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        """Get suppression log entries.
+
+        Args:
+            scan_id: Filter by scan ID (optional)
+            limit: Maximum entries to return
+
+        Returns:
+            List of suppression log entries
+        """
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            if scan_id is not None:
+                cursor.execute("""
+                    SELECT * FROM suppressions
+                    WHERE scan_id = ?
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                """, (scan_id, limit))
+            else:
+                cursor.execute("""
+                    SELECT * FROM suppressions
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                """, (limit,))
+
+            rows = cursor.fetchall()
+            return [
+                {
+                    "id": row["id"],
+                    "scan_id": row["scan_id"],
+                    "rule_id": row["rule_id"],
+                    "reason": row["reason"],
+                    "timestamp": row["timestamp"],
+                    "suppression_pattern": row["suppression_pattern"],
+                }
+                for row in rows
+            ]
+
     def export_to_json(self, scan_id: int) -> dict[str, Any]:
         """Export scan and detections to JSON-serializable dict.
 
@@ -538,6 +649,7 @@ class ScanHistoryDB:
             raise ValueError(f"Scan {scan_id} not found")
 
         detections = self.get_detections(scan_id)
+        suppressions = self.get_suppressions(scan_id=scan_id)
 
         return {
             "scan": {
@@ -545,4 +657,5 @@ class ScanHistoryDB:
                 "timestamp": scan.timestamp.isoformat(),
             },
             "detections": [asdict(d) for d in detections],
+            "suppressions": suppressions,
         }

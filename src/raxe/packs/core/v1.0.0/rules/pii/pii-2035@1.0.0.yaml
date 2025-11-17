@@ -34,3 +34,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-2035
 rule_hash: sha256:a344ddf5a507a7632db22f5708e53b2340f648fb6e966514d0eb100b3e646fda
+risk_explanation: Requests for cloud credentials, API keys, or other secrets indicate targeted attacks on infrastructure access. These requests often precede attempts to compromise cloud resources, exfiltrate data, or deploy malicious services.
+remediation_advice: Block all secret requests and trigger security alerts. Implement cloud security monitoring and threat detection. Use secret scanning tools to prevent accidental exposure. Maintain strict separation between AI systems and secret stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-2035-Requests-Aws

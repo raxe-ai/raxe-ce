@@ -35,3 +35,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-3004
 rule_hash: sha256:453fec06cf34ba376ec9cf85a47c2b3926bc44a39dec5fd0779b6c3a0899e249
+risk_explanation: Hex escape sequences obfuscate sensitive keywords (password, credentials) in code or commands. This technique evades simple string matching while preserving functionality when interpreted.
+remediation_advice: Decode and analyze hex escape sequences in all contexts. Implement interpretation-aware analysis that evaluates code as it would execute. Use semantic analysis that identifies malicious patterns regardless of escaping.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-3004-Hex-Escapes

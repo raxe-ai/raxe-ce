@@ -86,3 +86,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: null
 rule_hash: sha256:NEW_RULE_DAN_JAILBREAK_PERSONAS
+risk_explanation: Abbreviated attack patterns use shortened forms of malicious instructions to evade keyword-based detection while retaining semantic meaning. Common abbreviations like 'DAN', 'ig prev inst' can bypass simple pattern matching while still triggering harmful behaviors.
+remediation_advice: Expand detection patterns to include common abbreviations and shortened forms. Use semantic analysis that identifies intent regardless of textual format. Maintain a database of known abbreviated attack patterns and update it regularly.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-023-Dan-(Do-Anything

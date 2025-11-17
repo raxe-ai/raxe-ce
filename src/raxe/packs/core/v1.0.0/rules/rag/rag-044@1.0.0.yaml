@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-0044
 rule_hash: sha256:eaec97e03cb4ae188d3e976859ad2a32406a7ef609f1a6e766a7d221c627afbd
+risk_explanation: Retrieval manipulation poisons the context provided to answer generation, causing incorrect or malicious responses. This attack targets the bridge between retrieval and generation to inject false information.
+remediation_advice: Implement context validation and consistency checking. Use multiple retrieval sources and cross-validation. Deploy anomaly detection for unusual context patterns. Apply content security policies to retrieved context.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-044-Answer-Generation-Context

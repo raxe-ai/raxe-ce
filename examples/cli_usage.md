@@ -66,8 +66,11 @@ raxe init
 # Initialize with API key
 raxe init --api-key=raxe_your_key_here
 
-# Disable telemetry
-raxe init --no-telemetry
+# Initialize (free tier - telemetry required)
+raxe init
+
+# Pro/Team tier users can disable telemetry via web console
+# https://console.raxe.ai
 
 # Force overwrite existing config
 raxe init --force

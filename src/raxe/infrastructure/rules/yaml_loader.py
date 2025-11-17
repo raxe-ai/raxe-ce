@@ -233,6 +233,9 @@ class YAMLLoader:
             mitre_attack=schema.mitre_attack,
             metadata=schema.metadata,
             rule_hash=schema.rule_hash,
+            risk_explanation=schema.risk_explanation,
+            remediation_advice=schema.remediation_advice,
+            docs_url=schema.docs_url,
         )
 
     @staticmethod

@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: rag_attacks
 rule_hash: null
+risk_explanation: RAG context poisoning manipulates the retrieved context to influence AI responses toward attacker objectives. This can spread misinformation, bypass safety controls, or achieve persistent influence over AI behavior.
+remediation_advice: Implement context validation and consistency checking across multiple sources. Use anomaly detection for unusual context patterns. Apply content security policies to retrieved context. Maintain audit trails of context sources.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-201-Rag-Context-Poisoning-Detection

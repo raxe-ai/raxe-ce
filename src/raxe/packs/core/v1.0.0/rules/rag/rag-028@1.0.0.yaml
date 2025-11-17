@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-0028
 rule_hash: sha256:787fd84f01f20ef9067b339ec4022530980947aa6b8473c3749dc7472f9b9498
+risk_explanation: Index poisoning injects false information into vector databases to manipulate future retrievals. Poisoned indices can persistently affect many queries and users, degrading system accuracy over time.
+remediation_advice: Implement content validation and provenance tracking for all indexed documents. Use anomaly detection to identify suspicious content patterns. Apply access controls and audit logging for index modifications. Regularly scan for and remove poisoned content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-028-False-Fact-Injection

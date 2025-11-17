@@ -29,14 +29,10 @@ dependencies = [
     "pydantic>=2.0,<3.0",
     "httpx>=0.24,<1.0",
     "structlog>=23.0,<25.0",
-    "python-dotenv>=1.0,<2.0",
     "sqlalchemy>=2.0,<3.0",
-    "aiosqlite>=0.19,<1.0",
     "pyyaml>=6.0,<7.0",
     "rich>=13.0,<14.0",
-    "prompt-toolkit>=3.0,<4.0",
     "tomli>=2.0,<3.0; python_version < '3.11'",
-    "tomli-w>=1.0,<2.0",
 ]
 
 [project.optional-dependencies]
@@ -46,6 +42,7 @@ dev = [
     "pytest-cov>=4.1",
     "pytest-asyncio>=0.21",
     "pytest-benchmark>=4.0",
+    "pytest-xdist>=3.0",  # Parallel test execution
     "ruff>=0.1.0",
     "mypy>=1.5",
     "pre-commit>=3.3",
@@ -55,6 +52,16 @@ dev = [
     "build>=1.0",
 ]
 
+# Interactive REPL mode
+repl = [
+    "prompt-toolkit>=3.0,<4.0",
+]
+
+# Config management (writing TOML files)
+config-tools = [
+    "tomli-w>=1.0,<2.0",
+]
+
 # Optional LLM client wrappers
 wrappers = [
     "openai>=1.0",
@@ -62,11 +69,13 @@ wrappers = [
     "langchain>=0.1",
 ]
 
-# All optional dependencies (for testing)
+# All optional features
 all = [
     "openai>=1.0",
     "anthropic>=0.5",
     "langchain>=0.1",
+    "prompt-toolkit>=3.0,<4.0",
+    "tomli-w>=1.0,<2.0",
 ]
 
 [project.urls]
@@ -158,12 +167,22 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--verbose",
+    "--tb=short",
+    "--color=yes",
+    "-ra",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "benchmark: marks tests as benchmarks",
     "integration: marks tests as integration tests",
+    "golden: marks tests as golden file tests",
+    "fast: marks tests as fast (<100ms each)",
+    "unit: marks tests as pure unit tests",
+    "asyncio: marks tests as async tests",
 ]
+
+# Performance optimizations
+console_output_style = "progress"
 
 [tool.coverage.run]
 source = ["src/raxe"]

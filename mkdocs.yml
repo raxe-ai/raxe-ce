@@ -1,0 +1,126 @@
+site_name: RAXE - AI Security for LLMs
+site_description: Privacy-first threat detection for LLM applications
+site_url: https://raxe-ai.github.io/raxe-ce/
+repo_url: https://github.com/raxe-ai/raxe-ce
+repo_name: raxe-ai/raxe-ce
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quick Start: quickstart.md
+      - Installation: installation.md
+  - User Guide:
+      - Architecture: architecture.md
+      - Integration Guide: integration_guide.md
+      - Async SDK Guide: async-guide.md
+      - Custom Rules: CUSTOM_RULES.md
+      - Troubleshooting: troubleshooting.md
+  - API Reference:
+      - Overview: api/README.md
+      - Raxe Client: api/raxe-client.md
+      - Async Client: api/async-client.md
+      - Scan Results: api/scan-results.md
+      - Layer Control: api/layer-control.md
+      - Exceptions: api/exceptions.md
+      - Full API Reference: api_reference.md
+  - Performance:
+      - Tuning Guide: performance/tuning_guide.md
+      - Benchmarking: performance/benchmarking.md
+      - Performance Optimization: PERFORMANCE_TUNING.md
+  - Advanced:
+      - Plugin Development: plugins/plugin_development_guide.md
+      - Analytics: analytics_quickstart.md
+      - Testing Guide: QUICK_START_TESTING.md
+      - Migration (YAML to TOML): migration_yaml_to_toml.md
+      - Migration (Public API): MIGRATION_PUBLIC_API.md
+  - Security:
+      - Security Policy: SECURITY.md
+      - Threat Modeling: THREAT_MODELING.md
+      - Privacy Guide: privacy.md
+  - Development:
+      - Contributing: CONTRIBUTING.md
+      - Contributing Rules: CONTRIBUTING_RULES.md
+      - Development Guide: development.md
+      - Release Process: RELEASE_PROCESS.md
+      - Packaging Guide: PACKAGING_GUIDE.md
+      - Brand Style Guide: BRAND_STYLE_GUIDE.md
+  - Reference:
+      - Quick Reference: QUICK_REFERENCE.md
+      - Cheat Sheet: CHEAT_SHEET.md
+      - Suppression Guide: SUPPRESSION_GUIDE.md
+      - Explainability Guide: EXPLAINABILITY_GUIDE.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/raxe-ai/raxe-ce
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/raxe_ai
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/raxe
+
+copyright: Copyright &copy; 2025 RAXE Team. Licensed under MIT.

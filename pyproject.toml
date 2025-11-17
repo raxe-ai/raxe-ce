@@ -31,7 +31,7 @@ dependencies = [
     "structlog>=23.0,<25.0",
     "sqlalchemy>=2.0,<3.0",
     "pyyaml>=6.0,<7.0",
-    "rich>=13.0,<14.0",
+    "rich>=13.0,<15.0",
     "tomli>=2.0,<3.0; python_version < '3.11'",
 ]
 

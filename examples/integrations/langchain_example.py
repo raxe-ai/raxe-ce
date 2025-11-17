@@ -4,13 +4,13 @@ This example demonstrates how to use RAXE with LangChain
 to automatically scan all LLM interactions.
 
 Requirements:
-    pip install raxe langchain openai
+    pip install raxe langchain langchain-openai openai
 
 Usage:
     export OPENAI_API_KEY=sk-...
     python langchain_example.py
 """
-from langchain.llms import OpenAI
+from langchain_openai import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from raxe.sdk.integrations import RaxeCallbackHandler

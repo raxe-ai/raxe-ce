@@ -22,7 +22,7 @@ This directory contains production-ready examples demonstrating how to integrate
 
 ## AI/ML Framework Integrations
 
-- **[LangChain](langchain_integration/)** - Callback handlers and chain protection
+- **[LangChain, Anthropic, HuggingFace, Vertex AI](integrations/)** - Official framework integrations
 - **[RAG Pipeline](rag_pipeline/)** - Multi-stage security for retrieval-augmented generation
 
 ## Data Processing

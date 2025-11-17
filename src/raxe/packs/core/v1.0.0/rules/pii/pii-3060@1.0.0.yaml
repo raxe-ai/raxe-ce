@@ -11,7 +11,9 @@ patterns:
   flags:
   - IGNORECASE
   timeout: 5.0
-- pattern: (?i)(?:db|database|admin|root|user).{0,10}(?:password|passwd).{0,10}[=:]\s*['\"]([^'\"]{8,})['\"]
+# REDOS FIX: Replaced cascading .{0,10} with specific [\w_]{0,10} and added maximum bound to password
+# Removed middle .{0,10} and replaced with \s* for cleaner matching
+- pattern: (?i)(?:db|database|admin|root|user)[\w_]{0,10}(?:password|passwd)\s*[=:]\s*['\"]([A-Za-z0-9!@#$%^&*()_+=\-[\]{}|;:,.<>?/~`]{8,100})['\"]
   flags:
   - IGNORECASE
   timeout: 5.0
@@ -33,10 +35,8 @@ mitre_attack:
 - T1552.001
 metadata:
   created: '2025-11-16'
-  updated: '2025-11-16'
+  updated: '2025-11-17'
   author: raxe-ce
   category: generic_credentials
+  redos_fix: 'Pattern 2 fixed on 2025-11-17 to prevent cascading quantifier backtracking and add max bounds'
 rule_hash: null
-risk_explanation: Authentication token exposure (JWTs, bearer tokens, session cookies) grants attackers immediate access to authenticated sessions and user accounts. Unlike passwords, tokens provide direct access without needing additional authentication steps.
-remediation_advice: Implement short token lifetimes and automatic rotation. Use secure token storage and transmission. Deploy token validation and revocation mechanisms. Never log or expose tokens in error messages or responses.
-docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3060-Generic-Password-In-Code

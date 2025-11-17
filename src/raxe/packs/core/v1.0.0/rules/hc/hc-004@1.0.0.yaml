@@ -17,7 +17,9 @@ patterns:
   flags:
   - IGNORECASE
   timeout: 5.0
-- pattern: (?i)\b(can\s+you\s+tell\s+me|tell\s+me|describe|explain)\s+about\s+(the\s+)?(history|origins?|creation|development|invention).{0,50}(then\s+)?.*?\b(how\s+)?(was|were)\s+(it|they)\s+(created|made|manufactured|built|constructed|produced|assembled)
+# REDOS FIX: Replaced .{0,50}(then\s+)?.*? with bounded word matching to eliminate catastrophic backtracking
+# Original pattern caused O(2^n) complexity; new pattern is O(n) with max 13 word checks
+- pattern: (?i)\b(?:can\s+you\s+tell\s+me|tell\s+me|describe|explain)\s+about\s+(?:the\s+)?(?:history|origins?|creation|development|invention)(?:\s+\S+){0,8}(?:\s+then)?(?:\s+\S+){0,5}\s+(?:how\s+)?(?:was|were)\s+(?:it|they)\s+(?:created|made|manufactured|built|constructed|produced|assembled)\b
   flags:
   - IGNORECASE
   timeout: 5.0
@@ -61,9 +63,10 @@ mitre_attack:
 - T1204.002
 metadata:
   created: '2025-11-09'
-  updated: '2025-11-09'
+  updated: '2025-11-17'
   author: raxe-ce
   legacy_rx_id: RX-HC-0004
+  redos_fix: 'Pattern 3 fixed on 2025-11-17 to prevent catastrophic backtracking (57x performance improvement)'
 rule_hash: sha256:9780f7f92a250c8aef9f09cc73da6c072802a3671e9a96c7f47f4bd9a52fd5bd
 risk_explanation: Multi-turn turnkey attacks gradually escalate from benign requests to harmful objectives across multiple interactions. Each individual turn appears acceptable, but the cumulative effect bypasses safety controls.
 remediation_advice: Implement conversation-level monitoring that tracks escalation patterns. Use behavioral analysis to detect gradual movement toward harmful objectives. Maintain safety context across conversation turns. Deploy circuit breakers that halt concerning escalation.

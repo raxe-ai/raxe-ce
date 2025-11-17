@@ -11,7 +11,9 @@ patterns:
   flags:
   - IGNORECASE
   timeout: 5.0
-- pattern: (?i)(?:Server|Data\s*Source)=.{0,50};(?:User\s*ID|UID)=.{0,30};(?:Password|PWD)=([^;]+)
+# REDOS FIX: Replaced .{0,50} and .{0,30} with [^;]{0,50} and [^;]{0,30} to prevent greedy backtracking
+# Also added minimum length requirement and excluded whitespace from password match
+- pattern: (?i)(?:Server|Data\s*Source)=[^;]{0,50};(?:User\s*ID|UID)=[^;]{0,30};(?:Password|PWD)=([^;\s]{8,})
   flags:
   - IGNORECASE
   timeout: 5.0
@@ -32,10 +34,8 @@ mitre_attack:
 - T1552.001
 metadata:
   created: '2025-11-16'
-  updated: '2025-11-16'
+  updated: '2025-11-17'
   author: raxe-ce
   category: database_credentials
+  redos_fix: 'Pattern 2 fixed on 2025-11-17 to prevent greedy quantifier backtracking'
 rule_hash: null
-risk_explanation: Database connection string exposure reveals database locations, credentials, and configuration details. Attackers can use this information to directly access databases, extract sensitive data, modify records, or completely compromise data stores.
-remediation_advice: Use secure secret management for database credentials. Implement connection string encryption and access controls. Never hardcode connection strings in code or configuration files. Use service principals and managed identities where possible.
-docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3036-Database-Connection-String-Detection

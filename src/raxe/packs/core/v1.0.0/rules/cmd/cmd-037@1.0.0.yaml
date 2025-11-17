@@ -39,3 +39,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-0037
 rule_hash: sha256:25e6bd3713ab441388eaec8d00c8fb50a391a66fc7cf1536cd0aca695515cbc3
+risk_explanation: Shell command injection exploits enable arbitrary system command execution through vulnerable inputs. Attackers can read sensitive files, modify system configurations, escalate privileges, install backdoors, or completely compromise the underlying system.
+remediation_advice: Never execute shell commands with user-controlled input. If command execution is necessary, use strict allowlisting of permitted commands and arguments. Implement input validation and sanitization. Use least-privilege execution contexts. Deploy command injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-037-Pipe-Based-Command-Injection

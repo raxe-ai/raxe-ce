@@ -65,6 +65,9 @@ def display_scan_result(result: ScanPipelineResult, no_color: bool = False) -> N
     else:
         _display_safe(result, console)
 
+    # Add privacy footer (always visible)
+    _display_privacy_footer(console)
+
 
 def _display_threat_detected(result: ScanPipelineResult, console: Console) -> None:
     """Display threat detection results."""
@@ -136,6 +139,9 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
     console.print(table)
     console.print()
 
+    # Display detailed explanations for detections with explainability data
+    _display_detection_explanations(result.scan_result.l1_result.detections, console)
+
     # Summary with cleaner layout
     total_detections = len(result.scan_result.l1_result.detections)
     if result.scan_result.l2_result:
@@ -169,6 +175,72 @@ def _display_safe(result: ScanPipelineResult, console: Console) -> None:
         width=80,
         padding=(1, 2)
     ))
+    console.print()
+
+
+def _display_detection_explanations(detections: list, console: Console) -> None:
+    """Display detailed explanations for each detection.
+
+    Args:
+        detections: List of Detection objects
+        console: Rich console instance
+    """
+    for detection in detections:
+        # Only show explanations if at least one field is populated
+        has_explanation = (
+            getattr(detection, 'risk_explanation', '') or
+            getattr(detection, 'remediation_advice', '') or
+            getattr(detection, 'docs_url', '')
+        )
+
+        if not has_explanation:
+            continue
+
+        # Create explanation panel
+        explanation_content = Text()
+
+        # Rule header
+        explanation_content.append(f"\n{detection.rule_id}", style="cyan bold")
+        explanation_content.append(f" - {detection.severity.value.upper()}\n\n", style=get_severity_color(detection.severity))
+
+        # Risk explanation
+        risk_explanation = getattr(detection, 'risk_explanation', '')
+        if risk_explanation:
+            explanation_content.append("Why This Matters:\n", style="yellow bold")
+            explanation_content.append(f"{risk_explanation}\n\n", style="white")
+
+        # Remediation advice
+        remediation_advice = getattr(detection, 'remediation_advice', '')
+        if remediation_advice:
+            explanation_content.append("What To Do:\n", style="green bold")
+            explanation_content.append(f"{remediation_advice}\n\n", style="white")
+
+        # Documentation URL
+        docs_url = getattr(detection, 'docs_url', '')
+        if docs_url:
+            explanation_content.append("Learn More: ", style="blue bold")
+            explanation_content.append(f"{docs_url}\n", style="blue underline")
+
+        console.print(Panel(
+            explanation_content,
+            border_style="dim",
+            width=80,
+            padding=(1, 2),
+            title="Detection Details",
+            title_align="left"
+        ))
+        console.print()
+
+
+def _display_privacy_footer(console: Console) -> None:
+    """Display privacy guarantee footer."""
+    privacy_text = Text()
+    privacy_text.append("🔒 Privacy-First: ", style="dim cyan")
+    privacy_text.append(
+        "Prompt hashed locally (SHA256) • Never stored or transmitted",
+        style="dim"
+    )
+    console.print(privacy_text)
     console.print()
 
 

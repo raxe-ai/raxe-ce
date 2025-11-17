@@ -45,3 +45,6 @@ metadata:
   references:
   - https://simonwillison.net/tags/markdown-exfiltration/
 rule_hash: sha256:b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1
+risk_explanation: Data exfiltration through encoding (base64, etc.) attempts to bypass data loss prevention controls by obfuscating sensitive information. This technique can leak data through monitoring blind spots or content inspection gaps.
+remediation_advice: Implement deep content inspection that analyzes encoded data. Use DLP controls that detect common encoding schemes. Monitor for unusual encoding patterns or high volumes of encoded content in outputs.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3061-Base64-Encoding

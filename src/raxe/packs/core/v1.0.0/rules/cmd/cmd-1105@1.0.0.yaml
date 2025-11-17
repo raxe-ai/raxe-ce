@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-CMD-1105
 rule_hash: sha256:74be22629afd8399a0b6f9b9739b2a9e7f93361cba9999166f22f88dedacfe4e
+risk_explanation: Network tool abuse (curl, wget, nmap, netcat) enables data exfiltration, network reconnaissance, port scanning, or establishing backdoor connections. These tools can be weaponized to map infrastructure, steal data, or facilitate lateral movement.
+remediation_advice: Restrict network access from AI systems to only required services. Implement egress filtering and network segmentation. Use allowlisting for permitted network destinations. Monitor for suspicious network tool usage and data exfiltration patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-1105-Nmap-Network

@@ -45,3 +45,6 @@ metadata:
   references:
   - https://www.lakera.ai/blog/visual-prompt-injections
 rule_hash: sha256:c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+risk_explanation: Multimodal prompt injection embeds malicious instructions in images, audio, or other non-text inputs that AI systems process. These attacks exploit the complexity of multimodal processing to hide malicious content that evades text-based security controls.
+remediation_advice: Apply security scanning to all modalities (text, image, audio, video). Use multimodal analysis that detects cross-modal attacks. Implement content security policies for non-text inputs. Validate and sanitize all media before processing.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-3032-Visual/Multimodal-Prompt-Injection

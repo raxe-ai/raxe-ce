@@ -42,3 +42,6 @@ metadata:
   category: response_safety
   scan_target: response
 rule_hash: null
+risk_explanation: Fraud and scam instructions enable financial crimes that harm individuals and organizations. AI systems that provide fraud instructions contribute to financial crime and create legal liabilities.
+remediation_advice: Block all fraud instruction requests. Implement detection for scam-related terminology and techniques. Use behavioral analysis to identify fraud requests regardless of framing. Log and report fraud instruction attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-108-Fraud-Scam-Instruction

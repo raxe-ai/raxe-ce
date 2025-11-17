@@ -142,6 +142,9 @@ class Rule:
         mitre_attack: List of MITRE ATT&CK technique IDs
         metadata: Additional metadata (author, dates, custom fields)
         rule_hash: SHA256 hash of rule content for versioning
+        risk_explanation: Explanation of why this pattern is dangerous
+        remediation_advice: How to fix or mitigate this threat
+        docs_url: Link to documentation for learning more
     """
     # Core identity
     rule_id: str
@@ -166,6 +169,11 @@ class Rule:
     mitre_attack: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
     rule_hash: str | None = None
+
+    # Explainability fields
+    risk_explanation: str = ""
+    remediation_advice: str = ""
+    docs_url: str = ""
 
     def __post_init__(self) -> None:
         """Validate rule after construction.

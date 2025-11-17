@@ -32,3 +32,6 @@ metadata:
   author: raxe-ce
   category: evasion
 rule_hash: null
+risk_explanation: Double URL encoding and nested encoding techniques create multiple layers of obfuscation to evade security controls. Each layer bypasses a different security control, allowing malicious content through.
+remediation_advice: Implement recursive decoding to maximum safe depth. Use anomaly detection for excessive encoding layers. Deploy canonicalization before all security checks. Monitor for unusual encoding patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-201-Double-Url-Encoding-Detection

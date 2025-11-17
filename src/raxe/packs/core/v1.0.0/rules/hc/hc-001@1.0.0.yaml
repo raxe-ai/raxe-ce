@@ -68,3 +68,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-HC-0001
 rule_hash: sha256:2f77cf21a3d156158427be90e22d875ef8c51ac0d9d7b4a3fd3874a72584a763
+risk_explanation: Requests for malicious code generation test whether AI systems will create malware, exploits, or attack tools. Generated malicious code can be used in real attacks against systems and individuals.
+remediation_advice: Refuse all requests for malicious code generation regardless of stated purpose. Implement content filtering that detects malware patterns in code outputs. Use behavioral analysis to identify harmful code generation attempts. Log requests for security review.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-001-Requests-Generate

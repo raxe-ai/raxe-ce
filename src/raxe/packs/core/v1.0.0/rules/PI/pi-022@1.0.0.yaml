@@ -62,3 +62,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: null
 rule_hash: sha256:NEW_RULE_OBFUSCATED_PROMPT_INJECTION
+risk_explanation: Obfuscation techniques like l33t speak and homoglyphs are used to evade detection systems while still being readable by AI models. This allows attackers to bypass simple pattern matching and successfully inject malicious prompts.
+remediation_advice: Implement Unicode normalization and homoglyph detection before processing inputs. Consider using character-level models that can detect obfuscated patterns. Maintain updated lists of common obfuscation techniques.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-022-Obfuscated-Injection

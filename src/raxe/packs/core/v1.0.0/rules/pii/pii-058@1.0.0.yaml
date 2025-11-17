@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PII-0058
 rule_hash: sha256:d9cdf0968ea5228fb629e4e5a249b3667140e7b29eb9bf5a3bb96f988c7b8673
+risk_explanation: Secret leakage attacks extract sensitive system information like database contents, configuration details, or internal documentation. This information can enable further attacks, reveal vulnerabilities, or expose confidential business data.
+remediation_advice: Enforce principle of least privilege for AI data access. Never include secrets or sensitive configurations in AI-accessible contexts. Implement output filtering to detect and block secret disclosure. Use secure secret management systems.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-058-System-Prompt

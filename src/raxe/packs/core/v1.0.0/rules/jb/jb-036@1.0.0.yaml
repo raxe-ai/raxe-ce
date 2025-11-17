@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-JB-0036
 rule_hash: sha256:3f0f1d2b73d9d80e0c24da0ddb647fdd72c431addef70e819c3968fc3c44a731
+risk_explanation: Named jailbreak techniques invoke well-known attack patterns (DAN, KEVIN, etc.) that have documented success in bypassing AI safety controls. These attacks leverage established methods that may have exploited vulnerabilities in earlier AI systems.
+remediation_advice: Maintain an updated database of known jailbreak names and patterns. Implement specific detection and blocking for documented jailbreak techniques. Monitor for new named jailbreaks and update defenses accordingly. Never allow activation of named bypass modes.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-036-Malware-Themed-Modes-(Trojan,

@@ -30,3 +30,6 @@ metadata:
   author: raxe-ce
   category: cryptographic_keys
 rule_hash: null
+risk_explanation: Private key exposure (RSA, SSH, PGP keys) completely compromises cryptographic security. Attackers with private keys can decrypt sensitive data, forge signatures, impersonate key owners, and gain unauthorized access to systems.
+remediation_advice: Store private keys in hardware security modules (HSMs) or secure key management systems. Never transmit or log private keys. Implement key rotation and revocation procedures. Use separate keys for different purposes with appropriate access controls.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3035-Pgp-Private-Key-Detection

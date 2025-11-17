@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: network_info
 rule_hash: null
+risk_explanation: Network information exposure (IP addresses, MAC addresses, SSH keys) can enable reconnaissance, targeted attacks, or lateral movement within networks. This information helps attackers map infrastructure and identify potential entry points.
+remediation_advice: Implement network segmentation and access controls. Use private IP addressing and NAT where appropriate. Monitor for network information leakage. Apply principles of least privilege for network access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3040-Ipv4-Address-In-Sensitive

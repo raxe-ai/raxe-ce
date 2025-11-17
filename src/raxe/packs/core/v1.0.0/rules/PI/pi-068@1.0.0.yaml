@@ -45,3 +45,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-0068
 rule_hash: sha256:3941796c2e9b9262750c3933c223d7f32598896dc1759d7afea99fa50a3b19b3
+risk_explanation: Context manipulation attacks exploit how AI systems process and prioritize information to subvert intended behavior. These attacks can lead to incorrect decisions, bypassed safety checks, or exposure of information that should remain protected.
+remediation_advice: Maintain strict separation between trusted system context and untrusted user input. Implement context validation to detect manipulation attempts. Use structured prompts that clearly delineate different context sources and their trust levels.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-068-Compound-Multi-Attack-Injection

@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   category: web_attacks
 rule_hash: null
+risk_explanation: Server-Side Request Forgery (SSRF) tricks servers into making requests to unintended destinations, often internal systems. This can expose internal services, read cloud metadata, or bypass network security controls.
+remediation_advice: Implement strict allowlisting for external requests. Validate and sanitize all URLs. Use network segmentation to isolate internal services. Deploy SSRF detection. Never make requests to user-supplied URLs without validation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-204-Server-Side-Request-Forgery-(Ssrf)

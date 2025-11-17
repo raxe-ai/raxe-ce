@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: database_credentials
 rule_hash: null
+risk_explanation: Database connection string exposure reveals database locations, credentials, and configuration details. Attackers can use this information to directly access databases, extract sensitive data, modify records, or completely compromise data stores.
+remediation_advice: Use secure secret management for database credentials. Implement connection string encryption and access controls. Never hardcode connection strings in code or configuration files. Use service principals and managed identities where possible.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3036-Database-Connection-String-Detection

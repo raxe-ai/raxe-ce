@@ -77,3 +77,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: null
 rule_hash: sha256:NEW_RULE_DESERIALIZATION_ATTACKS
+risk_explanation: Code execution attacks inject and execute arbitrary code (Python, JavaScript, Node.js) to gain control over application logic or system resources. Successful exploitation can lead to complete system compromise, data theft, or deployment of malware.
+remediation_advice: Never use eval(), exec(), or similar functions with user input. Implement strict input validation and sanitization. Use sandboxing and containerization to isolate code execution. Deploy runtime application self-protection (RASP) to detect code injection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-027-Unsafe-Deserialization-Attacks

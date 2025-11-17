@@ -42,3 +42,6 @@ metadata:
   category: response_safety
   scan_target: response
 rule_hash: null
+risk_explanation: Medical misinformation can cause serious health harm when users follow incorrect medical advice. AI-generated health misinformation can be convincing while being dangerously inaccurate.
+remediation_advice: Implement fact-checking and verification for medical information. Use authoritative medical sources and databases. Add disclaimers that AI should not replace professional medical advice. Deploy accuracy monitoring for health-related outputs.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-104-Medical-Misinformation-Detection

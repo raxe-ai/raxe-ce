@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: jailbreak
 rule_hash: null
+risk_explanation: Token smuggling attacks exploit how AI systems tokenize and process text to hide malicious content in token boundaries, rare tokens, or tokenization edge cases. These attacks can evade pattern matching by manipulating the fundamental representation of text.
+remediation_advice: Implement security analysis at multiple levels (character, token, semantic). Use tokenization-aware pattern matching. Apply normalization before tokenization to resolve smuggling attempts. Monitor for unusual token patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-202-Token-Smuggling-Jailbreak-Detection

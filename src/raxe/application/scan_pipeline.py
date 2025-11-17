@@ -164,6 +164,7 @@ class ScanPipeline:
         telemetry_hook: TelemetryHook | None = None,
         telemetry_manager: TelemetryManager | None = None,
         plugin_manager: object | None = None,  # PluginManager type hint circular
+        suppression_manager: object | None = None,  # SuppressionManager type hint
         enable_l2: bool = True,
         fail_fast_on_critical: bool = True,
         min_confidence_for_skip: float = 0.7,
@@ -181,6 +182,7 @@ class ScanPipeline:
             telemetry_hook: Optional telemetry sender (legacy)
             telemetry_manager: Optional telemetry manager (new, with SQLite queue)
             plugin_manager: Optional plugin manager for extensibility
+            suppression_manager: Optional suppression manager for false positives
             enable_l2: Enable L2 analysis (default: True)
             fail_fast_on_critical: Skip L2 if CRITICAL detected (optimization)
             min_confidence_for_skip: Minimum L1 confidence to skip L2 on CRITICAL (default: 0.7)
@@ -195,6 +197,7 @@ class ScanPipeline:
         self.telemetry_hook = telemetry_hook
         self.telemetry_manager = telemetry_manager
         self.plugin_manager = plugin_manager  # NEW: Plugin system integration
+        self.suppression_manager = suppression_manager  # NEW: Suppression system
         self.enable_l2 = enable_l2
         self.fail_fast_on_critical = fail_fast_on_critical
         self.min_confidence_for_skip = min_confidence_for_skip
@@ -386,6 +389,34 @@ class ScanPipeline:
                 scan_duration_ms=l1_result.scan_duration_ms,
             )
 
+        # 4.5. Apply suppressions (NEW: Filter out suppressed detections)
+        suppressed_count = 0
+        if self.suppression_manager:
+            unsuppressed_detections = []
+            for detection in l1_result.detections:
+                is_suppressed, reason = self.suppression_manager.is_suppressed(detection.rule_id)
+                if is_suppressed:
+                    suppressed_count += 1
+                    logger.debug(f"Suppressed {detection.rule_id}: {reason}")
+                    # Log suppression application to audit log
+                    self.suppression_manager.log_suppression(
+                        scan_id=None,  # scan_id not available in pipeline
+                        rule_id=detection.rule_id,
+                        reason=reason
+                    )
+                else:
+                    unsuppressed_detections.append(detection)
+
+            # Update l1_result with unsuppressed detections
+            from raxe.domain.engine.executor import ScanResult
+            l1_result = ScanResult(
+                detections=unsuppressed_detections,
+                scanned_at=l1_result.scanned_at,
+                text_length=l1_result.text_length,
+                rules_checked=l1_result.rules_checked,
+                scan_duration_ms=l1_result.scan_duration_ms,
+            )
+
         # 5. Merge L1+L2 results
         metadata: dict[str, object] = {
             "customer_id": customer_id,
@@ -400,6 +431,7 @@ class ScanPipeline:
             "l2_enabled": l2_enabled,
             "confidence_threshold": confidence_threshold,
             "explain": explain,
+            "suppressed_count": suppressed_count,  # NEW: Track suppressions
         }
         if context:
             metadata["context"] = context

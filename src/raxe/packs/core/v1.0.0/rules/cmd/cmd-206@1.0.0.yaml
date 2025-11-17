@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   category: web_attacks
 rule_hash: null
+risk_explanation: Insecure deserialization attacks exploit object deserialization to execute arbitrary code, manipulate application logic, or cause denial of service. Deserializing untrusted data is extremely dangerous.
+remediation_advice: Never deserialize untrusted data. Use safe serialization formats (JSON) instead of language-specific formats (pickle, serialized PHP). Implement type checking and validation. Use allowlisting for permitted classes. Deploy deserialization attack detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-206-Insecure-Deserialization-Attack-Detection

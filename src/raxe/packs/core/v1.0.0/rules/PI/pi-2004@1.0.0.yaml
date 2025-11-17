@@ -34,3 +34,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-PI-2004
 rule_hash: sha256:604526540f7a39086414b6e0dda76712c5b69115939b87272cb05528c4a02d37
+risk_explanation: Spacing obfuscation uses unusual whitespace, separators, or formatting to disguise malicious keywords while preserving their meaning to the AI. This technique can evade simple pattern matching while still conveying harmful instructions.
+remediation_advice: Normalize whitespace and formatting before security analysis. Implement pattern matching that is resilient to spacing variations. Use n-gram analysis and fuzzy matching to detect obfuscated patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-2004-Underscore-Separated-Attack-Keywords

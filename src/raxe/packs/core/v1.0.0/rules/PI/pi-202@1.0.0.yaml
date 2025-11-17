@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   category: social_engineering
 rule_hash: null
+risk_explanation: Social engineering attacks manipulate AI systems using psychological techniques similar to those used against humans. These attacks can trick AI into revealing information, performing unauthorized actions, or bypassing security controls through deception rather than technical exploitation.
+remediation_advice: Train AI systems to recognize and resist social engineering tactics. Implement behavioral analysis to detect manipulation attempts. Use strict policy enforcement that cannot be overridden by persuasive language. Log and review suspicious interaction patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-202-Social-Engineering-Attack-Detection

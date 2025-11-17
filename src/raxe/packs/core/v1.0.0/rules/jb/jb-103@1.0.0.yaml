@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-JB-0103
 rule_hash: sha256:dcc0a074782c06627f4607fb9a2646d33ee504844b2eec7dc1bb01ea9ec383fa
+risk_explanation: Safety rule override attacks explicitly instruct the AI to forget, discard, or ignore its safety rules and ethical guidelines. Successfully bypassing safety rules enables generation of harmful content, privacy violations, or execution of dangerous instructions.
+remediation_advice: Never allow safety rules to be disabled, forgotten, or overridden by user input. Implement immutable safety policies that persist regardless of instructions. Use layered defenses where safety evaluation is independent of conversation state.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-103-Forget/Discard-Safety-Rules

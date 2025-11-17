@@ -84,15 +84,30 @@ pack:
     - id: pi-027
       version: 1.0.0
       path: rules/PI/pi-027@1.0.0.yaml
+    - id: pi-028
+      version: 1.0.0
+      path: rules/PI/pi-028@1.0.0.yaml
+    - id: pi-029
+      version: 1.0.0
+      path: rules/PI/pi-029@1.0.0.yaml
+    - id: pi-030
+      version: 1.0.0
+      path: rules/PI/pi-030@1.0.0.yaml
     - id: cmd-001
       version: 1.0.0
       path: rules/cmd/cmd-001@1.0.0.yaml
     - id: cmd-007
       version: 1.0.0
       path: rules/cmd/cmd-007@1.0.0.yaml
+    - id: cmd-015
+      version: 1.0.0
+      path: rules/cmd/cmd-015@1.0.0.yaml
     - id: cmd-016
       version: 1.0.0
       path: rules/cmd/cmd-016@1.0.0.yaml
+    - id: cmd-017
+      version: 1.0.0
+      path: rules/cmd/cmd-017@1.0.0.yaml
     - id: cmd-021
       version: 1.0.0
       path: rules/cmd/cmd-021@1.0.0.yaml
@@ -264,6 +279,12 @@ pack:
     - id: jb-105
       version: 1.0.0
       path: rules/jb/jb-105@1.0.0.yaml
+    - id: jb-110
+      version: 1.0.0
+      path: rules/jb/jb-110@1.0.0.yaml
+    - id: jb-111
+      version: 1.0.0
+      path: rules/jb/jb-111@1.0.0.yaml
     - id: pii-001
       version: 1.0.0
       path: rules/pii/pii-001@1.0.0.yaml
@@ -303,6 +324,27 @@ pack:
     - id: pii-044
       version: 1.0.0
       path: rules/pii/pii-044@1.0.0.yaml
+    - id: pii-050
+      version: 1.0.0
+      path: rules/pii/pii-050@1.0.0.yaml
+    - id: pii-051
+      version: 1.0.0
+      path: rules/pii/pii-051@1.0.0.yaml
+    - id: pii-052
+      version: 1.0.0
+      path: rules/pii/pii-052@1.0.0.yaml
+    - id: pii-053
+      version: 1.0.0
+      path: rules/pii/pii-053@1.0.0.yaml
+    - id: pii-054
+      version: 1.0.0
+      path: rules/pii/pii-054@1.0.0.yaml
+    - id: pii-055
+      version: 1.0.0
+      path: rules/pii/pii-055@1.0.0.yaml
+    - id: pii-056
+      version: 1.0.0
+      path: rules/pii/pii-056@1.0.0.yaml
     - id: pii-058
       version: 1.0.0
       path: rules/pii/pii-058@1.0.0.yaml
@@ -324,6 +366,30 @@ pack:
     - id: pii-2042
       version: 1.0.0
       path: rules/pii/pii-2042@1.0.0.yaml
+    - id: pii-3064
+      version: 1.0.0
+      path: rules/pii/pii-3064@1.0.0.yaml
+    - id: pii-3065
+      version: 1.0.0
+      path: rules/pii/pii-3065@1.0.0.yaml
+    - id: pii-3066
+      version: 1.0.0
+      path: rules/pii/pii-3066@1.0.0.yaml
+    - id: pii-3067
+      version: 1.0.0
+      path: rules/pii/pii-3067@1.0.0.yaml
+    - id: pii-3068
+      version: 1.0.0
+      path: rules/pii/pii-3068@1.0.0.yaml
+    - id: pii-3069
+      version: 1.0.0
+      path: rules/pii/pii-3069@1.0.0.yaml
+    - id: pii-3070
+      version: 1.0.0
+      path: rules/pii/pii-3070@1.0.0.yaml
+    - id: pii-3071
+      version: 1.0.0
+      path: rules/pii/pii-3071@1.0.0.yaml
     - id: rag-016
       version: 1.0.0
       path: rules/rag/rag-016@1.0.0.yaml

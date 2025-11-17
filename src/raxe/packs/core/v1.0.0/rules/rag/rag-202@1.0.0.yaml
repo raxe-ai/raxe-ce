@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: rag_attacks
 rule_hash: null
+risk_explanation: Embedding manipulation attacks optimize document representations to achieve malicious retrieval objectives. These attacks exploit the mathematical properties of embedding spaces to bias retrieval results.
+remediation_advice: Use robust embedding models resistant to adversarial optimization. Implement embedding quality metrics and anomaly detection. Deploy multiple diverse retrieval methods. Monitor embedding space for unusual patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-202-Rag-Embedding-Manipulation-Detection

@@ -38,3 +38,6 @@ metadata:
   updated: '2025-11-16'
   author: raxe-ce
 rule_hash: sha256:a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6
+risk_explanation: Leetspeak and character substitution techniques (1=i, 3=e, @=a) disguise attack keywords while remaining human-readable. This evades simple keyword matching while conveying malicious intent.
+remediation_advice: Implement deobfuscation and normalization of leetspeak patterns. Use fuzzy matching and edit distance algorithms. Deploy machine learning models trained on obfuscated attacks.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-019-Leetspeak-Character

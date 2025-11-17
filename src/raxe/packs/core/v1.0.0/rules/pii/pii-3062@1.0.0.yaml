@@ -45,3 +45,6 @@ metadata:
   references:
   - https://www.activefence.com/blog/llm-memory-exfiltration-red-team/
 rule_hash: sha256:c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2
+risk_explanation: LLM memory extraction attacks attempt to retrieve information from previous interactions, other users' conversations, or training data. Successful extraction can leak sensitive information across security boundaries and violate user privacy.
+remediation_advice: Implement proper conversation isolation and memory boundaries. Use access controls that prevent cross-user information leakage. Deploy privacy-preserving techniques in training and fine-tuning. Monitor for memory extraction attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3062-Llm-Memory-Exfiltration

@@ -36,3 +36,6 @@ metadata:
   author: raxe-ce
   category: evasion
 rule_hash: null
+risk_explanation: Null byte injection exploits null byte handling differences to truncate strings, bypass filters, or manipulate file operations. This can enable path traversal, filter bypass, or other injection attacks.
+remediation_advice: Reject or strip null bytes from all input. Implement consistent null byte handling across all components. Use safe string handling functions. Deploy null byte injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-203-Null-Byte-Injection-Detection

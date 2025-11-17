@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   category: prompt_injection
 rule_hash: null
+risk_explanation: System prompt extraction attacks attempt to reveal the internal instructions and configuration of AI systems. This information can be used to craft more sophisticated attacks, identify vulnerabilities, or reverse-engineer proprietary security controls.
+remediation_advice: Never include sensitive system information in prompts that can be extracted. Use prompt templates that minimize information leakage. Implement output filtering to detect and block system prompt disclosures. Monitor for extraction attempts and update defenses based on observed tactics.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-203-System-Prompt-Extraction-Attack

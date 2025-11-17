@@ -37,3 +37,6 @@ metadata:
   author: raxe-ce
   category: web_attacks
 rule_hash: null
+risk_explanation: LDAP injection manipulates directory service queries to bypass authentication, extract user information, or escalate privileges. This can compromise directory services that control authentication and authorization.
+remediation_advice: Use parameterized LDAP queries or safe query builders. Implement strict input validation and escaping. Use least-privilege LDAP service accounts. Deploy LDAP injection detection and blocking.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-208-Ldap-Injection-Attack-Detection

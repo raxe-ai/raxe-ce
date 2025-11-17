@@ -42,3 +42,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-RAG-0016
 rule_hash: sha256:7167a53359f47f50102d0ab18c43ece38ca3920a4abd69f29ba494830e26dfc0
+risk_explanation: Citation and source manipulation attacks attempt to alter document references or fake citations to make false information appear authoritative. This undermines trust in RAG systems and can spread misinformation.
+remediation_advice: Implement cryptographic verification of document sources and citations. Use immutable citation references. Validate all citations against authoritative sources. Deploy anomaly detection for citation manipulation attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-016-Alter

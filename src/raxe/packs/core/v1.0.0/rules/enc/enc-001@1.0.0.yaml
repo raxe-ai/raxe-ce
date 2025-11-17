@@ -43,3 +43,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-0001
 rule_hash: sha256:6455c25f7963264cf3581653540d1cf86198b4929651d46130f0bfaa7e393fa3
+risk_explanation: Base64 encoding is commonly used to obfuscate malicious payloads and evade security detection. Attackers encode harmful commands, code, or data to bypass content inspection while maintaining the ability to decode and execute.
+remediation_advice: Implement automatic decoding and analysis of base64 content. Use multi-layer inspection that examines both encoded and decoded forms. Deploy anomaly detection for suspicious base64 patterns. Monitor for base64 usage in contexts where it's unexpected.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-001-Base64-Encoded-Content

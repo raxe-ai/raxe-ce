@@ -91,15 +91,18 @@ class PipelinePreloader:
         self,
         config_path: Path | None = None,
         config: ScanConfig | None = None,
+        suppression_manager: object | None = None,
     ):
         """Initialize preloader.
 
         Args:
             config_path: Optional path to config file
             config: Optional explicit config (overrides config_path)
+            suppression_manager: Optional suppression manager for false positive handling
         """
         self.config_path = config_path
         self._config = config
+        self.suppression_manager = suppression_manager
 
     def preload(self) -> tuple[ScanPipeline, PreloadStats]:
         """Preload all components and create ready-to-use pipeline.
@@ -212,6 +215,7 @@ class PipelinePreloader:
             scan_merger=scan_merger,
             policy=config.policy,
             telemetry_hook=telemetry_hook,
+            suppression_manager=self.suppression_manager,
             enable_l2=config.enable_l2,
             fail_fast_on_critical=config.fail_fast_on_critical,
             min_confidence_for_skip=config.min_confidence_for_skip,
@@ -277,12 +281,14 @@ class PipelinePreloader:
 def preload_pipeline(
     config_path: Path | None = None,
     config: ScanConfig | None = None,
+    suppression_manager: object | None = None,
 ) -> tuple[ScanPipeline, PreloadStats]:
     """Convenience function to preload pipeline.
 
     Args:
         config_path: Optional path to config file
         config: Optional explicit config
+        suppression_manager: Optional suppression manager for false positive handling
 
     Returns:
         Tuple of (pipeline, stats)
@@ -292,5 +298,5 @@ def preload_pipeline(
         print(stats)
         result = pipeline.scan("test")
     """
-    preloader = PipelinePreloader(config_path, config)
+    preloader = PipelinePreloader(config_path, config, suppression_manager)
     return preloader.preload()

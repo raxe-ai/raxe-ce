@@ -41,3 +41,6 @@ metadata:
   author: raxe-ce
   legacy_rx_id: RX-ENC-0024
 rule_hash: sha256:2341d804748f3090f85472e366fa942c6060780f98e2c7946d58c076656a1a03
+risk_explanation: Hexadecimal encoding disguises malicious payloads (network attacks, credentials) to bypass string-based security controls. This encoding preserves payload functionality while evading signature-based detection.
+remediation_advice: Decode and analyze hex-encoded content before security evaluation. Implement pattern matching that works across multiple encodings. Use semantic analysis that identifies malicious intent regardless of encoding.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-024-Hex-Encoded-Network-Payloads

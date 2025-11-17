@@ -54,7 +54,7 @@ jobs:
           echo "Test collection and structure validation complete"
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           fail_ci_if_error: false

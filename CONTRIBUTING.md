@@ -12,8 +12,8 @@ Thank you for your interest in contributing to RAXE CE! We welcome contributions
 - Enhance documentation
 
 ### 2. Rules & Detection Logic
-- Contribute new detection rules to [raxe-rules](https://github.com/raxe-ai/raxe-rules)
-- Improve existing rules
+- Contribute new detection rules (see [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
+- Improve existing rules in `src/raxe/packs/core/v1.0.0/rules/`
 - Add test cases for edge cases
 - Report false positives/negatives
 
@@ -76,13 +76,14 @@ git checkout -b fix/your-bug-fix
 
 ### Code Standards
 
-We follow strict code quality standards (see `CLAUDE.md` for details):
+We follow strict code quality standards:
 
 - **Python 3.10+** with type hints required
-- **Ruff** for linting and formatting
-- **mypy** for type checking
-- **Domain layer purity** - NO I/O in domain/
+- **Ruff** for linting and formatting (`ruff check src/`)
+- **mypy** for type checking (`mypy src/`)
+- **Domain layer purity** - NO I/O in domain/ (Clean Architecture)
 - **Test coverage** >80% overall, >95% for domain layer
+- See our [Architecture Guide](docs/architecture.md) for design principles
 
 ### Running Tests
 

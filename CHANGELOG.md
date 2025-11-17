@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-11-17
+
+### 🔴 CRITICAL Security Fixes
+- **Merged 6 REDOS vulnerability fixes** into production rules:
+  - `pi-068@1.0.0`: Fixed O(n³) catastrophic backtracking (59x performance improvement)
+  - `hc-004@1.0.0`: Fixed O(2^n) exponential complexity (57x performance improvement)
+  - `cmd-036@1.0.0`: Fixed nested quantifier backtracking (1.9x speedup)
+  - `pii-3036@1.0.0`: Fixed quadratic complexity in database connection string detection
+  - `pii-3039@1.0.0`: Fixed unbounded negated character classes in Redis patterns
+  - `pii-3060@1.0.0`: NEW RULE - Generic password detection with REDOS protections
+- **Eliminated production DoS vulnerabilities** (2KB inputs causing 3-4 second freezes)
+- All fixes maintain 95-100% detection accuracy with zero new false positives
+
+### 🧹 Codebase Cleanup
+- **Consolidated duplicate LangChain examples** into `examples/integrations/`
+  - Removed duplicate `langchain_integration/` directory
+  - Updated to modern `langchain-openai` imports
+  - Created requirements.txt for integrations
+- **Consolidated duplicate profiler CLI** implementations
+  - Removed duplicate `cli/profile.py` and `profile_cmd`
+  - Single unified `raxe profile` command interface
+
+### 📦 Repository Structure
+- **Created `_not_for_public/` directory** for internal files (1.4MB, 52+ files)
+  - security_reports/: Vulnerability analyses, REDOS reports (7 files)
+  - validation_reports/: Internal validation docs (10 files)
+  - sprint_reports/: Sprint & test reports (5 files)
+  - research/: LLM security research papers (2 files, 72KB)
+  - ml_scripts/: Training scripts with fixed paths (16 files, 513KB)
+  - training_data/: L2 training datasets (3 directories, 186KB)
+- **Fixed hardcoded developer paths** in 15 ML training scripts
+  - Changed `/Users/mh/github-raxe-ai/raxe-ce/` → `PROJECT_ROOT` (portable paths)
+  - All scripts now use `Path(__file__).parent.parent.parent` for portability
+- **Updated .gitignore** to exclude `_not_for_public/`
+
+### 📁 Directory Cleanup
+- **Root directory**: 52 → 12 files (only public docs remain)
+- **data/ directory**: Cleaned (empty, ready for public L2 model)
+- **scripts/ directory**: 30 → 15 scripts (only public utilities remain)
+- **docs/ directory**: 46 → 36 docs (removed 10 internal validation docs)
+- **examples/ directory**: Removed duplicate `langchain_integration/`
+
+### 📝 Documentation
+- Fixed README.md documentation references (`docs/getting-started.md` → `docs/quickstart.md`)
+- Updated examples/README.md to reference consolidated integrations directory
+- All cross-references verified and corrected
+
+### 🚀 Public Release Preparation
+- Repository now clean and ready for public release
+- No internal security reports, vulnerability analyses, or developer paths exposed
+- Privacy-first architecture verified (no hardcoded credentials, internal URLs)
+- All tests passing with production REDOS fixes
+
 ## [0.0.2] - 2025-11-16
 
 ### Added

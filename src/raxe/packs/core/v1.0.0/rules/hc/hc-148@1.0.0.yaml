@@ -21,8 +21,7 @@ metrics:
   recall: null
   f1_score: null
   last_evaluated: null
-mitre_attack:
-
+mitre_attack: []
 metadata:
   created: '2025-11-17'
   updated: '2025-11-17'

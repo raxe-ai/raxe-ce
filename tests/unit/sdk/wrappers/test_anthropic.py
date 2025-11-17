@@ -15,7 +15,7 @@ from raxe.sdk.wrappers.anthropic import RaxeAnthropic
 @pytest.fixture
 def mock_anthropic():
     """Mock Anthropic client."""
-    with patch("raxe.sdk.wrappers.anthropic.Anthropic") as mock:
+    with patch("anthropic.Anthropic") as mock:
         yield mock
 
 
@@ -50,7 +50,7 @@ def test_raxe_anthropic_init(mock_anthropic, mock_raxe):
 
 def test_raxe_anthropic_init_without_anthropic_package():
     """Test that ImportError is raised if anthropic not installed."""
-    with patch("raxe.sdk.wrappers.anthropic.Anthropic", side_effect=ImportError):
+    with patch("builtins.__import__", side_effect=ImportError("No module named 'anthropic'")):
         with pytest.raises(ImportError, match="anthropic package is required"):
             RaxeAnthropic(api_key="sk-ant-test")
 

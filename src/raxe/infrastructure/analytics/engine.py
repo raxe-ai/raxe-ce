@@ -205,8 +205,10 @@ class AnalyticsEngine:
 
             total_scans = stats.get('total_scans', 0)
 
+            # IMPORTANT: Only use scan_history if we actually have data
+            # In test environments, scan_history.db might be empty or non-existent
             if total_scans > 0:
-                # We have scan history data - use it
+                # We have scan history data - use it (global machine stats)
                 scans_with_threats = stats.get('scans_with_threats', 0)
                 detection_rate = stats.get('threat_rate', 0.0) * 100
 

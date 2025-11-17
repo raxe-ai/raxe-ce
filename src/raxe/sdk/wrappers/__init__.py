@@ -128,8 +128,8 @@ def wrap_client(raxe_client: "Raxe", client: Any) -> Any:
     client_type = type(client).__name__
 
     if client_type == "OpenAI":
-        # Wrap OpenAI client
-        from raxe.sdk.wrappers import RaxeOpenAI
+        # Wrap OpenAI client - import directly from submodule to avoid lazy loading issues
+        from raxe.sdk.wrappers.openai import RaxeOpenAI
 
         # Create wrapped version with same config
         wrapped = RaxeOpenAI(raxe=raxe_client)
@@ -141,8 +141,8 @@ def wrap_client(raxe_client: "Raxe", client: Any) -> Any:
         return wrapped
 
     elif client_type == "Anthropic":
-        # Wrap Anthropic client
-        from raxe.sdk.wrappers import RaxeAnthropic
+        # Wrap Anthropic client - import directly from submodule to avoid lazy loading issues
+        from raxe.sdk.wrappers.anthropic import RaxeAnthropic
 
         # Create wrapped version with same config
         wrapped = RaxeAnthropic(raxe=raxe_client)

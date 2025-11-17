@@ -3,6 +3,7 @@
 Tests that L2 is intelligently skipped based on L1 confidence levels.
 """
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -16,10 +17,12 @@ from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
 
 
 @pytest.fixture
-def registry(tmp_path):
-    """Create a temporary pack registry."""
-    config = RegistryConfig(packs_root=tmp_path / "packs", strict=False)
-    return PackRegistry(config)
+def mock_registry():
+    """Create a mock pack registry that returns test rules via get_all_rules()."""
+    registry = Mock(spec=PackRegistry)
+    # Initially empty - tests will configure rules as needed
+    registry.get_all_rules.return_value = []
+    return registry
 
 
 @pytest.fixture
@@ -58,17 +61,17 @@ def low_confidence_rule():
     )
 
 
-def test_high_confidence_critical_skips_l2(registry, high_confidence_rule):
+def test_high_confidence_critical_skips_l2(mock_registry, high_confidence_rule):
     """Test that high-confidence CRITICAL detections skip L2."""
-    # Setup
-    registry._rules = [high_confidence_rule]
+    # Setup: Configure mock registry to return high-confidence rule
+    mock_registry.get_all_rules.return_value = [high_confidence_rule]
 
     executor = RuleExecutor()
     l2_detector = StubL2Detector()
     merger = ScanMerger()
 
     pipeline = ScanPipeline(
-        pack_registry=registry,
+        pack_registry=mock_registry,
         rule_executor=executor,
         l2_detector=l2_detector,
         scan_merger=merger,
@@ -86,17 +89,17 @@ def test_high_confidence_critical_skips_l2(registry, high_confidence_rule):
     assert result.scan_result.l2_result is None  # L2 skipped
 
 
-def test_low_confidence_critical_runs_l2(registry, low_confidence_rule):
+def test_low_confidence_critical_runs_l2(mock_registry, low_confidence_rule):
     """Test that low-confidence CRITICAL detections run L2 for validation."""
-    # Setup
-    registry._rules = [low_confidence_rule]
+    # Setup: Configure mock registry to return low-confidence rule
+    mock_registry.get_all_rules.return_value = [low_confidence_rule]
 
     executor = RuleExecutor()
     l2_detector = StubL2Detector()
     merger = ScanMerger()
 
     pipeline = ScanPipeline(
-        pack_registry=registry,
+        pack_registry=mock_registry,
         rule_executor=executor,
         l2_detector=l2_detector,
         scan_merger=merger,
@@ -114,10 +117,10 @@ def test_low_confidence_critical_runs_l2(registry, low_confidence_rule):
     assert result.scan_result.l2_result is not None  # L2 was executed
 
 
-def test_min_confidence_threshold_adjustable(registry, high_confidence_rule):
+def test_min_confidence_threshold_adjustable(mock_registry, high_confidence_rule):
     """Test that min_confidence_for_skip threshold is adjustable."""
-    # Setup
-    registry._rules = [high_confidence_rule]
+    # Setup: Configure mock registry to return high-confidence rule
+    mock_registry.get_all_rules.return_value = [high_confidence_rule]
 
     executor = RuleExecutor()
     l2_detector = StubL2Detector()
@@ -125,7 +128,7 @@ def test_min_confidence_threshold_adjustable(registry, high_confidence_rule):
 
     # High threshold (0.98) - even high confidence (0.95) won't skip
     pipeline = ScanPipeline(
-        pack_registry=registry,
+        pack_registry=mock_registry,
         rule_executor=executor,
         l2_detector=l2_detector,
         scan_merger=merger,
@@ -141,17 +144,17 @@ def test_min_confidence_threshold_adjustable(registry, high_confidence_rule):
     assert result.scan_result.l2_result is not None
 
 
-def test_fail_fast_disabled_always_runs_l2(registry, high_confidence_rule):
+def test_fail_fast_disabled_always_runs_l2(mock_registry, high_confidence_rule):
     """Test that L2 always runs when fail_fast_on_critical=False."""
-    # Setup
-    registry._rules = [high_confidence_rule]
+    # Setup: Configure mock registry to return high-confidence rule
+    mock_registry.get_all_rules.return_value = [high_confidence_rule]
 
     executor = RuleExecutor()
     l2_detector = StubL2Detector()
     merger = ScanMerger()
 
     pipeline = ScanPipeline(
-        pack_registry=registry,
+        pack_registry=mock_registry,
         rule_executor=executor,
         l2_detector=l2_detector,
         scan_merger=merger,
@@ -168,7 +171,7 @@ def test_fail_fast_disabled_always_runs_l2(registry, high_confidence_rule):
     assert result.scan_result.l2_result is not None
 
 
-def test_non_critical_always_runs_l2(registry):
+def test_non_critical_always_runs_l2(mock_registry):
     """Test that non-CRITICAL severities always run L2."""
     # Create HIGH severity rule
     high_severity_rule = Rule(
@@ -185,15 +188,15 @@ def test_non_critical_always_runs_l2(registry):
         metrics=RuleMetrics(),
     )
 
-    # Setup
-    registry._rules = [high_severity_rule]
+    # Setup: Configure mock registry to return HIGH severity rule
+    mock_registry.get_all_rules.return_value = [high_severity_rule]
 
     executor = RuleExecutor()
     l2_detector = StubL2Detector()
     merger = ScanMerger()
 
     pipeline = ScanPipeline(
-        pack_registry=registry,
+        pack_registry=mock_registry,
         rule_executor=executor,
         l2_detector=l2_detector,
         scan_merger=merger,

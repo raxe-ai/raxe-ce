@@ -1,34 +1,27 @@
-"""Suppression system for managing false positives.
+"""Suppression system for managing false positives - Domain Layer (PURE).
 
-This module provides:
-- .raxeignore file support (like .gitignore)
-- Programmatic suppression via API
-- SQLite audit logging of all suppressions
-- Wildcard pattern matching (pi-*, *-injection)
+This module provides the PURE business logic for suppressions:
+- Value objects (Suppression)
+- Pure matching logic
+- Repository protocol (no implementation)
+- Manager orchestration (accepts repositories via DI)
 
-Example .raxeignore:
-    # Suppress specific rules
-    pi-001  # Reason: False positive in documentation
-    jb-regex-basic  # Too sensitive for our use case
-
-    # Wildcard patterns
-    pi-*  # Suppress all prompt injection rules
-    *-injection  # Suppress all injection detection
+NO I/O operations in this layer:
+- NO database calls
+- NO file operations
+- NO network requests
+- NO logging (pass results up to application layer)
 """
 import fnmatch
-import logging
-import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-
-logger = logging.getLogger(__name__)
+from typing import Any, Protocol
 
 
 @dataclass(frozen=True)
 class Suppression:
-    """A single suppression entry.
+    """A single suppression entry (Value Object - Immutable).
 
     Attributes:
         pattern: Rule ID pattern (supports wildcards: pi-*, *-injection)
@@ -66,8 +59,11 @@ class Suppression:
         """
         return fnmatch.fnmatch(rule_id, self.pattern)
 
-    def is_expired(self) -> bool:
+    def is_expired(self, *, current_time: datetime | None = None) -> bool:
         """Check if suppression has expired.
+
+        Args:
+            current_time: Current time for testing (default: now)
 
         Returns:
             True if expires_at is set and in the past
@@ -77,197 +73,166 @@ class Suppression:
 
         try:
             expiry = datetime.fromisoformat(self.expires_at)
-            return datetime.now(timezone.utc) > expiry
+            now = current_time or datetime.now(timezone.utc)
+            return now > expiry
         except ValueError:
-            logger.warning(f"Invalid expiry date format: {self.expires_at}")
+            # Invalid date format - treat as expired
             return False
 
 
+@dataclass(frozen=True)
+class AuditEntry:
+    """Audit log entry for suppression actions (Value Object - Immutable).
+
+    Attributes:
+        pattern: Pattern that was added/removed/applied
+        reason: Reason for action
+        action: Action type (added, removed, applied)
+        created_at: When action occurred (ISO format)
+        scan_id: Scan ID (for applied actions, optional)
+        rule_id: Rule ID (for applied actions, optional)
+        created_by: Who performed the action (optional)
+        metadata: Additional metadata (optional)
+    """
+    pattern: str
+    reason: str
+    action: str
+    created_at: str
+    scan_id: int | None = None
+    rule_id: str | None = None
+    created_by: str | None = None
+    metadata: dict[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        """Validate audit entry."""
+        if self.action not in ("added", "removed", "applied"):
+            raise ValueError(f"Invalid action: {self.action}")
+
+
+class SuppressionRepository(Protocol):
+    """Repository interface for suppression persistence (PURE - NO IMPLEMENTATION).
+
+    This is a Protocol (interface) that defines what operations are needed.
+    Infrastructure layer provides concrete implementations.
+    """
+
+    def load_suppressions(self) -> list[Suppression]:
+        """Load all suppressions from storage.
+
+        Returns:
+            List of Suppression objects
+        """
+        ...
+
+    def save_suppression(self, suppression: Suppression) -> None:
+        """Save a suppression to storage.
+
+        Args:
+            suppression: Suppression to save
+        """
+        ...
+
+    def remove_suppression(self, pattern: str) -> bool:
+        """Remove a suppression from storage.
+
+        Args:
+            pattern: Pattern to remove
+
+        Returns:
+            True if removed, False if not found
+        """
+        ...
+
+    def save_all_suppressions(self, suppressions: list[Suppression]) -> None:
+        """Replace all suppressions in storage.
+
+        Args:
+            suppressions: List of suppressions to save
+        """
+        ...
+
+    def log_audit(self, entry: AuditEntry) -> None:
+        """Log an audit entry.
+
+        Args:
+            entry: Audit entry to log
+        """
+        ...
+
+    def get_audit_log(
+        self,
+        limit: int = 100,
+        pattern: str | None = None,
+        action: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Get audit log entries.
+
+        Args:
+            limit: Maximum entries to return
+            pattern: Filter by pattern (optional)
+            action: Filter by action (added/removed/applied, optional)
+
+        Returns:
+            List of audit log entries as dictionaries
+        """
+        ...
+
+
 class SuppressionManager:
-    """Manages suppressions for false positive handling.
+    """Manages suppressions for false positive handling (PURE ORCHESTRATION).
+
+    This class contains ONLY pure business logic - no I/O operations.
+    All persistence is delegated to the injected repository.
 
     Features:
-    - Load from .raxeignore file
-    - Programmatic API for adding/removing suppressions
-    - SQLite audit logging
+    - Check if rules are suppressed
+    - Add/remove suppressions (delegates to repository)
+    - Track active suppressions in memory
     - Wildcard pattern support
     """
 
     def __init__(
         self,
-        config_path: Path | None = None,
-        db_path: Path | None = None,
+        repository: SuppressionRepository,
+        *,
         auto_load: bool = True,
     ):
-        """Initialize suppression manager.
+        """Initialize suppression manager with dependency injection.
 
         Args:
-            config_path: Path to .raxeignore file (default: ./.raxeignore)
-            db_path: Path to SQLite database (default: ~/.raxe/suppressions.db)
-            auto_load: Automatically load suppressions from file on init
+            repository: Repository for persistence (injected)
+            auto_load: Automatically load suppressions from repository on init
         """
-        # Default paths
-        if config_path is None:
-            config_path = Path.cwd() / ".raxeignore"
-        if db_path is None:
-            db_path = Path.home() / ".raxe" / "suppressions.db"
-
-        self.config_path = Path(config_path)
-        self.db_path = Path(db_path)
-
-        # In-memory suppressions (loaded from file + programmatic)
+        self._repository = repository
         self._suppressions: dict[str, Suppression] = {}
 
-        # Initialize database
-        self._init_database()
+        # Auto-load from repository if requested
+        if auto_load:
+            self._load_from_repository()
 
-        # Auto-load from file if exists
-        if auto_load and self.config_path.exists():
-            self.load_from_file()
-
-    def _init_database(self) -> None:
-        """Initialize SQLite database for audit logging."""
-        import sqlite3
-
-        # Ensure directory exists
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        # Create suppressions audit table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS suppression_audit (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                pattern TEXT NOT NULL,
-                reason TEXT NOT NULL,
-                action TEXT NOT NULL,  -- 'added', 'removed', 'applied'
-                scan_id INTEGER,
-                rule_id TEXT,
-                created_at TEXT NOT NULL,
-                created_by TEXT,
-                metadata TEXT  -- JSON for additional context
-            )
-        """)
-
-        # Create index for efficient queries
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_audit_pattern
-            ON suppression_audit(pattern)
-        """)
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_audit_action
-            ON suppression_audit(action)
-        """)
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_audit_created_at
-            ON suppression_audit(created_at)
-        """)
-
-        conn.commit()
-        conn.close()
-
-    def load_from_file(self, path: Path | None = None) -> int:
-        """Load suppressions from .raxeignore file.
-
-        File format:
-            # Comment lines start with #
-            pi-001  # Inline reason
-            jb-*  # Suppress all jailbreak rules
-
-            # Blank lines are ignored
-            *-injection  # Suppress all injection rules
-
-        Args:
-            path: Path to file (default: self.config_path)
-
-        Returns:
-            Number of suppressions loaded
-        """
-        if path is None:
-            path = self.config_path
-
-        if not path.exists():
-            logger.debug(f"Suppression file not found: {path}")
-            return 0
-
-        count = 0
-        with open(path, "r", encoding="utf-8") as f:
-            for line_num, line in enumerate(f, start=1):
-                line = line.strip()
-
-                # Skip blank lines and comments
-                if not line or line.startswith("#"):
-                    continue
-
-                # Parse line: pattern # reason
-                pattern, _, reason = line.partition("#")
-                pattern = pattern.strip()
-                reason = reason.strip() or "Suppressed via .raxeignore"
-
-                if not pattern:
-                    logger.warning(f"Empty pattern at line {line_num} in {path}")
-                    continue
-
-                # Add suppression
-                try:
-                    self.add_suppression(
-                        pattern=pattern,
-                        reason=reason,
-                        created_by=f"file:{path.name}",
-                        log_to_db=False,  # Don't log file loads
-                    )
-                    count += 1
-                except ValueError as e:
-                    logger.warning(f"Invalid suppression at line {line_num}: {e}")
-
-        logger.info(f"Loaded {count} suppressions from {path}")
-        return count
-
-    def save_to_file(self, path: Path | None = None) -> int:
-        """Save current suppressions to .raxeignore file.
-
-        Args:
-            path: Path to file (default: self.config_path)
-
-        Returns:
-            Number of suppressions saved
-        """
-        if path is None:
-            path = self.config_path
-
-        # Ensure directory exists
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("# RAXE Suppression File (.raxeignore)\n")
-            f.write("# Format: <pattern>  # <reason>\n")
-            f.write("# Supports wildcards: pi-*, *-injection\n")
-            f.write("#\n")
-            f.write("# Auto-generated - DO NOT EDIT MANUALLY\n")
-            f.write(f"# Generated at: {datetime.now(timezone.utc).isoformat()}\n\n")
-
-            for suppression in sorted(self._suppressions.values(), key=lambda s: s.pattern):
-                f.write(f"{suppression.pattern}  # {suppression.reason}\n")
-
-        return len(self._suppressions)
+    def _load_from_repository(self) -> None:
+        """Load suppressions from repository into memory."""
+        suppressions = self._repository.load_suppressions()
+        for suppression in suppressions:
+            self._suppressions[suppression.pattern] = suppression
 
     def add_suppression(
         self,
         pattern: str,
         reason: str,
+        *,
         created_by: str | None = None,
         expires_at: str | None = None,
-        log_to_db: bool = True,
+        log_to_audit: bool = True,
     ) -> Suppression:
-        """Add a suppression programmatically.
+        """Add a suppression.
 
         Args:
             pattern: Rule ID pattern (supports wildcards)
             reason: Reason for suppression
             created_by: Who created it (default: "api")
             expires_at: When it expires (ISO format, optional)
-            log_to_db: Whether to log to database (default: True)
+            log_to_audit: Whether to log to audit (default: True)
 
         Returns:
             Created Suppression object
@@ -286,21 +251,26 @@ class SuppressionManager:
         # Store in memory
         self._suppressions[pattern] = suppression
 
-        # Log to database
-        if log_to_db:
-            self._log_audit(
+        # Persist to repository
+        self._repository.save_suppression(suppression)
+
+        # Log to audit
+        if log_to_audit:
+            audit_entry = AuditEntry(
                 pattern=pattern,
                 reason=reason,
                 action="added",
+                created_at=datetime.now(timezone.utc).isoformat(),
                 created_by=created_by,
             )
+            self._repository.log_audit(audit_entry)
 
-        logger.info(f"Added suppression: {pattern} - {reason}")
         return suppression
 
     def remove_suppression(
         self,
         pattern: str,
+        *,
         created_by: str | None = None,
     ) -> bool:
         """Remove a suppression.
@@ -317,22 +287,29 @@ class SuppressionManager:
 
         suppression = self._suppressions.pop(pattern)
 
-        # Log to database
-        self._log_audit(
+        # Remove from repository
+        self._repository.remove_suppression(pattern)
+
+        # Log to audit
+        audit_entry = AuditEntry(
             pattern=pattern,
             reason=suppression.reason,
             action="removed",
+            created_at=datetime.now(timezone.utc).isoformat(),
             created_by=created_by,
         )
+        self._repository.log_audit(audit_entry)
 
-        logger.info(f"Removed suppression: {pattern}")
         return True
 
-    def is_suppressed(self, rule_id: str) -> tuple[bool, str]:
-        """Check if a rule is suppressed.
+    def is_suppressed(
+        self, rule_id: str, *, current_time: datetime | None = None
+    ) -> tuple[bool, str]:
+        """Check if a rule is suppressed (PURE LOGIC).
 
         Args:
             rule_id: Rule ID to check
+            current_time: Current time for testing (default: now)
 
         Returns:
             Tuple of (is_suppressed, reason)
@@ -342,7 +319,7 @@ class SuppressionManager:
         # Check all active suppressions
         for suppression in self._suppressions.values():
             # Skip expired suppressions
-            if suppression.is_expired():
+            if suppression.is_expired(current_time=current_time):
                 continue
 
             # Check if pattern matches
@@ -351,85 +328,46 @@ class SuppressionManager:
 
         return False, ""
 
-    def log_suppression(
+    def log_suppression_applied(
         self,
-        scan_id: int | None,
         rule_id: str,
         reason: str,
+        *,
+        scan_id: int | None = None,
     ) -> None:
         """Log that a suppression was applied during a scan.
 
         Args:
-            scan_id: Scan ID (if applicable)
             rule_id: Rule ID that was suppressed
             reason: Reason for suppression
+            scan_id: Scan ID (if applicable)
         """
-        self._log_audit(
+        audit_entry = AuditEntry(
             pattern=rule_id,
             reason=reason,
             action="applied",
+            created_at=datetime.now(timezone.utc).isoformat(),
             scan_id=scan_id,
             rule_id=rule_id,
         )
+        self._repository.log_audit(audit_entry)
 
-    def _log_audit(
-        self,
-        pattern: str,
-        reason: str,
-        action: str,
-        scan_id: int | None = None,
-        rule_id: str | None = None,
-        created_by: str | None = None,
-        metadata: dict[str, Any] | None = None,
-    ) -> None:
-        """Log audit event to database.
+    def get_suppressions(self, *, current_time: datetime | None = None) -> list[Suppression]:
+        """Get all active suppressions (PURE LOGIC).
 
         Args:
-            pattern: Pattern that was added/removed/applied
-            reason: Reason for action
-            action: Action type (added, removed, applied)
-            scan_id: Scan ID (for applied actions)
-            rule_id: Rule ID (for applied actions)
-            created_by: Who performed the action
-            metadata: Additional metadata (JSON)
-        """
-        import json
-        import sqlite3
-
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO suppression_audit (
-                pattern, reason, action, scan_id, rule_id, created_at, created_by, metadata
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            pattern,
-            reason,
-            action,
-            scan_id,
-            rule_id,
-            datetime.now(timezone.utc).isoformat(),
-            created_by,
-            json.dumps(metadata) if metadata else None,
-        ))
-
-        conn.commit()
-        conn.close()
-
-    def get_suppressions(self) -> list[Suppression]:
-        """Get all active suppressions.
+            current_time: Current time for testing (default: now)
 
         Returns:
             List of Suppression objects (excluding expired ones)
         """
         return [
             s for s in self._suppressions.values()
-            if not s.is_expired()
+            if not s.is_expired(current_time=current_time)
         ]
 
     def get_suppression(self, pattern: str) -> Suppression | None:
-        """Get a specific suppression by pattern.
+        """Get a specific suppression by pattern (PURE LOGIC).
 
         Args:
             pattern: Pattern to look up (exact match)
@@ -445,7 +383,7 @@ class SuppressionManager:
         pattern: str | None = None,
         action: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Get audit log entries.
+        """Get audit log entries (delegates to repository).
 
         Args:
             limit: Maximum entries to return
@@ -455,78 +393,39 @@ class SuppressionManager:
         Returns:
             List of audit log entries
         """
-        import json
-        import sqlite3
+        return self._repository.get_audit_log(
+            limit=limit,
+            pattern=pattern,
+            action=action,
+        )
 
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+    def get_statistics(self, *, current_time: datetime | None = None) -> dict[str, Any]:
+        """Get suppression statistics (delegates to repository + pure logic).
 
-        # Build query
-        query = "SELECT * FROM suppression_audit WHERE 1=1"
-        params: list[Any] = []
-
-        if pattern:
-            query += " AND pattern = ?"
-            params.append(pattern)
-
-        if action:
-            query += " AND action = ?"
-            params.append(action)
-
-        query += " ORDER BY created_at DESC LIMIT ?"
-        params.append(limit)
-
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-
-        # Convert to dicts
-        results = []
-        for row in rows:
-            entry = dict(row)
-            # Parse metadata JSON
-            if entry.get("metadata"):
-                try:
-                    entry["metadata"] = json.loads(entry["metadata"])
-                except json.JSONDecodeError:
-                    entry["metadata"] = None
-            results.append(entry)
-
-        conn.close()
-        return results
-
-    def get_statistics(self) -> dict[str, Any]:
-        """Get suppression statistics.
+        Args:
+            current_time: Current time for testing (default: now)
 
         Returns:
             Dictionary with statistics
         """
-        import sqlite3
+        active_suppressions = self.get_suppressions(current_time=current_time)
 
-        active_suppressions = self.get_suppressions()
+        # Get audit counts from repository
+        audit_log = self._repository.get_audit_log(limit=10000)  # Get all
 
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        action_counts: dict[str, int] = {}
+        for entry in audit_log:
+            action = entry["action"]
+            action_counts[action] = action_counts.get(action, 0) + 1
 
-        # Count by action
-        cursor.execute("""
-            SELECT action, COUNT(*) as count
-            FROM suppression_audit
-            GROUP BY action
-        """)
-        action_counts = {row[0]: row[1] for row in cursor.fetchall()}
-
-        # Count applications in last 30 days
+        # Count recent applications (last 30 days)
         from datetime import timedelta
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
-        cursor.execute("""
-            SELECT COUNT(*) as count
-            FROM suppression_audit
-            WHERE action = 'applied' AND created_at >= ?
-        """, (cutoff,))
-        recent_applications = cursor.fetchone()[0]
-
-        conn.close()
+        cutoff = (current_time or datetime.now(timezone.utc)) - timedelta(days=30)
+        cutoff_str = cutoff.isoformat()
+        recent_applications = sum(
+            1 for entry in audit_log
+            if entry["action"] == "applied" and entry["created_at"] >= cutoff_str
+        )
 
         return {
             "total_active": len(active_suppressions),
@@ -536,7 +435,7 @@ class SuppressionManager:
             "recent_applications_30d": recent_applications,
         }
 
-    def clear_all(self, created_by: str | None = None) -> int:
+    def clear_all(self, *, created_by: str | None = None) -> int:
         """Clear all suppressions.
 
         Args:
@@ -549,13 +448,40 @@ class SuppressionManager:
 
         # Log removals
         for pattern, suppression in list(self._suppressions.items()):
-            self._log_audit(
+            audit_entry = AuditEntry(
                 pattern=pattern,
                 reason=suppression.reason,
                 action="removed",
+                created_at=datetime.now(timezone.utc).isoformat(),
                 created_by=created_by,
             )
+            self._repository.log_audit(audit_entry)
 
+        # Clear from repository
         self._suppressions.clear()
-        logger.info(f"Cleared {count} suppressions")
+        self._repository.save_all_suppressions([])
+
         return count
+
+    def reload(self) -> int:
+        """Reload suppressions from repository.
+
+        Returns:
+            Number of suppressions loaded
+        """
+        self._suppressions.clear()
+        self._load_from_repository()
+        return len(self._suppressions)
+
+    def save_to_file(self, path: Path | None = None) -> int:
+        """Save current suppressions to file (backward compatibility).
+
+        Args:
+            path: Path to save to (default: repository's config path)
+
+        Returns:
+            Number of suppressions saved
+        """
+        suppressions = list(self._suppressions.values())
+        self._repository.save_all_suppressions(suppressions)
+        return len(suppressions)

@@ -74,7 +74,11 @@ def validate_date_range(
             raise ValidationError(
                 f"start_date cannot be in the future: {start_date.isoformat()}"
             )
-        if end_date > now:
+        # For end_date, allow same day (end_date might be 23:59:59.999999 of today)
+        # Compare dates only, not full datetime
+        end_date_date = end_date.date() if hasattr(end_date, 'date') else end_date
+        now_date = now.date() if hasattr(now, 'date') else now
+        if end_date_date > now_date:
             raise ValidationError(
                 f"end_date cannot be in the future: {end_date.isoformat()}"
             )

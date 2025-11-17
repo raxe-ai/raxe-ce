@@ -15,7 +15,7 @@ from typing import Any
 
 from raxe.application.preloader import preload_pipeline
 from raxe.application.scan_pipeline import ScanPipelineResult
-from raxe.domain.suppression import SuppressionManager
+from raxe.domain.suppression_factory import create_suppression_manager
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.database.scan_history import ScanHistoryDB
 from raxe.infrastructure.tracking.usage import UsageTracker
@@ -111,7 +111,7 @@ class Raxe:
         self._streak_tracker = None
 
         # Initialize suppression manager (auto-loads .raxeignore from cwd)
-        self.suppression_manager = SuppressionManager(auto_load=True)
+        self.suppression_manager = create_suppression_manager(auto_load=True)
 
         # Preload pipeline (one-time startup cost ~100-200ms)
         # This compiles patterns, loads packs, warms caches
@@ -186,7 +186,7 @@ class Raxe:
         instance.config = ScanConfig.from_file(path)
 
         # Initialize suppression manager
-        instance.suppression_manager = SuppressionManager(auto_load=True)
+        instance.suppression_manager = create_suppression_manager(auto_load=True)
 
         # Preload pipeline
         logger.info("Initializing RAXE client from config file")

@@ -15,7 +15,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from raxe.domain.suppression import SuppressionManager
+from raxe.domain.suppression_factory import create_suppression_manager
 
 console = Console()
 
@@ -57,7 +57,7 @@ def add_suppression(pattern: str, reason: tuple[str], config: str | None, expire
 
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     try:
         # Add suppression
@@ -112,7 +112,7 @@ def list_suppressions(config: str | None, format: str):
     """
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     suppressions = manager.get_suppressions()
 
@@ -182,7 +182,7 @@ def remove_suppression(pattern: str, config: str | None, save: bool):
     """
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     # Remove suppression
     removed = manager.remove_suppression(pattern, created_by="cli")
@@ -222,7 +222,7 @@ def show_suppression(pattern: str, config: str | None):
     """
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     suppression = manager.get_suppression(pattern)
 
@@ -293,7 +293,7 @@ def clear_suppressions(config: str | None, save: bool):
     """
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     # Clear all
     count = manager.clear_all(created_by="cli")
@@ -338,7 +338,7 @@ def audit_log(config: str | None, limit: int, pattern: str | None, action: str |
     """
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     # Get audit log
     entries = manager.get_audit_log(limit=limit, pattern=pattern, action=action)
@@ -406,7 +406,7 @@ def suppression_stats(config: str | None):
     """
     # Initialize manager
     config_path = Path(config) if config else None
-    manager = SuppressionManager(config_path=config_path)
+    manager = create_suppression_manager(config_path=config_path)
 
     stats = manager.get_statistics()
 

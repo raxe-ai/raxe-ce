@@ -356,7 +356,8 @@ class DataAggregator:
                     "p50_latency_ms": 0.0,
                     "p95_latency_ms": 0.0,
                     "p99_latency_ms": 0.0,
-                    "trend": "stable"
+                    "trend": "stable",
+                    "sample_size": 0
                 }
 
             # Calculate percentiles

@@ -8,6 +8,7 @@ Tests the analytics calculation engine including:
 - Report generation
 """
 
+import os
 import tempfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -23,6 +24,24 @@ from raxe.infrastructure.analytics.engine import (
     UserStats,
 )
 from raxe.infrastructure.database.models import TelemetryEvent
+
+
+@pytest.fixture(autouse=True)
+def isolate_scan_history():
+    """Isolate tests from global scan_history.db by temporarily hiding it."""
+    global_scan_history = Path.home() / ".raxe" / "scan_history.db"
+    backup_path = None
+
+    if global_scan_history.exists():
+        # Temporarily rename the global database
+        backup_path = global_scan_history.with_suffix(".db.test_backup")
+        global_scan_history.rename(backup_path)
+
+    yield
+
+    # Restore the global database
+    if backup_path and backup_path.exists():
+        backup_path.rename(global_scan_history)
 
 
 @pytest.fixture

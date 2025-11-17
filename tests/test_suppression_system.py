@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from raxe.domain.suppression import Suppression, SuppressionManager
+from raxe.domain.suppression import Suppression
+from raxe.domain.suppression_factory import create_suppression_manager
 
 
 class TestSuppression:
@@ -108,7 +109,7 @@ class TestSuppressionManager:
         """Test adding a suppression."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             supp = manager.add_suppression(
                 pattern="pi-001",
@@ -127,7 +128,7 @@ class TestSuppressionManager:
         """Test removing a suppression."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-001", "Test")
             assert manager.is_suppressed("pi-001")[0]
@@ -144,7 +145,7 @@ class TestSuppressionManager:
         """Test checking exact match suppression."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-001", "Test suppression")
 
@@ -160,7 +161,7 @@ class TestSuppressionManager:
         """Test checking wildcard suppression."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-*", "Suppress all PI rules")
 
@@ -177,7 +178,7 @@ class TestSuppressionManager:
         """Test expired suppressions are ignored."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             # Add expired suppression
             past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
@@ -210,7 +211,7 @@ pi-*  # All PI rules
 # Blank lines and comments ignored
 """)
 
-            manager = SuppressionManager(
+            manager = create_suppression_manager(
                 config_path=config_path,
                 db_path=db_path,
                 auto_load=True,
@@ -232,7 +233,7 @@ pi-*  # All PI rules
             config_path = Path(tmpdir) / ".raxeignore"
             db_path = Path(tmpdir) / "test.db"
 
-            manager = SuppressionManager(
+            manager = create_suppression_manager(
                 config_path=config_path,
                 db_path=db_path,
                 auto_load=False,
@@ -258,7 +259,7 @@ pi-*  # All PI rules
         """Test getting all active suppressions."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-001", "Test 1")
             manager.add_suppression("pi-002", "Test 2")
@@ -279,7 +280,7 @@ pi-*  # All PI rules
         """Test getting specific suppression."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-001", "Test suppression")
 
@@ -295,7 +296,7 @@ pi-*  # All PI rules
         """Test audit log tracking."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             # Add suppression (logged as "added")
             manager.add_suppression("pi-001", "Test")
@@ -316,7 +317,7 @@ pi-*  # All PI rules
         """Test getting statistics."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             # Add some suppressions
             manager.add_suppression("pi-001", "Test 1")
@@ -335,7 +336,7 @@ pi-*  # All PI rules
         """Test clearing all suppressions."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             # Add suppressions
             manager.add_suppression("pi-001", "Test 1")
@@ -357,7 +358,7 @@ class TestSuppressionPatterns:
         """Test that more specific patterns take precedence."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             # Add both specific and wildcard
             manager.add_suppression("pi-*", "Wildcard suppression")
@@ -372,7 +373,7 @@ class TestSuppressionPatterns:
         """Test multiple wildcard patterns."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
-            manager = SuppressionManager(db_path=db_path, auto_load=False)
+            manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-*", "All PI rules")
             manager.add_suppression("*-injection", "All injection rules")
@@ -394,7 +395,7 @@ def example_basic_usage():
     """Example: Basic suppression usage."""
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"
-        manager = SuppressionManager(db_path=db_path, auto_load=False)
+        manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
         # Add suppression
         manager.add_suppression(
@@ -417,7 +418,7 @@ def example_wildcard_usage():
     """Example: Wildcard pattern usage."""
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"
-        manager = SuppressionManager(db_path=db_path, auto_load=False)
+        manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
         # Suppress all prompt injection rules
         manager.add_suppression(
@@ -455,7 +456,7 @@ pi-*  # All prompt injection rules
 """)
 
         # Load suppressions
-        manager = SuppressionManager(
+        manager = create_suppression_manager(
             config_path=config_path,
             db_path=db_path,
             auto_load=True,

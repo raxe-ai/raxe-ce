@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from raxe.domain.engine.executor import Detection
+from raxe.domain.engine.matcher import Match
 from raxe.domain.rules.models import Severity
 from raxe.infrastructure.database.scan_history import (
     DetectionRecord,
@@ -28,21 +29,45 @@ class TestScanHistoryDB:
         return [
             Detection(
                 rule_id="PI-001",
+                rule_version="1.0.0",
                 severity=Severity.HIGH,
                 confidence=0.9,
+                matches=[
+                    Match(
+                        pattern_index=0,
+                        start=0,
+                        end=27,
+                        matched_text="ignore previous instructions",
+                        groups=(),
+                        context_before="",
+                        context_after="",
+                    )
+                ],
+                detected_at=datetime.now(timezone.utc).isoformat(),
+                detection_layer="L1",
                 message="Prompt injection detected",
                 category="prompt_injection",
-                source="L1",
-                matched_text="ignore previous instructions",
             ),
             Detection(
                 rule_id="PI-002",
+                rule_version="1.0.0",
                 severity=Severity.MEDIUM,
                 confidence=0.7,
+                matches=[
+                    Match(
+                        pattern_index=0,
+                        start=0,
+                        end=19,
+                        matched_text="disregard all rules",
+                        groups=(),
+                        context_before="",
+                        context_after="",
+                    )
+                ],
+                detected_at=datetime.now(timezone.utc).isoformat(),
+                detection_layer="L1",
                 message="Suspicious pattern",
                 category="prompt_injection",
-                source="L1",
-                matched_text="disregard all rules",
             ),
         ]
 
@@ -88,7 +113,7 @@ class TestScanHistoryDB:
         scan = db.get_scan(scan_id)
         assert scan is not None
         assert scan.threats_found == 2
-        assert scan.highest_severity == "HIGH"
+        assert scan.highest_severity == "high"  # Stored as lowercase in DB
         assert scan.l1_duration_ms == 15.5
         assert scan.l2_detections == 0
         assert scan.l1_detections == 2
@@ -174,30 +199,56 @@ class TestScanHistoryDB:
         # Record scans with different severities
         high_detection = Detection(
             rule_id="test",
+            rule_version="1.0.0",
             severity=Severity.HIGH,
             confidence=0.9,
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=4,
+                    matched_text="test",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
+            detected_at=datetime.now(timezone.utc).isoformat(),
+            detection_layer="L1",
             message="test",
             category="test",
-            source="L1",
         )
         low_detection = Detection(
             rule_id="test",
+            rule_version="1.0.0",
             severity=Severity.LOW,
             confidence=0.5,
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=4,
+                    matched_text="test",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
+            detected_at=datetime.now(timezone.utc).isoformat(),
+            detection_layer="L1",
             message="test",
             category="test",
-            source="L1",
         )
 
         db.record_scan("high threat", [high_detection])
         db.record_scan("low threat", [low_detection])
         db.record_scan("clean", [])
 
-        # Filter for HIGH severity
-        high_scans = db.list_scans(severity_filter="HIGH")
+        # Filter for HIGH severity (stored as lowercase in DB)
+        high_scans = db.list_scans(severity_filter="high")
 
         assert len(high_scans) == 1
-        assert high_scans[0].highest_severity == "HIGH"
+        assert high_scans[0].highest_severity == "high"
 
     def test_get_detections(self, db: ScanHistoryDB, sample_detections: list[Detection]):
         """Test retrieving detections for a scan."""

@@ -13,12 +13,11 @@ Thank you for your interest in contributing to RAXE CE!
 - Add tests
 - Enhance documentation
 
-### 2. Detection Rules & Threat Intelligence
-- Contribute new detection rules (see [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
-- Improve existing rules in `src/raxe/packs/core/v1.0.0/rules/`
-- Add test cases for edge cases and evasion techniques
-- Report false positives/negatives with examples
-- Help document threats for educational purposes
+### 2. Rules & Detection Logic
+- Contribute new detection rules to `src/raxe/packs/core/v1.0.0/rules/` (see [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
+- Improve existing rules
+- Add test cases for edge cases
+- Report false positives/negatives
 
 ### 3. Integration Wrappers
 - Add support for new LLM providers

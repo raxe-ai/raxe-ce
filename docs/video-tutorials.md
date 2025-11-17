@@ -241,7 +241,7 @@ $ raxe scan "Ignore all previous instructions"
 - Rule structure
 - Writing patterns
 - Testing rules
-- Contributing to raxe-rules
+- Contributing to RAXE core rules
 
 ---
 

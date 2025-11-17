@@ -23,12 +23,14 @@ cp -r custom_detector ~/.raxe/plugins/
 # Configure in ~/.raxe/config.yaml
 cat >> ~/.raxe/config.yaml << EOF
 plugins:
-enabled = ["custom_detector"]
-
-[plugins.custom_detector]
-patterns = [
-    { name = "api_key", pattern = "sk-[a-zA-Z0-9]{48}", severity = "HIGH", message = "API key detected" }
-]
+  enabled:
+    - custom_detector
+  custom_detector:
+    patterns:
+      - name: api_key
+        pattern: "sk-[a-zA-Z0-9]{48}"
+        severity: HIGH
+        message: "API key detected"
 EOF
 
 # Test
@@ -53,12 +55,12 @@ cp -r slack_notifier ~/.raxe/plugins/
 # Configure in ~/.raxe/config.yaml
 cat >> ~/.raxe/config.yaml << EOF
 plugins:
-enabled = ["slack_notifier"]
-
-[plugins.slack_notifier]
-webhook_url = "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-channel = "#security-alerts"
-min_severity = "HIGH"
+  enabled:
+    - slack_notifier
+  slack_notifier:
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+    channel: "#security-alerts"
+    min_severity: HIGH
 EOF
 
 # Test - alerts will be sent to Slack when threats detected
@@ -84,12 +86,13 @@ cp -r webhook ~/.raxe/plugins/
 # Configure in ~/.raxe/config.yaml
 cat >> ~/.raxe/config.yaml << EOF
 plugins:
-enabled = ["webhook"]
-
-[plugins.webhook]
-url = "https://your-endpoint.com/api/raxe/events"
-on_threat_only = true
-headers = { "Authorization" = "Bearer YOUR_TOKEN" }
+  enabled:
+    - webhook
+  webhook:
+    url: "https://your-endpoint.com/api/raxe/events"
+    on_threat_only: true
+    headers:
+      Authorization: "Bearer YOUR_TOKEN"
 EOF
 
 # Test - results will be POSTed to your endpoint
@@ -115,12 +118,12 @@ cp -r file_logger ~/.raxe/plugins/
 # Configure in ~/.raxe/config.yaml
 cat >> ~/.raxe/config.yaml << EOF
 plugins:
-enabled = ["file_logger"]
-
-[plugins.file_logger]
-path = "~/.raxe/logs/scan.jsonl"
-threats_only = false
-include_metadata = true
+  enabled:
+    - file_logger
+  file_logger:
+    path: "~/.raxe/logs/scan.jsonl"
+    threats_only: false
+    include_metadata: true
 EOF
 
 # Test - results will be logged to file
@@ -152,7 +155,11 @@ cp -r custom_detector slack_notifier webhook file_logger ~/.raxe/plugins/
 # Enable in config
 cat >> ~/.raxe/config.yaml << EOF
 plugins:
-enabled = ["custom_detector", "slack_notifier", "webhook", "file_logger"]
+  enabled:
+    - custom_detector
+    - slack_notifier
+    - webhook
+    - file_logger
 EOF
 ```
 
@@ -160,22 +167,24 @@ EOF
 
 All plugins are configured in `~/.raxe/config.yaml`:
 
-```toml
+```yaml
 plugins:
-# List of enabled plugins
-enabled = ["plugin1", "plugin2"]
+  # List of enabled plugins
+  enabled:
+    - plugin1
+    - plugin2
 
-# Global plugin settings
-timeout_seconds = 5.0
-parallel_execution = false
+  # Global plugin settings
+  timeout_seconds: 5.0
+  parallel_execution: false
 
-# Plugin-specific configuration
-[plugins.plugin1]
-setting1 = "value1"
-setting2 = true
+  # Plugin-specific configuration
+  plugin1:
+    setting1: "value1"
+    setting2: true
 
-[plugins.plugin2]
-setting1 = "value2"
+  plugin2:
+    setting1: "value2"
 ```
 
 ## Viewing Loaded Plugins

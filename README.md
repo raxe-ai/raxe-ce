@@ -362,11 +362,10 @@ if user_input:
 
 ### Learn AI Security
 
-- 📖 [Getting Started Guide](docs/quickstart.md)
-- 🏗️ [Architecture Overview](docs/architecture.md)
-- 🧪 [Testing Best Practices](docs/troubleshooting.md)
-- 🔍 [Understanding Detection Rules](CONTRIBUTING_RULES.md)
-- 🛡️ [Security Policy](SECURITY.md)
+- 📹 [5-Minute Setup Video](https://www.youtube.com/watch?v=xxx) (Coming Soon)
+- 📝 [Quick Start Guide](docs/quickstart.md)
+- 🔧 [Integration Examples](examples/)
+- 🧪 [Testing Guide](QUICK_START_TESTING.md)
 
 ### Research & Papers
 

@@ -15,6 +15,7 @@ from typing import Any
 
 from raxe.application.preloader import preload_pipeline
 from raxe.application.scan_pipeline import ScanPipelineResult
+from raxe.domain.suppression import SuppressionManager
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.database.scan_history import ScanHistoryDB
 from raxe.infrastructure.tracking.usage import UsageTracker
@@ -109,11 +110,17 @@ class Raxe:
         self._scan_history: ScanHistoryDB | None = None
         self._streak_tracker = None
 
+        # Initialize suppression manager (auto-loads .raxeignore from cwd)
+        self.suppression_manager = SuppressionManager(auto_load=True)
+
         # Preload pipeline (one-time startup cost ~100-200ms)
         # This compiles patterns, loads packs, warms caches
         logger.info("raxe_client_init_start")
         try:
-            self.pipeline, self.preload_stats = preload_pipeline(config=self.config)
+            self.pipeline, self.preload_stats = preload_pipeline(
+                config=self.config,
+                suppression_manager=self.suppression_manager
+            )
             self._initialized = True
             logger.info(
                 "raxe_client_init_complete",
@@ -178,10 +185,16 @@ class Raxe:
         # Load configuration from file
         instance.config = ScanConfig.from_file(path)
 
+        # Initialize suppression manager
+        instance.suppression_manager = SuppressionManager(auto_load=True)
+
         # Preload pipeline
         logger.info("Initializing RAXE client from config file")
         try:
-            instance.pipeline, instance.preload_stats = preload_pipeline(config=instance.config)
+            instance.pipeline, instance.preload_stats = preload_pipeline(
+                config=instance.config,
+                suppression_manager=instance.suppression_manager
+            )
             instance._initialized = True
             logger.info(
                 f"RAXE client initialized: {instance.preload_stats.rules_loaded} rules loaded"

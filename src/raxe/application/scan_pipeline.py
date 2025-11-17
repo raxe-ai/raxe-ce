@@ -398,7 +398,12 @@ class ScanPipeline:
                 if is_suppressed:
                     suppressed_count += 1
                     logger.debug(f"Suppressed {detection.rule_id}: {reason}")
-                    # Note: We'll log this after we have a scan_id
+                    # Log suppression application to audit log
+                    self.suppression_manager.log_suppression(
+                        scan_id=None,  # scan_id not available in pipeline
+                        rule_id=detection.rule_id,
+                        reason=reason
+                    )
                 else:
                     unsuppressed_detections.append(detection)
 

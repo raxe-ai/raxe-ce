@@ -57,27 +57,36 @@ raxe scan "text" --verbose
 
 ---
 
-### 2. Telemetry Consent Prompt (2 hours)
-**Problem:** Telemetry enabled by default with no explicit consent
-**Solution:** First-run interactive prompt
+### 2. Telemetry Transparency Notice (1 hour)
+**Problem:** Free tier users unaware of telemetry (required for product improvement)
+**Solution:** First-run informational notice (not a consent prompt)
+
+**Business Model:**
+- Free tier: Telemetry REQUIRED (anonymous, privacy-preserving)
+- Pro/Team tier: Can disable via web console (future feature)
 
 **Implementation:**
 ```bash
-# First time running raxe
+# First time running raxe (free tier)
 $ raxe scan "test"
 
 ╔════════════════════════════════════════════╗
-║  Welcome to RAXE - Privacy-First LLM Security  ║
+║     Welcome to RAXE - Free Tier           ║
 ╚════════════════════════════════════════════╝
 
-Help improve RAXE by sharing anonymous telemetry?
-  - What we collect: Rule IDs, scan timings, severities
-  - What we DON'T collect: Your prompts, responses, or any user data
-  - Privacy-preserving: All data is anonymized
+To keep RAXE free and improve detection, we collect anonymous telemetry:
+  ✓ What we collect: Rule IDs, scan timings, severities
+  ✗ What we DON'T collect: Your prompts, responses, or any user data
 
-Send telemetry to improve RAXE? [Y/n]: _
+📊 All data is anonymized and privacy-preserving
+🔒 Your prompts are NEVER transmitted (SHA256 hashes only)
 
-# User choice saved to ~/.raxe/config.yaml
+Want to disable telemetry? Upgrade to Pro: https://raxe.ai/pricing
+
+Press Enter to continue...
+
+# User can't disable in free tier, just acknowledges
+# Pro tier gets disable option via web console
 ```
 
 ---
@@ -395,12 +404,13 @@ Local Storage:
   Logs: ~/.raxe/logs/ (PII auto-redacted)
 
 Controls:
-  Disable telemetry: raxe init --no-telemetry
+  Free tier: Telemetry REQUIRED (anonymous and privacy-preserving)
+  Pro tier: Can disable via web console (https://console.raxe.ai)
   Clear history: raxe history clear
   View logs: cat ~/.raxe/logs/latest.log
 ```
 
-**Impact:** Users now see privacy guarantees, building trust ✅
+**Impact:** Users now see privacy guarantees and understand tier differences, building trust ✅
 
 ---
 
@@ -520,7 +530,7 @@ Before approving P0 for production:
 ## Next Steps
 
 **Upon Approval:**
-1. I'll proceed with P1 implementation (progressive disclosure, telemetry consent, input validation, social sharing, error messages)
+1. I'll proceed with P1 implementation (progressive disclosure, telemetry transparency, input validation, social sharing, error messages)
 2. Estimated timeline: 8 days for all P1 features
 3. Can be implemented in parallel using multi-agent approach
 

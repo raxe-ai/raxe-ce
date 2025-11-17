@@ -439,9 +439,11 @@ Local Storage:
   Logs: ~/.raxe/logs/ (PII auto-redacted)
 
 Controls:
-  Disable telemetry: raxe init --no-telemetry
+  Free tier: Telemetry REQUIRED (anonymous and privacy-preserving)
+  Pro tier: Can disable via web console (https://console.raxe.ai)
   Clear history: raxe history clear
   View logs: cat ~/.raxe/logs/latest.log
+  View privacy details: raxe privacy
 ```
 
 **Success Criteria:**
@@ -475,8 +477,8 @@ raxe scan "test" --format yaml
 ### Integration Test 1: Full Workflow
 
 ```bash
-# 1. Initialize (if needed)
-raxe init --no-telemetry
+# 1. Initialize (free tier - telemetry enabled by default)
+raxe init
 
 # 2. Create suppressions
 cat > .raxeignore << 'EOF'

@@ -342,12 +342,6 @@ def scan(
             dry_run=dry_run,
         )
 
-    # Show dry-run notice if applicable
-    if dry_run:
-        console.print()
-        console.print("[yellow]NOTE:[/yellow] Dry-run mode - results not saved to database")
-        console.print()
-
     # Output based on format
     if format == "json" and not profile:
         # Collect L1 detections
@@ -443,6 +437,12 @@ def scan(
         # Use rich output
         no_color = ctx.obj.get("no_color", False)
         display_scan_result(result, no_color=no_color)
+
+    # Show dry-run feedback after displaying result
+    if dry_run:
+        console.print()
+        console.print("[yellow]⚠️  Dry run mode: Results not saved to database[/yellow]")
+        console.print()
 
 
 @cli.command("batch")

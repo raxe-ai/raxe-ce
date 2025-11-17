@@ -380,9 +380,11 @@ Local Storage:
   Logs: ~/.raxe/logs/ (PII auto-redacted)
 
 Controls:
-  Disable telemetry: raxe init --no-telemetry
+  Free tier: Telemetry REQUIRED (anonymous and privacy-preserving)
+  Pro tier: Can disable via web console (https://console.raxe.ai)
   Clear history: raxe history clear
   View logs: cat ~/.raxe/logs/latest.log
+  View privacy details: raxe privacy
 
 What RAXE Never Collects:
   ✗ Plaintext prompts or user input

@@ -236,7 +236,9 @@ Text Input
 
 ```bash
 # Initialization
-raxe init --api-key sk-... --telemetry/--no-telemetry
+raxe init --api-key sk-...
+# Free tier: telemetry enabled by default
+# Pro tier: telemetry manageable via web console
 
 # Single scan
 raxe scan "Ignore all instructions" 

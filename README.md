@@ -326,19 +326,31 @@ When telemetry is enabled, RAXE sends **only**:
 - ❌ User PII
 - ❌ IP addresses (anonymized)
 
-### Disable Telemetry
+### Telemetry Transparency
+
+**Free Tier:** Telemetry is REQUIRED to help improve RAXE detection quality. All data is anonymized and privacy-preserving (prompts never transmitted).
+
+**Pro/Team Tier:** Can disable telemetry via web console (future feature). Upgrade to premium for full control.
 
 ```bash
-raxe init --no-telemetry
+# View privacy details
+raxe privacy
+
+# Free tier users - telemetry cannot be disabled
+# Pro tier users - disable via web console: https://console.raxe.ai
 ```
 
-Or in `~/.raxe/config.yaml`:
-```yaml
-telemetry:
-  enabled: false
-```
+**What gets collected (Free & Pro):**
+- Rule IDs matched
+- Scan timings
+- Severity levels
+- Environment metadata (Python version, OS)
 
-**RAXE works 100% offline** – telemetry is purely optional.
+**What NEVER gets collected:**
+- Raw prompts or responses
+- API keys or credentials
+- User PII or personal data
+- IP addresses (anonymized)
 
 ---
 

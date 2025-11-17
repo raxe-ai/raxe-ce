@@ -31,7 +31,6 @@ Validates:
 
 ## Future Scripts
 
-- `migrate.py` - Database migration runner
 - `update_rules.py` - Download latest community rules
 - `analyze_coverage.py` - Detailed coverage analysis
 - `profile.py` - Performance profiling tools

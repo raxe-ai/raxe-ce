@@ -720,7 +720,7 @@ def plugins():
     console.print(f"Loaded: {len(loader.loaded_plugins)}")
     console.print(f"Failed: {len(loader.failed_plugins)}")
     console.print()
-    console.print("Enable plugins in ~/.raxe/config.toml under [plugins.enabled]")
+    console.print("Enable plugins in ~/.raxe/config.yaml under plugins.enabled")
 
 
 # Note: profile_cmd removed - use 'raxe profile' command instead

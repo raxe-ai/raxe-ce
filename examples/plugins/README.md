@@ -20,9 +20,9 @@ Regex-based threat detector that allows you to define custom patterns for organi
 # Copy to plugins directory
 cp -r custom_detector ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
 enabled = ["custom_detector"]
 
 [plugins.custom_detector]
@@ -50,9 +50,9 @@ Sends threat alerts to a Slack channel via incoming webhooks.
 # Copy to plugins directory
 cp -r slack_notifier ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
 enabled = ["slack_notifier"]
 
 [plugins.slack_notifier]
@@ -81,9 +81,9 @@ Sends scan results to a custom HTTP endpoint for SIEM integration or custom proc
 # Copy to plugins directory
 cp -r webhook ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
 enabled = ["webhook"]
 
 [plugins.webhook]
@@ -112,9 +112,9 @@ Logs scan results to a JSON Lines file for audit trails and offline analysis.
 # Copy to plugins directory
 cp -r file_logger ~/.raxe/plugins/
 
-# Configure in ~/.raxe/config.toml
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
+# Configure in ~/.raxe/config.yaml
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
 enabled = ["file_logger"]
 
 [plugins.file_logger]
@@ -141,7 +141,7 @@ cp -r <plugin-name> ~/.raxe/plugins/
 raxe config set plugins.enabled '["<plugin-name>"]'
 
 # Or edit config manually
-vi ~/.raxe/config.toml
+vi ~/.raxe/config.yaml
 ```
 
 ### Option 2: Install All Examples
@@ -150,18 +150,18 @@ vi ~/.raxe/config.toml
 cp -r custom_detector slack_notifier webhook file_logger ~/.raxe/plugins/
 
 # Enable in config
-cat >> ~/.raxe/config.toml << EOF
-[plugins]
+cat >> ~/.raxe/config.yaml << EOF
+plugins:
 enabled = ["custom_detector", "slack_notifier", "webhook", "file_logger"]
 EOF
 ```
 
 ## Configuration Format
 
-All plugins are configured in `~/.raxe/config.toml`:
+All plugins are configured in `~/.raxe/config.yaml`:
 
 ```toml
-[plugins]
+plugins:
 # List of enabled plugins
 enabled = ["plugin1", "plugin2"]
 
@@ -238,7 +238,7 @@ raxe scan "test" --verbose
 
 ### Plugin Errors
 - Check that `plugin = PluginClass()` is at the end of plugin.py
-- Verify configuration in ~/.raxe/config.toml
+- Verify configuration in ~/.raxe/config.yaml
 - Check that all required config fields are present
 - Review RAXE logs for detailed error messages
 

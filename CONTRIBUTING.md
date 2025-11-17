@@ -1,6 +1,8 @@
 # Contributing to RAXE CE
 
-Thank you for your interest in contributing to RAXE CE! We welcome contributions from security researchers, ML engineers, developers, and anyone passionate about AI safety.
+Thank you for your interest in contributing to RAXE CE!
+
+**We're building transparent, community-driven AI security** – free from vendor lock-in and marketing hype. We welcome contributions from security researchers, ML engineers, developers, and anyone passionate about AI safety through transparency.
 
 ## Ways to Contribute
 
@@ -11,11 +13,12 @@ Thank you for your interest in contributing to RAXE CE! We welcome contributions
 - Add tests
 - Enhance documentation
 
-### 2. Rules & Detection Logic
+### 2. Detection Rules & Threat Intelligence
 - Contribute new detection rules (see [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
 - Improve existing rules in `src/raxe/packs/core/v1.0.0/rules/`
-- Add test cases for edge cases
-- Report false positives/negatives
+- Add test cases for edge cases and evasion techniques
+- Report false positives/negatives with examples
+- Help document threats for educational purposes
 
 ### 3. Integration Wrappers
 - Add support for new LLM providers
@@ -83,6 +86,7 @@ We follow strict code quality standards:
 - **mypy** for type checking (`mypy src/`)
 - **Domain layer purity** - NO I/O in domain/ (Clean Architecture)
 - **Test coverage** >80% overall, >95% for domain layer
+- **Transparency** - Code must be understandable and well-documented
 - See our [Architecture Guide](docs/architecture.md) for design principles
 
 ### Running Tests
@@ -352,6 +356,18 @@ By contributing to RAXE CE, you agree that your contributions will be licensed u
 
 ---
 
-Thank you for contributing to AI safety! 🛡️
+## Our Values
+
+When contributing to RAXE, please remember:
+
+- 🔍 **Transparency over obscurity** - Make your code understandable
+- 📖 **Education over gatekeeping** - Help others learn from your work
+- 🤝 **Community over corporate** - Build for users, not shareholders
+- 🔒 **Privacy over convenience** - Never compromise user data
+- ⚖️ **Truth over hype** - Be honest about capabilities and limitations
+
+---
+
+Thank you for contributing to transparent AI safety! 🛡️
 
 **Questions?** Open a [Discussion](https://github.com/raxe-ai/raxe-ce/discussions) or join our [Discord](https://discord.gg/raxe).

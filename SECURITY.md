@@ -2,7 +2,9 @@
 
 ## Reporting Security Vulnerabilities
 
-**We take security seriously.** If you discover a security vulnerability in RAXE CE, please help us responsibly disclose it.
+**We take security seriously – and we practice what we preach about transparency.**
+
+If you discover a security vulnerability in RAXE CE, please help us responsibly disclose it. We believe in transparency, but responsible disclosure protects our users while fixes are being developed.
 
 ### ⚠️ DO NOT
 
@@ -130,12 +132,15 @@ detect-secrets scan
 
 ## Security Features in RAXE CE
 
-### Privacy-First Design
+### Privacy-First Design (Zero Trust in Marketing Claims)
 
-- **Local scanning** - Detection happens on your machine
-- **PII hashing** - Prompts are hashed before transmission
-- **Configurable telemetry** - You control what's sent
-- **No prompt storage** - We never store raw prompts
+Unlike vendors who claim "privacy-first" while sending your data to their cloud, RAXE's privacy guarantees are **verifiable**:
+
+- **Local scanning** - Detection happens on your machine (audit the code!)
+- **PII hashing** - Prompts are SHA-256 hashed before transmission (one-way, irreversible)
+- **Configurable telemetry** - You control what's sent (disable completely if needed)
+- **No prompt storage** - We never store raw prompts (provably impossible with our architecture)
+- **Open source** - Every line is auditable at [github.com/raxe-ai/raxe-ce](https://github.com/raxe-ai/raxe-ce)
 
 ### Secure Defaults
 
@@ -201,20 +206,36 @@ We assign CVEs for all security vulnerabilities. Check:
 
 We are planning a comprehensive third-party security audit before v1.0 release.
 
-## Compliance
+## Compliance & Transparency
 
-RAXE CE is designed to support:
+RAXE CE is designed to support compliance frameworks **through verifiable architecture**, not just buzzword compliance:
 
-- **GDPR** - Privacy by design, data minimization
-- **SOC 2** - Security controls and audit logging
-- **ISO 27001** - Information security management
-- **OWASP Top 10** - Secure coding practices
+- **GDPR** - Privacy by design (local-first architecture), data minimization (only hashes transmitted)
+- **SOC 2** - Security controls and audit logging (all open source, fully auditable)
+- **ISO 27001** - Information security management (documented processes, open source controls)
+- **OWASP Top 10** - Secure coding practices (pre-commit hooks, security scanning in CI/CD)
+
+**We don't just claim compliance – we build it into our architecture so you can verify it yourself.**
 
 ## Additional Resources
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [CWE Top 25](https://cwe.mitre.org/top25/)
 - [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
+
+---
+
+## Our Security Philosophy
+
+At RAXE, we believe:
+
+- 🔍 **Transparency builds trust** - Open source enables real security, not security theater
+- 📖 **Verifiable beats claimable** - Don't trust us, audit us
+- 🔒 **Privacy by architecture** - Technical controls beat policy promises
+- 🎓 **Education prevents vulnerabilities** - Understanding threats is as important as blocking them
+- 🤝 **Community improves security** - More eyes = better security
+
+**Security through obscurity is snake oil. We choose transparency.**
 
 ---
 

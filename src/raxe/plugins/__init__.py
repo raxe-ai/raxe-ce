@@ -45,14 +45,14 @@ Quick Start:
     plugin = MyDetector()  # Required!
     ```
 
-    Enable in config (~/.raxe/config.toml):
+    Enable in config (~/.raxe/config.yaml):
 
-    ```toml
-    [plugins]
-    enabled = ["my_detector"]
-
-    [plugins.my_detector]
-    enabled = true
+    ```yaml
+    plugins:
+      enabled:
+        - my_detector
+      my_detector:
+        enabled: true
     ```
 
 Architecture:

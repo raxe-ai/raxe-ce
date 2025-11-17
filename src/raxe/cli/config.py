@@ -5,7 +5,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from raxe.infrastructure.config.toml_config import RaxeConfig, create_default_config
+from raxe.infrastructure.config.yaml_config import RaxeConfig, create_default_config
 from raxe.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -22,7 +22,7 @@ def config() -> None:
 @click.option(
     "--path",
     type=click.Path(exists=True, path_type=Path),
-    help="Config file path (default: ~/.raxe/config.toml)",
+    help="Config file path (default: ~/.raxe/config.yaml)",
 )
 def show(path: Path | None) -> None:
     """Display current configuration."""
@@ -87,7 +87,7 @@ def show(path: Path | None) -> None:
 @click.option(
     "--path",
     type=click.Path(path_type=Path),
-    help="Config file path (default: ~/.raxe/config.toml)",
+    help="Config file path (default: ~/.raxe/config.yaml)",
 )
 def set(key: str, value: str, path: Path | None) -> None:
     """Set a configuration value.
@@ -98,7 +98,7 @@ def set(key: str, value: str, path: Path | None) -> None:
     try:
         # Load config
         if path is None:
-            path = Path.home() / ".raxe" / "config.toml"
+            path = Path.home() / ".raxe" / "config.yaml"
 
         if path.exists():
             config_obj = RaxeConfig.from_file(path)
@@ -136,14 +136,14 @@ def set(key: str, value: str, path: Path | None) -> None:
 @click.option(
     "--path",
     type=click.Path(path_type=Path),
-    help="Config file path (default: ~/.raxe/config.toml)",
+    help="Config file path (default: ~/.raxe/config.yaml)",
 )
 @click.confirmation_option(prompt="Reset configuration to defaults?")
 def reset(path: Path | None) -> None:
     """Reset configuration to defaults."""
     try:
         if path is None:
-            path = Path.home() / ".raxe" / "config.toml"
+            path = Path.home() / ".raxe" / "config.yaml"
 
         # Create default config
         create_default_config(path)
@@ -163,7 +163,7 @@ def reset(path: Path | None) -> None:
 @click.option(
     "--path",
     type=click.Path(exists=True, path_type=Path),
-    help="Config file path (default: ~/.raxe/config.toml)",
+    help="Config file path (default: ~/.raxe/config.yaml)",
 )
 def validate(path: Path | None) -> None:
     """Validate configuration file."""
@@ -192,7 +192,7 @@ def validate(path: Path | None) -> None:
 @click.option(
     "--path",
     type=click.Path(exists=True, path_type=Path),
-    help="Config file path (default: ~/.raxe/config.toml)",
+    help="Config file path (default: ~/.raxe/config.yaml)",
 )
 def edit(path: Path | None) -> None:
     """Open configuration file in editor."""
@@ -201,7 +201,7 @@ def edit(path: Path | None) -> None:
 
     try:
         if path is None:
-            path = Path.home() / ".raxe" / "config.toml"
+            path = Path.home() / ".raxe" / "config.yaml"
 
         # Create if doesn't exist
         if not path.exists():

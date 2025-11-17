@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: pii-3072
+family: PII
+sub_family: pii_type
+name: Detects PII type 3072 exposure
+description: Detects PII type 3072 exposure
+severity: critical
+confidence: 0.92
+patterns:
+- pattern: (?i)(reveal|extract).*pii.*3072
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - PII exposure
+  should_not_match:
+  - General discussion
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1589
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-3072
+rule_hash: sha256:d6d8f998881ed2ed5bfc83839517731461990f4fc2745fe92d73267266a37032
+risk_explanation: PII exposure risk.
+remediation_advice: Never expose PII.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3072-Pii-Type

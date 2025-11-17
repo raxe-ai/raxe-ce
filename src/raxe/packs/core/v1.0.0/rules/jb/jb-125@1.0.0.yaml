@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: jb-125
+family: JB
+sub_family: thought_experiment
+name: Detects Just a thought experiment jailbreak
+description: Detects Just a thought experiment jailbreak
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)just a thought experiment
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use Just a thought experiment to bypass
+  should_not_match:
+  - Legitimate use
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1562.001
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-JB-0125
+rule_hash: sha256:afc69b804a045fa3c9c74b1bf4a3bf5535d6104df978095b67f674ac4ec93e0d
+risk_explanation: Just a thought experiment framing bypasses safety.
+remediation_advice: Refuse harmful requests.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-125-Thought-Experiment

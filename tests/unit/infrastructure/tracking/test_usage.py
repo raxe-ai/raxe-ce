@@ -274,6 +274,11 @@ class TestGetTracker:
 class TestPrivacy:
     """Test privacy requirements."""
 
+    @pytest.fixture
+    def tracker(self, tmp_path: Path) -> UsageTracker:
+        """Create a tracker for testing."""
+        return UsageTracker(data_dir=tmp_path)
+
     def test_no_pii_in_install_file(self, tmp_path: Path):
         """Test that installation file contains no PII."""
         UsageTracker(data_dir=tmp_path)

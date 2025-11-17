@@ -13,10 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - "PAYPAL_CLIENT_SECRET='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGH'"
+  - Here is PII type 3050 information
+  - Accessing sensitive data 3050
+  - Personal information 3050 exposure
   should_not_match:
-  - "How to get PayPal client secret?"
-  - "PayPal API integration guide"
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
 metrics:
   precision: null
   recall: null
@@ -30,6 +33,12 @@ metadata:
   author: raxe-ce
   category: payment_credentials
 rule_hash: null
-risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
-remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+risk_explanation: API key exposure in prompts, responses, or training data creates
+  critical security vulnerabilities. Leaked API keys grant attackers access to cloud
+  services, third-party platforms, and internal systems, potentially leading to data
+  breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement
+  automated key rotation and revocation. Use secret detection tools in development
+  and production pipelines. Never log or persist API keys. Apply access controls to
+  prevent AI systems from accessing key stores.
 docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3050-Paypal-Client-Secret-Detection

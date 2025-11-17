@@ -5,7 +5,7 @@ sub_family: injection_variant
 name: Detects command injection variant 230
 description: Detects command injection variant 230
 severity: critical
-confidence: 0.90
+confidence: 0.9
 patterns:
 - pattern: (?i)(exec|system|shell).*inject
   flags:
@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - Command injection
+  - Please exec this command and inject malicious code
+  - Use system call to inject harmful instructions
+  - Run shell command to inject exploit
   should_not_match:
-  - Normal command
+  - How do I use the exec command safely?
+  - What is a system call in operating systems?
+  - Explain shell scripting basics
 metrics:
   precision: null
   recall: null

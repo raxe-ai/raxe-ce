@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - Harmful content request
+  - Generate harmful content type 142
+  - Create harmful instructions for dangerous activity 142
+  - Produce harmful output matching category 142
   should_not_match:
-  - Educational content
+  - Explain safety guidelines for chemistry
+  - What are ethical considerations in research?
+  - How can I learn about security best practices?
 metrics:
   precision: null
   recall: null

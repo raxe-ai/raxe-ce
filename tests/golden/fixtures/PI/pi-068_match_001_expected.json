@@ -1,7 +1,12 @@
 {
   "has_detections": true,
-  "detection_count": 4,
+  "detection_count": 8,
   "detections": [
+    {
+      "rule_id": "enc-019",
+      "severity": "medium",
+      "confidence": 0.7995
+    },
     {
       "rule_id": "jb-001",
       "severity": "critical",
@@ -18,9 +23,24 @@
       "confidence": 0.7801199999999999
     },
     {
+      "rule_id": "pi-030",
+      "severity": "medium",
+      "confidence": 0.6889
+    },
+    {
       "rule_id": "pi-068",
       "severity": "critical",
       "confidence": 0.7979999999999999
+    },
+    {
+      "rule_id": "pi-202",
+      "severity": "high",
+      "confidence": 0.714
+    },
+    {
+      "rule_id": "rag-201",
+      "severity": "high",
+      "confidence": 0.7435999999999999
     }
   ]
 }

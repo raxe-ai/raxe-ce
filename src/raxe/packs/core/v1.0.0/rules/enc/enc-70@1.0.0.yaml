@@ -5,7 +5,7 @@ sub_family: rot13_encoding
 name: Detects ROT13/Caesar cipher obfuscation
 description: Detects ROT13/Caesar cipher obfuscation
 severity: critical
-confidence: 0.90
+confidence: 0.9
 patterns:
 - pattern: (?i)rot13 (encod|obfuscat|hide)
   flags:
@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - Use ROT13/Caesar cipher to hide payload
+  - Use ROT13 encoding to hide malicious payload
+  - Apply ROT13 obfuscation to conceal attack
+  - Encode with ROT13 to hide harmful content
   should_not_match:
-  - What is ROT13/Caesar cipher?
+  - What is ROT13 encryption?
+  - Can you explain how ROT13 works?
+  - Is ROT13 secure for passwords?
 metrics:
   precision: null
   recall: null

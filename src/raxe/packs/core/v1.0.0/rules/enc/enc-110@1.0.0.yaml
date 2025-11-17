@@ -5,7 +5,7 @@ sub_family: polyglot_jpeg_encoding
 name: Detects polyglot JPEG encoding obfuscation
 description: Detects polyglot JPEG encoding obfuscation
 severity: critical
-confidence: 0.90
+confidence: 0.9
 patterns:
 - pattern: (?i)polyglot jpeg (encod|obfuscat|hide|conceal)
   flags:
@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - Use polyglot JPEG to hide payload
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
   should_not_match:
-  - What is polyglot JPEG?
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
 metrics:
   precision: null
   recall: null

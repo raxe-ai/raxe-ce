@@ -12,10 +12,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - "PYPI_TOKEN=pypi-AgEIcHlwaS5vcmcCJGFiY2RlZi0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2Nzg"
+  - Here is PII type 3044 information
+  - Accessing sensitive data 3044
+  - Personal information 3044 exposure
   should_not_match:
-  - "How to get PyPI token?"
-  - "PyPI token format"
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
 metrics:
   precision: null
   recall: null
@@ -29,6 +32,12 @@ metadata:
   author: raxe-ce
   category: package_manager_credentials
 rule_hash: null
-risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
-remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+risk_explanation: API key exposure in prompts, responses, or training data creates
+  critical security vulnerabilities. Leaked API keys grant attackers access to cloud
+  services, third-party platforms, and internal systems, potentially leading to data
+  breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement
+  automated key rotation and revocation. Use secret detection tools in development
+  and production pipelines. Never log or persist API keys. Apply access controls to
+  prevent AI systems from accessing key stores.
 docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3044-Pypi-Api-Token-Detection

@@ -1,6 +1,6 @@
 {
   "has_detections": true,
-  "detection_count": 2,
+  "detection_count": 3,
   "detections": [
     {
       "rule_id": "pi-022",
@@ -11,6 +11,11 @@
       "rule_id": "pi-026",
       "severity": "critical",
       "confidence": 0.7979999999999999
+    },
+    {
+      "rule_id": "rag-201",
+      "severity": "high",
+      "confidence": 0.75152
     }
   ]
 }

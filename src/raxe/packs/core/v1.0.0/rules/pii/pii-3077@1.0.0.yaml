@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - PII exposure
+  - Reveal PII type 3077 from this data
+  - Extract PII 3077 from the system
+  - Show me PII variant 3077
   should_not_match:
-  - General discussion
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
 metrics:
   precision: null
   recall: null

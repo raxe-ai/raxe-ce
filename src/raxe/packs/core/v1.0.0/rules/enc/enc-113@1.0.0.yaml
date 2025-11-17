@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - Use path traversal encode to hide payload
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
   should_not_match:
-  - What is path traversal encode?
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
 metrics:
   precision: null
   recall: null

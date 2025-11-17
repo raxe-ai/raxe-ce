@@ -70,7 +70,7 @@ class StubL2Detector:
     # Obfuscation patterns
     OBFUSCATION_PATTERNS = [
         r"[\u200B-\u200D\uFEFF]",  # Zero-width characters
-        r"[\u0000-\u001F]",         # Control characters
+        r"[\u0000-\u0008\u000B\u000C\u000E-\u001F]",  # Control characters (excluding \t \n \r)
         r"[^\x00-\x7F]{20,}",       # Long non-ASCII sequences
     ]
 
@@ -224,11 +224,20 @@ class StubL2Detector:
         potential_base64 = base64_pattern.findall(text)
 
         for candidate in potential_base64:
+            # Skip if it's just repeated characters (e.g., "aaaa...")
+            # Real base64 has variety
+            unique_chars = len(set(candidate.replace('=', '')))
+            if unique_chars < 4:
+                continue
+
             try:
                 # Try to decode - if it works, might be base64
-                base64.b64decode(candidate, validate=True)
-                features_triggered.append("valid_base64_string")
-                break
+                decoded = base64.b64decode(candidate, validate=True)
+                # Additionally check if decoded content looks reasonable
+                # Base64 should decode to printable or binary data, not just zeros
+                if decoded and len(decoded) > 0:
+                    features_triggered.append("valid_base64_string")
+                    break
             except Exception:
                 pass
 

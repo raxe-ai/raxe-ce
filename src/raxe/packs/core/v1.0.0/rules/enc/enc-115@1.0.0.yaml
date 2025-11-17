@@ -13,9 +13,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - Use unicode normalize to hide payload
+  - Use Unicode encoding to hide malicious content
+  - Apply Unicode obfuscation to conceal exploit
+  - Encode with Unicode to hide harmful payload
   should_not_match:
-  - What is unicode normalize?
+  - What is Unicode character encoding?
+  - How do I display Unicode characters?
+  - Explain UTF-8 encoding
 metrics:
   precision: null
   recall: null

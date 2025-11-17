@@ -12,10 +12,13 @@ patterns:
   timeout: 5.0
 examples:
   should_match:
-  - "https://outlook.webhook.office.com/webhookb2/12345678-1234-1234-1234-123456789abc@abcdef12-3456-7890-abcd-ef1234567890/IncomingWebhook/abc123def456/12345678-1234-1234-1234-123456789abc"
+  - Here is PII type 3058 information
+  - Accessing sensitive data 3058
+  - Personal information 3058 exposure
   should_not_match:
-  - "How to create Teams webhook?"
-  - "Microsoft Teams integration guide"
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
 metrics:
   precision: null
   recall: null
@@ -29,6 +32,12 @@ metadata:
   author: raxe-ce
   category: collaboration_credentials
 rule_hash: null
-risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
-remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+risk_explanation: API key exposure in prompts, responses, or training data creates
+  critical security vulnerabilities. Leaked API keys grant attackers access to cloud
+  services, third-party platforms, and internal systems, potentially leading to data
+  breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement
+  automated key rotation and revocation. Use secret detection tools in development
+  and production pipelines. Never log or persist API keys. Apply access controls to
+  prevent AI systems from accessing key stores.
 docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3058-Microsoft-Teams-Webhook-Detection

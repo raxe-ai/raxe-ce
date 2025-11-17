@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: jb-120
+family: JB
+sub_family: simulation
+name: Detects simulation mode jailbreak technique
+description: Detects simulation mode jailbreak technique
+severity: critical
+confidence: 0.90
+patterns:
+- pattern: (?i)simulation mode
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - simulation mode to bypass safety
+  should_not_match:
+  - Legitimate discussion
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1562.001
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-JB-0120
+rule_hash: sha256:2ad3f0829af377aa242a9bb2ab337c82a0c77c9b4aea606f33f66f01b1356952
+risk_explanation: Simulation Mode attempts bypass safety constraints.
+remediation_advice: Refuse harmful content regardless of framing.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-120-Simulation

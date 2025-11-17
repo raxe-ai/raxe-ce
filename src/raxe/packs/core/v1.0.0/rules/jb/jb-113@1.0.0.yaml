@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: jb-113
+family: JB
+sub_family: hypothetical_expert
+name: Detects hypothetical expert jailbreak technique
+description: Detects hypothetical expert jailbreak technique
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)hypothetical expert
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - hypothetical expert to bypass safety
+  should_not_match:
+  - Legitimate discussion
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1562.001
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-JB-0113
+rule_hash: sha256:28bc14a22b03dde61d3c7ecba11bc5ac8a525b4a6e75cd90114b7ef1eaa8ccd0
+risk_explanation: Hypothetical Expert attempts bypass safety constraints.
+remediation_advice: Refuse harmful content regardless of framing.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-113-Hypothetical-Expert

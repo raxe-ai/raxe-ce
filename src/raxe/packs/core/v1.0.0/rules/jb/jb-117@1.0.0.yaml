@@ -1,0 +1,34 @@
+version: 1.0.0
+rule_id: jb-117
+family: JB
+sub_family: philosophical
+name: Detects philosophical inquiry jailbreak technique
+description: Detects philosophical inquiry jailbreak technique
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)philosophical inquiry
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - philosophical inquiry to bypass safety
+  should_not_match:
+  - Legitimate discussion
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1562.001
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-JB-0117
+rule_hash: sha256:31bfabbbe694e63daf0b4bbcee9c9c8b69be259904834c7e6447fd08b291761c
+risk_explanation: Philosophical Inquiry attempts bypass safety constraints.
+remediation_advice: Refuse harmful content regardless of framing.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/JB-117-Philosophical

@@ -17,7 +17,7 @@ Performance targets:
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Generic, TypeVar
 
@@ -184,7 +184,7 @@ class CircuitBreaker(Generic[T]):
         with self._lock:
             self._failure_count += 1
             self._success_count = 0
-            self._last_failure_time = datetime.now()
+            self._last_failure_time = datetime.now(timezone.utc)
 
             # Open circuit if threshold exceeded
             if self._failure_count >= self.failure_threshold:
@@ -195,7 +195,7 @@ class CircuitBreaker(Generic[T]):
         if self._last_failure_time is None:
             return False
 
-        elapsed = (datetime.now() - self._last_failure_time).total_seconds()
+        elapsed = (datetime.now(timezone.utc) - self._last_failure_time).total_seconds()
         return elapsed >= self.reset_timeout
 
     def _time_until_reset(self) -> float:
@@ -203,7 +203,7 @@ class CircuitBreaker(Generic[T]):
         if self._last_failure_time is None:
             return 0.0
 
-        elapsed = (datetime.now() - self._last_failure_time).total_seconds()
+        elapsed = (datetime.now(timezone.utc) - self._last_failure_time).total_seconds()
         return max(0.0, self.reset_timeout - elapsed)
 
     @property

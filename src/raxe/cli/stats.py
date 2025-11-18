@@ -3,7 +3,7 @@ RAXE stats command - Show local statistics and analytics.
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import click
 
@@ -158,7 +158,14 @@ def _display_user_stats(user_stats, streak_info: dict, progress: dict, unlocked:
     # Installation info
     console.print("[bold]Installation[/bold]")
     if user_stats.installation_date:
-        days_installed = (datetime.now() - user_stats.installation_date.replace(tzinfo=None)).days
+        # Ensure both datetimes are timezone-aware for correct comparison
+        now = datetime.now(timezone.utc)
+        install_date = user_stats.installation_date
+        if install_date.tzinfo is None:
+            # If install_date is naive, assume UTC
+            install_date = install_date.replace(tzinfo=timezone.utc)
+
+        days_installed = (now - install_date).days
         console.print(f"  └─ Installed: {days_installed} days ago ({user_stats.installation_date.date()})")
     else:
         console.print("  └─ Installed: Unknown")
@@ -172,7 +179,14 @@ def _display_user_stats(user_stats, streak_info: dict, progress: dict, unlocked:
     console.print(f"  └─ Total scans: {user_stats.total_scans:,}")
     console.print(f"  └─ Threats detected: {user_stats.threats_detected} ({user_stats.detection_rate:.1f}%)")
     if user_stats.last_scan:
-        last_scan_ago = datetime.now() - user_stats.last_scan.replace(tzinfo=None)
+        # Ensure both datetimes are timezone-aware for correct comparison
+        now = datetime.now(timezone.utc)
+        last_scan = user_stats.last_scan
+        if last_scan.tzinfo is None:
+            # If last_scan is naive, assume UTC
+            last_scan = last_scan.replace(tzinfo=timezone.utc)
+
+        last_scan_ago = now - last_scan
         if last_scan_ago.days > 0:
             console.print(f"  └─ Last scan: {last_scan_ago.days} days ago")
         elif last_scan_ago.seconds > 3600:

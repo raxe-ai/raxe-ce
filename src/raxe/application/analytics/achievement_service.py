@@ -7,7 +7,7 @@ All calculations delegated to domain layer, all I/O to repository.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from raxe.domain.analytics import (
@@ -130,7 +130,7 @@ class AchievementService:
                 self.repository.save_achievement(
                     installation_id=installation_id,
                     achievement_id=achievement.id,
-                    earned_at=datetime.now(),
+                    earned_at=datetime.now(timezone.utc),
                     metadata={
                         'name': achievement.name,
                         'description': achievement.description,

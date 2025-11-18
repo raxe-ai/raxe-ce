@@ -9,7 +9,8 @@ This directory contains production-ready ML models for RAXE threat detection.
 **Model:** L2 Cascaded ONNX Detector v1.0
 **Format:** ZIP archive containing 3 ONNX models + metadata
 **Size:** 316KB (compressed), ~394KB (extracted)
-**Framework:** Cascaded classifiers with sentence embeddings
+**Framework:** Cascaded classifiers with sentence embeddings (768-dim)
+**Embedding Model Required:** `sentence-transformers/all-mpnet-base-v2` (768-dim)
 **Inference Time:** ~30-60ms (CPU, including embedding generation)
 
 **Architecture:**

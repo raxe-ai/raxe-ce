@@ -78,7 +78,7 @@ class ProductionONNXDetector:
         self,
         model_dir: Path | None = None,
         confidence_threshold: float = 0.5,
-        embedding_model: str = "all-MiniLM-L6-v2",
+        embedding_model: str = "sentence-transformers/all-mpnet-base-v2",
     ):
         """
         Initialize production ONNX detector.
@@ -274,7 +274,7 @@ class ProductionONNXDetector:
 def create_onnx_l2_detector(
     model_dir: Path | None = None,
     confidence_threshold: float = 0.5,
-    embedding_model: str = "all-MiniLM-L6-v2",
+    embedding_model: str = "sentence-transformers/all-mpnet-base-v2",
 ) -> L2Detector:
     """
     Create production ONNX L2 detector instance.

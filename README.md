@@ -259,6 +259,9 @@ Verifies:
 # Scan text for threats
 raxe scan "your text"
 
+# Scan with detailed explanations (educational mode)
+raxe scan "your text" --explain
+
 # Scan multiple prompts from a file
 raxe batch prompts.txt
 

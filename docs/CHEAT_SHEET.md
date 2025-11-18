@@ -69,7 +69,7 @@ raxe rules show pi-001
 raxe rules list --family PI
 
 # Search rules
-raxe rules list --search "injection"
+raxe rules search "injection"
 
 # Validate custom rule
 raxe validate-rule my-rule.yaml

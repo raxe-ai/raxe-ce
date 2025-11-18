@@ -4,7 +4,7 @@ RAXE export command - Export scan history.
 
 import csv
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import click
@@ -104,7 +104,7 @@ def _load_scan_history(days: int) -> list[dict]:
     # In production, this would query the SQLite database
     # For now, return sample data
 
-    datetime.now() - timedelta(days=days)
+    datetime.now(timezone.utc) - timedelta(days=days)
 
     # TODO: Integrate with actual telemetry database
     # from raxe.infrastructure.telemetry.queue import TelemetryQueue
@@ -114,7 +114,7 @@ def _load_scan_history(days: int) -> list[dict]:
     # Sample data for demonstration
     sample_data = [
         {
-            "timestamp": (datetime.now() - timedelta(days=i)).isoformat(),
+            "timestamp": (datetime.now(timezone.utc) - timedelta(days=i)).isoformat(),
             "prompt_hash": f"hash_{i}",
             "has_threats": i % 3 == 0,
             "detection_count": 1 if i % 3 == 0 else 0,

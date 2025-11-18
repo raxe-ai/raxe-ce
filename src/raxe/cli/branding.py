@@ -45,9 +45,9 @@ COLORS = {
 LOGO = [
     ("╔═══════════════════════════════╗", "cyan"),        # Top border
     ("║                               ║", "cyan"),        # Spacing
-    ("║   ██▀▀▀ ▄▀▀▄ ▀▄ ▄▀ ██▀▀▀      ║", "cyan"),       # R A X E (line 1)
-    ("║   ██▄▄  █▄▄█  ▄█▄  ██▄▄       ║", "cyan"),       # R A X E (line 2)
-    ("║   ██ ▀▀ █  █ ▀▀ ▀▀ ██▄▄▄      ║", "blue"),       # R A X E (line 3) - gradient starts
+    ("║   ██▀▀█ ▄▀▀▄ █▄ ▄█ ██▀▀▀      ║", "cyan"),       # R A X E (line 1)
+    ("║   ██▄▄█ █▄▄█  ▄█▄  ██▄▄       ║", "cyan"),       # R A X E (line 2)
+    ("║   ██  █ █  █ █▀ ▀█ ██▄▄▄      ║", "blue"),       # R A X E (line 3) - gradient starts
     ("║                               ║", "blue"),        # Spacing
     ("║   AI Security Engine          ║", "dim cyan"),   # Tagline
     ("║                               ║", "cyan"),        # Spacing
@@ -58,8 +58,8 @@ LOGO = [
 # Smaller version for minimal space usage
 LOGO_COMPACT = [
     ("┌──────────────────────┐", "cyan"),                # Top border
-    ("│  ██▀ ▄▀▄ ▀▄▄▀ ██▀    │", "cyan"),               # RAXE (compact, line 1)
-    ("│  ██▄ █▄█  ██  ██▄    │", "blue"),                # RAXE (compact, line 2)
+    ("│  █▀▀▄ ▄▀▄ ▀▄▀ █▀▀    │", "cyan"),               # RAXE (compact, line 1)
+    ("│  █ ▀█ █▀█ ▄▀▄ █▄▄    │", "blue"),                # RAXE (compact, line 2)
     ("└──────────────────────┘", "blue"),                # Bottom border
 ]
 

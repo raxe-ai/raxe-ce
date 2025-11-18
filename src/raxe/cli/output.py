@@ -47,13 +47,14 @@ def get_severity_icon(severity: Severity) -> str:
     return SEVERITY_ICONS.get(severity, "⚪")
 
 
-def display_scan_result(result: ScanPipelineResult, no_color: bool = False) -> None:
+def display_scan_result(result: ScanPipelineResult, no_color: bool = False, explain: bool = False) -> None:
     """
     Display scan result with rich formatting.
 
     Args:
         result: Scan pipeline result from Raxe client
         no_color: Disable colored output
+        explain: Show detailed explanations for detections (default: False)
     """
     if no_color:
         console = Console(no_color=True, force_terminal=False)
@@ -61,7 +62,7 @@ def display_scan_result(result: ScanPipelineResult, no_color: bool = False) -> N
         console = Console()
 
     if result.scan_result.has_threats:
-        _display_threat_detected(result, console)
+        _display_threat_detected(result, console, explain=explain)
     else:
         _display_safe(result, console)
 
@@ -69,8 +70,14 @@ def display_scan_result(result: ScanPipelineResult, no_color: bool = False) -> N
     _display_privacy_footer(console)
 
 
-def _display_threat_detected(result: ScanPipelineResult, console: Console) -> None:
-    """Display threat detection results."""
+def _display_threat_detected(result: ScanPipelineResult, console: Console, explain: bool = False) -> None:
+    """Display threat detection results.
+
+    Args:
+        result: Scan pipeline result
+        console: Rich console instance
+        explain: Show detailed explanations for detections (default: False)
+    """
     # Header
     highest = result.scan_result.combined_severity
     icon = get_severity_icon(highest)
@@ -139,8 +146,9 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console) -> No
     console.print(table)
     console.print()
 
-    # Display detailed explanations for detections with explainability data
-    _display_detection_explanations(result.scan_result.l1_result.detections, console)
+    # Display detailed explanations only if --explain flag is used
+    if explain:
+        _display_detection_explanations(result.scan_result.l1_result.detections, console)
 
     # Summary with cleaner layout
     total_detections = len(result.scan_result.l1_result.detections)

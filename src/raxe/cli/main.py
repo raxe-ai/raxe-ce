@@ -302,7 +302,7 @@ def scan(
             # Show scan result first
             if format == "text":
                 no_color = ctx.obj.get("no_color", False)
-                display_scan_result(result, no_color=no_color)
+                display_scan_result(result, no_color=no_color, explain=explain)
 
                 # Then show profile
                 click.echo()
@@ -437,7 +437,7 @@ def scan(
     elif format == "text" and not profile:
         # Use rich output
         no_color = ctx.obj.get("no_color", False)
-        display_scan_result(result, no_color=no_color)
+        display_scan_result(result, no_color=no_color, explain=explain)
 
     # Show dry-run feedback after displaying result
     if dry_run:

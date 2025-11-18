@@ -3,19 +3,20 @@
 Example action plugin that sends threat alerts to a Slack channel
 via incoming webhook.
 
-Configuration (~/.raxe/config.toml):
-    ```toml
-    [plugins.slack_notifier]
-    webhook_url = "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-    channel = "#security-alerts"
-    min_severity = "HIGH"  # Only alert on HIGH or CRITICAL
-    on_threat_only = true  # Only send when threats detected
+Configuration (~/.raxe/config.yaml):
+    ```yaml
+    plugins:
+      slack_notifier:
+        webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+        channel: "#security-alerts"
+        min_severity: "HIGH"  # Only alert on HIGH or CRITICAL
+        on_threat_only: true  # Only send when threats detected
     ```
 
 Setup:
     1. Create Slack incoming webhook at https://api.slack.com/messaging/webhooks
     2. Copy this directory to ~/.raxe/plugins/slack_notifier/
-    3. Add configuration to ~/.raxe/config.toml with your webhook URL
+    3. Add configuration to ~/.raxe/config.yaml with your webhook URL
     4. Enable in plugins.enabled list
 
 Security Note:
@@ -58,7 +59,7 @@ class SlackNotifierPlugin(ActionPlugin):
         """Initialize with Slack configuration.
 
         Args:
-            config: Plugin configuration from config.toml
+            config: Plugin configuration from config.yaml
 
         Raises:
             ValueError: If webhook_url is missing

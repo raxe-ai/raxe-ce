@@ -25,6 +25,18 @@ from raxe.domain.ml.protocol import (
 )
 from raxe.domain.ml.stub_detector import StubL2Detector
 
+# ONNX detector (optional - requires onnxruntime)
+try:
+    from raxe.domain.ml.onnx_production_detector import (
+        ProductionONNXDetector,
+        create_onnx_l2_detector,
+    )
+    _has_onnx = True
+except ImportError:
+    ProductionONNXDetector = None
+    create_onnx_l2_detector = None
+    _has_onnx = False
+
 __all__ = [
     "L2Detector",
     "L2Prediction",
@@ -33,4 +45,6 @@ __all__ = [
     "ProductionL2Detector",
     "StubL2Detector",
     "create_production_l2_detector",
+    "ProductionONNXDetector",
+    "create_onnx_l2_detector",
 ]

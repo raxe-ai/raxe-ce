@@ -69,6 +69,13 @@ wrappers = [
     "langchain>=0.1",
 ]
 
+# ML detection (ONNX-based L2 detector)
+ml = [
+    "onnxruntime>=1.16.0,<2.0",
+    "sentence-transformers>=2.2.0,<3.0",
+    "numpy>=1.24.0,<2.0",
+]
+
 # All optional features
 all = [
     "openai>=1.0",
@@ -76,6 +83,9 @@ all = [
     "langchain>=0.1",
     "prompt-toolkit>=3.0,<4.0",
     "tomli-w>=1.0,<2.0",
+    "onnxruntime>=1.16.0,<2.0",
+    "sentence-transformers>=2.2.0,<3.0",
+    "numpy>=1.24.0,<2.0",
 ]
 
 [project.urls]
@@ -97,6 +107,9 @@ raxe = [
     "py.typed",
     "packs/core/**/*.yaml",
     "packs/core/**/*.yml",
+    "domain/ml/models/*.onnx",
+    "domain/ml/models/*.json",
+    "domain/ml/models/*.bundle",
 ]
 
 # Exclude unnecessary files from package

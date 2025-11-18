@@ -4,19 +4,22 @@ Example action plugin that sends scan results to a custom HTTP endpoint.
 Useful for integrating RAXE with external systems like SIEM, logging
 platforms, or custom alerting systems.
 
-Configuration (~/.raxe/config.toml):
-    ```toml
-    [plugins.webhook]
-    url = "https://your-endpoint.com/api/raxe/events"
-    on_threat_only = true  # Only send when threats detected
-    headers = { "Authorization" = "Bearer YOUR_TOKEN", "X-Custom" = "value" }
-    timeout_seconds = 5
-    retry_on_failure = false
+Configuration (~/.raxe/config.yaml):
+    ```yaml
+    plugins:
+      webhook:
+        url: "https://your-endpoint.com/api/raxe/events"
+        on_threat_only: true  # Only send when threats detected
+        headers:
+          Authorization: "Bearer YOUR_TOKEN"
+          X-Custom: "value"
+        timeout_seconds: 5
+        retry_on_failure: false
     ```
 
 Usage:
     1. Copy this directory to ~/.raxe/plugins/webhook/
-    2. Configure your endpoint URL in config.toml
+    2. Configure your endpoint URL in config.yaml
     3. Enable in plugins.enabled list
     4. RAXE will POST scan results as JSON to your endpoint
 """
@@ -57,7 +60,7 @@ class WebhookPlugin(ActionPlugin):
         """Initialize with webhook configuration.
 
         Args:
-            config: Plugin configuration from config.toml
+            config: Plugin configuration from config.yaml
 
         Raises:
             ValueError: If URL is missing or invalid

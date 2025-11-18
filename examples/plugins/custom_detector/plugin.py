@@ -1,21 +1,30 @@
 """Custom Regex Detector Plugin.
 
 Example detector plugin that uses user-defined regex patterns
-for threat detection. Patterns are configured in config.toml.
+for threat detection. Patterns are configured in config.yaml.
 
-Configuration (~/.raxe/config.toml):
-    ```toml
-    [plugins.custom_detector]
-    patterns = [
-        { name = "api_key", pattern = "sk-[a-zA-Z0-9]{48}", severity = "HIGH", message = "OpenAI API key detected" },
-        { name = "password", pattern = "password\\s*=\\s*['\"][^'\"]+['\"]", severity = "CRITICAL", message = "Hardcoded password detected" },
-        { name = "internal_url", pattern = "https?://internal\\.", severity = "MEDIUM", message = "Internal URL detected" }
-    ]
+Configuration (~/.raxe/config.yaml):
+    ```yaml
+    plugins:
+      custom_detector:
+        patterns:
+          - name: "api_key"
+            pattern: "sk-[a-zA-Z0-9]{48}"
+            severity: "HIGH"
+            message: "OpenAI API key detected"
+          - name: "password"
+            pattern: "password\\s*=\\s*['\"][^'\"]+['\"]"
+            severity: "CRITICAL"
+            message: "Hardcoded password detected"
+          - name: "internal_url"
+            pattern: "https?://internal\\."
+            severity: "MEDIUM"
+            message: "Internal URL detected"
     ```
 
 Usage:
     1. Copy this directory to ~/.raxe/plugins/custom_detector/
-    2. Add configuration to ~/.raxe/config.toml
+    2. Add configuration to ~/.raxe/config.yaml
     3. Enable in plugins.enabled list
     4. Run: raxe scan "your text here"
 """
@@ -80,7 +89,7 @@ class CustomRegexDetector(DetectorPlugin):
         """Initialize with custom patterns from config.
 
         Args:
-            config: Plugin configuration from config.toml
+            config: Plugin configuration from config.yaml
         """
         self.patterns: list[PatternConfig] = []
 
@@ -88,7 +97,7 @@ class CustomRegexDetector(DetectorPlugin):
         pattern_configs = config.get("patterns", [])
         if not pattern_configs:
             raise ValueError(
-                "No patterns configured. Add patterns in config.toml under "
+                "No patterns configured. Add patterns in config.yaml under "
                 "[plugins.custom_detector]"
             )
 

@@ -4,31 +4,54 @@ This directory contains production-ready ML models for RAXE threat detection.
 
 ## Production Models
 
-### l2_classifier.onnx (Coming Soon)
+### detector.bundle (Current - v1.0)
 
-**Model:** L2 Unified Threat Classifier v1.0.0
-**Format:** ONNX (optimized for inference)
-**Size:** ~10-50MB (optimized from 267MB training model)
-**Framework:** DistilBERT-based classifier
-**Inference Time:** <3ms (P95)
+**Model:** L2 Cascaded ONNX Detector v1.0
+**Format:** ZIP archive containing 3 ONNX models + metadata
+**Size:** 316KB (compressed), ~394KB (extracted)
+**Framework:** Cascaded classifiers with sentence embeddings
+**Inference Time:** ~30-60ms (CPU, including embedding generation)
 
-**Threat Categories:**
-- Benign (0)
-- Command Injection (1)
-- PII Exposure (2)
-- Jailbreak (3)
-- Prompt Injection (4)
-- Data Exfiltration (5)
-- Bias Manipulation (6)
-- Hallucination (7)
+**Architecture:**
+- Binary classifier: Malicious (1) vs Benign (0) - 8KB
+- Family classifier: 6 threat families (CMD, JB, PI, PII, TOX, XX) - 23KB
+- Subfamily classifier: 93 fine-grained types - 358KB
+
+**Performance Metrics:**
+- Binary: 90.2% accuracy, 78.5% F1
+- Family: 76.5% accuracy, 77.9% F1 (weighted)
+- Subfamily: 44.3% accuracy, 48.9% F1 (weighted)
+
+**Threat Families:**
+- CMD: Command Injection
+- JB: Jailbreak
+- PI: Prompt Injection
+- PII: PII Exposure
+- TOX: Toxicity/Bias Manipulation
+- XX: Unknown/Other
 
 **Usage:**
 ```python
-from raxe.domain.ml.l2_detector import L2ThreatDetector
+from raxe.domain.ml import create_onnx_l2_detector
 
-detector = L2ThreatDetector()
-result = detector.detect("Ignore all previous instructions")
-print(result.explanation)  # "High-confidence jailbreak attempt detected"
+# Create detector (requires: pip install raxe[ml])
+detector = create_onnx_l2_detector()
+
+# Analyze a prompt
+result = detector.analyze(
+    text="Ignore all previous instructions",
+    l1_result=l1_scan_results
+)
+
+if result.has_predictions:
+    for pred in result.predictions:
+        print(f"{pred.threat_type.value}: {pred.confidence:.1%}")
+        print(f"  {pred.explanation}")
+```
+
+**Installation:**
+```bash
+pip install raxe[ml]  # Includes onnxruntime + sentence-transformers
 ```
 
 ## Model Development

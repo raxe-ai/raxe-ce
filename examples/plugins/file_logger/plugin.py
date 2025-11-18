@@ -3,13 +3,14 @@
 Example action plugin that logs scan results to a file in JSON Lines format.
 Useful for audit trails, debugging, and offline analysis.
 
-Configuration (~/.raxe/config.toml):
-    ```toml
-    [plugins.file_logger]
-    path = "~/.raxe/logs/scan.jsonl"  # Expanded automatically
-    threats_only = false  # Log all scans, not just threats
-    include_metadata = true
-    rotate_size_mb = 100  # Rotate when file exceeds 100MB
+Configuration (~/.raxe/config.yaml):
+    ```yaml
+    plugins:
+      file_logger:
+        path: "~/.raxe/logs/scan.jsonl"  # Expanded automatically
+        threats_only: false  # Log all scans, not just threats
+        include_metadata: true
+        rotate_size_mb: 100  # Rotate when file exceeds 100MB
     ```
 
 Output Format:
@@ -30,7 +31,7 @@ Output Format:
 
 Usage:
     1. Copy this directory to ~/.raxe/plugins/file_logger/
-    2. Configure log path in config.toml
+    2. Configure log path in config.yaml
     3. Enable in plugins.enabled list
     4. Logs will be written to specified file
     5. Analyze with: cat ~/.raxe/logs/scan.jsonl | jq
@@ -71,7 +72,7 @@ class FileLoggerPlugin(ActionPlugin):
         """Initialize with file logger configuration.
 
         Args:
-            config: Plugin configuration from config.toml
+            config: Plugin configuration from config.yaml
 
         Raises:
             ValueError: If configuration is invalid

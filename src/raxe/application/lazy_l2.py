@@ -64,19 +64,43 @@ class LazyL2Detector:
         logger.info("Loading L2 detector on first use...")
 
         if self.use_production:
+            # Try ONNX detector first (faster, smaller)
             try:
-                from raxe.domain.ml.factory import create_production_l2_detector
+                from raxe.domain.ml.onnx_production_detector import create_onnx_l2_detector
 
-                self._detector = create_production_l2_detector(
+                self._detector = create_onnx_l2_detector(
                     confidence_threshold=self.confidence_threshold
                 )
                 logger.info(
-                    f"Production L2 detector loaded "
+                    f"Production ONNX L2 detector loaded "
                     f"(threshold={self.confidence_threshold})"
                 )
+            except ImportError as e:
+                # ONNX not available, try PyTorch detector
+                logger.warning(
+                    f"ONNX detector not available ({e}). "
+                    f"Trying PyTorch detector..."
+                )
+                try:
+                    from raxe.domain.ml.production_detector import create_production_l2_detector
+
+                    self._detector = create_production_l2_detector(
+                        confidence_threshold=self.confidence_threshold
+                    )
+                    logger.info(
+                        f"Production PyTorch L2 detector loaded "
+                        f"(threshold={self.confidence_threshold})"
+                    )
+                except Exception as e2:
+                    logger.warning(
+                        f"Failed to load PyTorch L2 detector: {e2}. "
+                        f"Falling back to stub detector."
+                    )
+                    from raxe.domain.ml.stub_detector import StubL2Detector
+                    self._detector = StubL2Detector()
             except Exception as e:
                 logger.warning(
-                    f"Failed to load production L2 detector: {e}. "
+                    f"Failed to load ONNX L2 detector: {e}. "
                     f"Falling back to stub detector."
                 )
                 from raxe.domain.ml.stub_detector import StubL2Detector

@@ -4,18 +4,23 @@ This module defines the protocol and interfaces for L2 machine learning
 threat detection that augments L1 rule-based detection.
 
 L2 provides:
-- Semantic threat detection
-- Context-aware analysis
+- Semantic threat detection using sentence-transformers embeddings
+- Multi-head classification (binary, family, subfamily)
+- Context-aware analysis with explainability
 - Encoded content detection
-- Probabilistic predictions
+- Probabilistic predictions with confidence scores
 
-L2 receives L1 results as features and returns predictions.
-All implementations must be <5ms for production use.
+L2 uses unified .raxe model bundles from raxe-ml for all ML components:
+- Classifier (multi-head logistic regression)
+- Keyword triggers (pattern matching)
+- Attack clusters (similarity matching)
+- Embedding configuration
+- Training statistics
 """
 
-from raxe.domain.ml.production_detector import (
-    ProductionL2Detector,
-    create_production_l2_detector,
+from raxe.domain.ml.bundle_detector import (
+    BundleBasedDetector,
+    create_bundle_detector,
 )
 from raxe.domain.ml.protocol import (
     L2Detector,
@@ -25,26 +30,12 @@ from raxe.domain.ml.protocol import (
 )
 from raxe.domain.ml.stub_detector import StubL2Detector
 
-# ONNX detector (optional - requires onnxruntime)
-try:
-    from raxe.domain.ml.onnx_production_detector import (
-        ProductionONNXDetector,
-        create_onnx_l2_detector,
-    )
-    _has_onnx = True
-except ImportError:
-    ProductionONNXDetector = None
-    create_onnx_l2_detector = None
-    _has_onnx = False
-
 __all__ = [
     "L2Detector",
     "L2Prediction",
     "L2Result",
     "L2ThreatType",
-    "ProductionL2Detector",
+    "BundleBasedDetector",
+    "create_bundle_detector",
     "StubL2Detector",
-    "create_production_l2_detector",
-    "ProductionONNXDetector",
-    "create_onnx_l2_detector",
 ]

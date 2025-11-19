@@ -5,13 +5,19 @@ RAXE REPL - Interactive shell for RAXE commands.
 from pathlib import Path
 
 import click
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.history import FileHistory
 from rich.table import Table
 
 from raxe.cli.output import console, display_error, display_scan_result, display_stats
 from raxe.sdk.client import Raxe, ScanPipelineResult
+
+# Optional dependencies for REPL functionality
+try:
+    from prompt_toolkit import PromptSession
+    from prompt_toolkit.completion import WordCompleter
+    from prompt_toolkit.history import FileHistory
+    PROMPT_TOOLKIT_AVAILABLE = True
+except ImportError:
+    PROMPT_TOOLKIT_AVAILABLE = False
 
 
 @click.command()
@@ -41,6 +47,14 @@ def repl() -> None:
     Examples:
       raxe repl
     """
+    # Check if prompt_toolkit is available
+    if not PROMPT_TOOLKIT_AVAILABLE:
+        console.print(
+            "[red]Error:[/red] prompt-toolkit is required for REPL mode.\n"
+            "Install it with: [cyan]pip install raxe[repl][/cyan]"
+        )
+        raise click.Abort()
+
     from raxe.cli.branding import print_logo
 
     # Show compact logo

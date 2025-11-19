@@ -12,6 +12,7 @@ import click
 from raxe import __version__
 from raxe.cli.doctor import doctor
 from raxe.cli.export import export
+from raxe.cli.models import models
 from raxe.cli.output import console, display_error, display_scan_result
 from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
@@ -876,6 +877,7 @@ cli.add_command(export)
 cli.add_command(repl)
 cli.add_command(rules)
 cli.add_command(doctor)
+cli.add_command(models)
 cli.add_command(profile_command)
 cli.add_command(privacy_command)
 cli.add_command(suppress)

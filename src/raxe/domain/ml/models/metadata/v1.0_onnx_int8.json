@@ -1,0 +1,59 @@
+{
+  "model_id": "v1.0_onnx_int8",
+  "name": "RAXE L2 v1.0 ONNX INT8",
+  "version": "1.0.0",
+  "variant": "onnx_int8",
+  "description": "Optimized ONNX model with INT8 quantization. 5x faster embedding generation with minimal accuracy loss.",
+
+  "file_info": {
+    "filename": "raxe_model_l2_v1.0_onnx_int8.raxe",
+    "size_mb": 32.5,
+    "checksum": null
+  },
+
+  "capabilities": {
+    "classification_types": ["binary", "family", "subfamily"],
+    "supported_families": ["PI", "JB", "CMD", "PII", "ENC", "RAG", "BENIGN"],
+    "supports_explanations": true,
+    "supports_embeddings": true
+  },
+
+  "performance": {
+    "target_latency_ms": 10,
+    "p50_latency_ms": 8.5,
+    "p95_latency_ms": 12.0,
+    "p99_latency_ms": 15.0,
+    "throughput_per_sec": 120,
+    "memory_mb": 150
+  },
+
+  "accuracy": {
+    "binary_f1": 0.918,
+    "family_f1": 0.875,
+    "subfamily_f1": 0.805,
+    "false_positive_rate": 0.028,
+    "false_negative_rate": 0.060
+  },
+
+  "requirements": {
+    "runtime": "onnx_int8",
+    "min_runtime_version": "1.16.0",
+    "requires_gpu": false,
+    "requires_quantization_support": true,
+    "additional_dependencies": ["onnxruntime>=1.16.0"]
+  },
+
+  "training_info": {
+    "trained_on": "2024-11-15",
+    "training_samples": 50000,
+    "validation_samples": 10000,
+    "test_samples": 5000,
+    "quantization_method": "INT8 dynamic quantization",
+    "quantization_calibration_samples": 1000
+  },
+
+  "tags": ["production", "optimized", "quantized", "low-latency", "cpu"],
+  "status": "experimental",
+  "recommended_for": ["production", "low-latency", "high-throughput", "cpu-only"],
+  "not_recommended_for": ["maximum-accuracy-required"]
+}

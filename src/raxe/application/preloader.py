@@ -21,7 +21,7 @@ from pathlib import Path
 from raxe.application.scan_merger import ScanMerger
 from raxe.application.scan_pipeline import ScanPipeline
 from raxe.domain.engine.executor import RuleExecutor
-from raxe.domain.ml import StubL2Detector, create_production_l2_detector
+from raxe.domain.ml import StubL2Detector, create_bundle_detector
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
 from raxe.infrastructure.telemetry.hook import TelemetryHook
@@ -258,7 +258,7 @@ class PipelinePreloader:
         # Choose detector based on config
         if config.use_production_l2:
             try:
-                l2_detector = create_production_l2_detector(
+                l2_detector = create_bundle_detector(
                     confidence_threshold=config.l2_confidence_threshold
                 )
             except Exception:

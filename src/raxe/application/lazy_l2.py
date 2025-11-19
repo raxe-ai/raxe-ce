@@ -27,6 +27,9 @@ class LazyL2Detector:
     until the first call to analyze(). This significantly reduces startup time.
     """
 
+    # Class-level flag to show warning only once per process
+    _stub_warning_shown = False
+
     def __init__(
         self,
         *,
@@ -133,11 +136,30 @@ class LazyL2Detector:
 
             except Exception as e:
                 # Fallback to stub detector if bundle loading fails
+                from pathlib import Path
+                models_dir = Path(__file__).parent.parent / "domain" / "ml" / "models"
+
                 logger.warning(
                     "l2_bundle_failed",
                     error=str(e),
                     fallback="stub_detector",
+                    models_dir=str(models_dir),
+                    help="L2 ML detection unavailable. Falling back to stub detector (no actual threat detection). "
+                         f"To enable L2: Place a .raxe model file in {models_dir}. "
+                         "See L2_SCANNING_ISSUE_AND_FIX.md for details.",
                 )
+
+                # Show user-visible warning once per process
+                if not LazyL2Detector._stub_warning_shown:
+                    import sys
+                    print(
+                        f"\n⚠️  Warning: L2 ML model not found. Using stub detector (no threat detection).\n"
+                        f"   Expected location: {models_dir}/raxe_model_l2.raxe\n"
+                        f"   See L2_SCANNING_ISSUE_AND_FIX.md or 'raxe models list' for details.\n",
+                        file=sys.stderr
+                    )
+                    LazyL2Detector._stub_warning_shown = True
+
                 from raxe.domain.ml.stub_detector import StubL2Detector
                 self._detector = StubL2Detector()
 
@@ -147,6 +169,7 @@ class LazyL2Detector:
                     detector_type="stub",
                     model_version=model_info.get("version", "unknown"),
                     is_stub=True,
+                    warning="L2 ML detection unavailable - using stub (no actual detection)",
                 )
         else:
             from raxe.domain.ml.stub_detector import StubL2Detector

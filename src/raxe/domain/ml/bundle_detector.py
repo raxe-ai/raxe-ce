@@ -439,6 +439,7 @@ class BundleBasedDetector:
 def create_bundle_detector(
     bundle_path: str | Path,
     confidence_threshold: float = 0.5,
+    onnx_path: str | Path | None = None,
 ) -> L2Detector:
     """
     Factory function to create bundle-based detector.
@@ -446,6 +447,7 @@ def create_bundle_detector(
     Args:
         bundle_path: Path to .raxe bundle file
         confidence_threshold: Minimum confidence to report predictions
+        onnx_path: Optional path to ONNX embeddings model for 5x speedup
 
     Returns:
         L2Detector implementation (BundleBasedDetector)
@@ -453,8 +455,15 @@ def create_bundle_detector(
     Example:
         detector = create_bundle_detector('models/production_v1.raxe')
         result = detector.analyze(text, l1_results)
+
+        # With ONNX embeddings for 5x speedup
+        detector = create_bundle_detector(
+            'models/production_v1.raxe',
+            onnx_path='models/embeddings.onnx'
+        )
     """
     return BundleBasedDetector(
         bundle_path=bundle_path,
         confidence_threshold=confidence_threshold,
+        onnx_model_path=onnx_path,
     )

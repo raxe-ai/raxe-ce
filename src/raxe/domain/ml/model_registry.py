@@ -57,16 +57,12 @@ class ModelRegistry:
             logger.warning(f"Models directory not found: {self.models_dir}")
             return
 
-        # Find all .raxe files
-        raxe_files = list(self.models_dir.glob("*.raxe"))
-        if not raxe_files:
-            logger.warning(f"No .raxe model files found in {self.models_dir}")
-            return
-
-        logger.info(f"Discovered {len(raxe_files)} model files in {self.models_dir}")
-
-        # Try to load metadata for each
         metadata_dir = self.models_dir / "metadata"
+
+        # Strategy 1: Discover from .raxe files
+        raxe_files = list(self.models_dir.glob("*.raxe"))
+        if raxe_files:
+            logger.info(f"Discovered {len(raxe_files)} model files in {self.models_dir}")
 
         for raxe_file in raxe_files:
             try:
@@ -99,6 +95,41 @@ class ModelRegistry:
             except Exception as e:
                 logger.error(f"Failed to load model {raxe_file.name}: {e}")
                 continue
+
+        # Strategy 2: Discover from metadata files (for variants that share bundle files)
+        if metadata_dir.exists():
+            metadata_files = list(metadata_dir.glob("*.json"))
+            for metadata_file in metadata_files:
+                try:
+                    model_id = metadata_file.stem
+
+                    # Skip if already loaded from .raxe file
+                    if model_id in self._models:
+                        continue
+
+                    # Load metadata
+                    with open(metadata_file, "r") as f:
+                        data = json.load(f)
+
+                    # Resolve bundle file path
+                    bundle_filename = data["file_info"]["filename"]
+                    bundle_path = self.models_dir / bundle_filename
+
+                    if not bundle_path.exists():
+                        logger.warning(f"Bundle file not found for {model_id}: {bundle_path}")
+                        continue
+
+                    # Load model with correct bundle path
+                    metadata = ModelMetadata.from_dict(data, file_path=bundle_path)
+                    logger.info(f"Loaded model from metadata: {model_id} ({metadata.name})")
+                    self._models[model_id] = metadata
+
+                except Exception as e:
+                    logger.error(f"Failed to load model from metadata {metadata_file.name}: {e}")
+                    continue
+
+        if not self._models:
+            logger.warning(f"No models discovered in {self.models_dir}")
 
     def _create_default_metadata(
         self,
@@ -277,9 +308,19 @@ class ModelRegistry:
         if not model_file.exists():
             raise ValueError(f"Model file not found: {model_file}")
 
+        # Get ONNX embeddings path if specified
+        onnx_path = None
+        if model.file_info.onnx_embeddings:
+            onnx_path = self.models_dir / model.file_info.onnx_embeddings
+            if not onnx_path.exists():
+                logger.warning(f"ONNX embeddings not found: {onnx_path}, falling back to sentence-transformers")
+                onnx_path = None
+
         # Create detector using bundle detector factory
         logger.info(f"Creating detector from model: {model_id} ({model_file.name})")
-        return create_bundle_detector(model_path=str(model_file))
+        if onnx_path:
+            logger.info(f"Using ONNX embeddings: {onnx_path.name}")
+        return create_bundle_detector(model_path=str(model_file), onnx_path=onnx_path)
 
     def compare_models(
         self,

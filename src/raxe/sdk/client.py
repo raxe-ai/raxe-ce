@@ -249,6 +249,7 @@ class Raxe:
         confidence_threshold: float = 0.5,
         explain: bool = False,
         dry_run: bool = False,
+        use_async: bool = True,
     ) -> ScanPipelineResult:
         """Scan text for security threats with layer control.
 
@@ -271,6 +272,7 @@ class Raxe:
             confidence_threshold: Minimum confidence for reporting (0.0-1.0, default: 0.5)
             explain: Include explanations in detection results (default: False)
             dry_run: Test scan without saving to database (default: False)
+            use_async: Use async pipeline for parallel L1+L2 execution (5x speedup, default: True)
 
         Returns:
             ScanPipelineResult with:

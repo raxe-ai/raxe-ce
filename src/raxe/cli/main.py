@@ -12,6 +12,7 @@ import click
 from raxe import __version__
 from raxe.cli.doctor import doctor
 from raxe.cli.export import export
+from raxe.cli.models import models
 from raxe.cli.output import console, display_error, display_scan_result
 from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
@@ -385,13 +386,34 @@ def scan(
                 else:
                     severity = "low"
 
-                l2_detections.append({
+                # Extract family/subfamily from bundle metadata if available
+                family = p.metadata.get("family")
+                sub_family = p.metadata.get("sub_family")
+                scores = p.metadata.get("scores", {})
+                why_it_hit = p.metadata.get("why_it_hit", [])
+                recommended_action = p.metadata.get("recommended_action", [])
+
+                detection = {
                     "rule_id": f"L2-{p.threat_type.value}",
                     "severity": severity,
                     "confidence": p.confidence,
                     "layer": "L2",
                     "message": p.explanation or f"{p.threat_type.value} detected",
-                })
+                }
+
+                # Add bundle schema fields if available
+                if family:
+                    detection["family"] = family
+                if sub_family:
+                    detection["sub_family"] = sub_family
+                if scores:
+                    detection["scores"] = scores
+                if why_it_hit:
+                    detection["why_it_hit"] = why_it_hit
+                if recommended_action:
+                    detection["recommended_action"] = recommended_action
+
+                l2_detections.append(detection)
 
         output = {
             "has_detections": result.scan_result.has_threats,
@@ -855,6 +877,7 @@ cli.add_command(export)
 cli.add_command(repl)
 cli.add_command(rules)
 cli.add_command(doctor)
+cli.add_command(models)
 cli.add_command(profile_command)
 cli.add_command(privacy_command)
 cli.add_command(suppress)

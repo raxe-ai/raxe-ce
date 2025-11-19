@@ -415,9 +415,9 @@ class TestL2ModelIntegration:
         This test is marked as skip because it requires the actual ML model.
         Run with: pytest -m integration
         """
-        from raxe.domain.ml import create_production_l2_detector
+        from raxe.domain.ml import create_bundle_detector
 
-        detector = create_production_l2_detector()
+        detector = create_bundle_detector()
 
         # Sample L1 results
         l1_results = {

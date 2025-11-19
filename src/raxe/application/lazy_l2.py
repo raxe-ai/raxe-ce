@@ -52,6 +52,39 @@ class LazyL2Detector:
             f"(use_production={use_production}, threshold={confidence_threshold})"
         )
 
+    def _find_bundled_model(self) -> str | None:
+        """Auto-discover bundled L2 model file.
+
+        Searches for .raxe bundle files in the models directory.
+        Prioritizes raxe_model_l2.raxe if it exists.
+
+        Returns:
+            Path to the bundled model file, or None if not found
+        """
+        from pathlib import Path
+
+        # Get the models directory relative to this file
+        # src/raxe/application/lazy_l2.py -> src/raxe/domain/ml/models/
+        current_file = Path(__file__)
+        models_dir = current_file.parent.parent / "domain" / "ml" / "models"
+
+        # First, try the primary L2 model
+        primary_model = models_dir / "raxe_model_l2.raxe"
+        if primary_model.exists():
+            logger.info(f"Found primary L2 model: {primary_model}")
+            return str(primary_model)
+
+        # Fallback: find any .raxe file
+        raxe_files = list(models_dir.glob("*.raxe"))
+        if raxe_files:
+            # Sort by modification time, use most recent
+            raxe_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+            logger.info(f"Found bundled model: {raxe_files[0]}")
+            return str(raxe_files[0])
+
+        logger.warning(f"No bundled L2 models found in {models_dir}")
+        return None
+
     def _ensure_initialized(self) -> L2Detector:
         """Ensure L2 detector is initialized, loading it if needed.
 
@@ -68,37 +101,18 @@ class LazyL2Detector:
         )
 
         if self.use_production:
-            # Try ONNX detector first (faster, smaller)
+            # Try bundle-based detector first (unified model format)
             try:
-                from raxe.domain.ml.onnx_production_detector import create_onnx_l2_detector
+                from raxe.domain.ml.bundle_detector import create_bundle_detector
+                from pathlib import Path
 
-                self._detector = create_onnx_l2_detector(
-                    confidence_threshold=self.confidence_threshold
-                )
+                # Auto-discover bundled model
+                model_path = self._find_bundled_model()
 
-                # Get model info for logging
-                model_info = self._detector.model_info
-                logger.info(
-                    "l2_detector_loaded",
-                    detector_type="onnx_production",
-                    model_version=model_info.get("version", "unknown"),
-                    model_size_mb=model_info.get("size_mb", 0),
-                    device=model_info.get("device", "unknown"),
-                    confidence_threshold=self.confidence_threshold,
-                    latency_p95_ms=model_info.get("latency_p95_ms", 0),
-                    accuracy=model_info.get("accuracy", 0),
-                )
-            except ImportError as e:
-                # ONNX not available, try PyTorch detector
-                logger.warning(
-                    "l2_onnx_unavailable",
-                    error=str(e),
-                    fallback="pytorch_production",
-                )
-                try:
-                    from raxe.domain.ml.production_detector import create_production_l2_detector
-
-                    self._detector = create_production_l2_detector(
+                if model_path:
+                    logger.info(f"Loading bundled L2 model from: {model_path}")
+                    self._detector = create_bundle_detector(
+                        bundle_path=model_path,
                         confidence_threshold=self.confidence_threshold
                     )
 
@@ -106,33 +120,21 @@ class LazyL2Detector:
                     model_info = self._detector.model_info
                     logger.info(
                         "l2_detector_loaded",
-                        detector_type="pytorch_production",
+                        detector_type="bundle",
                         model_version=model_info.get("version", "unknown"),
-                        model_size_mb=model_info.get("size_mb", 0),
-                        device=model_info.get("device", "unknown"),
+                        model_id=model_info.get("model_id", "unknown"),
+                        embedding_model=model_info.get("embedding_model", "unknown"),
                         confidence_threshold=self.confidence_threshold,
                         latency_p95_ms=model_info.get("latency_p95_ms", 0),
-                        accuracy=model_info.get("accuracy", 0),
+                        families=model_info.get("families", []),
                     )
-                except Exception as e2:
-                    logger.warning(
-                        "l2_pytorch_failed",
-                        error=str(e2),
-                        fallback="stub_detector",
-                    )
-                    from raxe.domain.ml.stub_detector import StubL2Detector
-                    self._detector = StubL2Detector()
+                else:
+                    raise FileNotFoundError("No bundled L2 model found")
 
-                    model_info = self._detector.model_info
-                    logger.info(
-                        "l2_detector_loaded",
-                        detector_type="stub",
-                        model_version=model_info.get("version", "unknown"),
-                        is_stub=True,
-                    )
             except Exception as e:
+                # Fallback to stub detector if bundle loading fails
                 logger.warning(
-                    "l2_onnx_failed",
+                    "l2_bundle_failed",
                     error=str(e),
                     fallback="stub_detector",
                 )

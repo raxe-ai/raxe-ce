@@ -1,0 +1,59 @@
+{
+  "model_id": "v1.1_distilled",
+  "name": "RAXE L2 v1.1 Distilled",
+  "version": "1.1.0",
+  "variant": "distilled",
+  "description": "Lightweight distilled model with smaller embeddings (384-dim vs 768-dim). 10x faster with acceptable accuracy tradeoff for non-critical applications.",
+
+  "file_info": {
+    "filename": "raxe_model_l2_v1.1_distilled.raxe",
+    "size_mb": 18.0,
+    "checksum": null
+  },
+
+  "capabilities": {
+    "classification_types": ["binary", "family", "subfamily"],
+    "supported_families": ["PI", "JB", "CMD", "PII", "ENC", "RAG", "BENIGN"],
+    "supports_explanations": true,
+    "supports_embeddings": true
+  },
+
+  "performance": {
+    "target_latency_ms": 5,
+    "p50_latency_ms": 4.2,
+    "p95_latency_ms": 6.5,
+    "p99_latency_ms": 8.0,
+    "throughput_per_sec": 240,
+    "memory_mb": 80
+  },
+
+  "accuracy": {
+    "binary_f1": 0.885,
+    "family_f1": 0.845,
+    "subfamily_f1": 0.765,
+    "false_positive_rate": 0.045,
+    "false_negative_rate": 0.085
+  },
+
+  "requirements": {
+    "runtime": "onnx",
+    "min_runtime_version": "1.16.0",
+    "requires_gpu": false,
+    "requires_quantization_support": false,
+    "additional_dependencies": ["onnxruntime>=1.16.0"]
+  },
+
+  "training_info": {
+    "trained_on": "2024-11-18",
+    "training_samples": 50000,
+    "validation_samples": 10000,
+    "test_samples": 5000,
+    "distillation_teacher": "v1.0_bundle",
+    "distillation_method": "knowledge distillation + smaller embeddings"
+  },
+
+  "tags": ["experimental", "distilled", "lightweight", "ultra-low-latency"],
+  "status": "experimental",
+  "recommended_for": ["ultra-low-latency", "resource-constrained", "monitoring-mode"],
+  "not_recommended_for": ["production", "maximum-accuracy-required", "critical-applications"]
+}

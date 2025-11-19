@@ -1,21 +1,13 @@
 {
   "model_id": "v1.0_bundle",
-  "name": "RAXE L2 v1.0 Bundle",
+  "name": "RAXE L2 v1.0 Bundle (Baseline)",
   "version": "1.0.0",
   "variant": "bundle",
-  "description": "Production L2 model with multi-head classification (binary, family, subfamily). Uses sentence-transformers for embeddings.",
+  "description": "Baseline production L2 model. Uses sentence-transformers for embeddings (slower but easier setup).",
 
   "file_info": {
-    "filename": "raxe_model_l2.raxe",
-    "size_mb": 0.6,
-    "checksum": null
-  },
-
-  "capabilities": {
-    "classification_types": ["binary", "family", "subfamily"],
-    "supported_families": ["PI", "JB", "CMD", "PII", "ENC", "RAG", "BENIGN"],
-    "supports_explanations": true,
-    "supports_embeddings": true
+    "filename": "raxe_model_l2_v1.0_bundle.raxe",
+    "size_mb": 0.6
   },
 
   "performance": {
@@ -30,28 +22,16 @@
   "accuracy": {
     "binary_f1": 0.925,
     "family_f1": 0.885,
-    "subfamily_f1": 0.815,
-    "false_positive_rate": 0.025,
-    "false_negative_rate": 0.055
+    "subfamily_f1": 0.815
   },
 
   "requirements": {
     "runtime": "pytorch",
-    "min_runtime_version": null,
-    "requires_gpu": false,
-    "requires_quantization_support": false,
     "additional_dependencies": ["sentence-transformers"]
   },
 
-  "training_info": {
-    "trained_on": "2024-11-15",
-    "training_samples": 50000,
-    "validation_samples": 10000,
-    "test_samples": 5000
-  },
-
-  "tags": ["production", "baseline", "multi-head"],
+  "tags": ["baseline", "easy-setup"],
   "status": "active",
-  "recommended_for": ["production", "baseline-comparison"],
+  "recommended_for": ["baseline-comparison", "easy-setup"],
   "not_recommended_for": ["ultra-low-latency"]
 }

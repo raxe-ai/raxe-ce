@@ -485,3 +485,12 @@ class SuppressionManager:
         suppressions = list(self._suppressions.values())
         self._repository.save_all_suppressions(suppressions)
         return len(suppressions)
+
+    @property
+    def config_path(self) -> Path | None:
+        """Get config path from repository (if available).
+
+        Returns:
+            Path to config file, or None if repository doesn't expose it
+        """
+        return getattr(self._repository, "config_path", None)

@@ -39,18 +39,26 @@ from raxe.sdk.client import Raxe
     help="Show detailed logs (enables console logging)",
     envvar="RAXE_VERBOSE",
 )
+@click.option(
+    "--quiet",
+    is_flag=True,
+    help="Suppress all visual output (for CI/CD)",
+    envvar="RAXE_QUIET",
+)
 @click.pass_context
-def cli(ctx, no_color: bool, verbose: bool):
+def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
     """RAXE - AI Security for LLMs • Privacy-First Threat Detection"""
     # Ensure ctx.obj exists for sub-commands
     ctx.ensure_object(dict)
-    ctx.obj["no_color"] = no_color
-    ctx.obj["verbose"] = verbose
+    ctx.obj["no_color"] = no_color or quiet  # Quiet implies no color
+    ctx.obj["verbose"] = verbose and not quiet  # Quiet overrides verbose
+    ctx.obj["quiet"] = quiet
 
-    # Show welcome banner if no command provided
+    # Show welcome banner if no command provided (unless quiet)
     if ctx.invoked_subcommand is None:
-        from raxe.cli.branding import print_help_menu
-        print_help_menu(console)
+        if not quiet:
+            from raxe.cli.branding import print_help_menu
+            print_help_menu(console)
         ctx.exit()
 
     # Track command usage (record the invoked command name)
@@ -258,10 +266,18 @@ def scan(
       raxe scan "prompt" --format json
       raxe scan "text" --l1-only --mode fast
       raxe scan "text" --confidence 0.8 --explain
+      raxe --quiet scan "text"  # CI/CD mode (JSON output)
     """
+    # Check if quiet mode is enabled
+    quiet = ctx.obj.get("quiet", False)
+
+    # Override format to JSON if quiet mode
+    if quiet and format == "text":
+        format = "json"
+
     # Show compact logo (for visual consistency)
     from raxe.cli.branding import print_logo
-    if format == "text":  # Only show for text output
+    if format == "text" and not quiet:  # Only show for text output when not quiet
         print_logo(console, compact=True)
         console.print()
 
@@ -439,11 +455,15 @@ def scan(
         no_color = ctx.obj.get("no_color", False)
         display_scan_result(result, no_color=no_color, explain=explain)
 
-    # Show dry-run feedback after displaying result
-    if dry_run:
+    # Show dry-run feedback after displaying result (unless quiet)
+    if dry_run and not quiet:
         console.print()
         console.print("[yellow]⚠️  Dry run mode: Results not saved to database[/yellow]")
         console.print()
+
+    # Exit with appropriate code for CI/CD (quiet mode)
+    if quiet and result.scan_result.has_threats:
+        sys.exit(1)  # Exit with error code if threats detected
 
 
 @cli.command("batch")
@@ -758,7 +778,7 @@ _raxe_completion() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="init scan batch test stats export repl rules doctor pack plugins completion --help --version"
+    opts="init scan batch test stats export repl rules doctor pack plugins privacy profile suppress tune validate-rule completion --help --version"
 
     COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
     return 0
@@ -782,6 +802,11 @@ _raxe() {
         'doctor:Run system health checks'
         'pack:Manage rule packs'
         'plugins:List installed plugins'
+        'privacy:Show privacy guarantees'
+        'profile:Profile scan performance'
+        'suppress:Manage false positive suppressions'
+        'tune:Tune detection parameters'
+        'validate-rule:Validate a rule file'
         'completion:Generate shell completion'
     )
     _describe 'command' commands
@@ -791,7 +816,7 @@ _raxe
     elif shell == "fish":
         script = """
 # RAXE fish completion
-complete -c raxe -f -a "init scan batch test stats export repl rules doctor pack plugins completion"
+complete -c raxe -f -a "init scan batch test stats export repl rules doctor pack plugins privacy profile suppress tune validate-rule completion"
 complete -c raxe -f -a "init" -d "Initialize RAXE configuration"
 complete -c raxe -f -a "scan" -d "Scan text for threats"
 complete -c raxe -f -a "batch" -d "Batch scan prompts from file"
@@ -803,13 +828,18 @@ complete -c raxe -f -a "rules" -d "Manage detection rules"
 complete -c raxe -f -a "doctor" -d "Run health checks"
 complete -c raxe -f -a "pack" -d "Manage rule packs"
 complete -c raxe -f -a "plugins" -d "List installed plugins"
+complete -c raxe -f -a "privacy" -d "Show privacy guarantees"
+complete -c raxe -f -a "profile" -d "Profile scan performance"
+complete -c raxe -f -a "suppress" -d "Manage suppressions"
+complete -c raxe -f -a "tune" -d "Tune detection parameters"
+complete -c raxe -f -a "validate-rule" -d "Validate a rule file"
 """
     elif shell == "powershell":
         script = """
 # RAXE PowerShell completion
 Register-ArgumentCompleter -Native -CommandName raxe -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    $commands = @('init', 'scan', 'batch', 'test', 'stats', 'export', 'repl', 'rules', 'doctor', 'pack', 'plugins', 'completion')
+    $commands = @('init', 'scan', 'batch', 'test', 'stats', 'export', 'repl', 'rules', 'doctor', 'pack', 'plugins', 'privacy', 'profile', 'suppress', 'tune', 'validate-rule', 'completion')
     $commands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }

@@ -61,7 +61,10 @@ data/processed/
 
 # EXCEPTION: Keep production ONNX model in src/ (small, optimized for inference)
 !src/raxe/domain/ml/models/*.onnx
+!src/raxe/domain/ml/models/*.raxe
 !src/raxe/domain/ml/models/README.md
+!src/raxe/domain/ml/models/metadata/
+!src/raxe/domain/ml/models/metadata/*.json
 
 # Export files (user-generated)
 raxe_export.json

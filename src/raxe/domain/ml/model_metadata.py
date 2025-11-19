@@ -31,6 +31,7 @@ class FileInfo:
     filename: str
     size_mb: float = 0.0
     checksum: str | None = None
+    onnx_embeddings: str | None = None  # Optional ONNX embeddings model path
 
 
 @dataclass
@@ -213,6 +214,7 @@ class ModelMetadata:
                 filename=data["file_info"]["filename"],
                 size_mb=data["file_info"].get("size_mb", 0.0),
                 checksum=data["file_info"].get("checksum"),
+                onnx_embeddings=data["file_info"].get("onnx_embeddings"),
             ),
             performance=PerformanceMetrics(
                 target_latency_ms=data["performance"]["target_latency_ms"],

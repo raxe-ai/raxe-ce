@@ -1,13 +1,14 @@
 {
-  "model_id": "v1.0_onnx_int8",
-  "name": "RAXE L2 v1.0 ONNX INT8",
+  "model_id": "v1.0_onnx_int8_bundle",
+  "name": "RAXE L2 v1.0 with ONNX INT8 Embeddings",
   "version": "1.0.0",
-  "variant": "onnx_int8",
-  "description": "Optimized ONNX model with INT8 quantization. 5x faster embedding generation with minimal accuracy loss.",
+  "variant": "onnx_int8_bundle",
+  "description": "Bundle model with quantized ONNX INT8 embeddings for 5x speedup. Uses same classifier but faster embedding generation.",
 
   "file_info": {
-    "filename": "raxe_model_l2_v1.0_onnx_int8.raxe",
-    "size_mb": 32.5,
+    "filename": "raxe_model_l2_v1.0_bundle.raxe",
+    "onnx_embeddings": "raxe_model_l2_v1.0_onnx_int8_embeddings.onnx",
+    "size_mb": 33.1,
     "checksum": null
   },
 
@@ -20,19 +21,19 @@
 
   "performance": {
     "target_latency_ms": 10,
-    "p50_latency_ms": 8.5,
+    "p50_latency_ms": 9.0,
     "p95_latency_ms": 12.0,
     "p99_latency_ms": 15.0,
-    "throughput_per_sec": 120,
-    "memory_mb": 150
+    "throughput_per_sec": 110,
+    "memory_mb": 200
   },
 
   "accuracy": {
-    "binary_f1": 0.918,
-    "family_f1": 0.875,
-    "subfamily_f1": 0.805,
-    "false_positive_rate": 0.028,
-    "false_negative_rate": 0.060
+    "binary_f1": 0.925,
+    "family_f1": 0.885,
+    "subfamily_f1": 0.815,
+    "false_positive_rate": 0.025,
+    "false_negative_rate": 0.055
   },
 
   "requirements": {
@@ -52,8 +53,8 @@
     "quantization_calibration_samples": 1000
   },
 
-  "tags": ["production", "optimized", "quantized", "low-latency", "cpu"],
-  "status": "experimental",
-  "recommended_for": ["production", "low-latency", "high-throughput", "cpu-only"],
-  "not_recommended_for": ["maximum-accuracy-required"]
+  "tags": ["production", "optimized", "quantized", "low-latency"],
+  "status": "active",
+  "recommended_for": ["production", "low-latency", "high-throughput"],
+  "not_recommended_for": []
 }

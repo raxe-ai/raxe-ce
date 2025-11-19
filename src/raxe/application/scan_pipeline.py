@@ -380,19 +380,39 @@ class ScanPipeline:
 
                 # Log L2 inference results
                 if l2_result and l2_result.has_predictions:
-                    # Log each L2 prediction with full context
+                    # Log each L2 prediction with full context (including new bundle schema fields)
                     for prediction in l2_result.predictions:
-                        logger.info(
-                            "l2_threat_detected",
-                            threat_type=prediction.threat_type.value,
-                            confidence=prediction.confidence,
-                            explanation=prediction.explanation or "No explanation provided",
-                            features_used=prediction.features_used or [],
-                            metadata=prediction.metadata,
-                            text_hash=self._hash_text(text),
-                            processing_time_ms=l2_result.processing_time_ms,
-                            model_version=l2_result.model_version,
-                        )
+                        # Extract bundle schema fields if available
+                        log_data = {
+                            "threat_type": prediction.threat_type.value,
+                            "confidence": prediction.confidence,
+                            "explanation": prediction.explanation or "No explanation provided",
+                            "features_used": prediction.features_used or [],
+                            "text_hash": self._hash_text(text),
+                            "processing_time_ms": l2_result.processing_time_ms,
+                            "model_version": l2_result.model_version,
+                        }
+
+                        # Add new bundle schema fields (is_attack, family, sub_family, etc.)
+                        if "is_attack" in prediction.metadata:
+                            log_data["is_attack"] = prediction.metadata["is_attack"]
+                        if "family" in prediction.metadata:
+                            log_data["family"] = prediction.metadata["family"]
+                        if "sub_family" in prediction.metadata:
+                            log_data["sub_family"] = prediction.metadata["sub_family"]
+                        if "scores" in prediction.metadata:
+                            log_data["scores"] = prediction.metadata["scores"]
+                        if "why_it_hit" in prediction.metadata:
+                            log_data["why_it_hit"] = prediction.metadata["why_it_hit"]
+                        if "recommended_action" in prediction.metadata:
+                            log_data["recommended_action"] = prediction.metadata["recommended_action"]
+                        if "trigger_matches" in prediction.metadata:
+                            log_data["trigger_matches"] = prediction.metadata["trigger_matches"]
+                        if "uncertain" in prediction.metadata:
+                            log_data["uncertain"] = prediction.metadata["uncertain"]
+
+                        # Log with all available data
+                        logger.info("l2_threat_detected", **log_data)
                 else:
                     # Log clean L2 scan
                     logger.debug(

@@ -14,7 +14,6 @@ Performance targets:
 - Component breakdown: L1 <5ms, L2 <1ms, overhead <4ms
 """
 import hashlib
-import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -26,6 +25,7 @@ from raxe.domain.ml.protocol import L2Detector
 from raxe.domain.models import BlockAction, ScanPolicy
 from raxe.infrastructure.packs.registry import PackRegistry
 from raxe.infrastructure.telemetry.hook import TelemetryHook
+from raxe.utils.logging import get_logger
 
 # Import metrics collector
 try:
@@ -35,7 +35,7 @@ except ImportError:
     METRICS_AVAILABLE = False
     collector = None  # type: ignore
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -354,9 +354,13 @@ class ScanPipeline:
                     if max_confidence >= self.min_confidence_for_skip:
                         # High confidence CRITICAL - skip L2 for performance
                         should_skip_l2 = True
-                        logger.debug(
-                            f"Skipping L2: CRITICAL detected with {max_confidence:.2%} confidence "
-                            f"(threshold: {self.min_confidence_for_skip:.2%})"
+                        logger.info(
+                            "l2_scan_skipped",
+                            reason="critical_l1_detection_high_confidence",
+                            l1_severity="CRITICAL",
+                            l1_max_confidence=max_confidence,
+                            skip_threshold=self.min_confidence_for_skip,
+                            text_hash=self._hash_text(text),
                         )
                     else:
                         # Low confidence CRITICAL - run L2 for validation
@@ -373,6 +377,31 @@ class ScanPipeline:
                 else:
                     l2_result = self.l2_detector.analyze(text, l1_result, context)
                 l2_duration_ms = (time.perf_counter() - l2_start) * 1000
+
+                # Log L2 inference results
+                if l2_result and l2_result.has_predictions:
+                    # Log each L2 prediction with full context
+                    for prediction in l2_result.predictions:
+                        logger.info(
+                            "l2_threat_detected",
+                            threat_type=prediction.threat_type.value,
+                            confidence=prediction.confidence,
+                            explanation=prediction.explanation or "No explanation provided",
+                            features_used=prediction.features_used or [],
+                            metadata=prediction.metadata,
+                            text_hash=self._hash_text(text),
+                            processing_time_ms=l2_result.processing_time_ms,
+                            model_version=l2_result.model_version,
+                        )
+                else:
+                    # Log clean L2 scan
+                    logger.debug(
+                        "l2_scan_clean",
+                        processing_time_ms=l2_result.processing_time_ms if l2_result else 0.0,
+                        model_version=l2_result.model_version if l2_result else "unknown",
+                        confidence=l2_result.confidence if l2_result else 0.0,
+                        text_hash=self._hash_text(text),
+                    )
 
         # 4. Apply confidence threshold filtering
         if confidence_threshold > 0:

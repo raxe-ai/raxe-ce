@@ -12,6 +12,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeEl
 from rich.table import Table
 from rich.text import Text
 
+from raxe.cli.l2_formatter import L2ResultFormatter
 from raxe.domain.rules.models import Severity
 from raxe.sdk.client import ScanPipelineResult
 
@@ -146,9 +147,30 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console, expla
     console.print(table)
     console.print()
 
-    # Display detailed explanations only if --explain flag is used
+    # Display detailed L1 explanations only if --explain flag is used
     if explain:
         _display_detection_explanations(result.scan_result.l1_result.detections, console)
+
+    # Display L2 ML detection details (if available and explain enabled)
+    if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
+        if explain:
+            # Show full detailed L2 explanations with WHY
+            formatter = L2ResultFormatter()
+            formatter.format_predictions(
+                result.scan_result.l2_result,
+                console,
+                show_details=True,
+                show_summary=True,
+            )
+        else:
+            # Show compact L2 summary without full details
+            formatter = L2ResultFormatter()
+            formatter.format_predictions(
+                result.scan_result.l2_result,
+                console,
+                show_details=False,
+                show_summary=True,
+            )
 
     # Summary with cleaner layout
     total_detections = len(result.scan_result.l1_result.detections)

@@ -10,14 +10,14 @@ Key Benefits:
 - Transparent to the rest of the system (implements L2Detector protocol)
 """
 
-import logging
 from typing import Any
 
 from raxe.domain.engine.executor import ScanResult
 from raxe.domain.ml.protocol import L2Detector, L2Result
 from raxe.infrastructure.config.scan_config import ScanConfig
+from raxe.utils.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class LazyL2Detector:
@@ -61,7 +61,11 @@ class LazyL2Detector:
         if self._initialized and self._detector is not None:
             return self._detector
 
-        logger.info("Loading L2 detector on first use...")
+        logger.info(
+            "l2_detector_loading",
+            use_production=self.use_production,
+            confidence_threshold=self.confidence_threshold,
+        )
 
         if self.use_production:
             # Try ONNX detector first (faster, smaller)
@@ -71,15 +75,25 @@ class LazyL2Detector:
                 self._detector = create_onnx_l2_detector(
                     confidence_threshold=self.confidence_threshold
                 )
+
+                # Get model info for logging
+                model_info = self._detector.model_info
                 logger.info(
-                    f"Production ONNX L2 detector loaded "
-                    f"(threshold={self.confidence_threshold})"
+                    "l2_detector_loaded",
+                    detector_type="onnx_production",
+                    model_version=model_info.get("version", "unknown"),
+                    model_size_mb=model_info.get("size_mb", 0),
+                    device=model_info.get("device", "unknown"),
+                    confidence_threshold=self.confidence_threshold,
+                    latency_p95_ms=model_info.get("latency_p95_ms", 0),
+                    accuracy=model_info.get("accuracy", 0),
                 )
             except ImportError as e:
                 # ONNX not available, try PyTorch detector
                 logger.warning(
-                    f"ONNX detector not available ({e}). "
-                    f"Trying PyTorch detector..."
+                    "l2_onnx_unavailable",
+                    error=str(e),
+                    fallback="pytorch_production",
                 )
                 try:
                     from raxe.domain.ml.production_detector import create_production_l2_detector
@@ -87,28 +101,63 @@ class LazyL2Detector:
                     self._detector = create_production_l2_detector(
                         confidence_threshold=self.confidence_threshold
                     )
+
+                    # Get model info for logging
+                    model_info = self._detector.model_info
                     logger.info(
-                        f"Production PyTorch L2 detector loaded "
-                        f"(threshold={self.confidence_threshold})"
+                        "l2_detector_loaded",
+                        detector_type="pytorch_production",
+                        model_version=model_info.get("version", "unknown"),
+                        model_size_mb=model_info.get("size_mb", 0),
+                        device=model_info.get("device", "unknown"),
+                        confidence_threshold=self.confidence_threshold,
+                        latency_p95_ms=model_info.get("latency_p95_ms", 0),
+                        accuracy=model_info.get("accuracy", 0),
                     )
                 except Exception as e2:
                     logger.warning(
-                        f"Failed to load PyTorch L2 detector: {e2}. "
-                        f"Falling back to stub detector."
+                        "l2_pytorch_failed",
+                        error=str(e2),
+                        fallback="stub_detector",
                     )
                     from raxe.domain.ml.stub_detector import StubL2Detector
                     self._detector = StubL2Detector()
+
+                    model_info = self._detector.model_info
+                    logger.info(
+                        "l2_detector_loaded",
+                        detector_type="stub",
+                        model_version=model_info.get("version", "unknown"),
+                        is_stub=True,
+                    )
             except Exception as e:
                 logger.warning(
-                    f"Failed to load ONNX L2 detector: {e}. "
-                    f"Falling back to stub detector."
+                    "l2_onnx_failed",
+                    error=str(e),
+                    fallback="stub_detector",
                 )
                 from raxe.domain.ml.stub_detector import StubL2Detector
                 self._detector = StubL2Detector()
+
+                model_info = self._detector.model_info
+                logger.info(
+                    "l2_detector_loaded",
+                    detector_type="stub",
+                    model_version=model_info.get("version", "unknown"),
+                    is_stub=True,
+                )
         else:
             from raxe.domain.ml.stub_detector import StubL2Detector
             self._detector = StubL2Detector()
-            logger.info("Using stub L2 detector (use_production_l2=false)")
+
+            model_info = self._detector.model_info
+            logger.info(
+                "l2_detector_loaded",
+                detector_type="stub",
+                model_version=model_info.get("version", "unknown"),
+                is_stub=True,
+                reason="use_production_l2_disabled",
+            )
 
         self._initialized = True
         return self._detector

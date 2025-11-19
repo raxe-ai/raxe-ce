@@ -84,6 +84,7 @@ class BundleBasedDetector:
         components: BundleComponents | None = None,
         confidence_threshold: float = 0.5,
         include_explanations: bool = True,
+        onnx_model_path: str | Path | None = None,
     ):
         """
         Initialize bundle-based detector.
@@ -93,6 +94,7 @@ class BundleBasedDetector:
             components: Pre-loaded BundleComponents (OR bundle_path)
             confidence_threshold: Minimum confidence to report predictions
             include_explanations: Whether to generate explanations (default: True)
+            onnx_model_path: Optional path to ONNX model for faster embeddings (5x speedup)
 
         Note: Provide either bundle_path OR components, not both.
 
@@ -104,6 +106,12 @@ class BundleBasedDetector:
             loader = ModelBundleLoader()
             components = loader.load_bundle('models/my_model.raxe')
             detector = BundleBasedDetector(components=components)
+
+            # With ONNX quantized model for 5x speedup
+            detector = BundleBasedDetector(
+                bundle_path='models/my_model.raxe',
+                onnx_model_path='models/quantized_int8.onnx'
+            )
         """
         if bundle_path is None and components is None:
             raise ValueError("Must provide either bundle_path or components")
@@ -131,20 +139,39 @@ class BundleBasedDetector:
         self.embedding_config = self.components.embedding_config
         self.schema = self.components.schema
 
-        # Load embedding model (sentence-transformers)
-        logger.info(f"Loading embedder: {self.embedding_config['model_name']}")
-        try:
-            from sentence_transformers import SentenceTransformer
-        except ImportError as e:
-            raise ImportError(
-                "Bundle-based detector requires sentence-transformers. "
-                "Install with: pip install sentence-transformers"
-            ) from e
+        # Load embedding model (ONNX or sentence-transformers)
+        if onnx_model_path:
+            # Use ONNX embedder for 5x speedup
+            logger.info(f"Loading ONNX embedder: {onnx_model_path}")
+            try:
+                from raxe.domain.ml.onnx_embedder import create_onnx_embedder
+            except ImportError as e:
+                raise ImportError(
+                    "ONNX embedder requires onnxruntime and transformers. "
+                    "Install with: pip install onnxruntime transformers"
+                ) from e
 
-        self.embedder = SentenceTransformer(self.embedding_config['model_name'])
-        self.embedder.max_seq_length = self.embedding_config['max_length']
+            self.embedder = create_onnx_embedder(
+                model_path=onnx_model_path,
+                tokenizer_name=self.embedding_config['model_name']
+            )
+            self.embedder.max_seq_length = self.embedding_config['max_length']
+            logger.info(f"✓ Bundle-based detector ready (ONNX mode) - Model ID: {self.manifest.model_id}")
 
-        logger.info(f"✓ Bundle-based detector ready (Model ID: {self.manifest.model_id})")
+        else:
+            # Use sentence-transformers (slower but easier)
+            logger.info(f"Loading embedder: {self.embedding_config['model_name']}")
+            try:
+                from sentence_transformers import SentenceTransformer
+            except ImportError as e:
+                raise ImportError(
+                    "Bundle-based detector requires sentence-transformers. "
+                    "Install with: pip install sentence-transformers"
+                ) from e
+
+            self.embedder = SentenceTransformer(self.embedding_config['model_name'])
+            self.embedder.max_seq_length = self.embedding_config['max_length']
+            logger.info(f"✓ Bundle-based detector ready (Model ID: {self.manifest.model_id})")
 
     def analyze(
         self,

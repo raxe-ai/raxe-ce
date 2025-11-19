@@ -191,43 +191,129 @@ class L2ResultFormatter:
         content.append(f"\n{icon} {title}\n", style="red bold")
         content.append(f"{threat_info['description']}\n\n", style="white")
 
-        # Confidence
-        confidence_pct = f"{prediction.confidence * 100:.1f}%"
-        confidence_color = "red" if prediction.confidence >= 0.8 else "yellow"
-        content.append("Confidence: ", style="bold")
-        content.append(f"{confidence_pct}\n\n", style=confidence_color)
+        # NEW: Display bundle schema fields if available (is_attack, family, sub_family)
+        family = prediction.metadata.get("family")
+        sub_family = prediction.metadata.get("sub_family")
+        if family:
+            content.append("Attack Classification:\n", style="cyan bold")
+            content.append(f"  Family: {family}\n", style="white")
+            if sub_family:
+                content.append(f"  Sub-family: {sub_family}\n", style="white")
+            content.append("\n")
 
-        # WHY - Main explanation
-        if prediction.explanation:
+        # Confidence with detailed scores from bundle
+        scores = prediction.metadata.get("scores", {})
+        if scores:
+            content.append("Confidence Scores:\n", style="cyan bold")
+            attack_prob = scores.get("attack_probability", prediction.confidence)
+            family_conf = scores.get("family_confidence")
+            subfamily_conf = scores.get("subfamily_confidence")
+
+            confidence_pct = f"{attack_prob * 100:.1f}%"
+            confidence_color = "red" if attack_prob >= 0.8 else "yellow"
+            content.append(f"  Attack Probability: ", style="white")
+            content.append(f"{confidence_pct}\n", style=confidence_color)
+
+            if family_conf is not None:
+                content.append(f"  Family Confidence: ", style="white")
+                content.append(f"{family_conf * 100:.1f}%\n", style="white")
+
+            if subfamily_conf is not None:
+                content.append(f"  Subfamily Confidence: ", style="white")
+                content.append(f"{subfamily_conf * 100:.1f}%\n", style="white")
+
+            content.append("\n")
+        else:
+            # Fallback to simple confidence
+            confidence_pct = f"{prediction.confidence * 100:.1f}%"
+            confidence_color = "red" if prediction.confidence >= 0.8 else "yellow"
+            content.append("Confidence: ", style="bold")
+            content.append(f"{confidence_pct}\n\n", style=confidence_color)
+
+        # WHY - Use why_it_hit from bundle if available, otherwise use explanation
+        why_it_hit = prediction.metadata.get("why_it_hit", [])
+        if why_it_hit:
+            content.append("Why This Was Flagged:\n", style="cyan bold")
+            for reason in why_it_hit:
+                content.append(f"  • {reason}\n", style="white")
+            content.append("\n")
+        elif prediction.explanation:
             content.append("Why This Was Flagged:\n", style="cyan bold")
             content.append(f"{prediction.explanation}\n\n", style="white")
 
-        # Features used (if available)
-        if prediction.features_used:
+        # Trigger matches from bundle
+        trigger_matches = prediction.metadata.get("trigger_matches", [])
+        if trigger_matches:
+            content.append("Trigger Matches:\n", style="yellow bold")
+            for trigger in trigger_matches[:5]:  # Limit to top 5
+                content.append(f"  • {trigger}\n", style="yellow")
+            content.append("\n")
+
+        # Features used (if available and not redundant with why_it_hit)
+        if prediction.features_used and not why_it_hit:
             content.append("Features Detected:\n", style="cyan bold")
             for feature in prediction.features_used[:5]:  # Limit to top 5
                 content.append(f"  • {feature}\n", style="white")
             content.append("\n")
 
-        # Matched patterns (from metadata)
+        # Matched patterns (from metadata - legacy support)
         matched_patterns = prediction.metadata.get("matched_patterns", [])
-        if matched_patterns:
+        if matched_patterns and not trigger_matches:
             content.append("Detected Patterns:\n", style="cyan bold")
             for pattern in matched_patterns:
                 content.append(f"  • {pattern}\n", style="white")
             content.append("\n")
 
-        # Recommended action and severity
-        recommended_action = prediction.metadata.get("recommended_action", "review")
+        # Similar attacks from bundle
+        similar_attacks = prediction.metadata.get("similar_attacks", [])
+        if similar_attacks:
+            content.append("Similar Known Attacks:\n", style="magenta bold")
+            for i, attack in enumerate(similar_attacks[:3], 1):  # Top 3
+                if isinstance(attack, dict):
+                    text = attack.get("text", "")
+                    similarity = attack.get("similarity", 0)
+                    if text:
+                        # Truncate if too long
+                        text_preview = text[:60] + "..." if len(text) > 60 else text
+                        content.append(f"  {i}. {text_preview} ", style="white")
+                        content.append(f"({similarity:.0%} similar)\n", style="dim")
+            content.append("\n")
+
+        # Recommended action from bundle (list of strings)
+        recommended_actions = prediction.metadata.get("recommended_action", [])
+        if recommended_actions:
+            content.append("Recommended Actions:\n", style="yellow bold")
+            for action in recommended_actions:
+                # Determine color based on action content
+                if "BLOCK" in action.upper() or "HIGH" in action.upper():
+                    action_color = "red bold"
+                elif "WARN" in action.upper() or "MEDIUM" in action.upper():
+                    action_color = "yellow"
+                else:
+                    action_color = "green"
+                content.append(f"  • {action}\n", style=action_color)
+            content.append("\n")
+        else:
+            # Fallback to legacy recommended_action
+            recommended_action = prediction.metadata.get("recommended_action", "review")
+            if isinstance(recommended_action, str):
+                content.append("Recommended Action: ", style="yellow bold")
+                action_color = "red bold" if recommended_action == "block" else "yellow"
+                content.append(f"{recommended_action.upper()}\n\n", style=action_color)
+
+        # Severity (if available)
         severity = prediction.metadata.get("severity", "unknown")
+        if severity != "unknown":
+            content.append("Severity: ", style="yellow bold")
+            severity_color = "red" if severity in ("critical", "high") else "yellow"
+            content.append(f"{severity.upper()}\n\n", style=severity_color)
 
-        content.append("Recommended Action: ", style="yellow bold")
-        action_color = "red bold" if recommended_action == "block" else "yellow"
-        content.append(f"{recommended_action.upper()}\n", style=action_color)
-
-        content.append("Severity: ", style="yellow bold")
-        severity_color = "red" if severity in ("critical", "high") else "yellow"
-        content.append(f"{severity.upper()}\n\n", style=severity_color)
+        # Uncertainty flag from bundle
+        uncertain = prediction.metadata.get("uncertain", False)
+        if uncertain:
+            content.append("⚠️  ", style="yellow bold")
+            content.append("Model Uncertainty: ", style="yellow bold")
+            content.append("Low confidence - manual review recommended\n\n", style="yellow")
 
         # What to do - Remediation advice
         remediation = L2ResultFormatter.REMEDIATION_ADVICE.get(
@@ -245,10 +331,14 @@ class L2ResultFormatter:
 
         # Display panel with appropriate border color
         border_color = "red" if prediction.confidence >= 0.8 else "yellow"
+        panel_title = "L2 ML Detection"
+        if family:
+            panel_title += f" [{family}]"
+
         console.print(Panel(
             content,
             border_style=border_color,
-            title="L2 ML Detection",
+            title=panel_title,
             title_align="left",
             padding=(1, 2),
         ))

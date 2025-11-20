@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from raxe.application.scan_pipeline_async import AsyncScanPipeline
 from raxe.application.scan_merger import ScanMerger
-from raxe.application.lazy_l2 import LazyL2Detector
+from raxe.application.eager_l2 import EagerL2Detector
 from raxe.domain.engine.executor import RuleExecutor
 from raxe.infrastructure.packs.registry import PackRegistry
 from raxe.infrastructure.config.scan_config import ScanConfig
@@ -46,8 +46,8 @@ async def benchmark_async_vs_sync():
     rule_executor = RuleExecutor()
     scan_config = ScanConfig()
 
-    l2_detector = LazyL2Detector(
-        config=scan_config,
+    # Use EagerL2Detector for faster initialization and no timeouts
+    l2_detector = EagerL2Detector(
         use_production=True,
         confidence_threshold=0.5
     )
@@ -157,8 +157,8 @@ async def demo_streaming_scan():
     rule_executor = RuleExecutor()
     scan_config = ScanConfig()
 
-    l2_detector = LazyL2Detector(
-        config=scan_config,
+    # Use EagerL2Detector for faster initialization and no timeouts
+    l2_detector = EagerL2Detector(
         use_production=True,
         confidence_threshold=0.5
     )

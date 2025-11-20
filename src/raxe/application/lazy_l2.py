@@ -1,13 +1,42 @@
 """Lazy loading wrapper for L2 ML detector.
 
-This module provides a lazy loading wrapper for the L2 detector to improve
-first scan startup time. The L2 model is only loaded when first needed,
-reducing initialization time from ~4s to <2s.
+⚠️ DEPRECATED: This module is deprecated in favor of EagerL2Detector.
 
-Key Benefits:
-- Faster time-to-first-scan for users
-- L2 only loaded if actually used (respects l2_enabled flag)
-- Transparent to the rest of the system (implements L2Detector protocol)
+DEPRECATION TIMELINE:
+- v0.0.2 (current): Deprecated with warnings, still functional
+- v0.1.0 (Q1 2026): Will emit FutureWarning
+- v1.0.0 (Q2 2026): Will be removed entirely
+
+LazyL2Detector can cause timeout issues on first scan due to lazy initialization.
+Use EagerL2Detector for predictable initialization timing and no timeouts.
+
+WHY DEPRECATED:
+1. Can cause L2 timeout on first scan (model loads during scan, exceeds 150ms limit)
+2. Unpredictable first-scan latency (5s model load inside scan timer)
+3. Harder to debug initialization failures (errors occur during scan, not init)
+4. Misleading performance metrics (initialization conflated with scan time)
+
+MIGRATION GUIDE:
+    # Old (deprecated)
+    from raxe.application.lazy_l2 import LazyL2Detector
+    detector = LazyL2Detector(config=config, use_production=True)
+
+    # New (recommended)
+    from raxe.application.eager_l2 import EagerL2Detector
+    detector = EagerL2Detector(use_production=True, confidence_threshold=0.5)
+
+PERFORMANCE COMPARISON:
+    LazyL2Detector:
+    - Init: <1ms (wrapper only)
+    - First scan: 5,150ms (includes 5s model loading) ❌ TIMEOUT
+    - Subsequent scans: 50ms
+
+    EagerL2Detector:
+    - Init: 2,300ms (loads ONNX model) ✓ ONE-TIME
+    - First scan: 7ms (model ready) ✓ NO TIMEOUT
+    - Subsequent scans: 7ms ✓ CONSISTENT
+
+For more information, see: docs/ONNX_MODEL_LOADING.md
 """
 
 from typing import Any
@@ -39,20 +68,33 @@ class LazyL2Detector:
     ):
         """Initialize lazy L2 detector.
 
+        DEPRECATED: Use EagerL2Detector instead to avoid first-scan timeout issues.
+
         Args:
             config: Scan configuration
             use_production: Whether to use production L2 model
             confidence_threshold: Minimum confidence for L2 detections
         """
+        import warnings
+        warnings.warn(
+            "LazyL2Detector is deprecated and will be removed in a future version. "
+            "Use EagerL2Detector instead to avoid first-scan timeout issues. "
+            "See migration guide in module docstring.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         self.config = config
         self.use_production = use_production
         self.confidence_threshold = confidence_threshold
         self._detector: L2Detector | None = None
         self._initialized = False
 
-        logger.info(
-            "LazyL2Detector created "
-            f"(use_production={use_production}, threshold={confidence_threshold})"
+        logger.warning(
+            "LazyL2Detector is deprecated - use EagerL2Detector instead",
+            use_production=use_production,
+            threshold=confidence_threshold,
+            reason="lazy_loading_causes_first_scan_timeout"
         )
 
     def _find_bundled_model(self) -> str | None:
@@ -208,3 +250,32 @@ class LazyL2Detector:
 
         # Delegate to actual detector
         return detector.analyze(text, l1_result, context)
+
+    @property
+    def model_info(self) -> dict[str, Any]:
+        """Get model information.
+
+        Implements L2Detector protocol requirement.
+
+        Returns:
+            Dictionary with model metadata
+        """
+        if not self._initialized or self._detector is None:
+            return {
+                "name": "Uninitialized LazyL2Detector (DEPRECATED)",
+                "version": "unknown",
+                "type": "lazy",
+                "is_stub": True,
+                "deprecated": True,
+            }
+
+        # Delegate to underlying detector
+        info = self._detector.model_info.copy()
+
+        # Add lazy-specific metadata
+        info.update({
+            "detector_type": "lazy",
+            "deprecated": True,
+        })
+
+        return info

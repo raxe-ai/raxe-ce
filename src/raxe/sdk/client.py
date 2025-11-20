@@ -65,6 +65,7 @@ class Raxe:
         telemetry: bool = True,
         l2_enabled: bool = True,
         performance_mode: str = "balanced",
+        progress_callback = None,
         **kwargs
     ):
         """Initialize RAXE client.
@@ -81,11 +82,16 @@ class Raxe:
             telemetry: Enable privacy-preserving telemetry (default: True)
             l2_enabled: Enable L2 ML detection (default: True)
             performance_mode: "fast", "balanced", "accurate" (default: balanced)
+            progress_callback: Optional progress indicator for initialization
             **kwargs: Additional config options passed to ScanConfig
 
         Raises:
             Exception: If critical components fail to load
         """
+        # Store progress callback (use NullProgress if none provided)
+        from raxe.cli.progress import NullProgress
+        self._progress = progress_callback or NullProgress()
+
         # Build configuration with cascade
         # Note: load_config would handle the cascade, but it doesn't exist yet
         # For now, we'll use ScanConfig directly and update in Phase 4E
@@ -116,10 +122,15 @@ class Raxe:
         # Preload pipeline (one-time startup cost ~100-200ms)
         # This compiles patterns, loads packs, warms caches
         logger.info("raxe_client_init_start")
+
+        # Start progress indicator
+        self._progress.start("Initializing RAXE...")
+
         try:
             self.pipeline, self.preload_stats = preload_pipeline(
                 config=self.config,
-                suppression_manager=self.suppression_manager
+                suppression_manager=self.suppression_manager,
+                progress_callback=self._progress
             )
 
             # Also create async pipeline for parallel L1/L2 execution (5x faster!)
@@ -127,11 +138,19 @@ class Raxe:
             self._async_pipeline = None  # Lazy init on first use
 
             self._initialized = True
+
+            # Complete progress
+            self._progress.complete(
+                total_duration_ms=self.preload_stats.duration_ms
+            )
+
             logger.info(
                 "raxe_client_init_complete",
                 rules_loaded=self.preload_stats.rules_loaded
             )
         except Exception as e:
+            # Report error to progress
+            self._progress.error("initialization", str(e))
             logger.error("raxe_client_init_failed", error=str(e))
             raise
 
@@ -466,13 +485,18 @@ class Raxe:
                 )
 
                 # Structured logging (privacy-preserving)
+                # Include initialization timing (separate from scan timing)
+                init_stats = self.initialization_stats
                 logger.info(
                     "scan_completed",
                     prompt_hash=result.text_hash,
                     has_threats=result.has_threats,
                     detection_count=result.total_detections,
                     severity=result.severity if result.has_threats else "none",
-                    duration_ms=result.duration_ms,
+                    scan_duration_ms=result.duration_ms,  # Actual scan time (not including init)
+                    initialization_ms=init_stats.get("total_init_time_ms", 0),  # One-time init cost
+                    l2_init_ms=init_stats.get("l2_init_time_ms", 0),  # ML model loading time
+                    l2_model_type=init_stats.get("l2_model_type", "none"),  # onnx_int8, sentence_transformers, stub
                     l1_enabled=l1_enabled,
                     l2_enabled=l2_enabled,
                     mode=mode
@@ -512,13 +536,18 @@ class Raxe:
                 )
         else:
             # Log that dry_run scan skipped tracking
+            # Include initialization timing (separate from scan timing)
+            init_stats = self.initialization_stats
             logger.info(
                 "scan_completed_dry_run",
                 prompt_hash=result.text_hash,
                 has_threats=result.has_threats,
                 detection_count=result.total_detections,
                 severity=result.severity if result.has_threats else "none",
-                duration_ms=result.duration_ms,
+                scan_duration_ms=result.duration_ms,  # Actual scan time (not including init)
+                initialization_ms=init_stats.get("total_init_time_ms", 0),  # One-time init cost
+                l2_init_ms=init_stats.get("l2_init_time_ms", 0),  # ML model loading time
+                l2_model_type=init_stats.get("l2_model_type", "none"),  # onnx_int8, sentence_transformers, stub
                 l1_enabled=l1_enabled,
                 l2_enabled=l2_enabled,
                 mode=mode
@@ -823,6 +852,8 @@ class Raxe:
         if hasattr(self, 'preload_stats'):
             stats['preload_time_ms'] = self.preload_stats.duration_ms
             stats['patterns_compiled'] = self.preload_stats.patterns_compiled
+            stats['l2_init_time_ms'] = self.preload_stats.l2_init_time_ms
+            stats['l2_model_type'] = self.preload_stats.l2_model_type
 
         return stats
 
@@ -880,6 +911,43 @@ class Raxe:
         return validation
 
     @property
+    def initialization_stats(self) -> dict[str, Any]:
+        """Get initialization statistics (separate from scan timing).
+
+        This property provides detailed initialization metrics separated
+        from scan performance metrics. Useful for understanding startup costs.
+
+        Returns:
+            Dictionary with:
+                - total_init_time_ms: Total initialization time (preload + L2)
+                - preload_time_ms: Core preload time (rules, packs, patterns)
+                - l2_init_time_ms: L2 model initialization time
+                - l2_model_type: Type of L2 model loaded
+                - rules_loaded: Number of rules loaded
+                - packs_loaded: Number of packs loaded
+                - patterns_compiled: Number of patterns compiled
+                - config_loaded: True if config loaded successfully
+                - telemetry_initialized: True if telemetry initialized
+
+        Example:
+            raxe = Raxe()
+            init_stats = raxe.initialization_stats
+            print(f"Total init: {init_stats['total_init_time_ms']}ms")
+            print(f"L2 init: {init_stats['l2_init_time_ms']}ms ({init_stats['l2_model_type']})")
+        """
+        return {
+            "total_init_time_ms": self.preload_stats.duration_ms,
+            "preload_time_ms": self.preload_stats.duration_ms - self.preload_stats.l2_init_time_ms,
+            "l2_init_time_ms": self.preload_stats.l2_init_time_ms,
+            "l2_model_type": self.preload_stats.l2_model_type,
+            "rules_loaded": self.preload_stats.rules_loaded,
+            "packs_loaded": self.preload_stats.packs_loaded,
+            "patterns_compiled": self.preload_stats.patterns_compiled,
+            "config_loaded": self.preload_stats.config_loaded,
+            "telemetry_initialized": self.preload_stats.telemetry_initialized,
+        }
+
+    @property
     def stats(self) -> dict[str, Any]:
         """Get preload statistics.
 
@@ -901,6 +969,8 @@ class Raxe:
             "preload_time_ms": self.preload_stats.duration_ms,
             "config_loaded": self.preload_stats.config_loaded,
             "telemetry_initialized": self.preload_stats.telemetry_initialized,
+            "l2_init_time_ms": self.preload_stats.l2_init_time_ms,
+            "l2_model_type": self.preload_stats.l2_model_type,
         }
 
     def __repr__(self) -> str:

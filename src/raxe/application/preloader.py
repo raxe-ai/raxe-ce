@@ -51,6 +51,8 @@ class PreloadStats:
         patterns_compiled: Number of regex patterns compiled
         config_loaded: True if config loaded successfully
         telemetry_initialized: True if telemetry initialized
+        l2_init_time_ms: L2 model initialization time (separate from preload)
+        l2_model_type: Type of L2 model loaded (onnx_int8, sentence_transformers, stub)
     """
     duration_ms: float
     packs_loaded: int
@@ -58,14 +60,19 @@ class PreloadStats:
     patterns_compiled: int
     config_loaded: bool
     telemetry_initialized: bool
+    l2_init_time_ms: float = 0.0
+    l2_model_type: str = "none"
 
     def __str__(self) -> str:
         """Human-readable summary."""
-        return (
+        base_msg = (
             f"Preload complete in {self.duration_ms:.1f}ms: "
             f"{self.packs_loaded} packs, {self.rules_loaded} rules, "
             f"{self.patterns_compiled} patterns compiled"
         )
+        if self.l2_init_time_ms > 0:
+            base_msg += f", L2 initialized in {self.l2_init_time_ms:.1f}ms ({self.l2_model_type})"
+        return base_msg
 
 
 class PipelinePreloader:
@@ -92,6 +99,7 @@ class PipelinePreloader:
         config_path: Path | None = None,
         config: ScanConfig | None = None,
         suppression_manager: object | None = None,
+        progress_callback = None,
     ):
         """Initialize preloader.
 
@@ -99,10 +107,15 @@ class PipelinePreloader:
             config_path: Optional path to config file
             config: Optional explicit config (overrides config_path)
             suppression_manager: Optional suppression manager for false positive handling
+            progress_callback: Optional progress indicator
         """
         self.config_path = config_path
         self._config = config
         self.suppression_manager = suppression_manager
+
+        # Store progress callback (use NullProgress if none provided)
+        from raxe.cli.progress import NullProgress
+        self._progress = progress_callback or NullProgress()
 
     def preload(self) -> tuple[ScanPipeline, PreloadStats]:
         """Preload all components and create ready-to-use pipeline.
@@ -131,6 +144,9 @@ class PipelinePreloader:
                 config_loaded = False
 
         # 2. Load pack registry and rules
+        # Update progress: loading rules
+        self._progress.update_component("rules", "loading", 0)
+
         # Try user packs first, fall back to bundled packs if needed
         packs_root = config.packs_root
 
@@ -150,11 +166,22 @@ class PipelinePreloader:
         )
         pack_registry = PackRegistry(registry_config)
 
+        rules_start = time.perf_counter()
         try:
             pack_registry.load_all_packs()
             packs_loaded = len(pack_registry.list_packs())
             all_rules = pack_registry.get_all_rules()
             rules_loaded = len(all_rules)
+            rules_time = (time.perf_counter() - rules_start) * 1000
+
+            # Report rules loading completion
+            self._progress.update_component(
+                "rules",
+                "complete",
+                rules_time,
+                metadata={"count": rules_loaded}
+            )
+
             logger.info(
                 f"Loaded {rules_loaded} rules from {packs_loaded} packs"
             )
@@ -180,18 +207,40 @@ class PipelinePreloader:
             except Exception as e:
                 logger.warning(f"Failed to warm up rule executor: {e}")
 
-        # 4. Initialize L2 detector (LAZY LOADING for faster startup)
-        # Instead of loading L2 detector immediately, create a lazy wrapper
-        # This reduces first scan startup time from ~4s to <2s
-        # L2 will be loaded on first use (when l2_enabled=True in scan)
-        from raxe.application.lazy_l2 import LazyL2Detector
+        # 4. Initialize L2 detector (EAGER LOADING to avoid timeout issues)
+        # EagerL2Detector loads model during __init__() to avoid first-scan timeouts
+        # Uses ONNX-first strategy for fast loading (~500ms vs ~5s for bundle)
+        # Initialization time tracked separately from preload stats
 
-        l2_detector = LazyL2Detector(
+        # Update progress: loading ML model
+        self._progress.update_component("ml_model", "loading", 0)
+
+        from raxe.application.eager_l2 import EagerL2Detector
+
+        l2_init_start = time.perf_counter()
+        l2_detector = EagerL2Detector(
             config=config,
             use_production=config.use_production_l2,
             confidence_threshold=config.l2_confidence_threshold
         )
-        logger.info("L2 detector configured for lazy loading (loads on first use)")
+        l2_init_time_ms = (time.perf_counter() - l2_init_start) * 1000
+
+        # Get model type from initialization stats
+        l2_init_stats = l2_detector.initialization_stats
+        l2_model_type = l2_init_stats.get("model_type", "unknown")
+
+        # Report ML model loading completion
+        self._progress.update_component(
+            "ml_model",
+            "complete",
+            l2_init_time_ms
+        )
+
+        logger.info(
+            f"L2 detector initialized: {l2_model_type} in {l2_init_time_ms:.1f}ms "
+            f"(ONNX: {l2_init_stats.get('has_onnx', False)}, "
+            f"Stub: {l2_init_stats.get('is_stub', False)})"
+        )
 
         # 5. Initialize scan merger
         scan_merger = ScanMerger()
@@ -232,6 +281,8 @@ class PipelinePreloader:
             patterns_compiled=patterns_compiled,
             config_loaded=config_loaded,
             telemetry_initialized=telemetry_initialized,
+            l2_init_time_ms=l2_init_time_ms,
+            l2_model_type=l2_model_type,
         )
 
         logger.info(f"Preload complete: {stats}")
@@ -282,6 +333,7 @@ def preload_pipeline(
     config_path: Path | None = None,
     config: ScanConfig | None = None,
     suppression_manager: object | None = None,
+    progress_callback = None,
 ) -> tuple[ScanPipeline, PreloadStats]:
     """Convenience function to preload pipeline.
 
@@ -289,6 +341,7 @@ def preload_pipeline(
         config_path: Optional path to config file
         config: Optional explicit config
         suppression_manager: Optional suppression manager for false positive handling
+        progress_callback: Optional progress indicator
 
     Returns:
         Tuple of (pipeline, stats)
@@ -298,5 +351,5 @@ def preload_pipeline(
         print(stats)
         result = pipeline.scan("test")
     """
-    preloader = PipelinePreloader(config_path, config, suppression_manager)
+    preloader = PipelinePreloader(config_path, config, suppression_manager, progress_callback)
     return preloader.preload()

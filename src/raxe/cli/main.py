@@ -271,6 +271,12 @@ def scan(
     """
     # Check if quiet mode is enabled
     quiet = ctx.obj.get("quiet", False)
+    verbose = ctx.obj.get("verbose", False)
+    no_color = ctx.obj.get("no_color", False)
+
+    # Auto-enable quiet mode for JSON/YAML formats to prevent progress contamination
+    if format in ("json", "yaml"):
+        quiet = True
 
     # Override format to JSON if quiet mode
     if quiet and format == "text":
@@ -289,9 +295,21 @@ def scan(
         display_error("No text provided", "Provide text as argument or use --stdin")
         sys.exit(1)
 
+    # Setup progress indicator
+    from raxe.cli.progress_context import detect_progress_mode
+    from raxe.cli.progress import create_progress_indicator
+
+    progress_mode = detect_progress_mode(
+        quiet=quiet,
+        verbose=verbose,
+        no_color=no_color
+    )
+
+    progress = create_progress_indicator(progress_mode)
+
     # Create Raxe client (uses config if available)
     try:
-        raxe = Raxe()
+        raxe = Raxe(progress_callback=progress)
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
         console.print("Try running: [cyan]raxe init[/cyan]")

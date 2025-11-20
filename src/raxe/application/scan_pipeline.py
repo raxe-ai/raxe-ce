@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from raxe.application.scan_merger import CombinedScanResult, ScanMerger
 from raxe.application.telemetry_manager import TelemetryManager
 from raxe.domain.engine.executor import RuleExecutor
-from raxe.domain.ml.protocol import L2Detector
+from raxe.domain.ml.protocol import L2Detector, L2Result
 from raxe.domain.models import BlockAction, ScanPolicy
 from raxe.infrastructure.packs.registry import PackRegistry
 from raxe.infrastructure.telemetry.hook import TelemetryHook
@@ -492,8 +492,13 @@ class ScanPipeline:
         )
 
         # 6. Evaluate policy to determine action
-        policy_decision = self.policy.get_action(l1_result)
-        should_block = self.policy.should_block(l1_result)
+        # CRITICAL: Policy must consider BOTH L1 and L2 detections
+        # We evaluate using the combined result to include L2 predictions
+        policy_decision, should_block = self._evaluate_policy(
+            l1_result=l1_result,
+            l2_result=l2_result,
+            combined_severity=combined_result.combined_severity
+        )
 
         # 7. Calculate text hash (privacy-preserving)
         text_hash = self._hash_text(text)
@@ -612,6 +617,92 @@ class ScanPipeline:
             )
             results.append(result)
         return results
+
+    def _evaluate_policy(
+        self,
+        l1_result: object,
+        l2_result: L2Result | None,
+        combined_severity: object | None,
+    ) -> tuple[BlockAction, bool]:
+        """Evaluate policy considering BOTH L1 and L2 detections.
+
+        This method fixes the bug where policy only checked L1 results.
+        Now it properly evaluates:
+        1. L1 detections (as before)
+        2. L2 predictions (NEW - maps to severity)
+        3. Combined severity (from merged result)
+
+        The policy should block if EITHER L1 OR L2 detects a threat
+        that exceeds the policy thresholds.
+
+        Args:
+            l1_result: L1 scan result with rule detections
+            l2_result: L2 scan result with ML predictions (optional)
+            combined_severity: Maximum severity across L1 and L2
+
+        Returns:
+            Tuple of (policy_decision, should_block)
+        """
+        # Start with L1 policy evaluation
+        should_block_l1 = self.policy.should_block(l1_result)
+
+        # Check if L2 predictions should trigger blocking
+        should_block_l2 = False
+        if l2_result and l2_result.has_predictions:
+            should_block_l2 = self._should_block_on_l2(l2_result)
+
+        # Block if EITHER L1 or L2 says we should block
+        should_block = should_block_l1 or should_block_l2
+
+        # Determine policy decision based on blocking
+        if should_block:
+            policy_decision = BlockAction.BLOCK
+        elif l1_result.has_detections or (l2_result and l2_result.has_predictions):
+            policy_decision = BlockAction.WARN
+        else:
+            policy_decision = BlockAction.ALLOW
+
+        return policy_decision, should_block
+
+    def _should_block_on_l2(self, l2_result: L2Result) -> bool:
+        """Determine if L2 predictions should trigger blocking.
+
+        Maps L2 confidence scores to severity levels using the same
+        thresholds as ScanMerger, then applies policy rules.
+
+        Args:
+            l2_result: L2 scan result with predictions
+
+        Returns:
+            True if L2 predictions warrant blocking per policy
+        """
+        from raxe.domain.rules.models import Severity
+
+        # Map L2 confidence to severity using same thresholds as ScanMerger
+        # These are conservative - L2 must be quite confident to block
+        l2_severity = None
+        highest_confidence = l2_result.highest_confidence
+
+        # Use the same thresholds as ScanMerger for consistency
+        if highest_confidence >= 0.95:
+            l2_severity = Severity.CRITICAL
+        elif highest_confidence >= 0.85:
+            l2_severity = Severity.HIGH
+        elif highest_confidence >= 0.70:
+            l2_severity = Severity.MEDIUM
+        elif highest_confidence >= 0.50:
+            l2_severity = Severity.LOW
+        elif highest_confidence >= 0.30:
+            l2_severity = Severity.INFO
+
+        # Apply policy rules to L2 severity
+        if l2_severity == Severity.CRITICAL and self.policy.block_on_critical:
+            return True
+
+        if l2_severity == Severity.HIGH and self.policy.block_on_high:
+            return True
+
+        return False
 
     def _hash_text(self, text: str) -> str:
         """Create privacy-preserving hash of text.

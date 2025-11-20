@@ -162,11 +162,15 @@ Exception: Failed to initialize RAXE client: ...
    raxe = Raxe()  # One-time cost
    ```
 
-2. **Use lazy loading:**
+2. **Use ONNX optimization for faster initialization:**
    ```python
-   # For CLI tools
-   if __name__ == "__main__":
-       from raxe import Raxe  # Only when needed
+   # ONNX INT8 models load 2.2x faster than standard embeddings
+   # Automatically used when available in models/ directory
+   from raxe import Raxe
+   raxe = Raxe()  # Uses ONNX if available (~2.3s vs ~5s)
+
+   # Initialization is now eager (loads at startup, not first scan)
+   # This eliminates timeout issues and provides predictable latency
    ```
 
 3. **Reduce ruleset:**

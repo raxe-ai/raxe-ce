@@ -44,13 +44,7 @@ class HealthCheck:
     type=click.Path(),
     help="Export diagnostic report to file",
 )
-@click.option(
-    "--verbose",
-    "-v",
-    is_flag=True,
-    help="Show verbose diagnostic information",
-)
-def doctor(fix: bool, export: str | None, verbose: bool) -> None:
+def doctor(fix: bool, export: str | None) -> None:
     """
     Run comprehensive system health checks.
 
@@ -67,7 +61,6 @@ def doctor(fix: bool, export: str | None, verbose: bool) -> None:
       raxe doctor
       raxe doctor --fix
       raxe doctor --export report.txt
-      raxe doctor --verbose
     """
     from raxe.cli.branding import print_logo
 
@@ -83,31 +76,31 @@ def doctor(fix: bool, export: str | None, verbose: bool) -> None:
 
     # 1. Installation checks
     console.print("[bold]Installation[/bold]")
-    checks.extend(_check_installation(verbose))
+    checks.extend(_check_installation())
     _display_check_results(checks[-3:])  # Last 3 checks
     console.print()
 
     # 2. Configuration checks
     console.print("[bold]Configuration[/bold]")
-    checks.extend(_check_configuration(verbose))
+    checks.extend(_check_configuration())
     _display_check_results(checks[-2:])  # Last 2 checks
     console.print()
 
     # 3. Database checks
     console.print("[bold]Database[/bold]")
-    checks.extend(_check_database(verbose))
+    checks.extend(_check_database())
     _display_check_results(checks[-3:])  # Last 3 checks
     console.print()
 
     # 4. Rule packs checks
     console.print("[bold]Rule Packs[/bold]")
-    checks.extend(_check_rule_packs(verbose))
+    checks.extend(_check_rule_packs())
     _display_check_results(checks[-2:])  # Last 2 checks
     console.print()
 
     # 5. Performance checks
     console.print("[bold]Performance[/bold]")
-    checks.extend(_check_performance(verbose))
+    checks.extend(_check_performance())
     _display_check_results(checks[-2:])  # Last 2 checks
     console.print()
 
@@ -123,7 +116,7 @@ def doctor(fix: bool, export: str | None, verbose: bool) -> None:
         _export_report(checks, export)
 
 
-def _check_installation(verbose: bool) -> list[HealthCheck]:
+def _check_installation() -> list[HealthCheck]:
     """Check Python version and dependencies."""
     checks = []
 
@@ -196,7 +189,7 @@ def _check_installation(verbose: bool) -> list[HealthCheck]:
     return checks
 
 
-def _check_configuration(verbose: bool) -> list[HealthCheck]:
+def _check_configuration() -> list[HealthCheck]:
     """Check configuration file validity."""
     checks = []
 
@@ -265,7 +258,7 @@ def _check_configuration(verbose: bool) -> list[HealthCheck]:
     return checks
 
 
-def _check_database(verbose: bool) -> list[HealthCheck]:
+def _check_database() -> list[HealthCheck]:
     """Check database health."""
     checks = []
 
@@ -343,7 +336,7 @@ def _check_database(verbose: bool) -> list[HealthCheck]:
     return checks
 
 
-def _check_rule_packs(verbose: bool) -> list[HealthCheck]:
+def _check_rule_packs() -> list[HealthCheck]:
     """Check rule packs status."""
     checks = []
 
@@ -397,7 +390,7 @@ def _check_rule_packs(verbose: bool) -> list[HealthCheck]:
     return checks
 
 
-def _check_performance(verbose: bool) -> list[HealthCheck]:
+def _check_performance() -> list[HealthCheck]:
     """Check performance metrics."""
     checks = []
 

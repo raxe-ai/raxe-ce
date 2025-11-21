@@ -134,7 +134,7 @@ class RuleValidator:
 
         # Load YAML
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 rule_data = yaml.safe_load(f)
         except yaml.YAMLError as e:
             result.valid = False
@@ -216,11 +216,11 @@ class RuleValidator:
                             severity='error',
                             field=f'patterns[{i}].flags',
                             message=f"Unknown regex flag: {flag_name}",
-                            suggestion=f"Use valid regex flags like IGNORECASE, MULTILINE, DOTALL"
+                            suggestion="Use valid regex flags like IGNORECASE, MULTILINE, DOTALL"
                         ))
                         continue
 
-                compiled = re.compile(pattern_str, flags)
+                _ = re.compile(pattern_str, flags)  # Validate pattern compiles
 
             except re.error as e:
                 result.issues.append(ValidationIssue(

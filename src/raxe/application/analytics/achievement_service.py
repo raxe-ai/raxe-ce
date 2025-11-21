@@ -258,20 +258,16 @@ class AchievementService:
             raise
 
     def get_recent_unlocks(
-        self,
-        days: int = 7
+        self
     ) -> list[dict[str, Any]]:
         """Get recently unlocked achievements across all users.
-
-        Args:
-            days: Number of days to look back (default: 7)
 
         Returns:
             List of recent achievement unlocks with user and timestamp
 
         Example:
             >>> service = AchievementService(repo)
-            >>> recent = service.get_recent_unlocks(days=7)
+            >>> recent = service.get_recent_unlocks()
             >>> for unlock in recent[:5]:
             ...     print(f"{unlock['achievement_name']} - {unlock['earned_at']}")
         """
@@ -296,20 +292,16 @@ class AchievementService:
             raise
 
     def get_achievement_leaderboard(
-        self,
-        limit: int = 10
+        self
     ) -> list[dict[str, Any]]:
         """Get top users by achievement points.
-
-        Args:
-            limit: Maximum number of users to return (default: 10)
 
         Returns:
             List of top users sorted by achievement points
 
         Example:
             >>> service = AchievementService(repo)
-            >>> leaderboard = service.get_achievement_leaderboard(limit=5)
+            >>> leaderboard = service.get_achievement_leaderboard()
             >>> for rank, user in enumerate(leaderboard, 1):
             ...     print(f"{rank}. {user['installation_id']}: {user['points']} pts")
         """

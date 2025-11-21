@@ -20,8 +20,10 @@ Usage:
         model="text-bison"
     )
 """
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class RaxeVertexAI:
         project: str,
         location: str = "us-central1",
         *,
-        raxe: Optional["Raxe"] = None,
+        raxe: Raxe | None = None,
         raxe_block_on_threat: bool = True,
         raxe_scan_responses: bool = True,
         credentials: Any | None = None,
@@ -217,7 +219,7 @@ class RaxeVertexAI:
         top_p: float = 0.95,
         top_k: int = 40,
         **kwargs
-    ) -> "RaxeVertexAIChat":
+    ) -> RaxeVertexAIChat:
         """Start a chat session with automatic scanning.
 
         Args:

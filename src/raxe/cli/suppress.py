@@ -119,7 +119,7 @@ def list_suppressions(config: str | None, format: str):
     if not suppressions:
         console.print("[yellow]No active suppressions found[/yellow]")
         console.print()
-        console.print(f"Add suppressions with: [cyan]raxe suppress add <pattern> <reason>[/cyan]")
+        console.print("Add suppressions with: [cyan]raxe suppress add <pattern> <reason>[/cyan]")
         console.print(f"Or create {manager.config_path}")
         return
 
@@ -232,7 +232,7 @@ def show_suppression(pattern: str, config: str | None):
 
     # Show details
     console.print()
-    console.print(f"[bold]Suppression Details[/bold]")
+    console.print("[bold]Suppression Details[/bold]")
     console.print()
     console.print(f"  Pattern: [cyan]{suppression.pattern}[/cyan]")
     console.print(f"  Reason: {suppression.reason}")
@@ -244,7 +244,7 @@ def show_suppression(pattern: str, config: str | None):
         status = "[red]EXPIRED[/red]" if expired else "[green]Active[/green]"
         console.print(f"  Expires: {suppression.expires_at} ({status})")
     else:
-        console.print(f"  Expires: Never")
+        console.print("  Expires: Never")
 
     # Show matching examples
     console.print()

@@ -4,6 +4,8 @@ Provides auto-discovery, selection, and comparison of L2 models.
 Supports multiple model types (ONNX INT8, PyTorch, etc.) with
 zero code changes to add new models.
 """
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -107,7 +109,7 @@ class ModelRegistry:
 
                 if metadata_file.exists():
                     # Load from JSON
-                    with open(metadata_file, "r") as f:
+                    with open(metadata_file) as f:
                         data = json.load(f)
                     metadata = ModelMetadata.from_dict(data, file_path=raxe_file)
                     logger.info(f"Loaded model: {model_id} ({metadata.name})")
@@ -137,7 +139,7 @@ class ModelRegistry:
                         continue
 
                     # Load metadata
-                    with open(metadata_file, "r") as f:
+                    with open(metadata_file) as f:
                         data = json.load(f)
 
                     # Resolve bundle file path
@@ -180,10 +182,10 @@ class ModelRegistry:
         """Create default metadata for model without JSON file."""
         from raxe.domain.ml.model_metadata import (
             FileInfo,
-            PerformanceMetrics,
-            Requirements,
             ModelRuntime,
             ModelStatus,
+            PerformanceMetrics,
+            Requirements,
         )
 
         # Guess runtime from model_id
@@ -262,13 +264,6 @@ class ModelRegistry:
             ModelMetadata or None if loading failed
         """
         from raxe.domain.ml.manifest_loader import ManifestLoader
-        from raxe.domain.ml.model_metadata import (
-            FileInfo,
-            PerformanceMetrics,
-            Requirements,
-            ModelRuntime,
-            AccuracyMetrics,
-        )
 
         # Load manifest
         loader = ManifestLoader(strict=False)  # Non-strict for graceful degradation
@@ -281,7 +276,7 @@ class ModelRegistry:
         manifest_data = self._adapt_manifest_format(manifest_data)
 
         # Validate tokenizer if present
-        if "tokenizer" in manifest_data and manifest_data["tokenizer"]:
+        if manifest_data.get("tokenizer"):
             is_valid, errors = self._validate_tokenizer(manifest_data)
             if not is_valid:
                 logger.warning(
@@ -450,12 +445,12 @@ class ModelRegistry:
             ModelMetadata instance
         """
         from raxe.domain.ml.model_metadata import (
+            AccuracyMetrics,
             FileInfo,
+            ModelRuntime,
+            ModelStatus,
             PerformanceMetrics,
             Requirements,
-            ModelRuntime,
-            AccuracyMetrics,
-            ModelStatus,
         )
 
         # Extract basic fields
@@ -660,7 +655,7 @@ class ModelRegistry:
         self,
         model_id: str | None = None,
         criteria: str | None = None
-    ) -> "L2Detector":
+    ) -> L2Detector:
         """Create detector from model.
 
         Args:

@@ -116,7 +116,7 @@ class ManifestSchema:
 
         # Parse tokenizer if present
         tokenizer = None
-        if "tokenizer" in data and data["tokenizer"]:
+        if data.get("tokenizer"):
             tok_data = data["tokenizer"]
             tokenizer = TokenizerConfig(
                 name=tok_data.get("name", ""),
@@ -199,7 +199,7 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
                 errors.append("Field 'model.bundle_file' is required")
 
     # Optional tokenizer validation
-    if "tokenizer" in data and data["tokenizer"]:
+    if data.get("tokenizer"):
         tok_data = data["tokenizer"]
         if not isinstance(tok_data, dict):
             errors.append("Field 'tokenizer' must be a dictionary")
@@ -215,7 +215,7 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
                 errors.append("Field 'tokenizer.config' must be a dictionary when tokenizer is specified")
 
     # Optional performance validation
-    if "performance" in data and data["performance"]:
+    if data.get("performance"):
         perf = data["performance"]
         if not isinstance(perf, dict):
             errors.append("Field 'performance' must be a dictionary")
@@ -232,7 +232,7 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
                         )
 
     # Optional accuracy validation
-    if "accuracy" in data and data["accuracy"]:
+    if data.get("accuracy"):
         acc = data["accuracy"]
         if not isinstance(acc, dict):
             errors.append("Field 'accuracy' must be a dictionary")

@@ -13,8 +13,10 @@ With:
 The wrapper intercepts chat.completions.create calls, scans user messages
 before sending to OpenAI, and optionally scans responses.
 """
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any
 
 # Try to import OpenAI at module level
 try:
@@ -61,7 +63,7 @@ class RaxeOpenAI(OpenAI):
     def __init__(
         self,
         *args,
-        raxe: Optional["Raxe"] = None,
+        raxe: Raxe | None = None,
         raxe_block_on_threat: bool = True,
         raxe_scan_responses: bool = True,
         **kwargs

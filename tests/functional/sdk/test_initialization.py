@@ -65,8 +65,7 @@ class TestSDKInitialization:
         client = Raxe(
             api_key="explicit_key",
             telemetry=False,
-            l2_enabled=False,
-            performance_mode="fast"
+            l2_enabled=False
         )
 
         assert client.config.api_key == "explicit_key"
@@ -157,24 +156,21 @@ class TestSDKInitialization:
             del os.environ["RAXE_API_KEY"]
             del os.environ["RAXE_TELEMETRY"]
 
-    def test_initialization_performance_modes(self):
-        """Test different performance mode initializations."""
-        modes = ["fast", "balanced", "accurate"]
-        init_times = {}
+    def test_initialization_multiple_times(self):
+        """Test multiple client initializations."""
+        # Should be able to create multiple instances
+        client1 = Raxe()
+        client2 = Raxe()
 
-        for mode in modes:
-            start = time.perf_counter()
-            client = Raxe(performance_mode=mode)
-            init_times[mode] = (time.perf_counter() - start) * 1000
+        # Each should have their own config
+        assert client1.config is not None
+        assert client2.config is not None
 
-        # Fast mode should initialize quicker
-        if "fast" in init_times and "accurate" in init_times:
-            # This might not always be true depending on implementation
-            pass  # Just verify they all initialize
-
-        # All should initialize successfully
-        for mode, time_ms in init_times.items():
-            assert time_ms < 2000, f"{mode} mode took {time_ms:.0f}ms"
+        # Each should work independently
+        result1 = client1.scan("test prompt")
+        result2 = client2.scan("test prompt")
+        assert result1 is not None
+        assert result2 is not None
 
     @pytest.mark.slow
     def test_initialization_stress(self):

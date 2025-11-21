@@ -3,8 +3,8 @@
 Provides commands to list, inspect, test, and compare L2 models.
 """
 import click
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 
 from raxe.cli.output import console
@@ -40,8 +40,8 @@ def list_models(status: str, runtime: str):
       raxe models list --status active
       raxe models list --runtime onnx_int8
     """
-    from raxe.domain.ml.model_registry import get_registry
     from raxe.domain.ml.model_metadata import ModelStatus
+    from raxe.domain.ml.model_registry import get_registry
 
     # Get registry
     registry = get_registry()
@@ -247,9 +247,11 @@ def set_default(model_id: str):
     Examples:
       raxe models set-default v1.0_onnx_int8
     """
-    from raxe.domain.ml.model_registry import get_registry
     from pathlib import Path
+
     import yaml
+
+    from raxe.domain.ml.model_registry import get_registry
 
     # Get registry
     registry = get_registry()
@@ -268,7 +270,7 @@ def set_default(model_id: str):
         return
 
     # Load existing config
-    with open(config_file, "r") as f:
+    with open(config_file) as f:
         config = yaml.safe_load(f) or {}
 
     # Update L2 model setting

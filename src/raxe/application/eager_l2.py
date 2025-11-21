@@ -34,8 +34,8 @@ from raxe.domain.engine.executor import ScanResult
 from raxe.domain.ml.protocol import L2Detector, L2Result
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.models.discovery import (
-    ModelDiscoveryService,
     DiscoveredModel,
+    ModelDiscoveryService,
     ModelType,
 )
 from raxe.utils.logging import get_logger
@@ -142,6 +142,7 @@ class EagerL2Detector:
 
         # Check if config specifies a model_id
         from pathlib import Path
+
         import yaml
 
         configured_model_id = None
@@ -150,7 +151,7 @@ class EagerL2Detector:
             # (RaxeConfig dataclass doesn't include l2_model field yet)
             config_file = Path.home() / ".raxe" / "config.yaml"
             if config_file.exists():
-                with open(config_file, "r") as f:
+                with open(config_file) as f:
                     config_data = yaml.safe_load(f) or {}
 
                 l2_model_config = config_data.get("l2_model", {})

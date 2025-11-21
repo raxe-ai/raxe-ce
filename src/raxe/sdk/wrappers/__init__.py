@@ -12,6 +12,8 @@ Integrations are available via raxe.sdk.integrations:
     - LangChain callback handler (RaxeCallbackHandler)
     - Hugging Face pipeline wrapper (RaxePipeline)
 """
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -95,7 +97,7 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def wrap_client(raxe_client: "Raxe", client: Any) -> Any:
+def wrap_client(raxe_client: Raxe, client: Any) -> Any:
     """Wrap an LLM client with RAXE scanning.
 
     This helper function wraps an existing LLM client instance

@@ -277,8 +277,8 @@ def test_extract_response_texts_with_chat_result(mock_raxe):
     """Test extracting text from ChatResult."""
     handler = RaxeCallbackHandler(raxe_client=mock_raxe)
 
-    # Mock ChatResult with content attribute
-    response = Mock()
+    # Mock ChatResult with content attribute (no generations attribute)
+    response = Mock(spec=['content'])
     response.content = "Chat response content"
 
     texts = handler._extract_response_texts(response)

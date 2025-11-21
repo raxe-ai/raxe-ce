@@ -8,7 +8,6 @@ This infrastructure layer module handles ALL file I/O operations:
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from raxe.domain.suppression import AuditEntry, Suppression
 
@@ -153,23 +152,3 @@ class FileSuppressionRepository:
         # NO-OP: File repository doesn't do audit logging
         pass
 
-    def get_audit_log(
-        self,
-        limit: int = 100,
-        pattern: str | None = None,
-        action: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """Get audit log entries (empty for file repository).
-
-        File repository doesn't support audit logging.
-        Use SQLiteSuppressionRepository or CompositeSuppressionRepository.
-
-        Args:
-            limit: Maximum entries to return (ignored)
-            pattern: Filter by pattern (ignored)
-            action: Filter by action (ignored)
-
-        Returns:
-            Empty list (no audit log)
-        """
-        return []

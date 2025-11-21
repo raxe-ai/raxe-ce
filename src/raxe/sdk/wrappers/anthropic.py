@@ -13,9 +13,11 @@ With:
 The wrapper intercepts messages.create calls, scans user messages
 before sending to Claude, and optionally scans responses.
 """
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterator
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ class RaxeAnthropic:
     def __init__(
         self,
         *args,
-        raxe: Optional["Raxe"] = None,
+        raxe: Raxe | None = None,
         raxe_block_on_threat: bool = True,
         raxe_scan_responses: bool = True,
         **kwargs

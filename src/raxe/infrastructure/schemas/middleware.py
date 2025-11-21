@@ -162,7 +162,6 @@ class SchemaValidationMiddleware:
                 "enabled_layers": request_data.get("enabled_layers", ["l1", "l2"]),
                 "timeout_ms": request_data.get("timeout_ms", 1000),
                 "max_text_length": request_data.get("max_text_length", 100000),
-                "performance_mode": request_data.get("performance_mode", "balanced"),
                 "telemetry_enabled": request_data.get("telemetry_enabled", True),
                 "policy_enforcement": request_data.get("policy_enforcement", "enforce"),
                 "cache_ttl_seconds": request_data.get("cache_ttl_seconds", 300),

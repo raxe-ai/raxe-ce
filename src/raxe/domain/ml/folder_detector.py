@@ -144,7 +144,7 @@ class FolderL2Detector:
                 "embedding_dim": 768,
                 "embedding_model": "sentence-transformers/all-mpnet-base-v2"
             }
-            logger.warning(f"No metadata found, using defaults")
+            logger.warning("No metadata found, using defaults")
         else:
             with open(metadata_path) as f:
                 self.metadata = json.load(f)
@@ -497,7 +497,7 @@ class FolderL2Detector:
         elif scores["attack_probability"] > 0.7:
             why.append(f"High confidence {family} attack characteristics")
         else:
-            why.append(f"Moderate confidence threat indicators")
+            why.append("Moderate confidence threat indicators")
 
         # Add family-specific explanation
         family_explanations = {

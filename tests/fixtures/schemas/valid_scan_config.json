@@ -3,7 +3,7 @@
   "l1_enabled": true,
   "l2_enabled": true,
   "l2_confidence_threshold": 0.8,
-  "performance_mode": "adaptive",
+  "performance_mode": "fail_open",
   "sample_rate": 1.0,
   "max_scan_duration_ms": 500,
   "max_text_length": 50000,

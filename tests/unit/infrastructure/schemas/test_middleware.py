@@ -74,13 +74,11 @@ class TestSchemaValidationMiddleware:
         middleware = SchemaValidationMiddleware()
 
         minimal_request = {
-            "enabled_tiers": ["core"],
-            "performance_mode": "fail_open"
+            "enabled_tiers": ["core"]
         }
         normalized = middleware.validate_scan_request(minimal_request)
 
         assert normalized["enabled_tiers"] == ["core"]
-        assert normalized["performance_mode"] == "fail_open"
         assert "max_text_length" in normalized or "max_scan_duration_ms" in normalized
 
     def test_validate_scan_request_custom(self):
@@ -89,7 +87,6 @@ class TestSchemaValidationMiddleware:
 
         custom_request = {
             "enabled_tiers": ["core", "community"],
-            "performance_mode": "adaptive",
             "l1_enabled": True,
             "l2_enabled": False,
         }
@@ -97,7 +94,6 @@ class TestSchemaValidationMiddleware:
         normalized = middleware.validate_scan_request(custom_request)
 
         assert normalized["enabled_tiers"] == ["core", "community"]
-        assert normalized["performance_mode"] == "adaptive"
         assert normalized["l1_enabled"] is True
         assert normalized["l2_enabled"] is False
 
@@ -151,15 +147,14 @@ class TestSchemaValidationMiddleware:
 
         @middleware.validate_request("v1.0.0/config/scan_config")
         def process_scan(config):
-            return f"Processing with {config['performance_mode']}"
+            return f"Processing with tiers: {config['enabled_tiers']}"
 
         # Valid request should work
         valid_config = {
-            "enabled_tiers": ["core"],
-            "performance_mode": "adaptive"
+            "enabled_tiers": ["core"]
         }
         result = process_scan(valid_config)
-        assert "adaptive" in result
+        assert "core" in result
 
         # Invalid request should raise
         invalid_config = {"timeout_ms": -1}
@@ -240,7 +235,7 @@ class TestSchemaValidationMiddleware:
 
         @validate_request("v1.0.0/config/scan_config")
         def scan_with_config(config):
-            return config["performance_mode"]
+            return config["enabled_tiers"][0]
 
         @validate_response("v2.1.0/events/scan_performed")
         def create_event():
@@ -267,11 +262,10 @@ class TestSchemaValidationMiddleware:
             }
 
         # Test request decorator
-        mode = scan_with_config({
-            "enabled_tiers": ["core"],
-            "performance_mode": "fail_open"
+        tier = scan_with_config({
+            "enabled_tiers": ["core"]
         })
-        assert mode == "fail_open"
+        assert tier == "core"
 
         # Test response decorator
         event = create_event()

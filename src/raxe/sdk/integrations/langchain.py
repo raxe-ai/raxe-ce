@@ -306,14 +306,14 @@ class RaxeCallbackHandler:
     def on_chain_start(
         self,
         serialized: dict[str, Any],
-        inputs: dict[str, Any],
+        _inputs: dict[str, Any],  # Required by LangChain protocol, unused
         **kwargs: Any,
     ) -> None:
         """Hook for chain start (optional scanning of inputs).
 
         Args:
             serialized: Chain serialization info
-            inputs: Chain input dictionary
+            _inputs: Chain input dictionary (unused - rely on on_llm_start)
             **kwargs: Additional callback arguments
         """
         # Optional: Scan chain inputs

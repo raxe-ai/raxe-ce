@@ -9,6 +9,8 @@ This class is the foundation for all RAXE integrations:
 ALL scanning MUST go through the Raxe.scan() method to ensure
 consistency and proper configuration cascade.
 """
+from __future__ import annotations
+
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -64,7 +66,6 @@ class Raxe:
         config_path: Path | None = None,
         telemetry: bool = True,
         l2_enabled: bool = True,
-        performance_mode: str = "balanced",
         progress_callback = None,
         **kwargs
     ):
@@ -81,7 +82,6 @@ class Raxe:
             config_path: Path to config file (overrides default search)
             telemetry: Enable privacy-preserving telemetry (default: True)
             l2_enabled: Enable L2 ML detection (default: True)
-            performance_mode: "fast", "balanced", "accurate" (default: balanced)
             progress_callback: Optional progress indicator for initialization
             **kwargs: Additional config options passed to ScanConfig
 
@@ -106,9 +106,6 @@ class Raxe:
         # Explicitly set telemetry (handles both True and False)
         self.config.telemetry.enabled = telemetry
         self.config.enable_l2 = l2_enabled
-
-        # TODO: Apply performance_mode and other kwargs
-        # This will be enhanced when we implement full config cascade
 
         # Initialize tracking and history components
         # These are lazily loaded - only create files when first used
@@ -212,7 +209,7 @@ class Raxe:
         return self._streak_tracker
 
     @classmethod
-    def from_config_file(cls, path: Path) -> "Raxe":
+    def from_config_file(cls, path: Path) -> Raxe:
         """Create Raxe client from config file.
 
         When using this method, configuration is loaded ONLY from the file
@@ -373,7 +370,7 @@ class Raxe:
 
                 # Run async pipeline in sync context
                 try:
-                    loop = asyncio.get_running_loop()
+                    _ = asyncio.get_running_loop()
                     # Already in async context - this shouldn't happen in sync SDK
                     logger.warning("Already in async context, falling back to sync pipeline")
                     use_sync_fallback = True
@@ -770,20 +767,6 @@ class Raxe:
         """
         return bool(self.config.api_key)
 
-    def get_performance_mode(self) -> str:
-        """Get the current performance mode setting.
-
-        Returns:
-            Performance mode: 'fast', 'balanced', or 'thorough'
-
-        Example:
-            raxe = Raxe()
-            mode = raxe.get_performance_mode()
-            print(f"Performance mode: {mode}")
-        """
-        # Return from config or default to 'balanced'
-        return getattr(self.config, 'performance_mode', 'balanced')
-
     def get_telemetry_enabled(self) -> bool:
         """Check if telemetry is enabled.
 
@@ -829,7 +812,6 @@ class Raxe:
             Dictionary with pipeline statistics:
                 - rules_loaded: Number of rules loaded
                 - packs_loaded: Number of packs loaded
-                - performance_mode: Current performance mode
                 - telemetry_enabled: Whether telemetry is enabled
                 - has_api_key: Whether API key is configured
                 - l2_enabled: Whether L2 detection is enabled
@@ -842,7 +824,6 @@ class Raxe:
         stats = {
             'rules_loaded': len(self.get_all_rules()),
             'packs_loaded': len(self.list_rule_packs()),
-            'performance_mode': self.get_performance_mode(),
             'telemetry_enabled': self.get_telemetry_enabled(),
             'has_api_key': self.has_api_key(),
             'l2_enabled': self.config.enable_l2
@@ -889,16 +870,6 @@ class Raxe:
                 validation['warnings'].append("API key should start with 'raxe_'")
             if len(self.config.api_key) < 20:
                 validation['warnings'].append("API key seems too short")
-
-        # Check performance mode
-        valid_modes = ['fast', 'balanced', 'thorough']
-        current_mode = self.get_performance_mode()
-        if current_mode not in valid_modes:
-            validation['errors'].append(
-                f"Invalid performance mode: {current_mode}. "
-                f"Must be one of: {', '.join(valid_modes)}"
-            )
-            validation['config_valid'] = False
 
         # Check rule loading
         if len(self.get_all_rules()) == 0:

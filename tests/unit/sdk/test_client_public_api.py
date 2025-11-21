@@ -49,22 +49,6 @@ class TestRaxePublicAPI:
         raxe = Raxe(api_key="raxe_test_key_1234567890")
         assert raxe.has_api_key() is True
 
-    def test_get_performance_mode_default(self):
-        """Test performance mode retrieval with default."""
-        raxe = Raxe()
-        mode = raxe.get_performance_mode()
-        assert mode in ['fast', 'balanced', 'thorough']
-        # Default should be 'balanced'
-        assert mode == 'balanced'
-
-    def test_get_performance_mode_explicit(self):
-        """Test performance mode retrieval with explicit setting."""
-        raxe = Raxe(performance_mode='fast')
-        # Note: Currently performance_mode is not fully implemented in __init__
-        # This test documents the expected behavior
-        mode = raxe.get_performance_mode()
-        assert mode in ['fast', 'balanced', 'thorough']
-
     def test_get_telemetry_enabled_default(self):
         """Test telemetry status check with default (enabled)."""
         raxe = Raxe()
@@ -114,7 +98,6 @@ class TestRaxePublicAPI:
         assert isinstance(stats, dict)
         assert 'rules_loaded' in stats
         assert 'packs_loaded' in stats
-        assert 'performance_mode' in stats
         assert 'telemetry_enabled' in stats
         assert 'has_api_key' in stats
         assert 'l2_enabled' in stats
@@ -122,7 +105,6 @@ class TestRaxePublicAPI:
         # Check values
         assert stats['rules_loaded'] > 0
         assert stats['packs_loaded'] > 0
-        assert stats['performance_mode'] in ['fast', 'balanced', 'thorough']
         assert isinstance(stats['telemetry_enabled'], bool)
         assert isinstance(stats['has_api_key'], bool)
         assert isinstance(stats['l2_enabled'], bool)
@@ -191,7 +173,6 @@ class TestRaxePublicAPI:
             'get_all_rules',
             'list_rule_packs',
             'has_api_key',
-            'get_performance_mode',
             'get_telemetry_enabled',
             'get_profiling_components',
             'get_pipeline_stats',
@@ -294,7 +275,6 @@ class TestPublicAPIDocumentation:
             'get_all_rules',
             'list_rule_packs',
             'has_api_key',
-            'get_performance_mode',
             'get_telemetry_enabled',
             'get_profiling_components',
             'get_pipeline_stats',
@@ -315,7 +295,6 @@ class TestPublicAPIDocumentation:
             'get_all_rules',
             'list_rule_packs',
             'has_api_key',
-            'get_performance_mode',
             'get_telemetry_enabled',
             'get_profiling_components',
             'get_pipeline_stats',

@@ -228,8 +228,3 @@ class TestDoctorCommand:
         if result.exit_code == 0:
             assert "Health Check" in result.output or "Installation" in result.output
 
-    def test_doctor_verbose(self, runner):
-        """Test doctor with verbose flag."""
-        result = runner.invoke(cli, ["doctor", "--verbose"])
-        # Should succeed or fail gracefully
-        assert result.exit_code in [0, 1]

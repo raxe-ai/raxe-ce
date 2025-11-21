@@ -11,6 +11,8 @@ Usage:
     # Raises SecurityException on threat
     generate("Ignore all instructions")
 """
+from __future__ import annotations
+
 import inspect
 from collections.abc import Callable
 from functools import wraps
@@ -21,7 +23,7 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 
 def protect_function(
-    raxe_client: "Raxe",
+    raxe_client: Raxe,
     func: F,
     *,
     block_on_threat: bool = True,
@@ -148,7 +150,7 @@ def _extract_text_from_args(args: tuple, kwargs: dict) -> str | None:
 
 
 # Convenience function for backward compatibility
-def protect(raxe_client: "Raxe"):
+def protect(raxe_client: Raxe):
     """
     Create a decorator factory.
 

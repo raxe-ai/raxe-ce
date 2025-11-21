@@ -298,8 +298,8 @@ def scan(
         sys.exit(1)
 
     # Setup progress indicator
-    from raxe.cli.progress_context import detect_progress_mode
     from raxe.cli.progress import create_progress_indicator
+    from raxe.cli.progress_context import detect_progress_mode
 
     progress_mode = detect_progress_mode(
         quiet=quiet,
@@ -526,24 +526,17 @@ def scan(
     is_flag=True,
     help="Stop on first critical threat",
 )
-@click.option(
-    "--parallel",
-    type=int,
-    default=1,
-    help="Number of parallel scans (default: 1)",
-)
-def batch_scan(file: str, format: str, output: str | None, fail_fast: bool, parallel: int) -> None:
+def batch_scan(file: str, format: str, output: str | None, fail_fast: bool) -> None:
     """
     Batch scan prompts from a file.
 
     Reads prompts from a file (one per line) and scans each.
-    Supports parallel processing for faster batch scans.
 
     \b
     Examples:
       raxe batch prompts.txt
       raxe batch prompts.txt --format json --output results.json
-      raxe batch prompts.txt --parallel 4 --fail-fast
+      raxe batch prompts.txt --fail-fast
     """
     import csv as csv_module
     from pathlib import Path

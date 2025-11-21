@@ -17,7 +17,6 @@ Usage:
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.text import Text
 
 from raxe.domain.ml.protocol import L2Prediction, L2Result
@@ -211,15 +210,15 @@ class L2ResultFormatter:
 
             confidence_pct = f"{attack_prob * 100:.1f}%"
             confidence_color = "red" if attack_prob >= 0.8 else "yellow"
-            content.append(f"  Attack Probability: ", style="white")
+            content.append("  Attack Probability: ", style="white")
             content.append(f"{confidence_pct}\n", style=confidence_color)
 
             if family_conf is not None:
-                content.append(f"  Family Confidence: ", style="white")
+                content.append("  Family Confidence: ", style="white")
                 content.append(f"{family_conf * 100:.1f}%\n", style="white")
 
             if subfamily_conf is not None:
-                content.append(f"  Subfamily Confidence: ", style="white")
+                content.append("  Subfamily Confidence: ", style="white")
                 content.append(f"{subfamily_conf * 100:.1f}%\n", style="white")
 
             content.append("\n")

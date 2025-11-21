@@ -17,7 +17,6 @@ import hashlib
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
 
 from raxe.application.scan_merger import CombinedScanResult, ScanMerger
 from raxe.application.telemetry_manager import TelemetryManager

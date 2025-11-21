@@ -82,7 +82,6 @@ class AsyncRaxe:
         config_path: Path | None = None,
         telemetry: bool = True,
         l2_enabled: bool = True,
-        performance_mode: str = "balanced",
         cache_size: int = 1000,
         cache_ttl: float = 300.0,
         **kwargs: Any
@@ -94,7 +93,6 @@ class AsyncRaxe:
             config_path: Path to config file (overrides default search)
             telemetry: Enable privacy-preserving telemetry (default: True)
             l2_enabled: Enable L2 ML detection (default: True)
-            performance_mode: "fast", "balanced", "accurate" (default: balanced)
             cache_size: LRU cache size (default: 1000 entries)
             cache_ttl: Cache TTL in seconds (default: 300 = 5 minutes)
             **kwargs: Additional config options passed to ScanConfig

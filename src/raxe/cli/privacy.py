@@ -6,9 +6,7 @@ Displays RAXE's privacy guarantees and user data handling practices.
 
 import click
 from rich.console import Console
-from rich.panel import Panel
 from rich.text import Text
-from rich.table import Table
 
 
 @click.command("privacy")

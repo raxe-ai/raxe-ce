@@ -30,11 +30,11 @@ from raxe.domain.ml.protocol import (
 from raxe.domain.ml.stub_detector import StubL2Detector
 
 __all__ = [
+    "FolderL2Detector",
     "L2Detector",
     "L2Prediction",
     "L2Result",
     "L2ThreatType",
-    "FolderL2Detector",
-    "create_folder_detector",
     "StubL2Detector",
+    "create_folder_detector",
 ]

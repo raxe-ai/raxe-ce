@@ -137,7 +137,7 @@ class RaxeConfig:
             raise FileNotFoundError(f"Config file not found: {config_path}")
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 data = yaml.safe_load(f) or {}
         except Exception as e:
             raise ValueError(f"Failed to parse YAML config: {e}") from e

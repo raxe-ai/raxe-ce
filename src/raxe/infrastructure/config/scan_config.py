@@ -40,7 +40,7 @@ class ScanConfig:
     enable_l2: bool = True
     use_production_l2: bool = True
     l2_confidence_threshold: float = 0.5
-    fail_fast_on_critical: bool = True
+    fail_fast_on_critical: bool = False  # Changed: Always run both L1 and L2 in parallel
     min_confidence_for_skip: float = 0.7
     enable_schema_validation: bool = False
     schema_validation_mode: str = "log_only"  # log_only, warn, enforce
@@ -128,7 +128,7 @@ class ScanConfig:
             enable_l2=scan_data.get("enable_l2", True),
             use_production_l2=scan_data.get("use_production_l2", True),
             l2_confidence_threshold=scan_data.get("l2_confidence_threshold", 0.5),
-            fail_fast_on_critical=scan_data.get("fail_fast_on_critical", True),
+            fail_fast_on_critical=scan_data.get("fail_fast_on_critical", False),  # Changed default to False
             min_confidence_for_skip=scan_data.get("min_confidence_for_skip", 0.7),
             enable_schema_validation=scan_data.get("enable_schema_validation", False),
             schema_validation_mode=scan_data.get("schema_validation_mode", "log_only"),
@@ -160,7 +160,7 @@ class ScanConfig:
         enable_l2 = os.getenv("RAXE_ENABLE_L2", "true").lower() == "true"
         use_production_l2 = os.getenv("RAXE_USE_PRODUCTION_L2", "true").lower() == "true"
         l2_confidence_threshold = float(os.getenv("RAXE_L2_CONFIDENCE_THRESHOLD", "0.5"))
-        fail_fast = os.getenv("RAXE_FAIL_FAST_ON_CRITICAL", "true").lower() == "true"
+        fail_fast = os.getenv("RAXE_FAIL_FAST_ON_CRITICAL", "false").lower() == "true"  # Changed default to false
         min_confidence_for_skip = float(os.getenv("RAXE_MIN_CONFIDENCE_FOR_SKIP", "0.7"))
         enable_schema_validation = os.getenv("RAXE_ENABLE_SCHEMA_VALIDATION", "false").lower() == "true"
         schema_validation_mode = os.getenv("RAXE_SCHEMA_VALIDATION_MODE", "log_only")

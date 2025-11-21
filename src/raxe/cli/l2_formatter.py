@@ -191,7 +191,7 @@ class L2ResultFormatter:
         content.append(f"\n{icon} {title}\n", style="red bold")
         content.append(f"{threat_info['description']}\n\n", style="white")
 
-        # NEW: Display bundle schema fields if available (is_attack, family, sub_family)
+        # NEW: Display ML model metadata fields if available (is_attack, family, sub_family)
         family = prediction.metadata.get("family")
         sub_family = prediction.metadata.get("sub_family")
         if family:

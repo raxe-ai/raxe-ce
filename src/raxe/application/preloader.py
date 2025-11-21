@@ -21,7 +21,7 @@ from pathlib import Path
 from raxe.application.scan_merger import ScanMerger
 from raxe.application.scan_pipeline import ScanPipeline
 from raxe.domain.engine.executor import RuleExecutor
-from raxe.domain.ml import StubL2Detector, create_bundle_detector
+from raxe.domain.ml import StubL2Detector
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
 from raxe.infrastructure.telemetry.hook import TelemetryHook
@@ -238,8 +238,7 @@ class PipelinePreloader:
 
         logger.info(
             f"L2 detector initialized: {l2_model_type} in {l2_init_time_ms:.1f}ms "
-            f"(ONNX: {l2_init_stats.get('has_onnx', False)}, "
-            f"Stub: {l2_init_stats.get('is_stub', False)})"
+            f"(Stub: {l2_init_stats.get('is_stub', False)})"
         )
 
         # 5. Initialize scan merger
@@ -306,16 +305,9 @@ class PipelinePreloader:
         pack_registry = PackRegistry(registry_config)
         pack_registry.load_all_packs()
 
-        # Choose detector based on config
-        if config.use_production_l2:
-            try:
-                l2_detector = create_bundle_detector(
-                    confidence_threshold=config.l2_confidence_threshold
-                )
-            except Exception:
-                l2_detector = StubL2Detector()
-        else:
-            l2_detector = StubL2Detector()
+        # Bundle support removed - use stub detector
+        # For production L2 detection, use preload() with EagerL2Detector
+        l2_detector = StubL2Detector()
 
         return ScanPipeline(
             pack_registry=pack_registry,

@@ -10,10 +10,12 @@ from pathlib import Path
 import click
 
 from raxe import __version__
+from raxe.cli.config import config
 from raxe.cli.doctor import doctor
 from raxe.cli.export import export
+from raxe.cli.history import history
 from raxe.cli.models import models
-from raxe.cli.output import console, display_error, display_scan_result
+from raxe.cli.output import console, display_error, display_scan_result, display_success
 from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
 from raxe.cli.repl import repl
@@ -419,7 +421,7 @@ def scan(
                     "message": p.explanation or f"{p.threat_type.value} detected",
                 }
 
-                # Add bundle schema fields if available
+                # Add ML model metadata fields if available
                 if family:
                     detection["family"] = family
                 if sub_family:
@@ -901,6 +903,8 @@ cli.add_command(privacy_command)
 cli.add_command(suppress)
 cli.add_command(tune)
 cli.add_command(validate_rule_command)
+cli.add_command(config)
+cli.add_command(history)
 
 
 if __name__ == "__main__":

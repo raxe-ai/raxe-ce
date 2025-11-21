@@ -55,7 +55,7 @@ class DetectionConfig:
     l2_enabled: bool = True
     mode: Literal["fast", "balanced", "thorough"] = "balanced"
     confidence_threshold: float = 0.5
-    fail_fast_on_critical: bool = True
+    fail_fast_on_critical: bool = False  # Changed: Always run both L1 and L2 in parallel
     min_confidence_for_skip: float = 0.7
 
 
@@ -211,7 +211,7 @@ class RaxeConfig:
             l2_enabled=get_bool("RAXE_DETECTION_L2_ENABLED", True),
             mode=os.getenv("RAXE_DETECTION_MODE", "balanced"),  # type: ignore
             confidence_threshold=get_float("RAXE_DETECTION_CONFIDENCE_THRESHOLD", 0.5),
-            fail_fast_on_critical=get_bool("RAXE_DETECTION_FAIL_FAST_ON_CRITICAL", True),
+            fail_fast_on_critical=get_bool("RAXE_DETECTION_FAIL_FAST_ON_CRITICAL", False),  # Changed default to False
             min_confidence_for_skip=get_float("RAXE_DETECTION_MIN_CONFIDENCE_FOR_SKIP", 0.7),
         )
 

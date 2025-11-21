@@ -4,23 +4,22 @@ This module defines the protocol and interfaces for L2 machine learning
 threat detection that augments L1 rule-based detection.
 
 L2 provides:
-- Semantic threat detection using sentence-transformers embeddings
+- Semantic threat detection using ONNX embeddings
 - Multi-head classification (binary, family, subfamily)
 - Context-aware analysis with explainability
 - Encoded content detection
 - Probabilistic predictions with confidence scores
 
-L2 uses unified .raxe model bundles from raxe-ml for all ML components:
-- Classifier (multi-head logistic regression)
-- Keyword triggers (pattern matching)
-- Attack clusters (similarity matching)
-- Embedding configuration
-- Training statistics
+L2 uses folder-based ONNX models containing:
+- ONNX embeddings model
+- ONNX classifier models (binary, family, subfamily)
+- Label encoders
+- Model configuration
 """
 
-from raxe.domain.ml.bundle_detector import (
-    BundleBasedDetector,
-    create_bundle_detector,
+from raxe.domain.ml.folder_detector import (
+    FolderL2Detector,
+    create_folder_detector,
 )
 from raxe.domain.ml.protocol import (
     L2Detector,
@@ -35,7 +34,7 @@ __all__ = [
     "L2Prediction",
     "L2Result",
     "L2ThreatType",
-    "BundleBasedDetector",
-    "create_bundle_detector",
+    "FolderL2Detector",
+    "create_folder_detector",
     "StubL2Detector",
 ]

@@ -117,7 +117,6 @@ class EagerL2Detector:
             "eager_l2_detector_initialized",
             load_time_ms=init_time_ms,
             model_type=self._init_stats.get("model_type", "unknown"),
-            has_onnx=self._init_stats.get("has_onnx", False),
             is_stub=self._init_stats.get("is_stub", False),
         )
 
@@ -136,14 +135,92 @@ class EagerL2Detector:
             self._init_stats.update({
                 "model_type": "stub",
                 "is_stub": True,
-                "has_onnx": False,
                 "reason": "use_production_disabled",
             })
             logger.info("Using stub detector (use_production=False)")
             return
 
-        # Discover best available model
+        # Check if config specifies a model_id
         from pathlib import Path
+        import yaml
+
+        configured_model_id = None
+        try:
+            # Load config YAML file directly to check for explicit model selection
+            # (RaxeConfig dataclass doesn't include l2_model field yet)
+            config_file = Path.home() / ".raxe" / "config.yaml"
+            if config_file.exists():
+                with open(config_file, "r") as f:
+                    config_data = yaml.safe_load(f) or {}
+
+                l2_model_config = config_data.get("l2_model", {})
+                if l2_model_config.get("selection") == "explicit":
+                    configured_model_id = l2_model_config.get("model_id")
+                    logger.info(
+                        "explicit_model_id_configured",
+                        model_id=configured_model_id,
+                        source="config.yaml"
+                    )
+        except Exception as e:
+            logger.debug(f"Failed to load config for model_id: {e}")
+
+        # Use Model Registry if explicit model_id is configured
+        if configured_model_id:
+            from raxe.domain.ml.model_registry import get_registry
+
+            registry = get_registry()
+
+            # Check if the configured model exists
+            if registry.has_model(configured_model_id):
+                try:
+                    logger.info(
+                        "using_explicit_model_from_config",
+                        model_id=configured_model_id
+                    )
+
+                    # Create detector from registry using explicit model_id
+                    discovery_start = time.perf_counter()
+                    self._detector = registry.create_detector(model_id=configured_model_id)
+                    discovery_time_ms = (time.perf_counter() - discovery_start) * 1000
+
+                    # Get model metadata
+                    model_metadata = registry.get_model(configured_model_id)
+
+                    # Store initialization statistics
+                    self._init_stats.update({
+                        "discovery_time_ms": discovery_time_ms,
+                        "model_id": configured_model_id,
+                        "model_type": model_metadata.runtime_type if model_metadata else "unknown",
+                        "is_stub": False,
+                        "estimated_load_ms": model_metadata.performance.p95_latency_ms if model_metadata else 0,
+                        "selection_method": "explicit_config",
+                    })
+
+                    logger.info(
+                        "explicit_model_loaded_successfully",
+                        model_id=configured_model_id,
+                        discovery_time_ms=discovery_time_ms,
+                    )
+                    return
+
+                except Exception as e:
+                    logger.warning(
+                        "explicit_model_load_failed",
+                        model_id=configured_model_id,
+                        error=str(e),
+                        fallback="auto_discovery"
+                    )
+                    # Continue to auto-discovery fallback
+            else:
+                logger.warning(
+                    "configured_model_not_found",
+                    model_id=configured_model_id,
+                    available_models=[m.model_id for m in registry.list_models()],
+                    fallback="auto_discovery"
+                )
+                # Continue to auto-discovery fallback
+
+        # Fallback: Auto-discover best available model (original behavior)
         discovery_service = ModelDiscoveryService(
             models_dir=Path(models_dir) if models_dir else None
         )
@@ -156,7 +233,6 @@ class EagerL2Detector:
         self._init_stats["discovery_time_ms"] = discovery_time_ms
         self._init_stats["model_id"] = discovered.model_id
         self._init_stats["model_type"] = discovered.model_type.value
-        self._init_stats["has_onnx"] = discovered.has_onnx
         self._init_stats["is_stub"] = discovered.is_stub
         self._init_stats["estimated_load_ms"] = discovered.estimated_load_time_ms
 
@@ -164,9 +240,7 @@ class EagerL2Detector:
             "model_discovered",
             model_id=discovered.model_id,
             model_type=discovered.model_type.value,
-            has_onnx=discovered.has_onnx,
-            bundle_path=str(discovered.bundle_path) if discovered.bundle_path else None,
-            onnx_path=str(discovered.onnx_path) if discovered.onnx_path else None,
+            model_dir=str(discovered.model_dir) if discovered.model_dir else None,
             estimated_load_ms=discovered.estimated_load_time_ms,
             discovery_time_ms=discovery_time_ms,
         )
@@ -178,22 +252,30 @@ class EagerL2Detector:
             self._load_production_detector(discovered)
 
     def _load_production_detector(self, discovered: DiscoveredModel) -> None:
-        """Load production detector (bundle or ONNX variant).
+        """Load production detector (ONNX-only, bundle, or ONNX variant).
 
         Args:
             discovered: Discovered model information
         """
         try:
-            from raxe.domain.ml.bundle_detector import create_bundle_detector
-
             load_start = time.perf_counter()
 
-            # Create detector with optional ONNX embeddings
-            self._detector = create_bundle_detector(
-                bundle_path=str(discovered.bundle_path),
-                confidence_threshold=self.confidence_threshold,
-                onnx_path=str(discovered.onnx_path) if discovered.onnx_path else None,
-            )
+            # Check model type to choose correct loader
+            if discovered.model_type == ModelType.ONNX_ONLY and discovered.model_dir:
+                # Load folder-based detector from folder
+                from raxe.domain.ml.folder_detector import create_folder_detector
+
+                logger.info(f"Loading folder-based detector from folder: {discovered.model_dir}")
+                self._detector = create_folder_detector(
+                    model_dir=str(discovered.model_dir),
+                    confidence_threshold=self.confidence_threshold,
+                )
+            else:
+                # No other model types supported - raise clear error
+                raise ValueError(
+                    f"Unsupported model type: {discovered.model_type}. "
+                    f"Only ONNX_ONLY (folder-based) models are supported."
+                )
 
             load_time_ms = (time.perf_counter() - load_start) * 1000
 
@@ -214,7 +296,6 @@ class EagerL2Detector:
                 model_type=discovered.model_type.value,
                 model_id=discovered.model_id,
                 model_version=model_info.get("version", "unknown"),
-                has_onnx=discovered.has_onnx,
                 load_time_ms=load_time_ms,
                 embedding_model=model_info.get("embedding_model", "unknown"),
                 confidence_threshold=self.confidence_threshold,
@@ -245,7 +326,6 @@ class EagerL2Detector:
         self._init_stats.update({
             "model_type": "stub",
             "is_stub": True,
-            "has_onnx": False,
         })
 
         # Show user-visible warning once per process
@@ -255,8 +335,8 @@ class EagerL2Detector:
 
             print(
                 f"\n⚠️  Warning: L2 ML model not found. Using stub detector (no threat detection).\n"
-                f"   Expected location: {models_dir}/raxe_model_l2.raxe\n"
-                f"   See L2_SCANNING_ISSUE_AND_FIX.md or 'raxe models list' for details.\n",
+                f"   Expected location: {models_dir}/<model_folder>/\n"
+                f"   See 'raxe models list' for details.\n",
                 file=sys.stderr
             )
             EagerL2Detector._stub_warning_shown = True
@@ -305,8 +385,7 @@ class EagerL2Detector:
         Returns:
             Dictionary with initialization metrics:
                 - load_time_ms: Total initialization time
-                - model_type: Type of model loaded (onnx_int8, bundle, stub)
-                - has_onnx: Whether ONNX embeddings are used
+                - model_type: Type of model loaded (onnx_only, stub)
                 - is_stub: Whether stub detector is used
                 - model_id: Model identifier
                 - discovery_time_ms: Time spent discovering model
@@ -320,7 +399,6 @@ class EagerL2Detector:
 
             print(f"Model type: {stats['model_type']}")
             print(f"Load time: {stats['load_time_ms']}ms")
-            print(f"Has ONNX: {stats['has_onnx']}")
         """
         return self._init_stats.copy()
 
@@ -348,7 +426,6 @@ class EagerL2Detector:
         info.update({
             "detector_type": "eager",
             "initialization_time_ms": self._init_stats.get("load_time_ms", 0),
-            "has_onnx": self._init_stats.get("has_onnx", False),
         })
 
         return info

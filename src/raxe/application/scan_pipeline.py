@@ -17,6 +17,7 @@ import hashlib
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any
 
 from raxe.application.scan_merger import CombinedScanResult, ScanMerger
 from raxe.application.telemetry_manager import TelemetryManager
@@ -295,6 +296,11 @@ class ScanPipeline:
         rules = self.pack_registry.get_all_rules()
 
         # 2. Execute L1 rule-based detection (if enabled)
+        # NOTE: L1 and L2 are NOT run in parallel because:
+        # - L1 is very fast (~1ms) while L2 dominates (~110ms)
+        # - Thread pool overhead (~0.5ms) cancels out parallelism benefit
+        # - Sequential execution is simpler and easier to debug
+        # - If L1 becomes slower in future, reconsider parallelization
         l1_duration_ms = 0.0
         if l1_enabled:
             l1_start = time.perf_counter()
@@ -378,50 +384,50 @@ class ScanPipeline:
                     l2_result = self.l2_detector.analyze(text, l1_result, context)
                 l2_duration_ms = (time.perf_counter() - l2_start) * 1000
 
-                # Log L2 inference results
-                if l2_result and l2_result.has_predictions:
-                    # Log each L2 prediction with full context (including new bundle schema fields)
-                    for prediction in l2_result.predictions:
-                        # Extract bundle schema fields if available
-                        log_data = {
-                            "threat_type": prediction.threat_type.value,
-                            "confidence": prediction.confidence,
-                            "explanation": prediction.explanation or "No explanation provided",
-                            "features_used": prediction.features_used or [],
-                            "text_hash": self._hash_text(text),
-                            "processing_time_ms": l2_result.processing_time_ms,
-                            "model_version": l2_result.model_version,
-                        }
+        # Log L2 inference results
+        if l2_result and l2_result.has_predictions:
+            # Log each L2 prediction with full context (including new bundle schema fields)
+            for prediction in l2_result.predictions:
+                # Extract bundle schema fields if available
+                log_data = {
+                    "threat_type": prediction.threat_type.value,
+                    "confidence": prediction.confidence,
+                    "explanation": prediction.explanation or "No explanation provided",
+                    "features_used": prediction.features_used or [],
+                    "text_hash": self._hash_text(text),
+                    "processing_time_ms": l2_result.processing_time_ms,
+                    "model_version": l2_result.model_version,
+                }
 
-                        # Add new bundle schema fields (is_attack, family, sub_family, etc.)
-                        if "is_attack" in prediction.metadata:
-                            log_data["is_attack"] = prediction.metadata["is_attack"]
-                        if "family" in prediction.metadata:
-                            log_data["family"] = prediction.metadata["family"]
-                        if "sub_family" in prediction.metadata:
-                            log_data["sub_family"] = prediction.metadata["sub_family"]
-                        if "scores" in prediction.metadata:
-                            log_data["scores"] = prediction.metadata["scores"]
-                        if "why_it_hit" in prediction.metadata:
-                            log_data["why_it_hit"] = prediction.metadata["why_it_hit"]
-                        if "recommended_action" in prediction.metadata:
-                            log_data["recommended_action"] = prediction.metadata["recommended_action"]
-                        if "trigger_matches" in prediction.metadata:
-                            log_data["trigger_matches"] = prediction.metadata["trigger_matches"]
-                        if "uncertain" in prediction.metadata:
-                            log_data["uncertain"] = prediction.metadata["uncertain"]
+                # Add new bundle schema fields (is_attack, family, sub_family, etc.)
+                if "is_attack" in prediction.metadata:
+                    log_data["is_attack"] = prediction.metadata["is_attack"]
+                if "family" in prediction.metadata:
+                    log_data["family"] = prediction.metadata["family"]
+                if "sub_family" in prediction.metadata:
+                    log_data["sub_family"] = prediction.metadata["sub_family"]
+                if "scores" in prediction.metadata:
+                    log_data["scores"] = prediction.metadata["scores"]
+                if "why_it_hit" in prediction.metadata:
+                    log_data["why_it_hit"] = prediction.metadata["why_it_hit"]
+                if "recommended_action" in prediction.metadata:
+                    log_data["recommended_action"] = prediction.metadata["recommended_action"]
+                if "trigger_matches" in prediction.metadata:
+                    log_data["trigger_matches"] = prediction.metadata["trigger_matches"]
+                if "uncertain" in prediction.metadata:
+                    log_data["uncertain"] = prediction.metadata["uncertain"]
 
-                        # Log with all available data
-                        logger.info("l2_threat_detected", **log_data)
-                else:
-                    # Log clean L2 scan
-                    logger.debug(
-                        "l2_scan_clean",
-                        processing_time_ms=l2_result.processing_time_ms if l2_result else 0.0,
-                        model_version=l2_result.model_version if l2_result else "unknown",
-                        confidence=l2_result.confidence if l2_result else 0.0,
-                        text_hash=self._hash_text(text),
-                    )
+                # Log with all available data
+                logger.info("l2_threat_detected", **log_data)
+        elif l2_result:
+            # Log clean L2 scan
+            logger.debug(
+                "l2_scan_clean",
+                processing_time_ms=l2_result.processing_time_ms,
+                model_version=l2_result.model_version,
+                confidence=l2_result.confidence,
+                text_hash=self._hash_text(text),
+            )
 
         # 4. Apply confidence threshold filtering
         if confidence_threshold > 0:

@@ -42,10 +42,12 @@ Example rule file (~/.raxe/rules/my_rule.yaml):
 import logging
 import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from raxe.domain.engine.executor import Detection
+from raxe.domain.engine.matcher import Match
 from raxe.domain.rules.models import Severity
 
 logger = logging.getLogger(__name__)
@@ -314,17 +316,24 @@ class CustomRuleLoader:
 
             # Check if pattern matches
             if rule.match(text):
+                # Create a simple Match object for the detection
+                match = Match(
+                    pattern="custom_rule",
+                    text=text[:100],  # Include first 100 chars as context
+                    start=0,
+                    end=min(100, len(text))
+                )
+
                 detection = Detection(
                     rule_id=rule.id,
+                    rule_version="1.0.0",  # Default version for custom rules
                     severity=rule.severity,
                     confidence=rule.confidence,
+                    matches=[match],
+                    detected_at=datetime.now(timezone.utc).isoformat(),
+                    detection_layer="PLUGIN",
+                    category=rule.category,
                     message=f"{rule.name}: {rule.description}",
-                    metadata={
-                        "category": rule.category,
-                        "tags": list(rule.tags),
-                        "custom_rule": True,
-                        **rule.metadata,
-                    },
                 )
                 detections.append(detection)
 

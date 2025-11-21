@@ -51,11 +51,12 @@ Skip L2 analysis when CRITICAL threats are detected by L1:
 ```yaml
 # config.yaml
 performance:
-  fail_fast_on_critical: true  # Skip L2 if CRITICAL detected
+  fail_fast_on_critical: true  # Skip L2 if CRITICAL detected (not default)
 ```
 
+**Note**: This is disabled by default to ensure both L1 and L2 results are visible.
 **Impact**: 20-30% faster on prompts with critical threats
-**Trade-off**: None (CRITICAL is already highest severity)
+**Trade-off**: L2 ML insights are skipped when CRITICAL detected by L1
 
 ### 2. Adjust Performance Mode
 
@@ -121,8 +122,8 @@ performance:
   # L2 ML detection
   l2_enabled: true
 
-  # Skip L2 if CRITICAL already detected
-  fail_fast_on_critical: true
+  # Skip L2 if CRITICAL already detected (optional optimization)
+  fail_fast_on_critical: false  # default: false
 
   # Maximum acceptable latency (ms)
   # If exceeded, enter degraded mode
@@ -247,16 +248,17 @@ performance:
 **Impact**: 10-20% faster
 **Trade-off**: No ML-based detection (lower recall on novel attacks)
 
-#### 2. Use Fail-Fast Mode
+#### 2. Use Fail-Fast Mode (Optional)
 
-Skip L2 when CRITICAL threats already detected:
+Skip L2 when CRITICAL threats already detected (disabled by default):
 
 ```yaml
 performance:
-  fail_fast_on_critical: true
+  fail_fast_on_critical: true  # Enable for performance optimization
 ```
 
 **Impact**: 20-30% faster on malicious prompts
+**Trade-off**: Miss L2 ML insights when CRITICAL detected by L1
 
 #### 3. L2 Model Selection
 
@@ -491,7 +493,7 @@ Look for slow rules in the output.
 
 **Solutions**:
 1. Use lighter L2 model: `l2_model: fast`
-2. Enable fail-fast: `fail_fast_on_critical: true`
+2. Enable fail-fast (optional): `fail_fast_on_critical: true`
 3. Disable L2: `l2_enabled: false`
 
 ### Symptom: Variable Latency (Spikes)

@@ -1,0 +1,328 @@
+{
+  "_comment": "RAXE Model Metadata Template - Complete example with all fields",
+  "_version": "2.0.0",
+  "_last_updated": "2025-11-20",
+
+  "schema_version": "2.0.0",
+
+  "model_id": "v1.0_minilm_l12_int8",
+  "name": "RAXE L2 v1.0 MiniLM-L12 INT8",
+  "version": "1.0.0",
+  "variant": "minilm_l12_int8",
+  "description": "Production L2 threat detector with MiniLM-L12-v2 INT8 quantized embeddings. Optimized for <3ms latency and <50MB size while maintaining >0.95 F1 accuracy.",
+
+  "file_info": {
+    "_comment": "Information about model files",
+    "filename": "raxe_model_l2_v1.0.raxe",
+    "size_mb": 12.5,
+    "checksum": "sha256:1234567890abcdef...",
+    "onnx_embeddings": "all-minilm-l12-v2_int8.onnx",
+    "onnx_embeddings_size_mb": 44.0,
+    "onnx_embeddings_checksum": "sha256:abcdef1234567890..."
+  },
+
+  "performance": {
+    "_comment": "Performance characteristics measured on target hardware",
+    "target_latency_ms": 3.0,
+    "p50_latency_ms": 2.0,
+    "p95_latency_ms": 2.2,
+    "p99_latency_ms": 2.8,
+    "throughput_per_sec": 450,
+    "memory_mb": 150,
+    "embedding_latency_ms": 0.9,
+    "classifier_latency_ms": 0.6,
+    "preprocessing_latency_ms": 0.3,
+    "postprocessing_latency_ms": 0.4
+  },
+
+  "accuracy": {
+    "_comment": "Accuracy metrics from test set evaluation",
+    "binary_f1": 0.955,
+    "binary_precision": 0.968,
+    "binary_recall": 0.943,
+    "family_f1": 0.850,
+    "family_accuracy": 0.860,
+    "subfamily_f1": 0.820,
+    "subfamily_accuracy": 0.835,
+    "false_positive_rate": 0.010,
+    "false_negative_rate": 0.028,
+    "test_set_size": 5000,
+    "test_set_date": "2025-11-15",
+    "test_set_distribution": {
+      "benign": 3000,
+      "PI": 500,
+      "JB": 400,
+      "CMD": 300,
+      "PII": 400,
+      "ENC": 200,
+      "RAG": 200
+    }
+  },
+
+  "requirements": {
+    "_comment": "Runtime requirements and dependencies",
+    "runtime": "onnx_int8",
+    "min_runtime_version": "1.14.0",
+    "requires_gpu": false,
+    "requires_quantization_support": true,
+    "python_version": ">=3.9",
+    "additional_dependencies": [
+      "onnxruntime>=1.14.0",
+      "transformers>=4.30.0",
+      "numpy>=1.24.0",
+      "joblib>=1.3.0",
+      "scikit-learn>=1.3.0"
+    ]
+  },
+
+  "ml_config": {
+    "_comment": "ML model configuration details",
+    "embedding_model": "sentence-transformers/all-minilm-l12-v2",
+    "embedding_dimension": 384,
+    "max_sequence_length": 512,
+    "quantization": "int8",
+    "onnx_opset_version": 14,
+    "classifier_type": "multi_head_random_forest",
+    "classifier_config": {
+      "binary": {
+        "n_estimators": 100,
+        "max_depth": 20,
+        "min_samples_split": 10
+      },
+      "family": {
+        "n_estimators": 100,
+        "max_depth": 15
+      },
+      "subfamily": {
+        "n_estimators": 100,
+        "max_depth": 12
+      }
+    },
+    "num_families": 6,
+    "num_subfamilies": 47,
+    "threat_categories": [
+      "PI",
+      "JB",
+      "CMD",
+      "PII",
+      "ENC",
+      "RAG"
+    ],
+    "pooling_strategy": "mean",
+    "normalization": "l2"
+  },
+
+  "training_info": {
+    "_comment": "Training provenance and configuration",
+    "training_date": "2025-11-10T14:30:00Z",
+    "training_framework": "raxe-ml",
+    "training_version": "0.2.0",
+    "training_duration_hours": 4.2,
+    "dataset_version": "v2.0",
+    "dataset_size": 50000,
+    "dataset_distribution": {
+      "benign": 30000,
+      "PI": 5000,
+      "JB": 4000,
+      "CMD": 3000,
+      "PII": 4000,
+      "ENC": 2000,
+      "RAG": 2000
+    },
+    "dataset_sources": [
+      "internal_adversarial_prompts",
+      "public_jailbreak_datasets",
+      "synthetic_data_augmentation"
+    ],
+    "hyperparameters": {
+      "learning_rate": 0.001,
+      "batch_size": 32,
+      "epochs": 10,
+      "validation_split": 0.15,
+      "test_split": 0.15,
+      "random_seed": 42,
+      "early_stopping_patience": 3
+    },
+    "validation_strategy": "stratified_5_fold_cv",
+    "cross_validation_f1": {
+      "mean": 0.957,
+      "std": 0.008,
+      "folds": [0.960, 0.955, 0.962, 0.951, 0.957]
+    }
+  },
+
+  "deployment": {
+    "_comment": "Deployment status and metadata",
+    "status": "active",
+    "deployed_at": "2025-11-15T10:30:00Z",
+    "deployed_by": "ml-engineering@raxe.ai",
+    "environments": ["production", "staging"],
+    "rollout_percentage": 100,
+    "rollout_strategy": "canary",
+    "canary_group": null,
+    "previous_model": "v1.0_onnx_int8",
+    "deployment_notes": "Switched from MPNet to MiniLM-L12 for size optimization. Validated with A/B testing."
+  },
+
+  "monitoring": {
+    "_comment": "Monitoring configuration",
+    "metrics_to_track": [
+      "latency_p95",
+      "false_positive_rate",
+      "false_negative_rate",
+      "throughput",
+      "memory_usage",
+      "error_rate"
+    ],
+    "alert_thresholds": {
+      "latency_p95_ms": 5.0,
+      "false_positive_rate": 0.02,
+      "false_negative_rate": 0.04,
+      "error_rate": 0.05,
+      "memory_usage_mb": 250
+    },
+    "metrics_retention_days": 90,
+    "alert_channels": ["slack", "email"],
+    "dashboard_url": "https://monitoring.raxe.ai/models/v1.0_minilm_l12_int8"
+  },
+
+  "compatibility": {
+    "_comment": "Compatibility information",
+    "min_raxe_version": "0.0.2",
+    "max_raxe_version": null,
+    "compatible_pack_versions": [
+      "core/v1.0.0",
+      "core/v1.1.0"
+    ],
+    "bundle_schema_version": "1.0.0",
+    "breaking_changes": [],
+    "migration_notes": null
+  },
+
+  "tags": [
+    "production",
+    "quantized",
+    "fast",
+    "onnx",
+    "optimized",
+    "minilm"
+  ],
+
+  "recommended_for": [
+    "production",
+    "low-latency",
+    "cpu-only",
+    "resource-constrained",
+    "high-throughput"
+  ],
+
+  "not_recommended_for": [
+    "gpu-acceleration",
+    "research",
+    "highest-accuracy-required"
+  ],
+
+  "known_limitations": [
+    "Slightly lower accuracy than MPNet variant (0.955 vs 0.962 F1)",
+    "May miss very subtle semantic attacks that require 768D embeddings",
+    "Performance sensitive to sequence length (degrades above 512 tokens)"
+  ],
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-11-15",
+      "changes": [
+        "Initial production release",
+        "Switched from MPNet to MiniLM-L12 for size optimization",
+        "Achieved <50MB total size",
+        "Maintained >0.95 F1 accuracy",
+        "Reduced P95 latency to 2.2ms"
+      ],
+      "migration_required": false,
+      "breaking_changes": false
+    }
+  ],
+
+  "testing": {
+    "_comment": "Testing and validation information",
+    "unit_tests_pass": true,
+    "integration_tests_pass": true,
+    "e2e_tests_pass": true,
+    "benchmark_tests_pass": true,
+    "regression_tests_pass": true,
+    "ab_test_results": {
+      "control_model": "v1.0_onnx_int8",
+      "test_model": "v1.0_minilm_l12_int8",
+      "sample_size": 10000,
+      "duration_days": 7,
+      "metrics_comparison": {
+        "latency_improvement": "24%",
+        "accuracy_delta": "-0.7%",
+        "fpr_delta": "+0.2%",
+        "statistical_significance": "p<0.001"
+      },
+      "decision": "deploy",
+      "notes": "Latency improvement outweighs minimal accuracy decrease"
+    }
+  },
+
+  "documentation": {
+    "_comment": "Links to documentation",
+    "training_report": "docs/models/v1.0_minilm_l12_int8_training_report.md",
+    "benchmark_report": "benchmarks/v1.0_minilm_l12_int8_benchmark.json",
+    "deployment_guide": "docs/models/v1.0_minilm_l12_int8_deployment.md",
+    "api_reference": "docs/api/l2_detector.md",
+    "troubleshooting": "docs/troubleshooting/model_performance.md"
+  },
+
+  "contact": {
+    "_comment": "Contact information for model owners",
+    "owner": "ML Engineering Team",
+    "email": "ml-engineering@raxe.ai",
+    "slack_channel": "#ml-models",
+    "on_call": "ml-on-call@raxe.ai"
+  },
+
+  "license": {
+    "_comment": "License information",
+    "model_license": "Apache-2.0",
+    "embedding_model_license": "Apache-2.0",
+    "training_data_license": "Internal - Proprietary",
+    "attribution": "Built on sentence-transformers/all-minilm-l12-v2"
+  },
+
+  "notes": "Optimized production model for CPU inference. Balances accuracy, latency, and size constraints. Use v1.0_onnx_fp16 if higher accuracy is required and size/latency constraints can be relaxed.",
+
+  "_template_instructions": {
+    "required_fields": [
+      "model_id",
+      "name",
+      "version",
+      "variant",
+      "file_info.filename",
+      "performance.target_latency_ms",
+      "requirements.runtime"
+    ],
+    "optional_but_recommended": [
+      "accuracy.*",
+      "training_info.*",
+      "deployment.*",
+      "monitoring.*"
+    ],
+    "auto_generated": [
+      "file_info.size_mb",
+      "file_info.checksum"
+    ],
+    "validation_rules": {
+      "model_id": "Must match filename pattern",
+      "performance.target_latency_ms": "Must be <5ms",
+      "accuracy.binary_f1": "Must be >0.90 (production: >0.95)",
+      "file_info.size_mb": "Should be <50MB (bundle + embeddings)"
+    },
+    "naming_conventions": {
+      "model_id": "{version}_{variant}_{quantization}",
+      "example": "v1.0_minilm_l12_int8"
+    }
+  }
+}

@@ -160,7 +160,7 @@ class AsyncScanPipeline:
         self.pack_registry = pack_registry
         self.rule_executor = rule_executor
         self.l2_detector = l2_detector
-        self.fail_fast_on_critical = True
+        self.fail_fast_on_critical = False  # Changed: Run both L1+L2 by default
         self.l2_timeout_ms = 150  # P95 latency target
 
     async def scan(

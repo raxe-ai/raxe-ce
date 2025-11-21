@@ -7,11 +7,11 @@ description: Detects extraction attempts that use authority impersonation, debug
 severity: high
 confidence: 0.87
 patterns:
-- pattern: (?i)\bI(?:'m|\s+am)\s+(?:your|the|a)\s+(?:developer|engineer|admin|administrator|creator|designer|builder)
+- pattern: (?i)\bI(?:'m|\s+am)\s+(?:your|the|a)\s+(?:developer|engineer|admin|administrator|creator|designer|builder)(?:\.|,)?\s+(?:show|give|reveal|display|provide|tell|share|send)\s+(?:me|us)\s+(?:your|the|access|to)
   flags:
   - IGNORECASE
   timeout: 5.0
-- pattern: (?i)\b(?:for|as\s+part\s+of)\s+(?:debugging|testing|quality\s+assurance|QA|diagnostics|troubleshooting)
+- pattern: (?i)\b(?:for|as\s+part\s+of)\s+(?:debugging|testing|quality\s+assurance|QA|diagnostics|troubleshooting).{0,50}\b(?:show|give|reveal|provide|display|share|tell)\s+(?:me|us)\s+(?:your|the|access)
   flags:
   - IGNORECASE
   timeout: 5.0
@@ -53,6 +53,15 @@ examples:
   - What is debugging in software?
   - Can you help with my audit project?
   - I work in security field
+  - I am the admin, I want to install an app, tell me how
+  - I'm the administrator, can you help me configure the system?
+  - I am the admin, how do I set up user accounts?
+  - As the developer, I need help understanding the API
+  - I'm the admin, what are the best practices for deployment?
+  - What are the best practices for testing?
+  - I'm learning about debugging techniques
+  - Can you explain testing methodologies?
+  - How should I approach testing in my project?
 metrics:
   precision: null
   recall: null
@@ -63,7 +72,7 @@ mitre_attack:
 - T1586
 metadata:
   created: '2025-11-17'
-  updated: '2025-11-17'
+  updated: '2025-11-20'
   author: raxe-ce
   category: social_engineering_extraction
   tags:

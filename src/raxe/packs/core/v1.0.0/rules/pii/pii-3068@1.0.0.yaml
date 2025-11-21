@@ -7,7 +7,7 @@ description: Detects attempts to extract training data, model architecture, para
 severity: critical
 confidence: 0.89
 patterns:
-- pattern: (?i)\b(?:show|reveal|display|output|share|provide)\s+(?:me\s+)?(?:your\s+)?(?:training\s+)?(?:data|dataset|examples?|samples?)
+- pattern: (?i)\b(?:show|reveal|display|output|share|provide)\s+(?:me\s+)?(?:your|the\s+model'?s?)\s+(?:training\s+)?(?:data|dataset|training\s+examples?|training\s+samples?)
   flags:
   - IGNORECASE
   timeout: 5.0
@@ -53,6 +53,10 @@ examples:
   - Explain model architectures
   - Training data best practices
   - What are common AI models?
+  - Provide examples of corporis in real life
+  - Provide examples of design patterns in software
+  - Can you show me examples of good code?
+  - What are some examples in education?
 metrics:
   precision: null
   recall: null
@@ -63,7 +67,7 @@ mitre_attack:
 - T1589.002
 metadata:
   created: '2025-11-17'
-  updated: '2025-11-17'
+  updated: '2025-11-20'
   author: raxe-ce
   category: training_data_extraction
   tags:

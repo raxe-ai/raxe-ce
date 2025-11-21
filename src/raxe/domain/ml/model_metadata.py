@@ -82,7 +82,10 @@ class ModelMetadata:
             file_info=FileInfo(filename="raxe_model_l2_v1.0_onnx_int8.raxe"),
             performance=PerformanceMetrics(target_latency_ms=10),
             requirements=Requirements(runtime=ModelRuntime.ONNX_INT8),
-            status=ModelStatus.ACTIVE
+            status=ModelStatus.ACTIVE,
+            tokenizer_name="sentence-transformers/all-mpnet-base-v2",
+            tokenizer_config={"max_length": 512, "type": "AutoTokenizer"},
+            embedding_model_name="all-mpnet-base-v2"
         )
     """
     model_id: str
@@ -100,6 +103,11 @@ class ModelMetadata:
     tags: list[str] = field(default_factory=list)
     recommended_for: list[str] = field(default_factory=list)
     not_recommended_for: list[str] = field(default_factory=list)
+
+    # Tokenizer fields (for manifest-based models)
+    tokenizer_name: str | None = None
+    tokenizer_config: dict | None = None
+    embedding_model_name: str | None = None
 
     # Computed fields
     file_path: Path | None = None
@@ -169,7 +177,7 @@ class ModelMetadata:
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
-        return {
+        result = {
             "model_id": self.model_id,
             "name": self.name,
             "version": self.version,
@@ -200,6 +208,16 @@ class ModelMetadata:
             "status": self.status.value,
             "tags": self.tags,
         }
+
+        # Add tokenizer fields if present
+        if self.tokenizer_name:
+            result["tokenizer_name"] = self.tokenizer_name
+        if self.tokenizer_config:
+            result["tokenizer_config"] = self.tokenizer_config
+        if self.embedding_model_name:
+            result["embedding_model_name"] = self.embedding_model_name
+
+        return result
 
     @staticmethod
     def from_dict(data: dict, file_path: Path | None = None) -> "ModelMetadata":
@@ -238,5 +256,8 @@ class ModelMetadata:
             tags=data.get("tags", []),
             recommended_for=data.get("recommended_for", []),
             not_recommended_for=data.get("not_recommended_for", []),
+            tokenizer_name=data.get("tokenizer_name"),
+            tokenizer_config=data.get("tokenizer_config"),
+            embedding_model_name=data.get("embedding_model_name"),
             file_path=file_path,
         )

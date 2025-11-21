@@ -7,9 +7,8 @@ description: Detects SWIFT/BIC codes for international wire transfers
 severity: medium
 confidence: 0.91
 patterns:
-- pattern: (?i)(?:swift|bic).{0,10}(?:code|no|number)?.{0,10}\b([A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?)\b
-  flags:
-  - IGNORECASE
+- pattern: \b(?:SWIFT|BIC)\b.{0,10}(?:code|no|number)?.{0,10}\b([A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?)\b
+  flags: []
   timeout: 5.0
 examples:
   should_match:
@@ -19,6 +18,10 @@ examples:
   should_not_match:
   - "What is a SWIFT code?"
   - "How to find BIC code?"
+  - "How do I handle authentication in a Swift application?"
+  - "Can you help me debug this Swift function?"
+  - "I'm learning Swift programming"
+  - "What are Swift best practices?"
 metrics:
   precision: null
   recall: null
@@ -28,7 +31,7 @@ mitre_attack:
 - T1552.004
 metadata:
   created: '2025-11-16'
-  updated: '2025-11-16'
+  updated: '2025-11-20'
   author: raxe-ce
   category: financial
 rule_hash: null

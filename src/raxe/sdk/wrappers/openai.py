@@ -16,10 +16,22 @@ before sending to OpenAI, and optionally scans responses.
 import logging
 from typing import Any, Optional
 
+# Try to import OpenAI at module level
+try:
+    from openai import OpenAI
+except ImportError:
+    # Create a dummy class if OpenAI is not installed
+    class OpenAI:
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "openai package is required for RaxeOpenAI. "
+                "Install with: pip install openai"
+            )
+
 logger = logging.getLogger(__name__)
 
 
-class RaxeOpenAI:
+class RaxeOpenAI(OpenAI):
     """Drop-in replacement for openai.OpenAI with automatic scanning.
 
     This wrapper inherits from OpenAI client and intercepts all
@@ -77,17 +89,8 @@ class RaxeOpenAI:
                 raxe_block_on_threat=False
             )
         """
-        # Try to import OpenAI
-        try:
-            from openai import OpenAI
-        except ImportError:
-            raise ImportError(
-                "openai package is required for RaxeOpenAI. "
-                "Install with: pip install openai"
-            )
-
         # Initialize parent OpenAI client
-        self._openai_client = OpenAI(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Create or use provided Raxe client
         if raxe is None:
@@ -109,7 +112,7 @@ class RaxeOpenAI:
     def _wrap_chat_completions(self):
         """Wrap chat.completions.create method with scanning."""
         # Get original create method
-        original_create = self._openai_client.chat.completions.create
+        original_create = super().chat.completions.create
 
         def wrapped_create(*args, **kwargs):
             """Wrapped chat.completions.create with RAXE scanning."""
@@ -139,7 +142,7 @@ class RaxeOpenAI:
             return response
 
         # Replace the method
-        self._openai_client.chat.completions.create = wrapped_create
+        self.chat.completions.create = wrapped_create
 
     def _scan_message(self, content: str):
         """Scan a user message for threats.
@@ -186,20 +189,6 @@ class RaxeOpenAI:
         except Exception as e:
             # Don't fail on response scanning
             logger.error(f"Failed to scan response: {e}")
-
-    def __getattr__(self, name):
-        """Proxy all other attributes to the OpenAI client.
-
-        This makes RaxeOpenAI a true drop-in replacement by forwarding
-        all attributes and methods we don't explicitly override.
-
-        Args:
-            name: Attribute name
-
-        Returns:
-            Attribute from underlying OpenAI client
-        """
-        return getattr(self._openai_client, name)
 
     def __repr__(self) -> str:
         """String representation of RaxeOpenAI client.

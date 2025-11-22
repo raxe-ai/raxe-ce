@@ -6,16 +6,16 @@ when L2 detects threats even if L1 doesn't.
 
 import pytest
 
+from raxe.domain.models import ScanPolicy
+from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.sdk.client import Raxe
 from raxe.sdk.decorator import protect_function
-from raxe.infrastructure.config.scan_config import ScanConfig
-from raxe.domain.models import ScanPolicy
 
 
 def test_decorator_blocks_on_l2_only_threat(tmp_path, monkeypatch):
     """Test that decorator blocks when only L2 detects a threat."""
     # Create Raxe client with policy that blocks on CRITICAL
-    config = ScanConfig(
+    ScanConfig(
         packs_root=tmp_path / "packs",
         enable_l2=True,
     )
@@ -68,7 +68,7 @@ def test_decorator_blocks_on_l2_only_threat(tmp_path, monkeypatch):
 
 def test_decorator_respects_l2_severity(tmp_path, monkeypatch):
     """Test that decorator respects L2 severity levels in policy."""
-    config = ScanConfig(
+    ScanConfig(
         packs_root=tmp_path / "packs",
         enable_l2=True,
     )
@@ -108,7 +108,7 @@ def test_decorator_respects_l2_severity(tmp_path, monkeypatch):
 
 def test_decorator_with_l2_disabled(tmp_path, monkeypatch):
     """Test decorator works when L2 is disabled."""
-    config = ScanConfig(
+    ScanConfig(
         packs_root=tmp_path / "packs",
         enable_l2=False,  # Disable L2
     )
@@ -144,7 +144,7 @@ def test_decorator_with_l2_disabled(tmp_path, monkeypatch):
 
 def test_decorator_non_blocking_mode_with_l2(tmp_path, monkeypatch):
     """Test decorator in non-blocking mode with L2 threats."""
-    config = ScanConfig(
+    ScanConfig(
         packs_root=tmp_path / "packs",
         enable_l2=True,
     )

@@ -10,7 +10,7 @@ This module provides comprehensive validation for rule YAML files including:
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from urllib.parse import urlparse
 
 import yaml
@@ -79,7 +79,7 @@ class RuleValidator:
     """
 
     # Known dangerous regex patterns that can cause catastrophic backtracking
-    BACKTRACKING_PATTERNS = [
+    BACKTRACKING_PATTERNS: ClassVar[list] = [
         (r'\(\.\*\)\+', "Nested quantifiers (.*)+"),
         (r'\(\.\+\)\+', "Nested quantifiers (.+)+"),
         (r'\(\.\*\)\*', "Nested quantifiers (.*)* "),

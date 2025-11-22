@@ -8,18 +8,18 @@ Tests the complete model discovery and loading pipeline:
 5. Model verification
 """
 
-import pytest
-import tempfile
 import shutil
 from pathlib import Path
 
-from raxe.infrastructure.models.discovery import (
-    ModelDiscoveryService,
-    DiscoveredModel,
-    ModelType,
-)
+import pytest
+
 from raxe.application.eager_l2 import EagerL2Detector
 from raxe.domain.engine.executor import ScanResult
+from raxe.infrastructure.models.discovery import (
+    DiscoveredModel,
+    ModelDiscoveryService,
+    ModelType,
+)
 
 
 class TestModelDiscovery:
@@ -355,7 +355,7 @@ class TestEndToEnd:
                 assert result is not None
                 assert result.processing_time_ms > 0
 
-            print(f"\n✓ ONNX pipeline test passed!")
+            print("\n✓ ONNX pipeline test passed!")
             print(f"  Loading time: {stats['load_time_ms']:.2f}ms")
             print(f"  Model type: {stats['model_type']}")
         else:

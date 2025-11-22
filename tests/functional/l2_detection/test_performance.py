@@ -42,7 +42,7 @@ class TestL2Performance:
         # Measure combined scan times
         for prompt in safe_prompts[:20]:
             with performance_tracker.track("combined_scan"):
-                result = client.scan(prompt)
+                client.scan(prompt)
 
         stats = performance_tracker.get_stats("combined_scan")
 
@@ -76,7 +76,7 @@ class TestL2Performance:
 
         def scan_with_timing(prompt):
             start = time.perf_counter()
-            result = client.scan(prompt)
+            client.scan(prompt)
             latency_ms = (time.perf_counter() - start) * 1000
             return latency_ms
 
@@ -121,7 +121,7 @@ class TestL2Performance:
         times = []
 
         # Scan same prompt multiple times
-        for i in range(10):
+        for _i in range(10):
             start = time.perf_counter()
             client.scan(prompt)
             times.append((time.perf_counter() - start) * 1000)
@@ -180,7 +180,7 @@ class TestL2Performance:
         window_stats = []
 
         # Run for multiple time windows
-        for window in range(5):
+        for _window in range(5):
             window_times = []
 
             # 100 scans per window
@@ -204,11 +204,8 @@ class TestL2Performance:
     def test_onnx_optimization_benefit(self):
         """Test ONNX provides performance benefit."""
         # This test is conditional on ONNX availability
-        try:
-            import onnxruntime
-            has_onnx = True
-        except ImportError:
-            has_onnx = False
+        import importlib.util
+        has_onnx = importlib.util.find_spec("onnxruntime") is not None
 
         if not has_onnx:
             pytest.skip("ONNX not available")

@@ -11,8 +11,8 @@ Data sources:
 - tests/fixtures/rule_based_threats.jsonl: ~400 threats derived from rule examples
 """
 import json
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -124,7 +124,7 @@ class TestDetectionCoverage:
             print(f"  {family}: {family_rate:.2%} ({detected_by_family[family]}/{by_family[family]})")
 
         if missed_examples:
-            print(f"\nSample misses (first 5):")
+            print("\nSample misses (first 5):")
             for ex in missed_examples[:5]:
                 print(f"  - {ex['family']}/{ex.get('sub_family', '?')}: {ex['text'][:80]}...")
 
@@ -160,7 +160,7 @@ class TestDetectionCoverage:
             else:
                 neither += 1
 
-        print(f"\nL1 + L2 Coverage Analysis:")
+        print("\nL1 + L2 Coverage Analysis:")
         print(f"  Detected by both L1 and L2: {both}")
         print(f"  Detected by L1 only: {l1_only}")
         print(f"  Detected by L2 only: {l2_only} ← L2 added value")
@@ -208,7 +208,7 @@ class TestDetectionCoverage:
                 if severity:
                     severity_counts[severity.value] += 1
 
-        print(f"\nSeverity Distribution:")
+        print("\nSeverity Distribution:")
         for severity in ["critical", "high", "medium", "low", "info"]:
             count = severity_counts.get(severity, 0)
             print(f"  {severity.upper()}: {count}")
@@ -243,7 +243,7 @@ class TestDetectionCoverage:
         p95 = latencies[int(len(latencies) * 0.95)]
         p99 = latencies[int(len(latencies) * 0.99)]
 
-        print(f"\nScan Latency:")
+        print("\nScan Latency:")
         print(f"  P50: {p50:.2f}ms")
         print(f"  P95: {p95:.2f}ms")
         print(f"  P99: {p99:.2f}ms")

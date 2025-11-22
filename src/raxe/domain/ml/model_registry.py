@@ -9,9 +9,12 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from raxe.domain.ml.model_metadata import ModelMetadata, ModelStatus
+
+if TYPE_CHECKING:
+    from raxe.domain.ml.protocol import L2Detector
 
 logger = logging.getLogger(__name__)
 
@@ -421,7 +424,7 @@ class ModelRegistry:
 
             # Validate full tokenizer config
             tokenizer_config = tokenizer_data.get("config", {})
-            is_valid, validation_errors = registry.validate_tokenizer(
+            _is_valid, validation_errors = registry.validate_tokenizer(
                 tokenizer_name,
                 tokenizer_config,
                 embedding_model

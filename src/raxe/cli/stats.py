@@ -37,7 +37,7 @@ from raxe.utils.error_sanitizer import sanitize_error_message
     type=click.Path(),
     help="Export stats to JSON file",
 )
-def stats(format: str, show_global: bool, retention: bool, export: str | None) -> None:
+def stats(output_format: str, show_global: bool, retention: bool, export: str | None) -> None:
     """
     Show local RAXE statistics and analytics.
 
@@ -57,7 +57,7 @@ def stats(format: str, show_global: bool, retention: bool, export: str | None) -
       raxe stats --export stats.json # Export to file
     """
     # Show compact logo for text output
-    if format == "text":
+    if output_format == "text":
         from raxe.cli.branding import print_logo
         print_logo(console, compact=True)
         console.print()
@@ -75,7 +75,7 @@ def stats(format: str, show_global: bool, retention: bool, export: str | None) -
         if show_global:
             # Show global statistics
             stats_data = engine.get_global_stats()
-            if format == "json":
+            if output_format == "json":
                 console.print_json(data=stats_data)
             else:
                 _display_global_stats(stats_data)
@@ -84,7 +84,7 @@ def stats(format: str, show_global: bool, retention: bool, export: str | None) -
             # Use installation date's cohort (simplified - use 30 days ago)
             cohort_date = (datetime.now().date() - timedelta(days=30))
             retention_data = engine.calculate_retention(cohort_date)
-            if format == "json":
+            if output_format == "json":
                 console.print_json(data=retention_data)
             else:
                 _display_retention_stats(retention_data)
@@ -120,7 +120,7 @@ def stats(format: str, show_global: bool, retention: bool, export: str | None) -
                 with open(export, 'w') as f:
                     json.dump(stats_data, f, indent=2)
                 console.print(f"[green]Stats exported to {export}[/green]")
-            elif format == "json":
+            elif output_format == "json":
                 console.print_json(data=stats_data)
             else:
                 _display_user_stats(user_stats, streak_info, progress, unlocked)
@@ -131,7 +131,7 @@ def stats(format: str, show_global: bool, retention: bool, export: str | None) -
 
     except Exception as e:
         display_error("Failed to retrieve statistics", sanitize_error_message(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 def _get_installation_id() -> str:

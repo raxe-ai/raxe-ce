@@ -2,21 +2,29 @@
 
 This module provides comprehensive formatting for L2 ML detection results,
 including:
+- Hierarchical risk scoring (0-100 scale)
+- Classification levels (SAFE, FP_LIKELY, REVIEW, LIKELY_THREAT, THREAT, HIGH_THREAT)
+- Final decision recommendations (ALLOW, BLOCK, BLOCK_WITH_REVIEW, etc.)
 - Clear WHY explanations for each detection
+- Detailed confidence breakdown (binary, family, subfamily)
+- Signal quality indicators
 - Matched patterns and features
-- Recommended actions and severity
-- Remediation advice
+- Recommended actions and remediation advice
 - User-friendly threat descriptions
+- Auto-block messaging for LIKELY_THREAT with spot-check queue guidance
 
 Usage:
     from raxe.cli.l2_formatter import L2ResultFormatter
 
     formatter = L2ResultFormatter()
-    formatter.format_predictions(l2_result, console)
+    formatter.format_predictions(l2_result, console, explain=False)
 """
+
+from typing import ClassVar
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 
 from raxe.domain.ml.protocol import L2Prediction, L2Result
@@ -25,8 +33,67 @@ from raxe.domain.ml.protocol import L2Prediction, L2Result
 class L2ResultFormatter:
     """Formatter for L2 detection results with comprehensive WHY explanations."""
 
+    @staticmethod
+    def _get_confidence_indicator(confidence: float) -> tuple[str, str]:
+        """Get visual indicator for confidence level.
+
+        Args:
+            confidence: Confidence value (0.0-1.0)
+
+        Returns:
+            Tuple of (indicator emoji, strength label)
+        """
+        if confidence >= 0.8:
+            return ("✓", "Strong")
+        elif confidence >= 0.5:
+            return ("⚠️", "Medium")
+        elif confidence >= 0.3:
+            return ("⚠️", "Weak")
+        else:
+            return ("❌", "Very weak")
+
+    @staticmethod
+    def _get_classification_display(classification: str) -> tuple[str, str]:
+        """Get display styling for classification level.
+
+        Args:
+            classification: Classification level
+
+        Returns:
+            Tuple of (icon, color)
+        """
+        classification_map = {
+            "SAFE": ("🟢", "green"),
+            "FP_LIKELY": ("🟡", "yellow"),
+            "REVIEW": ("🟠", "yellow"),
+            "LIKELY_THREAT": ("🔶", "orange"),
+            "THREAT": ("🔴", "red"),
+            "HIGH_THREAT": ("🔴", "red bold"),
+        }
+        return classification_map.get(classification, ("⚪", "white"))
+
+    @staticmethod
+    def _get_action_display(action: str) -> tuple[str, str]:
+        """Get display styling for action.
+
+        Args:
+            action: Action recommendation
+
+        Returns:
+            Tuple of (icon, color)
+        """
+        action_map = {
+            "ALLOW": ("✓", "green"),
+            "ALLOW_WITH_LOG": ("✓", "yellow"),
+            "MANUAL_REVIEW": ("👁️", "yellow"),
+            "BLOCK_WITH_REVIEW": ("🔍", "orange"),
+            "BLOCK": ("🛡️", "red"),
+            "BLOCK_ALERT": ("🚨", "red bold"),
+        }
+        return action_map.get(action, ("•", "white"))
+
     # User-friendly threat type descriptions
-    THREAT_DESCRIPTIONS = {
+    THREAT_DESCRIPTIONS: ClassVar[dict[str, dict[str, str]]] = {
         "semantic_jailbreak": {
             "title": "Semantic Jailbreak",
             "description": "Attempt to bypass AI safety guidelines through clever phrasing",
@@ -65,7 +132,7 @@ class L2ResultFormatter:
     }
 
     # Remediation advice per threat type
-    REMEDIATION_ADVICE = {
+    REMEDIATION_ADVICE: ClassVar[dict[str, str]] = {
         "semantic_jailbreak": (
             "Block the request and log for security review. "
             "This prompt attempts to bypass AI safety guidelines."
@@ -97,7 +164,7 @@ class L2ResultFormatter:
     }
 
     # Documentation URLs per threat type
-    DOCS_URLS = {
+    DOCS_URLS: ClassVar[dict] = {
         "semantic_jailbreak": "https://docs.raxe.ai/threats/semantic-jailbreak",
         "encoded_injection": "https://docs.raxe.ai/threats/encoded-injection",
         "context_manipulation": "https://docs.raxe.ai/threats/context-manipulation",
@@ -112,53 +179,310 @@ class L2ResultFormatter:
         l2_result: L2Result,
         console: Console,
         *,
-        show_details: bool = True,
-        show_summary: bool = True,
+        explain: bool = False,
     ) -> None:
         """Format all L2 predictions with rich output.
 
         Args:
             l2_result: L2 detection result
             console: Rich console instance
-            show_details: Show detailed WHY explanations (default: True)
-            show_summary: Show summary table (default: True)
+            explain: Show detailed explain mode with scoring breakdown (default: False)
         """
         if not l2_result or not l2_result.has_predictions:
             return
 
-        # Show summary header
-        if show_summary:
-            L2ResultFormatter._format_summary(l2_result, console)
-
-        # Show detailed explanations for each prediction
-        if show_details:
-            console.print()
-            console.print("[bold cyan]═══ L2 ML Detection Details ═══[/bold cyan]")
-            console.print()
-
-            for prediction in l2_result.predictions:
-                L2ResultFormatter.format_prediction_detail(prediction, console)
-                console.print()
+        # Show default or explain mode
+        if explain:
+            # Detailed explain mode with full scoring breakdown
+            L2ResultFormatter._format_explain_mode(l2_result, console)
+        else:
+            # Compact default mode with key metrics
+            L2ResultFormatter._format_default_mode(l2_result, console)
 
     @staticmethod
-    def _format_summary(l2_result: L2Result, console: Console) -> None:
-        """Format L2 summary information.
+    def _format_default_mode(l2_result: L2Result, console: Console) -> None:
+        """Format L2 predictions in compact default mode.
+
+        Shows:
+        - Risk score (0-100)
+        - Classification level
+        - Final decision
+        - Brief confidence summary
 
         Args:
             l2_result: L2 detection result
             console: Rich console instance
         """
-        summary = Text()
-        summary.append("🤖 ", style="cyan bold")
-        summary.append("L2 ML Analysis: ", style="cyan bold")
-        summary.append(
-            f"{len(l2_result.predictions)} threat(s) detected ",
-            style="red"
-        )
-        summary.append(f"in {l2_result.processing_time_ms:.1f}ms ", style="dim")
-        summary.append(f"[{l2_result.model_version}]", style="dim")
+        console.print()
 
-        console.print(summary)
+        for prediction in l2_result.predictions:
+            # Extract scoring metadata
+            metadata = prediction.metadata
+            classification = metadata.get("classification", "THREAT")
+            action = metadata.get("action", "BLOCK")
+            risk_score = metadata.get("risk_score", prediction.confidence * 100)
+            hierarchical_score = metadata.get("hierarchical_score", prediction.confidence)
+
+            # Get confidence scores
+            scores = metadata.get("scores", {})
+            binary_conf = scores.get("attack_probability", prediction.confidence)
+            family_conf = scores.get("family_confidence", 0.0)
+            subfamily_conf = scores.get("subfamily_confidence", 0.0)
+
+            # Get family info
+            metadata.get("family", "UNKNOWN")
+
+            # Get display styling
+            class_icon, class_color = L2ResultFormatter._get_classification_display(classification)
+            action_icon, action_color = L2ResultFormatter._get_action_display(action)
+
+            # Header
+            header = Text()
+            header.append(f"{class_icon} ", style=class_color)
+            header.append(f"{classification}", style=f"{class_color} bold")
+            if action == "BLOCK_WITH_REVIEW":
+                header.append(" - AUTO-BLOCKED", style="orange bold")
+            elif action in ("BLOCK", "BLOCK_ALERT"):
+                header.append(" - BLOCKED", style="red bold")
+
+            console.print(header)
+            console.print()
+
+            # Create scoring table
+            table = Table(
+                show_header=True,
+                header_style="bold cyan",
+                border_style="dim",
+                box=None,
+                padding=(0, 2)
+            )
+            table.add_column("Layer", style="cyan", width=8)
+            table.add_column("Type", style="white", width=20)
+            table.add_column("Risk Score", justify="right", style="white", width=12)
+            table.add_column("Classification", style="white", width=20)
+
+            # L1 row (if available from context)
+            # This would be populated by the calling code
+
+            # L2 row
+            threat_type = prediction.threat_type.value.replace("_", " ").title()
+            table.add_row(
+                "L2",
+                threat_type,
+                f"{risk_score:.0f}%",
+                classification
+            )
+
+            console.print(table)
+            console.print()
+
+            # Final decision summary
+            decision = Text()
+            decision.append(f"{action_icon} ", style=action_color)
+            decision.append("Final Decision: ", style="bold")
+            decision.append(f"{action}", style=action_color)
+            decision.append(f" (Hierarchical Risk Score: {hierarchical_score * 100:.0f}/100)", style="dim")
+            console.print(decision)
+
+            # Confidence summary
+            conf_summary = Text()
+            conf_summary.append("📊 Confidence: ", style="bold")
+
+            # Overall confidence label
+            if hierarchical_score >= 0.8:
+                conf_label = "High"
+                conf_color = "green"
+            elif hierarchical_score >= 0.6:
+                conf_label = "Medium"
+                conf_color = "yellow"
+            else:
+                conf_label = "Low"
+                conf_color = "red"
+
+            conf_summary.append(f"{conf_label} ", style=conf_color)
+            conf_summary.append(
+                f"(binary: {binary_conf * 100:.0f}%, family: {family_conf * 100:.0f}%, "
+                f"subfamily: {subfamily_conf * 100:.0f}%)",
+                style="dim"
+            )
+            console.print(conf_summary)
+            console.print()
+
+            # Show detected pattern and admin guidance for LIKELY_THREAT
+            if classification == "LIKELY_THREAT":
+                has_pattern = metadata.get("has_attack_pattern", False)
+                if has_pattern:
+                    pattern_info = Text()
+                    pattern_info.append("⚠️  ", style="yellow bold")
+                    pattern_info.append("Detected Pattern: ", style="bold")
+                    pattern_info.append("Obvious attack pattern detected", style="yellow")
+                    console.print(pattern_info)
+
+                admin_info = Text()
+                admin_info.append("ℹ️  ", style="cyan")
+                admin_info.append("Auto-blocked with spot-check queue. ", style="white")
+                admin_info.append("Review via: ", style="dim")
+                admin_info.append("raxe spot-check list", style="cyan")
+                console.print(admin_info)
+                console.print()
+
+    @staticmethod
+    def _format_explain_mode(l2_result: L2Result, console: Console) -> None:
+        """Format L2 predictions in detailed explain mode.
+
+        Shows:
+        - Complete scoring breakdown
+        - Classification reasoning
+        - Confidence signals with strength indicators
+        - Hierarchical score calculation
+        - Signal quality metrics
+        - Decision rationale
+        - Recommended actions
+
+        Args:
+            l2_result: L2 detection result
+            console: Rich console instance
+        """
+        console.print()
+        console.print("═" * 80, style="cyan")
+        console.print("📊 SCORING BREAKDOWN (L2 ML Detection)", style="bold cyan")
+        console.print("═" * 80, style="cyan")
+        console.print()
+
+        for prediction in l2_result.predictions:
+            # Extract scoring metadata
+            metadata = prediction.metadata
+            classification = metadata.get("classification", "THREAT")
+            action = metadata.get("action", "BLOCK")
+            metadata.get("risk_score", prediction.confidence * 100)
+            hierarchical_score = metadata.get("hierarchical_score", prediction.confidence)
+
+            # Get confidence scores
+            scores = metadata.get("scores", {})
+            binary_conf = scores.get("attack_probability", prediction.confidence)
+            family_conf = scores.get("family_confidence", 0.0)
+            subfamily_conf = scores.get("subfamily_confidence", 0.0)
+
+            # Get signal quality
+            is_consistent = metadata.get("is_consistent", True)
+            variance = metadata.get("variance", 0.0)
+            weak_margins_count = metadata.get("weak_margins_count", 0)
+            margins = metadata.get("margins", {})
+
+            # Get family info
+            family = metadata.get("family", "UNKNOWN")
+            subfamily = metadata.get("sub_family", "unknown")
+
+            # Get reasoning
+            reason = metadata.get("reason", "No explanation available")
+
+            # Classification header
+            class_icon, class_color = L2ResultFormatter._get_classification_display(classification)
+            console.print(f"Classification: {class_icon} ", style=class_color, end="")
+            console.print(classification, style=f"{class_color} bold")
+            console.print(f"Confidence: {hierarchical_score * 100:.0f}%", style="bold")
+            console.print()
+
+            # Why This Was Flagged
+            why_it_hit = metadata.get("why_it_hit", [])
+            if why_it_hit:
+                console.print("Why This Was Flagged:", style="yellow bold")
+                console.print("─" * 30, style="dim")
+                for reason_item in why_it_hit:
+                    console.print(f"  • {reason_item}", style="white")
+            elif prediction.explanation:
+                console.print("Why This Was Flagged:", style="yellow bold")
+                console.print("─" * 30, style="dim")
+                console.print(f"  {prediction.explanation}", style="white")
+            console.print()
+
+            # Confidence Signals
+            console.print("Confidence Signals:", style="cyan bold")
+            console.print("─" * 30, style="dim")
+
+            # Binary threat confidence
+            binary_indicator, binary_strength = L2ResultFormatter._get_confidence_indicator(binary_conf)
+            console.print(f"  • Binary Threat:       {binary_conf * 100:5.1f}% {binary_indicator} ", style="white", end="")
+            console.print(f"({binary_strength})", style="dim")
+
+            # Family confidence
+            family_indicator, family_strength = L2ResultFormatter._get_confidence_indicator(family_conf)
+            console.print(f"  • Threat Family ({family:3s}): {family_conf * 100:5.1f}% {family_indicator} ", style="white", end="")
+            console.print(f"({family_strength})", style="dim")
+
+            # Subfamily confidence
+            subfamily_indicator, subfamily_strength = L2ResultFormatter._get_confidence_indicator(subfamily_conf)
+            console.print(f"  • Subfamily ({subfamily[:8]:8s}): {subfamily_conf * 100:5.1f}% {subfamily_indicator} ", style="white", end="")
+            console.print(f"({subfamily_strength})", style="dim")
+
+            console.print()
+
+            # Hierarchical Score
+            hier_indicator, hier_strength = L2ResultFormatter._get_confidence_indicator(hierarchical_score)
+            console.print(f"Hierarchical Score: {hierarchical_score * 100:.1f}/100 {hier_indicator} ", style="bold", end="")
+            console.print(f"({hier_strength})", style="dim")
+            console.print()
+
+            # Signal Quality
+            console.print("Signal Quality:", style="magenta bold")
+            console.print("─" * 30, style="dim")
+
+            # Consistency
+            consistency_status = "Good" if is_consistent else "Poor"
+            consistency_color = "green" if is_consistent else "yellow"
+            console.print(f"  • Consistency:     {consistency_status} ", style=consistency_color, end="")
+            console.print(f"(variance: {variance:.3f})", style="dim")
+
+            # Binary margin
+            binary_margin = margins.get("binary", 0.0)
+            binary_margin_indicator, binary_margin_strength = L2ResultFormatter._get_confidence_indicator(binary_margin)
+            console.print(f"  • Binary Margin:   {binary_margin * 100:.1f}% {binary_margin_indicator} ", style="white", end="")
+            console.print(f"({binary_margin_strength})", style="dim")
+
+            # Weak margins count
+            weak_status = "acceptable" if weak_margins_count <= 1 else "concerning"
+            weak_color = "green" if weak_margins_count <= 1 else "yellow"
+            console.print(f"  • Weak Margins:    {weak_margins_count}/3 ", style=weak_color, end="")
+            console.print(f"({weak_status})", style="dim")
+
+            console.print()
+
+            # Decision Rationale
+            console.print("Decision Rationale:", style="green bold")
+            console.print("─" * 30, style="dim")
+            console.print(f"  {reason}", style="white")
+            console.print()
+
+            # Recommended Action
+            action_icon, action_color = L2ResultFormatter._get_action_display(action)
+            console.print(f"Recommended Action: {action_icon} ", style="bold", end="")
+            console.print(action, style=f"{action_color} bold")
+            console.print()
+
+            # Show additional context for LIKELY_THREAT
+            if classification == "LIKELY_THREAT":
+                console.print("─" * 30, style="dim")
+                has_pattern = metadata.get("has_attack_pattern", False)
+                if has_pattern:
+                    console.print("⚠️  AUTO-BLOCKED: ", style="orange bold", end="")
+                    console.print("Request was automatically blocked", style="white")
+                    console.print("🎯 PATTERN DETECTED: ", style="yellow bold", end="")
+                    console.print("Obvious attack pattern found in prompt", style="white")
+                else:
+                    console.print("⚠️  AUTO-BLOCKED: ", style="orange bold", end="")
+                    console.print("Request was automatically blocked", style="white")
+
+                console.print("ℹ️  SPOT-CHECK QUEUE: ", style="cyan bold", end="")
+                console.print("Added to spot-check queue for batch review", style="white")
+                console.print("🔍 ADMIN ACTION: ", style="cyan bold", end="")
+                console.print("Review via ", style="white", end="")
+                console.print("raxe spot-check list", style="cyan")
+                console.print()
+
+            # Separator between predictions
+            if len(l2_result.predictions) > 1:
+                console.print("─" * 80, style="dim")
+                console.print()
 
     @staticmethod
     def format_prediction_detail(

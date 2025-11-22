@@ -12,8 +12,6 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import pytest
-
 from raxe.domain.suppression import Suppression
 from raxe.domain.suppression_factory import create_suppression_manager
 
@@ -189,7 +187,7 @@ class TestSuppressionManager:
             )
 
             # Should not be suppressed (expired)
-            is_suppressed, reason = manager.is_suppressed("pi-001")
+            is_suppressed, _reason = manager.is_suppressed("pi-001")
             assert not is_suppressed
 
     def test_load_from_file(self):
@@ -365,7 +363,7 @@ class TestSuppressionPatterns:
             manager.add_suppression("pi-001", "Specific suppression")
 
             # Both should match, but we get the first match
-            is_suppressed, reason = manager.is_suppressed("pi-001")
+            is_suppressed, _reason = manager.is_suppressed("pi-001")
             assert is_suppressed
             # Reason could be either - depends on dict ordering
 

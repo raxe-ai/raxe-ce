@@ -27,14 +27,32 @@ from raxe.domain.ml.protocol import (
     L2Result,
     L2ThreatType,
 )
+from raxe.domain.ml.scoring_models import (
+    ActionType,
+    ScoringMode,
+    ScoringResult,
+    ScoringThresholds,
+    ThreatLevel,
+    ThreatScore,
+)
 from raxe.domain.ml.stub_detector import StubL2Detector
+from raxe.domain.ml.threat_scorer import HierarchicalThreatScorer
 
 __all__ = [
+    # Threat Scoring
+    "ActionType",
+    # L2 Detection
     "FolderL2Detector",
+    "HierarchicalThreatScorer",
     "L2Detector",
     "L2Prediction",
     "L2Result",
     "L2ThreatType",
+    "ScoringMode",
+    "ScoringResult",
+    "ScoringThresholds",
     "StubL2Detector",
+    "ThreatLevel",
+    "ThreatScore",
     "create_folder_detector",
 ]

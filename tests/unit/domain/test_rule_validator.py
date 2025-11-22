@@ -1,5 +1,4 @@
 """Tests for rule validation logic."""
-import re
 import tempfile
 from pathlib import Path
 

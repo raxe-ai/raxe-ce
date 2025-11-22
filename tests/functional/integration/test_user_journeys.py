@@ -3,9 +3,7 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
 import time
-from pathlib import Path
 
 import pytest
 
@@ -65,7 +63,7 @@ class TestUserJourneys:
 
         # Create test file with prompts
         test_file = tmp_path / "prompts.txt"
-        test_file.write_text("\n".join(safe_prompts[:3] + [threat_prompts[0]]))
+        test_file.write_text("\n".join([*safe_prompts[:3], threat_prompts[0]]))
 
         # 1. Run in quiet mode with JSON output
         result = subprocess.run(

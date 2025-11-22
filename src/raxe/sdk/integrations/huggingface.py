@@ -124,11 +124,11 @@ class RaxePipeline:
         # Try to import transformers
         try:
             from transformers import pipeline
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "transformers package is required for RaxePipeline. "
                 "Install with: pip install transformers"
-            )
+            ) from e
 
         # Create Hugging Face pipeline
         pipeline_kwargs = pipeline_kwargs or {}

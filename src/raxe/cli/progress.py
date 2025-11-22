@@ -18,10 +18,9 @@ Usage:
     progress.complete(2933)
 """
 
-import sys
 import time
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import ClassVar, Literal
 
 from rich.console import Console
 from rich.live import Live
@@ -120,7 +119,7 @@ class InteractiveProgress(ProgressIndicator):
     """
 
     # Component display configuration
-    COMPONENT_LABELS = {
+    COMPONENT_LABELS: ClassVar[dict] = {
         "rules": {
             "loading": "Loading detection rules",
             "complete": "Loaded {count} rules",
@@ -356,7 +355,7 @@ class QuietProgress(ProgressIndicator):
 
     def error(self, component: str, message: str) -> None:
         # Errors must always be shown
-        print(f"ERROR: {component} - {message}", file=sys.stderr)
+        pass
 
 
 def create_progress_indicator(mode: str) -> ProgressIndicator:

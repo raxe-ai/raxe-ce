@@ -1,6 +1,6 @@
 """Test SDK initialization and stats."""
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -41,7 +41,7 @@ class TestSDKInitialization:
 
     def test_initialization_with_progress_callback(self, mock_progress):
         """Test initialization with progress callback."""
-        client = Raxe(progress_callback=mock_progress)
+        Raxe(progress_callback=mock_progress)
 
         # Progress methods should have been called
         mock_progress.start.assert_called_once()
@@ -91,7 +91,7 @@ class TestSDKInitialization:
 
         # First scan
         start_scan = time.perf_counter()
-        result = client.scan("Test prompt")
+        client.scan("Test prompt")
         scan_time = time.perf_counter() - start_scan
 
         # Init should be slower than scan
@@ -129,7 +129,7 @@ class TestSDKInitialization:
 
         # Should be created on first scan (if telemetry enabled)
         if client.config.telemetry.enabled:
-            result = client.scan("Test")
+            client.scan("Test")
             # Now tracker might be initialized (implementation dependent)
 
     def test_suppression_manager_initialization(self):
@@ -148,7 +148,7 @@ class TestSDKInitialization:
         os.environ["RAXE_TELEMETRY"] = "false"
 
         try:
-            client = Raxe()
+            Raxe()
             # Env vars should be picked up (if config cascade implemented)
             # This might depend on implementation details
         finally:
@@ -177,9 +177,9 @@ class TestSDKInitialization:
         """Test multiple rapid initializations."""
         init_times = []
 
-        for i in range(5):
+        for _i in range(5):
             start = time.perf_counter()
-            client = Raxe()
+            Raxe()
             init_times.append((time.perf_counter() - start) * 1000)
 
         # All should succeed and be reasonably fast

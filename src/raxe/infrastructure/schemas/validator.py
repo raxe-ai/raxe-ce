@@ -10,11 +10,11 @@ from typing import Any
 try:
     from jsonschema import Draft7Validator, RefResolver, ValidationError
     from jsonschema.validators import validator_for  # noqa: F401 - Reserved for future use
-except ImportError:
+except ImportError as e:
     raise ImportError(
         "jsonschema is required for schema validation. "
         "Install with: pip install jsonschema"
-    )
+    ) from e
 
 
 class SchemaValidator:

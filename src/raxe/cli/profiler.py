@@ -24,7 +24,7 @@ from raxe.utils.profiler import ScanProfiler
     default="tree",
     help="Output format (default: tree)",
 )
-def profile_command(text: str, l2: bool, format: str) -> None:
+def profile_command(text: str, l2: bool, output_format: str) -> None:
     """Profile scan performance.
 
     Provides detailed performance breakdown including:
@@ -51,7 +51,7 @@ def profile_command(text: str, l2: bool, format: str) -> None:
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     try:
         # Get components using public API
@@ -71,16 +71,16 @@ def profile_command(text: str, l2: bool, format: str) -> None:
             profile = profiler.profile_scan(text, rules, include_l2=l2)
 
         # Display results
-        if format == "json":
+        if output_format == "json":
             _display_json(profile)
-        elif format == "table":
+        elif output_format == "table":
             _display_table(profile)
         else:  # tree
             _display_tree(profile)
 
     except Exception as e:
         display_error("Profiling failed", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 def _display_tree(profile) -> None:

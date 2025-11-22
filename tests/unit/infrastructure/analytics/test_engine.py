@@ -8,7 +8,6 @@ Tests the analytics calculation engine including:
 - Report generation
 """
 
-import os
 import tempfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path

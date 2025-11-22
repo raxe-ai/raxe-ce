@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from raxe.sdk.client import Raxe
 
 logger = logging.getLogger(__name__)
 
@@ -86,11 +89,11 @@ class RaxeAnthropic:
         # Try to import Anthropic
         try:
             from anthropic import Anthropic
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "anthropic package is required for RaxeAnthropic. "
                 "Install with: pip install anthropic"
-            )
+            ) from e
 
         # Initialize parent Anthropic client
         self._anthropic_client = Anthropic(*args, **kwargs)

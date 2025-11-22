@@ -56,7 +56,7 @@ def rules() -> None:
     default="table",
     help="Output format (default: table)",
 )
-def list_rules(family: str | None, severity: str | None, format: str) -> None:
+def list_rules(family: str | None, severity: str | None, output_format: str) -> None:
     """
     List all available detection rules.
 
@@ -82,14 +82,14 @@ def list_rules(family: str | None, severity: str | None, format: str) -> None:
     except Exception as e:
         display_error("Failed to initialize RAXE", sanitize_error_message(e))
         console.print("Try running: [cyan]raxe init[/cyan]")
-        raise click.Abort()
+        raise click.Abort() from e
 
     # Get all rules from registry
     try:
         all_rules = raxe.get_all_rules()
     except Exception as e:
         display_error("Failed to load rules", sanitize_error_message(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     if not all_rules:
         console.print("[yellow]No rules loaded[/yellow]")
@@ -116,11 +116,11 @@ def list_rules(family: str | None, severity: str | None, format: str) -> None:
         return
 
     # Display based on format
-    if format == "table":
+    if output_format == "table":
         _display_rules_table(filtered_rules)
-    elif format == "tree":
+    elif output_format == "tree":
         _display_rules_tree(filtered_rules)
-    elif format == "json":
+    elif output_format == "json":
         import json
         rules_data = [
             {
@@ -163,7 +163,7 @@ def show_rule(rule_id: str) -> None:
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     # Find rule
     try:
@@ -171,7 +171,7 @@ def show_rule(rule_id: str) -> None:
         rule = next((r for r in all_rules if r.rule_id == rule_id), None)
     except Exception as e:
         display_error("Failed to load rules", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     if not rule:
         display_error(f"Rule not found: {rule_id}", "Use 'raxe rules list' to see available rules")
@@ -207,13 +207,13 @@ def search_rules(query: str, search_in: str) -> None:
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     try:
         all_rules = raxe.get_all_rules()
     except Exception as e:
         display_error("Failed to load rules", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     # Search
     query_lower = query.lower()
@@ -261,7 +261,7 @@ def test_rule(rule_id: str, text: str) -> None:
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     # Find rule
     try:
@@ -269,7 +269,7 @@ def test_rule(rule_id: str, text: str) -> None:
         rule = next((r for r in all_rules if r.rule_id == rule_id), None)
     except Exception as e:
         display_error("Failed to load rules", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     if not rule:
         display_error(f"Rule not found: {rule_id}", "Use 'raxe rules list' to see available rules")
@@ -322,7 +322,7 @@ def test_rule(rule_id: str, text: str) -> None:
 
     except Exception as e:
         display_error("Failed to test rule", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @rules.command("stats")
@@ -343,13 +343,13 @@ def rules_stats() -> None:
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     try:
         all_rules = raxe.get_all_rules()
     except Exception as e:
         display_error("Failed to load rules", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     if not all_rules:
         console.print("[yellow]No rules loaded[/yellow]")

@@ -151,26 +151,14 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console, expla
     if explain:
         _display_detection_explanations(result.scan_result.l1_result.detections, console)
 
-    # Display L2 ML detection details (if available and explain enabled)
+    # Display L2 ML detection details with hierarchical scoring
     if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
-        if explain:
-            # Show full detailed L2 explanations with WHY
-            formatter = L2ResultFormatter()
-            formatter.format_predictions(
-                result.scan_result.l2_result,
-                console,
-                show_details=True,
-                show_summary=True,
-            )
-        else:
-            # Show compact L2 summary without full details
-            formatter = L2ResultFormatter()
-            formatter.format_predictions(
-                result.scan_result.l2_result,
-                console,
-                show_details=False,
-                show_summary=True,
-            )
+        formatter = L2ResultFormatter()
+        formatter.format_predictions(
+            result.scan_result.l2_result,
+            console,
+            explain=explain,  # Pass explain flag for detailed scoring breakdown
+        )
 
     # Summary with cleaner layout
     total_detections = len(result.scan_result.l1_result.detections)
@@ -265,10 +253,10 @@ def _display_detection_explanations(detections: list, console: Console) -> None:
 def _display_privacy_footer(console: Console) -> None:
     """Display privacy guarantee footer."""
     privacy_text = Text()
-    privacy_text.append("🔒 Privacy-First: ", style="dim cyan")
+    privacy_text.append("🔒 ", style="cyan")
     privacy_text.append(
-        "Prompt hashed locally (SHA256) • Never stored or transmitted",
-        style="dim"
+        "Your data stayed private - scanned locally, nothing sent to cloud.",
+        style="cyan"
     )
     console.print(privacy_text)
     console.print()

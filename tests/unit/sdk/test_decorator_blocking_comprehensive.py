@@ -7,7 +7,7 @@ This test suite verifies that:
 4. SecurityException is raised and propagated properly
 """
 import asyncio
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 

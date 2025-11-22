@@ -4,10 +4,9 @@ import json
 import subprocess
 import sys
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 @dataclass
@@ -18,7 +17,7 @@ class TestResult:
     failed: int
     skipped: int
     duration_ms: float
-    errors: List[str]
+    errors: list[str]
 
 
 @dataclass
@@ -41,9 +40,9 @@ class ReleaseValidation:
     failed_tests: int
     skipped_tests: int
     total_duration_ms: float
-    test_results: List[TestResult]
-    performance_benchmarks: List[PerformanceBenchmark]
-    coverage_percent: Optional[float] = None
+    test_results: list[TestResult]
+    performance_benchmarks: list[PerformanceBenchmark]
+    coverage_percent: float | None = None
     all_passed: bool = False
 
 
@@ -53,8 +52,8 @@ class FunctionalTestRunner:
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
         self.test_dir = Path(__file__).parent
-        self.results: List[TestResult] = []
-        self.benchmarks: List[PerformanceBenchmark] = []
+        self.results: list[TestResult] = []
+        self.benchmarks: list[PerformanceBenchmark] = []
 
     def run_test_suite(self, suite_path: str, suite_name: str) -> TestResult:
         """Run a specific test suite."""
@@ -120,7 +119,7 @@ class FunctionalTestRunner:
         print(f"  Duration: {duration_ms:.0f}ms")
 
         if errors and self.verbose:
-            print(f"  Failed tests:")
+            print("  Failed tests:")
             for error in errors[:5]:  # Show first 5
                 print(f"    - {error}")
 
@@ -181,7 +180,7 @@ class FunctionalTestRunner:
         }
         return mock_values.get(metric, 100)
 
-    def run_coverage_analysis(self) -> Optional[float]:
+    def run_coverage_analysis(self) -> float | None:
         """Run coverage analysis."""
         print(f"\n{'=' * 60}")
         print("Running Coverage Analysis")
@@ -196,7 +195,7 @@ class FunctionalTestRunner:
             "-q"
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        subprocess.run(cmd, capture_output=True, text=True)
 
         # Parse coverage
         try:
@@ -209,7 +208,7 @@ class FunctionalTestRunner:
             print("  Coverage analysis failed")
             return None
 
-    def generate_report(self, coverage: Optional[float]) -> ReleaseValidation:
+    def generate_report(self, coverage: float | None) -> ReleaseValidation:
         """Generate release validation report."""
         total_passed = sum(r.passed for r in self.results)
         total_failed = sum(r.failed for r in self.results)
@@ -238,7 +237,7 @@ class FunctionalTestRunner:
         print("RELEASE VALIDATION SUMMARY")
         print('=' * 60)
 
-        print(f"\nTest Results:")
+        print("\nTest Results:")
         print(f"  Total Tests: {validation.total_tests}")
         print(f"  Passed: {validation.passed_tests} ✅")
         print(f"  Failed: {validation.failed_tests} ❌")
@@ -249,7 +248,7 @@ class FunctionalTestRunner:
             coverage_status = "✅" if validation.coverage_percent > 80 else "❌"
             print(f"  Coverage: {validation.coverage_percent:.1f}% {coverage_status}")
 
-        print(f"\nPerformance Benchmarks:")
+        print("\nPerformance Benchmarks:")
         for benchmark in validation.performance_benchmarks:
             status = "✅" if benchmark.passed else "❌"
             print(f"  {benchmark.metric}: {benchmark.value:.1f}{benchmark.unit} {status}")

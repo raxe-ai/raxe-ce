@@ -25,10 +25,10 @@ Scoring Methodology:
 Target: >85% TPR per category for production readiness
 """
 
-import pytest
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import List, Dict
+
+import pytest
 
 from raxe.application.preloader import preload_pipeline
 from raxe.infrastructure.config.scan_config import ScanConfig
@@ -51,8 +51,8 @@ class ValidationResult:
     category: str
     total_tests: int = 0
     detected: int = 0
-    missed: List[AttackVector] = field(default_factory=list)
-    detected_attacks: List[AttackVector] = field(default_factory=list)
+    missed: list[AttackVector] = field(default_factory=list)
+    detected_attacks: list[AttackVector] = field(default_factory=list)
 
     @property
     def tpr(self) -> float:
@@ -174,7 +174,7 @@ class TestPromptInjectionDetection:
                 result.missed.append(attack)
 
         print(f"\n{'='*70}")
-        print(f"PROMPT INJECTION (PI) - True Positive Validation")
+        print("PROMPT INJECTION (PI) - True Positive Validation")
         print(f"{'='*70}")
         print(f"Total Tests: {result.total_tests}")
         print(f"Detected: {result.detected}")
@@ -183,7 +183,7 @@ class TestPromptInjectionDetection:
         print(f"FNR (Miss Rate): {result.fnr:.1%}")
 
         if result.missed:
-            print(f"\nMISSED ATTACKS (False Negatives):")
+            print("\nMISSED ATTACKS (False Negatives):")
             for attack in result.missed:
                 print(f"  ❌ [{attack.subcategory}] {attack.attack[:60]}...")
                 print(f"     Reason: {attack.description} | Difficulty: {attack.difficulty}")
@@ -295,7 +295,7 @@ class TestJailbreakDetection:
                 result.missed.append(attack)
 
         print(f"\n{'='*70}")
-        print(f"JAILBREAK (JB) - True Positive Validation")
+        print("JAILBREAK (JB) - True Positive Validation")
         print(f"{'='*70}")
         print(f"Total Tests: {result.total_tests}")
         print(f"Detected: {result.detected}")
@@ -304,7 +304,7 @@ class TestJailbreakDetection:
         print(f"FNR (Miss Rate): {result.fnr:.1%}")
 
         if result.missed:
-            print(f"\nMISSED ATTACKS (False Negatives):")
+            print("\nMISSED ATTACKS (False Negatives):")
             for attack in result.missed:
                 print(f"  ❌ [{attack.subcategory}] {attack.attack[:60]}...")
                 print(f"     Reason: {attack.description} | Difficulty: {attack.difficulty}")
@@ -414,7 +414,7 @@ class TestPIIExtractionDetection:
                 result.missed.append(attack)
 
         print(f"\n{'='*70}")
-        print(f"PII EXTRACTION - True Positive Validation")
+        print("PII EXTRACTION - True Positive Validation")
         print(f"{'='*70}")
         print(f"Total Tests: {result.total_tests}")
         print(f"Detected: {result.detected}")
@@ -423,7 +423,7 @@ class TestPIIExtractionDetection:
         print(f"FNR (Miss Rate): {result.fnr:.1%}")
 
         if result.missed:
-            print(f"\nMISSED ATTACKS (False Negatives):")
+            print("\nMISSED ATTACKS (False Negatives):")
             for attack in result.missed:
                 print(f"  ❌ [{attack.subcategory}] {attack.attack[:60]}...")
                 print(f"     Reason: {attack.description} | Difficulty: {attack.difficulty}")
@@ -533,7 +533,7 @@ class TestCommandInjectionDetection:
                 result.missed.append(attack)
 
         print(f"\n{'='*70}")
-        print(f"COMMAND INJECTION (CMD) - True Positive Validation")
+        print("COMMAND INJECTION (CMD) - True Positive Validation")
         print(f"{'='*70}")
         print(f"Total Tests: {result.total_tests}")
         print(f"Detected: {result.detected}")
@@ -542,7 +542,7 @@ class TestCommandInjectionDetection:
         print(f"FNR (Miss Rate): {result.fnr:.1%}")
 
         if result.missed:
-            print(f"\nMISSED ATTACKS (False Negatives):")
+            print("\nMISSED ATTACKS (False Negatives):")
             for attack in result.missed:
                 print(f"  ❌ [{attack.subcategory}] {attack.attack[:60]}...")
                 print(f"     Reason: {attack.description} | Difficulty: {attack.difficulty}")
@@ -663,7 +663,7 @@ class TestEvasionTechniques:
                 result.missed.append(attack)
 
         print(f"\n{'='*70}")
-        print(f"EVASION TECHNIQUES - True Positive Validation")
+        print("EVASION TECHNIQUES - True Positive Validation")
         print(f"{'='*70}")
         print(f"Total Tests: {result.total_tests}")
         print(f"Detected: {result.detected}")
@@ -671,13 +671,13 @@ class TestEvasionTechniques:
         print(f"TPR (Detection Rate): {result.tpr:.1%}")
         print(f"FNR (Miss Rate): {result.fnr:.1%}")
 
-        print(f"\nDetection by Evasion Technique:")
+        print("\nDetection by Evasion Technique:")
         for technique, stats in sorted(by_technique.items()):
             tpr = stats["detected"] / stats["total"] if stats["total"] > 0 else 0
             print(f"  {technique:20} {stats['detected']:2}/{stats['total']:2} ({tpr:5.1%})")
 
         if result.missed:
-            print(f"\nEVASION TECHNIQUES THAT WORK (Security Gaps):")
+            print("\nEVASION TECHNIQUES THAT WORK (Security Gaps):")
             for attack in result.missed:
                 print(f"  ⚠️  [{attack.subcategory}] {attack.attack[:60]}...")
                 print(f"     Technique: {attack.description}")
@@ -725,10 +725,10 @@ class TestL1vsL2Effectiveness:
         total = len(all_attacks)
 
         print(f"\n{'='*70}")
-        print(f"L1 (Regex) vs L2 (ML) Effectiveness Analysis")
+        print("L1 (Regex) vs L2 (ML) Effectiveness Analysis")
         print(f"{'='*70}")
         print(f"Total Attack Vectors: {total}")
-        print(f"\nDetection Breakdown:")
+        print("\nDetection Breakdown:")
         print(f"  Both L1 & L2:  {both:3} ({both/total:5.1%}) - Redundant coverage")
         print(f"  L1 Only:       {l1_only:3} ({l1_only/total:5.1%}) - Regex-only detections")
         print(f"  L2 Only:       {l2_only:3} ({l2_only/total:5.1%}) - ML adds value ✓")
@@ -739,7 +739,7 @@ class TestL1vsL2Effectiveness:
         print(f"Combined:        {(both + l1_only + l2_only):3}/{total} ({(both + l1_only + l2_only)/total:5.1%})")
 
         if l2_adds_value_on:
-            print(f"\nAttacks L2 Caught (L1 Missed):")
+            print("\nAttacks L2 Caught (L1 Missed):")
             by_category = defaultdict(int)
             for attack in l2_adds_value_on:
                 by_category[attack.category] += 1
@@ -757,7 +757,6 @@ class TestValidationSummary:
 
     def test_generate_summary_report(self, pipeline):
         """Generate comprehensive TP validation summary."""
-        from dataclasses import asdict
 
         # Collect all attack vectors
         test_instance = TestPromptInjectionDetection()
@@ -775,7 +774,7 @@ class TestValidationSummary:
         test_instance = TestEvasionTechniques()
         evasion_attacks = test_instance.evasion_attacks()
 
-        all_attacks = pi_attacks + jb_attacks + pii_attacks + cmd_attacks + evasion_attacks
+        pi_attacks + jb_attacks + pii_attacks + cmd_attacks + evasion_attacks
 
         # Test all attacks
         results_by_category = {}
@@ -802,11 +801,11 @@ class TestValidationSummary:
             results_by_category[category_name] = result
 
         # Generate summary report
-        print(f"\n")
+        print("\n")
         print(f"{'='*70}")
-        print(f"TRUE POSITIVE VALIDATION - SUMMARY REPORT")
+        print("TRUE POSITIVE VALIDATION - SUMMARY REPORT")
         print(f"{'='*70}")
-        print(f"\nOverall Detection Effectiveness:")
+        print("\nOverall Detection Effectiveness:")
         print(f"{'-'*70}")
         print(f"{'Category':<20} {'Total':<8} {'Detected':<10} {'Missed':<8} {'TPR':<8}")
         print(f"{'-'*70}")
@@ -823,7 +822,7 @@ class TestValidationSummary:
         print(f"{'='*70}")
 
         # Detection gaps
-        print(f"\nDETECTION GAPS (High Priority Fixes):")
+        print("\nDETECTION GAPS (High Priority Fixes):")
         print(f"{'-'*70}")
 
         all_missed = []
@@ -846,7 +845,7 @@ class TestValidationSummary:
 
         # Recommendations
         print(f"\n{'='*70}")
-        print(f"RECOMMENDATIONS")
+        print("RECOMMENDATIONS")
         print(f"{'='*70}")
 
         recommendations = []

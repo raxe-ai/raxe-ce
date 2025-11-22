@@ -250,7 +250,7 @@ def scan(
     ctx,
     text: str | None,
     stdin: bool,
-    format: str,
+    output_format: str,
     profile: bool,
     l1_only: bool,
     l2_only: bool,
@@ -281,12 +281,12 @@ def scan(
         quiet = True
 
     # Override format to JSON if quiet mode
-    if quiet and format == "text":
-        format = "json"
+    if quiet and output_format == "text":
+        output_format = "json"
 
     # Show compact logo (for visual consistency)
     from raxe.cli.branding import print_logo
-    if format == "text" and not quiet:  # Only show for text output when not quiet
+    if output_format == "text" and not quiet:  # Only show for text output when not quiet
         print_logo(console, compact=True)
         console.print()
 
@@ -337,7 +337,7 @@ def scan(
             )
 
             # Show scan result first
-            if format == "text":
+            if output_format == "text":
                 no_color = ctx.obj.get("no_color", False)
                 display_scan_result(result, no_color=no_color, explain=explain)
 
@@ -381,7 +381,7 @@ def scan(
         )
 
     # Output based on format
-    if format == "json" and not profile:
+    if output_format == "json" and not profile:
         # Collect L1 detections
         l1_detections = [
             {
@@ -444,7 +444,7 @@ def scan(
         }
         click.echo(json.dumps(output, indent=2))
 
-    elif format == "yaml" and not profile:
+    elif output_format == "yaml" and not profile:
         try:
             import yaml
 
@@ -492,7 +492,7 @@ def scan(
             display_error("PyYAML not installed", "Use --format json instead")
             sys.exit(1)
 
-    elif format == "text" and not profile:
+    elif output_format == "text" and not profile:
         # Use rich output
         no_color = ctx.obj.get("no_color", False)
         display_scan_result(result, no_color=no_color, explain=explain)
@@ -526,7 +526,7 @@ def scan(
     is_flag=True,
     help="Stop on first critical threat",
 )
-def batch_scan(file: str, format: str, output: str | None, fail_fast: bool) -> None:
+def batch_scan(file: str, output_format: str, output: str | None, fail_fast: bool) -> None:
     """
     Batch scan prompts from a file.
 
@@ -544,7 +544,7 @@ def batch_scan(file: str, format: str, output: str | None, fail_fast: bool) -> N
     from raxe.cli.branding import print_logo
 
     # Show compact logo for text output
-    if format == "text":
+    if output_format == "text":
         print_logo(console, compact=True)
         console.print()
 
@@ -620,7 +620,7 @@ def batch_scan(file: str, format: str, output: str | None, fail_fast: bool) -> N
     console.print()
 
     # Output results
-    if format == "json":
+    if output_format == "json":
         import json
         output_data = {
             "total_scanned": len(results),
@@ -634,7 +634,7 @@ def batch_scan(file: str, format: str, output: str | None, fail_fast: bool) -> N
         else:
             console.print(json.dumps(output_data, indent=2))
 
-    elif format == "csv":
+    elif output_format == "csv":
         if not output:
             display_error("CSV format requires --output option", "Specify output file with --output")
             sys.exit(1)

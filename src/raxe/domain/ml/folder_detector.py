@@ -27,6 +27,8 @@ import numpy as np
 
 from raxe.domain.engine.executor import ScanResult as L1ScanResult
 from raxe.domain.ml.protocol import L2Detector, L2Prediction, L2Result, L2ThreatType
+from raxe.domain.ml.scoring_models import ScoringResult, ThreatScore
+from raxe.domain.ml.threat_scorer import HierarchicalThreatScorer
 from raxe.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -91,6 +93,8 @@ class FolderL2Detector:
         confidence_threshold: float = 0.5,
         include_explanations: bool = True,
         providers: list[str] | None = None,
+        *,
+        scorer: HierarchicalThreatScorer | None = None,
     ):
         """
         Initialize folder-based detector.
@@ -101,6 +105,7 @@ class FolderL2Detector:
             include_explanations: Whether to generate human-readable explanations
             providers: ONNX Runtime providers (default: ['CPUExecutionProvider'])
                       Can use ['CUDAExecutionProvider', 'CPUExecutionProvider'] for GPU
+            scorer: Optional hierarchical threat scorer for advanced classification
 
         Raises:
             FileNotFoundError: If required model files are missing
@@ -111,6 +116,7 @@ class FolderL2Detector:
         self.confidence_threshold = confidence_threshold
         self.include_explanations = include_explanations
         self.providers = providers or ['CPUExecutionProvider']
+        self.scorer = scorer
 
         # Validate directory exists
         if not self.model_dir.exists():
@@ -302,10 +308,88 @@ class FolderL2Detector:
             # 3. Run classifiers
             predictions_dict = self._classify(embeddings, text)
 
-            # 4. Convert to L2 predictions
-            predictions = self._create_l2_predictions(predictions_dict)
+            # 4. Apply hierarchical threat scoring (if scorer enabled)
+            scoring_result = None
+            hierarchical_score = None
+            classification = None
+            recommended_action = None
+            decision_rationale = None
+            signal_quality = None
 
-            # 5. Calculate metrics
+            if self.scorer and predictions_dict["is_attack"]:
+                # Extract full probability distributions for scoring
+                prob_dists = predictions_dict.get("probability_distributions", {})
+
+                binary_proba = prob_dists.get("binary")
+                family_proba = prob_dists.get("family")
+                subfamily_proba = prob_dists.get("subfamily")
+
+                # Use defaults if distributions not available
+                if binary_proba is None:
+                    binary_proba = [
+                        1.0 - predictions_dict["scores"]["attack_probability"],
+                        predictions_dict["scores"]["attack_probability"]
+                    ]
+                if family_proba is None:
+                    family_proba = [predictions_dict["scores"]["family_confidence"]]
+                if subfamily_proba is None:
+                    subfamily_proba = [predictions_dict["scores"]["subfamily_confidence"]]
+
+                # Convert numpy arrays to lists for ThreatScore
+                if isinstance(binary_proba, np.ndarray):
+                    binary_proba = binary_proba.tolist()
+                if isinstance(family_proba, np.ndarray):
+                    family_proba = family_proba.tolist()
+                if isinstance(subfamily_proba, np.ndarray):
+                    subfamily_proba = subfamily_proba.tolist()
+
+                try:
+                    # Create ThreatScore object
+                    threat_score = ThreatScore(
+                        binary_threat_score=predictions_dict["scores"]["attack_probability"],
+                        binary_safe_score=1.0 - predictions_dict["scores"]["attack_probability"],
+                        family_confidence=predictions_dict["scores"]["family_confidence"],
+                        subfamily_confidence=predictions_dict["scores"]["subfamily_confidence"],
+                        binary_proba=binary_proba,
+                        family_proba=family_proba,
+                        subfamily_proba=subfamily_proba,
+                        family_name=predictions_dict.get("family"),
+                        subfamily_name=predictions_dict.get("sub_family"),
+                    )
+
+                    # Score the threat
+                    scoring_result = self.scorer.score(threat_score)
+
+                    # Extract scoring metadata
+                    hierarchical_score = scoring_result.hierarchical_score
+                    classification = scoring_result.classification.value
+                    recommended_action = scoring_result.action.value
+                    decision_rationale = scoring_result.reason
+                    signal_quality = {
+                        "is_consistent": scoring_result.is_consistent,
+                        "variance": scoring_result.variance,
+                        "weak_margins_count": scoring_result.weak_margins_count,
+                        "margins": scoring_result.metadata.get("margins", {}),
+                    }
+
+                    logger.debug(
+                        "hierarchical_scoring_applied",
+                        classification=classification,
+                        action=recommended_action,
+                        hierarchical_score=hierarchical_score,
+                        threat_score=predictions_dict["scores"]["attack_probability"],
+                    )
+                except Exception as e:
+                    logger.warning(f"Hierarchical scoring failed: {e}", exc_info=True)
+                    # Continue without scoring - graceful degradation
+
+            # 5. Convert to L2 predictions
+            predictions = self._create_l2_predictions(
+                predictions_dict,
+                scoring_result=scoring_result
+            )
+
+            # 6. Calculate metrics
             processing_time_ms = (time.perf_counter() - start_time) * 1000
 
             return L2Result(
@@ -323,7 +407,12 @@ class FolderL2Detector:
                     "model_dir": str(self.model_dir),
                     "providers": self.providers,
                     "quantization": "int8" if "int8" in self.model_dir.name else "fp16",
-                }
+                },
+                hierarchical_score=hierarchical_score,
+                classification=classification,
+                recommended_action=recommended_action,
+                decision_rationale=decision_rationale,
+                signal_quality=signal_quality,
             )
 
         except Exception as e:
@@ -394,6 +483,12 @@ class FolderL2Detector:
         prob_dict = binary_outputs[1][0]  # output_probability map
         attack_probability = float(prob_dict.get(1, 0.0))  # Get prob for class 1 (attack)
 
+        # Store full probability distribution for scoring
+        binary_proba_full = np.array([
+            float(prob_dict.get(0, 0.0)),  # prob_benign
+            float(prob_dict.get(1, 0.0)),  # prob_attack
+        ])
+
         logger.debug(
             "binary_classifier_output",
             is_attack=is_attack,
@@ -410,6 +505,11 @@ class FolderL2Detector:
                 "attack_probability": attack_probability,
                 "family_confidence": 1.0 - attack_probability if not is_attack else 0.0,
                 "subfamily_confidence": 1.0 - attack_probability if not is_attack else 0.0,
+            },
+            "probability_distributions": {
+                "binary": binary_proba_full,
+                "family": None,
+                "subfamily": None,
             },
             "why_it_hit": [],
             "recommended_action": [],
@@ -430,6 +530,12 @@ class FolderL2Detector:
                 family = self.family_labels.get(family_idx, "UNKNOWN")
                 family_confidence = float(family_prob_dict.get(family_idx, 0.0))
 
+                # Store full probability distribution
+                family_proba_full = np.array([
+                    float(family_prob_dict.get(i, 0.0))
+                    for i in range(len(self.family_labels))
+                ])
+
                 logger.debug(
                     "family_classifier_output",
                     family_idx=family_idx,
@@ -440,6 +546,7 @@ class FolderL2Detector:
 
                 result["family"] = family
                 result["scores"]["family_confidence"] = family_confidence
+                result["probability_distributions"]["family"] = family_proba_full
 
             # Run subfamily classifier if available
             if self.subfamily_session:
@@ -453,6 +560,12 @@ class FolderL2Detector:
                 sub_family = self.subfamily_labels.get(subfamily_idx, "unknown")
                 subfamily_confidence = float(subfamily_prob_dict.get(subfamily_idx, 0.0))
 
+                # Store full probability distribution
+                subfamily_proba_full = np.array([
+                    float(subfamily_prob_dict.get(i, 0.0))
+                    for i in range(len(self.subfamily_labels))
+                ])
+
                 logger.debug(
                     "subfamily_classifier_output",
                     subfamily_idx=subfamily_idx,
@@ -463,6 +576,7 @@ class FolderL2Detector:
 
                 result["sub_family"] = sub_family
                 result["scores"]["subfamily_confidence"] = subfamily_confidence
+                result["probability_distributions"]["subfamily"] = subfamily_proba_full
 
             # Generate explanations
             result["why_it_hit"] = self._generate_why_it_hit(result)
@@ -518,7 +632,12 @@ class FolderL2Detector:
 
         return why
 
-    def _create_l2_predictions(self, predictions_dict: dict) -> list[L2Prediction]:
+    def _create_l2_predictions(
+        self,
+        predictions_dict: dict,
+        *,
+        scoring_result: ScoringResult | None = None,
+    ) -> list[L2Prediction]:
         """Convert internal predictions to L2Prediction objects."""
         predictions = []
 
@@ -533,6 +652,21 @@ class FolderL2Detector:
             else:
                 explanation = None
 
+            # Build metadata with scoring results if available
+            metadata = {
+                "is_attack": predictions_dict["is_attack"],
+                "family": family,
+                "sub_family": predictions_dict["sub_family"],
+                "scores": predictions_dict["scores"],
+                "why_it_hit": predictions_dict["why_it_hit"],
+                "recommended_action": predictions_dict["recommended_action"],
+                "uncertain": predictions_dict["uncertain"],
+            }
+
+            # Add hierarchical scoring metadata if available
+            if scoring_result:
+                metadata["hierarchical_scoring"] = scoring_result.to_dict()
+
             # Create L2 prediction
             prediction = L2Prediction(
                 threat_type=l2_type,
@@ -543,15 +677,8 @@ class FolderL2Detector:
                     f"subfamily={predictions_dict['sub_family']}",
                     f"folder_model={self.model_dir.name}",
                 ],
-                metadata={
-                    "is_attack": predictions_dict["is_attack"],
-                    "family": family,
-                    "sub_family": predictions_dict["sub_family"],
-                    "scores": predictions_dict["scores"],
-                    "why_it_hit": predictions_dict["why_it_hit"],
-                    "recommended_action": predictions_dict["recommended_action"],
-                    "uncertain": predictions_dict["uncertain"],
-                }
+                metadata=metadata,
+                scoring_result=scoring_result,
             )
             predictions.append(prediction)
 
@@ -596,6 +723,8 @@ def create_folder_detector(
     model_dir: str | Path,
     confidence_threshold: float = 0.5,
     providers: list[str] | None = None,
+    *,
+    scorer: HierarchicalThreatScorer | None = None,
 ) -> L2Detector:
     """
     Factory function to create folder-based detector.
@@ -604,6 +733,7 @@ def create_folder_detector(
         model_dir: Directory containing ONNX models
         confidence_threshold: Minimum confidence for predictions
         providers: ONNX Runtime providers
+        scorer: Optional hierarchical threat scorer for advanced classification
 
     Returns:
         L2Detector implementation (FolderL2Detector)
@@ -618,9 +748,17 @@ def create_folder_detector(
             "models/threat_classifier_fp16_deploy",
             providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
         )
+
+        # With hierarchical scoring
+        scorer = HierarchicalThreatScorer(mode="balanced")
+        detector = create_folder_detector(
+            "models/threat_classifier_int8_deploy",
+            scorer=scorer
+        )
     """
     return FolderL2Detector(
         model_dir=model_dir,
         confidence_threshold=confidence_threshold,
         providers=providers,
+        scorer=scorer,
     )

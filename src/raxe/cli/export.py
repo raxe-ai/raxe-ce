@@ -30,7 +30,7 @@ from raxe.cli.output import console, create_progress_bar, display_error, display
     default=30,
     help="Days of history to export (default: 30)",
 )
-def export(format: str, output: str | None, days: int) -> None:
+def export(output_format: str, output: str | None, days: int) -> None:
     """
     Export scan history to JSON or CSV.
 
@@ -74,7 +74,7 @@ def export(format: str, output: str | None, days: int) -> None:
         with create_progress_bar("Exporting...") as progress:
             task = progress.add_task("Processing...", total=len(data))
 
-            if format == "json":
+            if output_format == "json":
                 _export_json(output_path, data, progress, task)
             else:
                 _export_csv(output_path, data, progress, task)
@@ -87,7 +87,7 @@ def export(format: str, output: str | None, days: int) -> None:
 
     except Exception as e:
         display_error("Export failed", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 def _load_scan_history(days: int) -> list[dict]:

@@ -14,7 +14,7 @@ Performance target: <1ms (should be trivial since it's just string ops)
 import base64
 import re
 import time
-from typing import Any
+from typing import Any, ClassVar
 
 from raxe.domain.engine.executor import ScanResult as L1ScanResult
 from raxe.domain.ml.protocol import L2Prediction, L2Result, L2ThreatType
@@ -43,7 +43,7 @@ class StubL2Detector:
     VERSION = "stub-1.0.0"
 
     # Suspicious function/method patterns
-    SUSPICIOUS_PATTERNS = [
+    SUSPICIOUS_PATTERNS: ClassVar[list] = [
         r"\beval\s*\(",
         r"\bexec\s*\(",
         r"__import__",
@@ -57,7 +57,7 @@ class StubL2Detector:
     ]
 
     # Encoding indicators
-    ENCODING_INDICATORS = [
+    ENCODING_INDICATORS: ClassVar[list] = [
         r"\bbase64\b",
         r"\bb64decode\b",
         r"\bfromhex\b",
@@ -68,14 +68,14 @@ class StubL2Detector:
     ]
 
     # Obfuscation patterns
-    OBFUSCATION_PATTERNS = [
+    OBFUSCATION_PATTERNS: ClassVar[list] = [
         r"[\u200B-\u200D\uFEFF]",  # Zero-width characters
         r"[\u0000-\u0008\u000B\u000C\u000E-\u001F]",  # Control characters (excluding \t \n \r)
         r"[^\x00-\x7F]{20,}",       # Long non-ASCII sequences
     ]
 
     # Role/privilege escalation keywords
-    PRIVILEGE_KEYWORDS = [
+    PRIVILEGE_KEYWORDS: ClassVar[list] = [
         r"\bsudo\b",
         r"\badmin\b",
         r"\broot\b",

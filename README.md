@@ -398,7 +398,7 @@ if user_input:
 
 ### Ways to Contribute
 
-1. **Add Detection Rules** – Help catch more threats ([CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
+1. **Add Detection Rules** – Help catch more threats ([docs/CUSTOM_RULES.md](docs/CUSTOM_RULES.md))
 2. **Report Vulnerabilities** – Responsible disclosure ([SECURITY.md](SECURITY.md))
 3. **Improve Documentation** – Make security education better
 4. **Share Knowledge** – Write tutorials, blog posts, case studies
@@ -472,7 +472,7 @@ remediation_advice: |
   and monitor for suspicious patterns.
 ```
 
-See [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md) for the full guide.
+See [docs/CUSTOM_RULES.md](docs/CUSTOM_RULES.md) for the full guide.
 
 ---
 

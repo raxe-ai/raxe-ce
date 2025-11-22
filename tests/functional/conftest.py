@@ -7,7 +7,7 @@ import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -23,21 +23,21 @@ def test_data_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def safe_prompts(test_data_dir: Path) -> List[str]:
+def safe_prompts(test_data_dir: Path) -> list[str]:
     """Load safe test prompts."""
     with open(test_data_dir / "safe_prompts.json") as f:
         return json.load(f)["prompts"]
 
 
 @pytest.fixture(scope="session")
-def threat_prompts(test_data_dir: Path) -> List[str]:
+def threat_prompts(test_data_dir: Path) -> list[str]:
     """Load threat test prompts."""
     with open(test_data_dir / "threat_prompts.json") as f:
         return json.load(f)["prompts"]
 
 
 @pytest.fixture(scope="session")
-def edge_cases(test_data_dir: Path) -> Dict[str, Any]:
+def edge_cases(test_data_dir: Path) -> dict[str, Any]:
     """Load edge case test data."""
     with open(test_data_dir / "edge_cases.json") as f:
         return json.load(f)
@@ -95,7 +95,7 @@ def performance_tracker():
                     self.metrics[name] = []
                 self.metrics[name].append(duration_ms)
 
-        def get_stats(self, name: str) -> Dict[str, float]:
+        def get_stats(self, name: str) -> dict[str, float]:
             """Get statistics for a metric."""
             if name not in self.metrics:
                 return {}

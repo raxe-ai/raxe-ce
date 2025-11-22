@@ -16,7 +16,10 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from functools import wraps
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+if TYPE_CHECKING:
+    from raxe.sdk.client import Raxe
 
 # Type variable for generic function
 F = TypeVar('F', bound=Callable[..., Any])

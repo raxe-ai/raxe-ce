@@ -1,8 +1,7 @@
 """Test L2 model loading with ONNX/bundle/stub fallback chain."""
-import os
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -98,7 +97,7 @@ class TestL2ModelLoading:
 
         # First scan should not trigger L2 loading
         start = time.perf_counter()
-        result = client.scan("Test prompt")
+        client.scan("Test prompt")
         first_scan_ms = (time.perf_counter() - start) * 1000
 
         # First scan should be fast (L2 already loaded)
@@ -156,7 +155,7 @@ class TestL2ModelLoading:
 
             # Inference should be fast too
             start = time.perf_counter()
-            result = client.scan("Test prompt for INT8 model")
+            client.scan("Test prompt for INT8 model")
             inference_ms = (time.perf_counter() - start) * 1000
 
             assert inference_ms < 150  # INT8 should meet <150ms target
@@ -186,13 +185,13 @@ class TestL2ModelLoading:
         memory_tracker.reset_baseline()
 
         # Load with L2
-        client_with_l2 = Raxe(l2_enabled=True)
+        Raxe(l2_enabled=True)
         with_l2_memory = memory_tracker.get_delta_mb()
 
         memory_tracker.reset_baseline()
 
         # Load without L2
-        client_without_l2 = Raxe(l2_enabled=False)
+        Raxe(l2_enabled=False)
         without_l2_memory = memory_tracker.get_delta_mb()
 
         # L2 model should add reasonable memory (<500MB for INT8)
@@ -205,7 +204,7 @@ class TestL2ModelLoading:
         """Test rapid model loading under stress."""
         load_times = []
 
-        for i in range(3):
+        for _i in range(3):
             start = time.perf_counter()
             client = Raxe()
             load_times.append((time.perf_counter() - start) * 1000)

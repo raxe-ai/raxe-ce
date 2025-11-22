@@ -16,7 +16,10 @@ before sending to OpenAI, and optionally scans responses.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from raxe.sdk.client import Raxe
 
 # Try to import OpenAI at module level
 try:

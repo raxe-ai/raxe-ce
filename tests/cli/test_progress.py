@@ -3,8 +3,6 @@
 import io
 import sys
 
-import pytest
-
 from raxe.cli.progress import (
     InteractiveProgress,
     NullProgress,

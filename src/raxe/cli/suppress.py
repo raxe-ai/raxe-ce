@@ -36,7 +36,7 @@ def suppress():
 )
 @click.option(
     "--expires",
-    help="Expiration date (ISO format: 2025-12-31T23:59:59Z)",
+    help="Expiration date (ISO output_format: 2025-12-31T23:59:59Z)",
 )
 @click.option(
     "--save",
@@ -103,7 +103,7 @@ def add_suppression(pattern: str, reason: tuple[str], config: str | None, expire
     default="table",
     help="Output format (default: table)",
 )
-def list_suppressions(config: str | None, format: str):
+def list_suppressions(config: str | None, output_format: str):
     """List all active suppressions.
 
     Examples:
@@ -123,7 +123,7 @@ def list_suppressions(config: str | None, format: str):
         console.print(f"Or create {manager.config_path}")
         return
 
-    if format == "json":
+    if output_format == "json":
         import json
         output = [
             {
@@ -137,7 +137,7 @@ def list_suppressions(config: str | None, format: str):
         ]
         console.print(json.dumps(output, indent=2))
 
-    elif format == "text":
+    elif output_format == "text":
         for s in suppressions:
             console.print(f"{s.pattern}  # {s.reason}")
 

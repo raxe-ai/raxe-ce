@@ -9,7 +9,6 @@ import pytest
 from raxe.cli.output import (
     display_error,
     display_info,
-    display_scan_result,
     display_stats,
     display_success,
     display_warning,
@@ -77,9 +76,6 @@ class TestDisplayScanResult:
         """Test displaying with no_color flag."""
         # TODO: Update test to match current architecture
         pytest.skip("Test needs updating to match current architecture")
-
-        # Should not raise an error
-        display_scan_result(pipeline_result, no_color=True)
 
 
 class TestDisplayMessages:

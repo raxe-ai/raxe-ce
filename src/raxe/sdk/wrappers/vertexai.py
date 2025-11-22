@@ -23,7 +23,10 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from raxe.sdk.client import Raxe
 
 logger = logging.getLogger(__name__)
 
@@ -112,11 +115,11 @@ class RaxeVertexAI:
         # Try to import Vertex AI
         try:
             from google.cloud import aiplatform
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "google-cloud-aiplatform package is required for RaxeVertexAI. "
                 "Install with: pip install google-cloud-aiplatform"
-            )
+            ) from e
 
         # Initialize Vertex AI
         aiplatform.init(

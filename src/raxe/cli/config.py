@@ -78,7 +78,7 @@ def show(path: Path | None) -> None:
     except Exception as e:
         console.print(f"[red]Error loading config:[/red] {e}")
         logger.error("config_show_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @config.command()
@@ -89,7 +89,7 @@ def show(path: Path | None) -> None:
     type=click.Path(path_type=Path),
     help="Config file path (default: ~/.raxe/config.yaml)",
 )
-def set(key: str, value: str, path: Path | None) -> None:
+def set_value(key: str, value: str, path: Path | None) -> None:
     """Set a configuration value.
 
     KEY should be in format: section.key (e.g., detection.mode)
@@ -125,11 +125,11 @@ def set(key: str, value: str, path: Path | None) -> None:
     except ValueError as e:
         console.print(f"[red]Invalid key:[/red] {e}")
         logger.error("config_set_failed", key=key, error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
     except Exception as e:
         console.print(f"[red]Error updating config:[/red] {e}")
         logger.error("config_set_failed", key=key, error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @config.command()
@@ -156,7 +156,7 @@ def reset(path: Path | None) -> None:
     except Exception as e:
         console.print(f"[red]Error resetting config:[/red] {e}")
         logger.error("config_reset_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @config.command()
@@ -185,7 +185,7 @@ def validate(path: Path | None) -> None:
     except Exception as e:
         console.print(f"[red]Error validating config:[/red] {e}")
         logger.error("config_validate_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @config.command()
@@ -218,4 +218,4 @@ def edit(path: Path | None) -> None:
     except Exception as e:
         console.print(f"[red]Error opening editor:[/red] {e}")
         logger.error("config_edit_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e

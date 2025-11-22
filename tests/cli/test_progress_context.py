@@ -4,8 +4,6 @@ import os
 import sys
 from unittest.mock import patch
 
-import pytest
-
 from raxe.cli.progress_context import (
     detect_progress_mode,
     supports_animation,

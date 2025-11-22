@@ -5,9 +5,14 @@ This directory contains production-ready examples demonstrating how to integrate
 ## Quick Start Examples
 
 ### Basic Usage
-- [basic_scan.py](basic_scan.py) - Simple scanning example
-- [decorator_pattern.py](decorator_pattern.py) - Decorator-based protection
-- [openai_wrapper.py](openai_wrapper.py) - OpenAI client wrapper
+- **[basic_scan.py](basic_scan.py)** - Simple scanning example with comprehensive patterns
+- **[decorator_usage.py](decorator_usage.py)** - Decorator-based protection (@raxe.protect)
+- **[openai_wrapper.py](openai_wrapper.py)** - OpenAI client wrapper with auto-scanning
+- **[async_usage.py](async_usage.py)** - Async SDK for high-throughput scenarios (>1000 req/sec)
+- **[layer_control_usage.py](layer_control_usage.py)** - Fine-grained control of L1/L2 layers
+- **[async_parallel_scan_demo.py](async_parallel_scan_demo.py)** - Parallel async scanning demo
+- **[decorator_blocking_examples.py](decorator_blocking_examples.py)** - Advanced decorator patterns
+- **[domain_analytics_demo.py](domain_analytics_demo.py)** - Analytics and reporting
 
 ## Framework Integrations
 
@@ -22,13 +27,25 @@ This directory contains production-ready examples demonstrating how to integrate
 
 ## AI/ML Framework Integrations
 
-- **[LangChain, Anthropic, HuggingFace, Vertex AI](integrations/)** - Official framework integrations
+- **[LangChain](integrations/langchain_example.py)** - Callback handler for LangChain
+- **[Anthropic](integrations/anthropic_example.py)** - Claude API integration
+- **[HuggingFace](integrations/huggingface_example.py)** - HuggingFace models integration
+- **[Vertex AI](integrations/vertexai_example.py)** - Google Vertex AI integration
 - **[RAG Pipeline](rag_pipeline/)** - Multi-stage security for retrieval-augmented generation
+- See [integrations/README.md](integrations/README.md) for complete list
 
 ## Data Processing
 
 - **[Batch Processing](batch_processing/)** - Parallel scanning for large datasets (CSV)
 - **[Jupyter Notebooks](notebooks/)** - Interactive tutorials with visualizations
+
+## Plugins & Extensions
+
+- **[Custom Detector](plugins/custom_detector/)** - Create custom detection logic
+- **[Webhook Notifier](plugins/webhook/)** - Send alerts to external systems
+- **[Slack Notifier](plugins/slack_notifier/)** - Send alerts to Slack channels
+- **[File Logger](plugins/file_logger/)** - Custom logging to files
+- See [plugins/README.md](plugins/README.md) for plugin development guide
 
 ## CI/CD Integration
 

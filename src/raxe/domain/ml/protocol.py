@@ -43,12 +43,14 @@ class L2Prediction:
         explanation: Human-readable explanation of why this was flagged
         features_used: List of feature names that triggered this prediction
         metadata: Additional prediction metadata (model-specific)
+        scoring_result: Optional hierarchical scoring result (if scorer is enabled)
     """
     threat_type: L2ThreatType
     confidence: float
     explanation: str | None = None
     features_used: list[str] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    scoring_result: Any | None = None  # ScoringResult from scoring.py
 
     def __post_init__(self) -> None:
         """Validate prediction."""
@@ -70,6 +72,11 @@ class L2Result:
         model_version: Identifier of the model that produced this result
         features_extracted: Dictionary of features extracted for analysis
         metadata: Additional result metadata (model-specific)
+        hierarchical_score: Optional hierarchical threat score (0-1)
+        classification: Optional threat classification (SAFE, FP_LIKELY, etc.)
+        recommended_action: Optional recommended action (ALLOW, BLOCK, etc.)
+        decision_rationale: Optional explanation of classification decision
+        signal_quality: Optional dict with consistency, margins, variance metrics
     """
     predictions: list[L2Prediction]
     confidence: float
@@ -77,6 +84,11 @@ class L2Result:
     model_version: str
     features_extracted: dict[str, Any] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    hierarchical_score: float | None = None
+    classification: str | None = None
+    recommended_action: str | None = None
+    decision_rationale: str | None = None
+    signal_quality: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         """Validate result."""

@@ -10,11 +10,10 @@ These tests ensure that:
 4. Confidence thresholds are respected for L2 predictions
 """
 
-import pytest
 
 from raxe.application.scan_merger import ScanMerger
 from raxe.application.scan_pipeline import ScanPipeline
-from raxe.domain.engine.executor import RuleExecutor, ScanResult
+from raxe.domain.engine.executor import RuleExecutor
 from raxe.domain.ml.protocol import L2Prediction, L2Result, L2ThreatType
 from raxe.domain.models import BlockAction, ScanPolicy
 from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
@@ -359,7 +358,7 @@ class TestL2PolicyWithRealDetector:
         )
 
         # Load real pipeline with stub L2 detector
-        pipeline, stats = preload_pipeline(config=config)
+        pipeline, _stats = preload_pipeline(config=config)
 
         # Override policy to block on CRITICAL
         pipeline.policy = ScanPolicy(block_on_critical=True)
@@ -385,11 +384,16 @@ class TestBackwardCompatibility:
     def test_l1_only_blocking_still_works(self, tmp_path):
         """Verify L1-only blocking still works as before."""
         from raxe.domain.rules.models import (
-            Rule, Severity, Pattern, RuleExamples, RuleMetrics, RuleFamily
+            Pattern,
+            Rule,
+            RuleExamples,
+            RuleFamily,
+            RuleMetrics,
+            Severity,
         )
 
         # Create a rule that will match
-        test_rule = Rule(
+        Rule(
             rule_id="test-rule",
             version="1.0.0",
             family=RuleFamily.PI,
@@ -439,7 +443,7 @@ class TestBackwardCompatibility:
             enable_l2=False,  # Disable L2 to test L1-only
         )
 
-        pipeline, stats = preload_pipeline(config=config)
+        pipeline, _stats = preload_pipeline(config=config)
         pipeline.policy = ScanPolicy(block_on_critical=True)
 
         # Scan with a known pattern (if default packs are loaded)

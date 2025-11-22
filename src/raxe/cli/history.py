@@ -22,7 +22,7 @@ def history() -> None:
 @history.command()
 @click.option("--limit", default=20, help="Number of scans to show")
 @click.option("--severity", help="Filter by severity (CRITICAL, HIGH, MEDIUM, LOW)")
-def list(limit: int, severity: str | None) -> None:
+def list_scans(limit: int, severity: str | None) -> None:
     """List recent scans."""
     try:
         db = ScanHistoryDB()
@@ -70,7 +70,7 @@ def list(limit: int, severity: str | None) -> None:
     except Exception as e:
         console.print(f"[red]Error listing scans:[/red] {e}")
         logger.error("history_list_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @history.command()
@@ -130,7 +130,7 @@ def show(scan_id: int) -> None:
     except Exception as e:
         console.print(f"[red]Error showing scan:[/red] {e}")
         logger.error("history_show_failed", scan_id=scan_id, error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @history.command()
@@ -168,7 +168,7 @@ def stats(days: int) -> None:
     except Exception as e:
         console.print(f"[red]Error getting statistics:[/red] {e}")
         logger.error("history_stats_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @history.command()
@@ -179,12 +179,12 @@ def stats(days: int) -> None:
     help="Output file path (default: stdout)",
 )
 @click.option("--format", type=click.Choice(["json", "csv"]), default="json")
-def export(scan_id: int, output: Path | None, format: str) -> None:
+def export(scan_id: int, output: Path | None, output_format: str) -> None:
     """Export scan to JSON or CSV."""
     try:
         db = ScanHistoryDB()
 
-        if format == "json":
+        if output_format == "json":
             data = db.export_to_json(scan_id)
             json_str = json.dumps(data, indent=2)
 
@@ -194,7 +194,7 @@ def export(scan_id: int, output: Path | None, format: str) -> None:
             else:
                 console.print(json_str)
 
-        elif format == "csv":
+        elif output_format == "csv":
             # Simple CSV export
             scan = db.get_scan(scan_id)
             detections = db.get_detections(scan_id)
@@ -220,12 +220,12 @@ def export(scan_id: int, output: Path | None, format: str) -> None:
             else:
                 console.print(csv_str)
 
-        logger.info("history_export_completed", scan_id=scan_id, format=format)
+        logger.info("history_export_completed", scan_id=scan_id, output_format =format)
 
     except Exception as e:
         console.print(f"[red]Error exporting scan:[/red] {e}")
         logger.error("history_export_failed", scan_id=scan_id, error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
 
 @history.command()
@@ -244,4 +244,4 @@ def clean(days: int) -> None:
     except Exception as e:
         console.print(f"[red]Error cleaning history:[/red] {e}")
         logger.error("history_clean_failed", error=str(e))
-        raise click.Abort()
+        raise click.Abort() from e

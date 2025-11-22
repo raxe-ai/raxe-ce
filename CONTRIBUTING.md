@@ -14,7 +14,7 @@ Thank you for your interest in contributing to RAXE CE!
 - Enhance documentation
 
 ### 2. Rules & Detection Logic
-- Contribute new detection rules to `src/raxe/packs/core/v1.0.0/rules/` (see [CONTRIBUTING_RULES.md](CONTRIBUTING_RULES.md))
+- Contribute new detection rules to `src/raxe/packs/core/v1.0.0/rules/` (see [docs/CUSTOM_RULES.md](docs/CUSTOM_RULES.md))
 - Improve existing rules
 - Add test cases for edge cases
 - Report false positives/negatives

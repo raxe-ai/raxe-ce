@@ -88,7 +88,7 @@ class TestSDKThreadSafety:
         assert len(results) == 5
 
         # Each thread should have 3 results
-        for thread_id, thread_results in results.items():
+        for _thread_id, thread_results in results.items():
             assert len(thread_results) == 3
             assert all(r.status == "safe" for r in thread_results)
 
@@ -213,7 +213,7 @@ class TestSDKThreadSafety:
         # Create clients concurrently
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(create_client, i) for i in range(5)]
-            init_times = [f.result() for f in as_completed(futures, timeout=5)]
+            [f.result() for f in as_completed(futures, timeout=5)]
 
         # All should initialize successfully
         assert len(clients) == 5

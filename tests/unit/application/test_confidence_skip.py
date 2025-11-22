@@ -2,18 +2,16 @@
 
 Tests that L2 is intelligently skipped based on L1 confidence levels.
 """
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
-from raxe.application.scan_pipeline import ScanPipeline
 from raxe.application.scan_merger import ScanMerger
+from raxe.application.scan_pipeline import ScanPipeline
 from raxe.domain.engine.executor import RuleExecutor
 from raxe.domain.ml.stub_detector import StubL2Detector
-from raxe.domain.models import ScanPolicy
 from raxe.domain.rules.models import Pattern, Rule, RuleExamples, RuleFamily, RuleMetrics, Severity
-from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
+from raxe.infrastructure.packs.registry import PackRegistry
 
 
 @pytest.fixture

@@ -1,0 +1,117 @@
+# RAXE Configuration Example with Hierarchical Scoring
+# Copy this file to ~/.raxe/config.yaml or .raxe/config.yaml in your project
+
+scan:
+  # Rule packs location
+  packs_root: ~/.raxe/packs
+
+  # L2 ML Detection
+  enable_l2: true
+  use_production_l2: true
+  l2_confidence_threshold: 0.5
+
+  # Performance optimizations
+  fail_fast_on_critical: false
+  min_confidence_for_skip: 0.7
+
+# Hierarchical Threat Scoring Configuration
+# This uses multiple confidence signals to reduce false positives
+l2_scoring:
+  # Simple Mode: Choose a preset (recommended for most users)
+  # Options: high_security, balanced, low_fp
+  # - high_security: More aggressive blocking, fewer false negatives
+  # - balanced: Balance between security and false positives (RECOMMENDED)
+  # - low_fp: Minimize false positives, may miss some threats
+  mode: balanced
+
+  # Advanced: Enable/disable signal quality checks
+  enable_consistency_check: true  # Check variance across confidence levels
+  enable_margin_analysis: true    # Analyze probability distribution margins
+  enable_entropy: false            # Future feature for uncertainty estimation
+
+  # Expert Mode: Custom Thresholds (optional - overrides mode defaults)
+  # Only use if you understand the impact on detection accuracy
+  # custom_thresholds:
+  #   safe: 0.5              # Below this = SAFE (allow)
+  #   fp_likely: 0.55        # Low hierarchical score = likely false positive
+  #   review: 0.70           # Inconsistent signals = needs review
+  #   threat: 0.85           # Confident threat = block
+  #   high_threat: 0.95      # Very confident = block + alert
+  #   inconsistency_threshold: 0.05  # Max variance for consistent signals
+  #   weak_family: 0.4       # Below this family confidence = weak signal
+  #   weak_subfamily: 0.3    # Below this subfamily confidence = weak signal
+
+  # Expert Mode: Custom Weights (optional - overrides defaults)
+  # Weights for hierarchical score calculation (must sum to 1.0)
+  # weights:
+  #   binary: 0.60      # Binary is_attack classifier (most reliable)
+  #   family: 0.25      # Attack family classifier (important for context)
+  #   subfamily: 0.15   # Attack subfamily classifier (helps identify FPs)
+
+  # Expert Mode: Per-Family Adjustments (optional)
+  # Adjust thresholds for specific attack families
+  # family_adjustments:
+  #   PI:   # Prompt Injection
+  #     threat: 0.80  # Slightly lower threshold for PI
+  #   JB:   # Jailbreak
+  #     threat: 0.85
+  #   TOX:  # Toxicity (often has false positives)
+  #     fp_likely: 0.60  # Higher FP threshold
+
+# Policy Configuration
+policy:
+  # Blocking behavior
+  block_on_critical: true
+  block_on_high: false
+
+  # Confidence thresholds
+  allow_on_low_confidence: true
+  confidence_threshold: 0.7
+
+# Performance Monitoring
+performance:
+  mode: fail_open  # Options: fail_open, fail_closed
+  failure_threshold: 5
+  reset_timeout_seconds: 30.0
+  half_open_requests: 3
+  sample_rate: 10
+  latency_threshold_ms: 10.0
+
+# Telemetry (optional - helps improve RAXE)
+telemetry:
+  enabled: false
+  # api_key: your-api-key-here
+  endpoint: https://telemetry.raxe.ai/v1/events
+  batch_size: 10
+  flush_interval_seconds: 30.0
+  max_queue_size: 1000
+  async_send: true
+
+# Example Configurations for Different Use Cases
+
+# 1. High Security Environment (e.g., Financial Services)
+# l2_scoring:
+#   mode: high_security
+#   enable_consistency_check: true
+#   enable_margin_analysis: true
+
+# 2. Low False Positive (e.g., Customer Support)
+# l2_scoring:
+#   mode: low_fp
+#   custom_thresholds:
+#     fp_likely: 0.60    # More lenient on FPs
+#     review: 0.80       # Higher review threshold
+
+# 3. Balanced (Recommended for Most Users)
+# l2_scoring:
+#   mode: balanced
+
+# 4. Expert Mode with Custom Tuning
+# l2_scoring:
+#   mode: balanced
+#   custom_thresholds:
+#     threat: 0.88       # Slightly higher threat threshold
+#   weights:
+#     binary: 0.65       # More weight on binary classifier
+#     family: 0.25
+#     subfamily: 0.10

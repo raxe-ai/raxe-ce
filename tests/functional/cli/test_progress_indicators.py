@@ -3,7 +3,6 @@ import os
 import subprocess
 import sys
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -22,7 +21,7 @@ class TestCLIProgressIndicators:
         env = {**os.environ, "TERM": "xterm", "COLUMNS": "80"}
 
         result = subprocess.run(
-            self.raxe_cmd + ["scan", safe_prompts[0]],
+            [*self.raxe_cmd, "scan", safe_prompts[0]],
             capture_output=True,
             text=True,
             env=env
@@ -38,12 +37,11 @@ class TestCLIProgressIndicators:
         """Test progress indicators in non-TTY environment (CI/CD)."""
         # Simulate non-TTY environment
         env = {**os.environ}
-        if "TERM" in env:
-            del env["TERM"]
+        env.pop("TERM", None)
 
         # Use pipe to ensure non-TTY
         process = subprocess.Popen(
-            self.raxe_cmd + ["scan", safe_prompts[0]],
+            [*self.raxe_cmd, "scan", safe_prompts[0]],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -58,7 +56,7 @@ class TestCLIProgressIndicators:
     def test_quiet_mode_no_progress(self, safe_prompts):
         """Test quiet mode suppresses all progress indicators."""
         result = subprocess.run(
-            self.raxe_cmd + ["--quiet", "scan", safe_prompts[0]],
+            [*self.raxe_cmd, "--quiet", "scan", safe_prompts[0]],
             capture_output=True,
             text=True
         )
@@ -73,7 +71,7 @@ class TestCLIProgressIndicators:
         env = {**os.environ, "RAXE_NO_CACHE": "true"}
 
         result = subprocess.run(
-            self.raxe_cmd + ["scan", safe_prompts[0]],
+            [*self.raxe_cmd, "scan", safe_prompts[0]],
             capture_output=True,
             text=True,
             env=env
@@ -89,7 +87,7 @@ class TestCLIProgressIndicators:
         prompts = safe_prompts[:5]
 
         result = subprocess.run(
-            self.raxe_cmd + ["scan"] + prompts,
+            [*self.raxe_cmd, "scan", *prompts],
             capture_output=True,
             text=True
         )
@@ -104,14 +102,14 @@ class TestCLIProgressIndicators:
         """Test progress indicators adapt to context."""
         # Test with safe prompt
         result_safe = subprocess.run(
-            self.raxe_cmd + ["scan", safe_prompts[0]],
+            [*self.raxe_cmd, "scan", safe_prompts[0]],
             capture_output=True,
             text=True
         )
 
         # Test with threat prompt
         result_threat = subprocess.run(
-            self.raxe_cmd + ["scan", threat_prompts[0]],
+            [*self.raxe_cmd, "scan", threat_prompts[0]],
             capture_output=True,
             text=True
         )
@@ -137,7 +135,7 @@ class TestCLIProgressIndicators:
 
         start_time = time.time()
         result = subprocess.run(
-            self.raxe_cmd + ["scan", long_prompt],
+            [*self.raxe_cmd, "scan", long_prompt],
             capture_output=True,
             text=True,
             timeout=10
@@ -154,7 +152,7 @@ class TestCLIProgressIndicators:
         env = {**os.environ, "DOCKER_CONTAINER": "true", "CI": "true"}
 
         result = subprocess.run(
-            self.raxe_cmd + ["scan", safe_prompts[0]],
+            [*self.raxe_cmd, "scan", safe_prompts[0]],
             capture_output=True,
             text=True,
             env=env
@@ -167,7 +165,7 @@ class TestCLIProgressIndicators:
     def test_progress_with_verbose_flag(self, safe_prompts):
         """Test progress with verbose output."""
         result = subprocess.run(
-            self.raxe_cmd + ["--verbose", "scan", safe_prompts[0]],
+            [*self.raxe_cmd, "--verbose", "scan", safe_prompts[0]],
             capture_output=True,
             text=True
         )
@@ -181,7 +179,7 @@ class TestCLIProgressIndicators:
         """Test progress indicators handle interruption gracefully."""
         # Start a scan process
         process = subprocess.Popen(
-            self.raxe_cmd + ["scan", safe_prompts[0] * 1000],  # Long prompt
+            [*self.raxe_cmd, "scan", safe_prompts[0] * 1000],  # Long prompt
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True

@@ -48,7 +48,7 @@ def tune() -> None:
     type=click.Path(exists=True),
     help="Test file with prompts (one per line)",
 )
-def tune_threshold(min: float, max: float, step: float, test_file: str | None) -> None:
+def tune_threshold(min_threshold: float, max_threshold: float, step: float, test_file: str | None) -> None:
     """Tune confidence threshold interactively.
 
     Tests different confidence thresholds to find the optimal balance
@@ -69,7 +69,7 @@ def tune_threshold(min: float, max: float, step: float, test_file: str | None) -
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     # Load test prompts
     if test_file:
@@ -98,7 +98,7 @@ def tune_threshold(min: float, max: float, step: float, test_file: str | None) -
     with Progress() as progress:
         task = progress.add_task("[cyan]Testing thresholds...", total=int((max - min) / step) + 1)
 
-        while current <= max:
+        while current <= max_threshold:
             thresholds.append(current)
 
             # Scan all prompts with this threshold
@@ -189,7 +189,7 @@ def benchmark_modes(iterations: int, text: str) -> None:
         raxe = Raxe()
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
-        raise click.Abort()
+        raise click.Abort() from e
 
     console.print(Panel.fit(
         f"[bold cyan]Performance Mode Benchmark[/bold cyan]\n\n"

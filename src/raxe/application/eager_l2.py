@@ -26,7 +26,6 @@ Example:
 
 from __future__ import annotations
 
-import sys
 import time
 from typing import Any
 
@@ -261,6 +260,36 @@ class EagerL2Detector:
         try:
             load_start = time.perf_counter()
 
+            # Create hierarchical threat scorer if config is provided
+            scorer = None
+            if self.config and self.config.l2_scoring:
+                from raxe.domain.ml.scoring_models import ScoringMode
+                from raxe.domain.ml.threat_scorer import HierarchicalThreatScorer
+
+                try:
+                    # Map config mode string to ScoringMode enum
+                    mode_map = {
+                        "high_security": ScoringMode.HIGH_SECURITY,
+                        "balanced": ScoringMode.BALANCED,
+                        "low_fp": ScoringMode.LOW_FP,
+                    }
+                    mode = mode_map.get(self.config.l2_scoring.mode, ScoringMode.BALANCED)
+
+                    scorer = HierarchicalThreatScorer(
+                        mode=mode,
+                        enable_consistency_check=self.config.l2_scoring.enable_consistency_check,
+                        enable_margin_analysis=self.config.l2_scoring.enable_margin_analysis,
+                    )
+                    logger.info(
+                        "hierarchical_scorer_created",
+                        mode=self.config.l2_scoring.mode,
+                        consistency_check=self.config.l2_scoring.enable_consistency_check,
+                        margin_analysis=self.config.l2_scoring.enable_margin_analysis,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to create hierarchical scorer: {e}", exc_info=True)
+                    scorer = None
+
             # Check model type to choose correct loader
             if discovered.model_type == ModelType.ONNX_ONLY and discovered.model_dir:
                 # Load folder-based detector from folder
@@ -270,6 +299,7 @@ class EagerL2Detector:
                 self._detector = create_folder_detector(
                     model_dir=str(discovered.model_dir),
                     confidence_threshold=self.confidence_threshold,
+                    scorer=scorer,
                 )
             else:
                 # No other model types supported - raise clear error
@@ -332,14 +362,8 @@ class EagerL2Detector:
         # Show user-visible warning once per process
         if not EagerL2Detector._stub_warning_shown:
             from pathlib import Path
-            models_dir = Path(__file__).parent.parent / "domain" / "ml" / "models"
+            Path(__file__).parent.parent / "domain" / "ml" / "models"
 
-            print(
-                f"\n⚠️  Warning: L2 ML model not found. Using stub detector (no threat detection).\n"
-                f"   Expected location: {models_dir}/<model_folder>/\n"
-                f"   See 'raxe models list' for details.\n",
-                file=sys.stderr
-            )
             EagerL2Detector._stub_warning_shown = True
 
         logger.warning(

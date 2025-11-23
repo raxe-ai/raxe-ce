@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: pii-3002
+family: PII
+sub_family: api_keys
+name: AWS Secret Access Key Detection
+description: Detects AWS Secret Access Keys which are 40-character base64 strings
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)aws.{0,20}secret.{0,20}['\"]([A-Za-z0-9/+=]{40})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)secret.{0,20}key.{0,20}['\"]([A-Za-z0-9/+=]{40})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'"
+  - "AWS_SECRET_KEY='abcdefghijklmnopqrstuvwxyz1234567890ABCD'"
+  should_not_match:
+  - "How do I rotate my AWS secret key?"
+  - "What is an AWS secret access key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cloud_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3002-Aws-Secret-Access-Key

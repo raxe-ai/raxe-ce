@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: pii-044
+family: PII
+sub_family: pii_exposure
+name: Detects medical and health record extraction
+description: Detects medical and health record extraction
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\b(?:show|display|get|reveal|access)\s+(?:(?:patient|user)\s+)?(?:medical|health)\s+(?:records?|data|information)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:diagnosis|prescription|treatment)\s+(?:history|data|records?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:hipaa|phi|ehr)\s+(?:data|records?|information)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Show patient medical records
+  - Display health information
+  - Get diagnosis data
+  - Access prescription history
+  should_not_match:
+  - HIPAA compliance requirements
+  - Medical record formats
+  - Health data privacy
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-0044
+rule_hash: sha256:acefe87aedfb978fc30de605845fe378fbaaabf8d4e1f0d0212c8889d531a1c0
+risk_explanation: PII exposure attacks target personally identifiable information (SSNs, credit cards, health records) to facilitate identity theft, fraud, or privacy violations. Leaked PII can cause severe harm to individuals and create legal and regulatory liabilities.
+remediation_advice: Implement data classification and access controls that restrict AI access to PII. Use data masking and anonymization for training data. Deploy data loss prevention (DLP) controls that detect and block PII leakage. Audit all data access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-044-Medical-Health

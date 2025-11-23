@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-78
+family: ENC
+sub_family: xor_encoding
+name: Detects XOR encoding obfuscation
+description: Detects XOR encoding obfuscation
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)xor (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0078
+rule_hash: sha256:c9f2e4d89ac86f048cf00345d33d9a72720428bc24855bcf4607253ef8498b7a
+risk_explanation: Xor Encoding encoding can obfuscate malicious content.
+remediation_advice: Detect XOR encoding patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-78-Xor-Encoding

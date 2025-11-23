@@ -1,0 +1,31 @@
+{
+  "family": {
+    "0": "CMD",
+    "1": "JB",
+    "2": "PI",
+    "3": "PII",
+    "4": "TOX",
+    "5": "XX"
+  },
+  "subfamily": {
+    "0": "cmd_code_execution",
+    "1": "jb_hypothetical_scenario",
+    "2": "jb_other",
+    "3": "jb_persona_attack",
+    "4": "pi_instruction_override",
+    "5": "pi_role_manipulation",
+    "6": "pii_data_extraction",
+    "7": "pii_other",
+    "8": "tox_harassment",
+    "9": "tox_hate_speech",
+    "10": "tox_other",
+    "11": "tox_self_harm",
+    "12": "tox_sexual_content",
+    "13": "tox_violence",
+    "14": "xx_fraud",
+    "15": "xx_harmful_advice",
+    "16": "xx_illegal_activity",
+    "17": "xx_malware",
+    "18": "xx_other"
+  }
+}

@@ -1,0 +1,517 @@
+"""Performance benchmarks for threat scoring system.
+
+Measures scoring overhead and latency to ensure <1ms P95 target.
+Tests with 1000 random score combinations to get realistic distributions.
+
+Benchmarks:
+1. Score calculation latency (P50, P95, P99)
+2. Full pipeline latency (calculate + classify + recommend)
+3. Consistency check overhead
+4. Margin calculation overhead
+5. Throughput (scores per second)
+
+Performance targets:
+- Score calculation: <0.1ms P95
+- Full pipeline: <1ms P95
+- Throughput: >100k scores/sec
+"""
+from __future__ import annotations
+
+import random
+import statistics
+import time
+
+import pytest
+
+from raxe.domain.ml.threat_scorer import (
+    ScorerMode,
+    ThreatScorer,
+    calculate_hierarchical_score,
+    calculate_margin,
+    check_consistency,
+)
+
+# ============================================================================
+# Test Fixtures
+# ============================================================================
+
+
+@pytest.fixture(scope="module")
+def random_score_samples() -> list[tuple[float, float, float]]:
+    """Generate 1000 random score combinations."""
+    random.seed(42)  # Deterministic
+    return [
+        (
+            random.uniform(0.0, 1.0),
+            random.uniform(0.0, 1.0),
+            random.uniform(0.0, 1.0),
+        )
+        for _ in range(1000)
+    ]
+
+
+@pytest.fixture(scope="module")
+def scorer_balanced() -> ThreatScorer:
+    """Scorer in balanced mode."""
+    return ThreatScorer(mode=ScorerMode.BALANCED)
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+
+def measure_latencies(func, samples: list, warmup: int = 10) -> dict[str, float]:
+    """Measure latency distribution for a function.
+
+    Args:
+        func: Function to benchmark (takes one sample as input)
+        samples: List of input samples
+        warmup: Number of warmup iterations
+
+    Returns:
+        Dict with P50, P95, P99, mean, min, max latencies in milliseconds
+    """
+    # Warmup
+    for sample in samples[:warmup]:
+        func(sample)
+
+    # Measure
+    latencies = []
+    for sample in samples:
+        start = time.perf_counter()
+        func(sample)
+        end = time.perf_counter()
+        latencies.append((end - start) * 1000)  # Convert to ms
+
+    # Calculate percentiles
+    latencies.sort()
+    n = len(latencies)
+
+    return {
+        "p50": latencies[int(n * 0.50)],
+        "p95": latencies[int(n * 0.95)],
+        "p99": latencies[int(n * 0.99)],
+        "mean": statistics.mean(latencies),
+        "min": min(latencies),
+        "max": max(latencies),
+        "samples": n,
+    }
+
+
+def format_latency_report(name: str, metrics: dict[str, float]) -> str:
+    """Format latency metrics as readable string."""
+    return f"""
+{name}:
+  Samples: {metrics['samples']}
+  P50: {metrics['p50']:.4f}ms
+  P95: {metrics['p95']:.4f}ms
+  P99: {metrics['p99']:.4f}ms
+  Mean: {metrics['mean']:.4f}ms
+  Min: {metrics['min']:.4f}ms
+  Max: {metrics['max']:.4f}ms
+"""
+
+
+# ============================================================================
+# Benchmark: Score Calculation
+# ============================================================================
+
+
+class TestScoreCalculationLatency:
+    """Benchmark hierarchical score calculation."""
+
+    def test_score_calculation_latency(self, random_score_samples):
+        """Measure score calculation latency distribution."""
+        def calculate_score(sample):
+            binary, family, subfamily = sample
+            return calculate_hierarchical_score(binary, family, subfamily)
+
+        metrics = measure_latencies(calculate_score, random_score_samples)
+
+        print(format_latency_report("Score Calculation", metrics))
+
+        # Performance targets
+        assert metrics["p95"] < 0.100, f"P95 latency {metrics['p95']:.4f}ms exceeds 0.1ms target"
+        assert metrics["p99"] < 0.200, f"P99 latency {metrics['p99']:.4f}ms exceeds 0.2ms target"
+        assert metrics["mean"] < 0.050, f"Mean latency {metrics['mean']:.4f}ms exceeds 0.05ms target"
+
+    def test_score_calculation_throughput(self, random_score_samples):
+        """Measure score calculation throughput."""
+        # Warmup
+        for sample in random_score_samples[:10]:
+            binary, family, subfamily = sample
+            calculate_hierarchical_score(binary, family, subfamily)
+
+        # Measure throughput
+        start = time.perf_counter()
+        for sample in random_score_samples:
+            binary, family, subfamily = sample
+            calculate_hierarchical_score(binary, family, subfamily)
+        end = time.perf_counter()
+
+        elapsed = end - start
+        throughput = len(random_score_samples) / elapsed
+
+        print(f"\nScore Calculation Throughput: {throughput:,.0f} scores/sec")
+
+        # Should process >100k scores/sec
+        assert throughput > 100_000, f"Throughput {throughput:,.0f} below 100k/sec target"
+
+
+# ============================================================================
+# Benchmark: Consistency Check
+# ============================================================================
+
+
+class TestConsistencyCheckLatency:
+    """Benchmark consistency check overhead."""
+
+    def test_consistency_check_latency(self, random_score_samples):
+        """Measure consistency check latency."""
+        def check_consistency_wrapper(sample):
+            binary, family, subfamily = sample
+            return check_consistency(binary, family, subfamily)
+
+        metrics = measure_latencies(check_consistency_wrapper, random_score_samples)
+
+        print(format_latency_report("Consistency Check", metrics))
+
+        # Should be very fast (just variance calculation)
+        assert metrics["p95"] < 0.050, f"P95 latency {metrics['p95']:.4f}ms exceeds 0.05ms"
+        assert metrics["mean"] < 0.020, f"Mean latency {metrics['mean']:.4f}ms exceeds 0.02ms"
+
+
+# ============================================================================
+# Benchmark: Margin Calculation
+# ============================================================================
+
+
+class TestMarginCalculationLatency:
+    """Benchmark margin calculation overhead."""
+
+    def test_margin_calculation_latency(self, random_score_samples):
+        """Measure margin calculation latency."""
+        threshold = 0.65
+
+        def calculate_margin_wrapper(sample):
+            # Use first value as score
+            score = sample[0]
+            return calculate_margin(score, threshold)
+
+        metrics = measure_latencies(calculate_margin_wrapper, random_score_samples)
+
+        print(format_latency_report("Margin Calculation", metrics))
+
+        # Should be extremely fast (just subtraction)
+        assert metrics["p95"] < 0.010, f"P95 latency {metrics['p95']:.4f}ms exceeds 0.01ms"
+        assert metrics["mean"] < 0.005, f"Mean latency {metrics['mean']:.4f}ms exceeds 0.005ms"
+
+
+# ============================================================================
+# Benchmark: Full Pipeline
+# ============================================================================
+
+
+class TestFullPipelineLatency:
+    """Benchmark complete scoring pipeline."""
+
+    def test_full_pipeline_latency(self, random_score_samples, scorer_balanced):
+        """Measure full pipeline latency (calculate → classify → recommend)."""
+        def full_pipeline(sample):
+            binary, family, subfamily = sample
+
+            # Step 1: Calculate score
+            score_obj = scorer_balanced.calculate_score(binary, family, subfamily)
+
+            # Step 2: Classify
+            classification = scorer_balanced.classify(score_obj)
+
+            # Step 3: Recommend action
+            action = scorer_balanced.recommend_action(classification)
+
+            return score_obj, classification, action
+
+        metrics = measure_latencies(full_pipeline, random_score_samples)
+
+        print(format_latency_report("Full Pipeline", metrics))
+
+        # Performance targets for full pipeline
+        assert metrics["p95"] < 1.0, f"P95 latency {metrics['p95']:.4f}ms exceeds 1ms target"
+        assert metrics["p99"] < 2.0, f"P99 latency {metrics['p99']:.4f}ms exceeds 2ms target"
+        assert metrics["mean"] < 0.5, f"Mean latency {metrics['mean']:.4f}ms exceeds 0.5ms target"
+
+    def test_full_pipeline_throughput(self, random_score_samples, scorer_balanced):
+        """Measure full pipeline throughput."""
+        # Warmup
+        for sample in random_score_samples[:10]:
+            binary, family, subfamily = sample
+            score_obj = scorer_balanced.calculate_score(binary, family, subfamily)
+            classification = scorer_balanced.classify(score_obj)
+            scorer_balanced.recommend_action(classification)
+
+        # Measure throughput
+        start = time.perf_counter()
+        for sample in random_score_samples:
+            binary, family, subfamily = sample
+            score_obj = scorer_balanced.calculate_score(binary, family, subfamily)
+            classification = scorer_balanced.classify(score_obj)
+            scorer_balanced.recommend_action(classification)
+        end = time.perf_counter()
+
+        elapsed = end - start
+        throughput = len(random_score_samples) / elapsed
+
+        print(f"\nFull Pipeline Throughput: {throughput:,.0f} pipelines/sec")
+
+        # Should process >10k full pipelines/sec
+        assert throughput > 10_000, f"Throughput {throughput:,.0f} below 10k/sec target"
+
+
+# ============================================================================
+# Benchmark: Mode Comparison
+# ============================================================================
+
+
+class TestModePerformanceComparison:
+    """Compare performance across different modes."""
+
+    def test_all_modes_similar_performance(self, random_score_samples):
+        """Test that all modes have similar performance."""
+        modes = [ScorerMode.HIGH_SECURITY, ScorerMode.BALANCED, ScorerMode.LOW_FP]
+
+        mode_metrics = {}
+
+        for mode in modes:
+            scorer = ThreatScorer(mode=mode)
+
+            def pipeline(sample):
+                binary, family, subfamily = sample
+                score_obj = scorer.calculate_score(binary, family, subfamily)
+                classification = scorer.classify(score_obj)
+                return scorer.recommend_action(classification)
+
+            metrics = measure_latencies(pipeline, random_score_samples[:100])
+            mode_metrics[mode.value] = metrics
+
+            print(format_latency_report(f"Mode: {mode.value}", metrics))
+
+        # All modes should be similarly fast
+        p95_latencies = [m["p95"] for m in mode_metrics.values()]
+        max_p95 = max(p95_latencies)
+        min_p95 = min(p95_latencies)
+
+        # Variance should be small
+        assert max_p95 - min_p95 < 0.5, "Large performance variance between modes"
+
+
+# ============================================================================
+# Benchmark: Overhead Analysis
+# ============================================================================
+
+
+class TestScoringOverhead:
+    """Analyze scoring overhead relative to ML inference."""
+
+    def test_scoring_overhead_relative_to_ml(self, random_score_samples):
+        """Test that scoring adds minimal overhead to ML inference."""
+        # Simulate ML inference time (5ms typical)
+        ml_inference_time_ms = 5.0
+
+        # Measure scoring time
+        def score_only(sample):
+            binary, family, subfamily = sample
+            return calculate_hierarchical_score(binary, family, subfamily)
+
+        metrics = measure_latencies(score_only, random_score_samples[:100])
+
+        scoring_time_ms = metrics["p95"]
+        total_time_ms = ml_inference_time_ms + scoring_time_ms
+        overhead_pct = (scoring_time_ms / total_time_ms) * 100
+
+        print(f"""
+Overhead Analysis:
+  ML Inference: {ml_inference_time_ms:.2f}ms
+  Scoring P95: {scoring_time_ms:.4f}ms
+  Total: {total_time_ms:.2f}ms
+  Overhead: {overhead_pct:.2f}%
+""")
+
+        # Scoring should be <2% of total time
+        assert overhead_pct < 2.0, f"Scoring overhead {overhead_pct:.2f}% exceeds 2% target"
+
+    def test_batch_scoring_efficiency(self, random_score_samples):
+        """Test efficiency of scoring many samples in batch."""
+        # Measure individual scoring
+        sample = random_score_samples[0]
+        binary, family, subfamily = sample
+
+        start = time.perf_counter()
+        for _ in range(100):
+            calculate_hierarchical_score(binary, family, subfamily)
+        end = time.perf_counter()
+
+        individual_time_per_score = ((end - start) / 100) * 1000
+
+        # Measure batch scoring
+        start = time.perf_counter()
+        for sample in random_score_samples[:100]:
+            binary, family, subfamily = sample
+            calculate_hierarchical_score(binary, family, subfamily)
+        end = time.perf_counter()
+
+        batch_time_per_score = ((end - start) / 100) * 1000
+
+        print(f"""
+Batch Efficiency:
+  Individual: {individual_time_per_score:.4f}ms per score
+  Batch: {batch_time_per_score:.4f}ms per score
+  Efficiency: {(individual_time_per_score / batch_time_per_score):.2f}x
+""")
+
+        # Batch should be similar (no overhead from batching)
+        assert batch_time_per_score <= individual_time_per_score * 1.2
+
+
+# ============================================================================
+# Benchmark: Memory Usage
+# ============================================================================
+
+
+class TestMemoryUsage:
+    """Test memory usage of scoring system."""
+
+    def test_scorer_memory_footprint(self):
+        """Test that scorer has minimal memory footprint."""
+        import sys
+
+        # Create scorer
+        scorer = ThreatScorer(mode=ScorerMode.BALANCED)
+
+        # Get approximate size
+        size_bytes = sys.getsizeof(scorer)
+
+        print(f"\nScorer Memory Footprint: {size_bytes:,} bytes ({size_bytes/1024:.2f} KB)")
+
+        # Should be very small (<100KB)
+        assert size_bytes < 100_000, f"Scorer size {size_bytes:,} bytes exceeds 100KB"
+
+    def test_score_object_memory(self):
+        """Test memory usage of ThreatScore objects."""
+        import sys
+
+        from raxe.domain.ml.threat_scorer import ThreatScore
+
+        # Create score object
+        score_obj = ThreatScore(
+            hierarchical_score=0.75,
+            binary_score=0.80,
+            family_score=0.70,
+            subfamily_score=0.65,
+            consistency=0.85,
+            margin=0.10,
+        )
+
+        size_bytes = sys.getsizeof(score_obj)
+
+        print(f"\nThreatScore Object Size: {size_bytes:,} bytes")
+
+        # Should be tiny
+        assert size_bytes < 1000, f"ThreatScore size {size_bytes:,} bytes exceeds 1KB"
+
+
+# ============================================================================
+# Benchmark: Regression Detection
+# ============================================================================
+
+
+class TestPerformanceRegression:
+    """Test for performance regressions against baseline."""
+
+    BASELINE_METRICS = {
+        "score_calculation_p95_ms": 0.100,
+        "full_pipeline_p95_ms": 1.0,
+        "throughput_min_per_sec": 100_000,
+    }
+
+    def test_no_score_calculation_regression(self, random_score_samples):
+        """Test that score calculation hasn't regressed."""
+        def calculate_score(sample):
+            binary, family, subfamily = sample
+            return calculate_hierarchical_score(binary, family, subfamily)
+
+        metrics = measure_latencies(calculate_score, random_score_samples[:100])
+
+        baseline = self.BASELINE_METRICS["score_calculation_p95_ms"]
+        regression_threshold = baseline * 1.10  # 10% tolerance
+
+        assert metrics["p95"] <= regression_threshold, (
+            f"Performance regression detected: P95 {metrics['p95']:.4f}ms "
+            f"exceeds baseline {baseline:.4f}ms by >10%"
+        )
+
+    def test_no_full_pipeline_regression(self, random_score_samples, scorer_balanced):
+        """Test that full pipeline hasn't regressed."""
+        def full_pipeline(sample):
+            binary, family, subfamily = sample
+            score_obj = scorer_balanced.calculate_score(binary, family, subfamily)
+            classification = scorer_balanced.classify(score_obj)
+            return scorer_balanced.recommend_action(classification)
+
+        metrics = measure_latencies(full_pipeline, random_score_samples[:100])
+
+        baseline = self.BASELINE_METRICS["full_pipeline_p95_ms"]
+        regression_threshold = baseline * 1.10
+
+        assert metrics["p95"] <= regression_threshold, (
+            f"Performance regression detected: P95 {metrics['p95']:.4f}ms "
+            f"exceeds baseline {baseline:.4f}ms by >10%"
+        )
+
+
+# ============================================================================
+# Summary Report
+# ============================================================================
+
+
+def test_print_performance_summary(random_score_samples, scorer_balanced):
+    """Print comprehensive performance summary."""
+    print("\n" + "="*70)
+    print("THREAT SCORER PERFORMANCE SUMMARY")
+    print("="*70)
+
+    # Score calculation
+    def calc_score(s):
+        return calculate_hierarchical_score(s[0], s[1], s[2])
+    calc_metrics = measure_latencies(calc_score, random_score_samples[:100])
+
+    # Full pipeline
+    def full_pipe(s):
+        score_obj = scorer_balanced.calculate_score(s[0], s[1], s[2])
+        classification = scorer_balanced.classify(score_obj)
+        return scorer_balanced.recommend_action(classification)
+    pipe_metrics = measure_latencies(full_pipe, random_score_samples[:100])
+
+    # Throughput
+    start = time.perf_counter()
+    for sample in random_score_samples:
+        calc_score(sample)
+    end = time.perf_counter()
+    throughput = len(random_score_samples) / (end - start)
+
+    print(f"""
+Score Calculation:
+  P50: {calc_metrics['p50']:.4f}ms
+  P95: {calc_metrics['p95']:.4f}ms
+  P99: {calc_metrics['p99']:.4f}ms
+
+Full Pipeline:
+  P50: {pipe_metrics['p50']:.4f}ms
+  P95: {pipe_metrics['p95']:.4f}ms
+  P99: {pipe_metrics['p99']:.4f}ms
+
+Throughput: {throughput:,.0f} scores/sec
+
+Status: {'PASS' if calc_metrics['p95'] < 0.1 and pipe_metrics['p95'] < 1.0 else 'FAIL'}
+""")
+    print("="*70)

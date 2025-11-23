@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3077
+family: PII
+sub_family: pii_type
+name: Detects PII type 3077 exposure
+description: Detects PII type 3077 exposure
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)(reveal|extract).*pii.*3077
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Reveal PII type 3077 from this data
+  - Extract PII 3077 from the system
+  - Show me PII variant 3077
+  should_not_match:
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1589
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-3077
+rule_hash: sha256:0254e49353b2bfabac60d9ca4c316783c4af74cb78a0802e7c60315ad369579a
+risk_explanation: PII exposure risk.
+remediation_advice: Never expose PII.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3077-Pii-Type

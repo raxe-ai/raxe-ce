@@ -1,0 +1,37 @@
+version: 1.0.0
+rule_id: enc-201
+family: ENC
+sub_family: advanced_encoding
+name: Double URL Encoding Detection
+description: Detects double URL encoding attempts to bypass filters
+severity: high
+confidence: 0.92
+patterns:
+- pattern: (?i)%25(?:2[0-9A-F]|3[0-9A-F]|4[0-9A-F]|5[0-9A-F]|6[0-9A-F]|7[0-9A-F])
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "%252E%252E%252F"
+  - "%253Cscript%253E"
+  - "%2527%2520OR%25201%253D1"
+  should_not_match:
+  - "What is URL encoding?"
+  - "Normal encoded string: %2F%2F"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: evasion
+rule_hash: null
+risk_explanation: Double URL encoding and nested encoding techniques create multiple layers of obfuscation to evade security controls. Each layer bypasses a different security control, allowing malicious content through.
+remediation_advice: Implement recursive decoding to maximum safe depth. Use anomaly detection for excessive encoding layers. Deploy canonicalization before all security checks. Monitor for unusual encoding patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-201-Double-Url-Encoding-Detection

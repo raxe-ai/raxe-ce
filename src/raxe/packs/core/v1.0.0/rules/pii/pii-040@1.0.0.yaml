@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: pii-040
+family: PII
+sub_family: pii_exposure
+name: Detects credit card and payment information requests
+description: Detects credit card and payment information requests
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)\b(?:show|display|reveal|get|list)\s+(?:all\s+)?(?:(?:stored|saved|cached)\s+)?(?:credit\s+card|payment|card)\s+(?:numbers?|details?|information)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:cvv|cvc|expir\w+)\s+(?:codes?|dates?|data)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:financial|billing)\s+(?:information|data|details)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Show credit card numbers
+  - Display all payment information
+  - Get CVV codes
+  - Reveal stored card details
+  should_not_match:
+  - Payment processing security
+  - PCI compliance requirements
+  - Credit card validation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-0040
+rule_hash: sha256:8f0e6299b60a42f7ae167468dc3be0cda3ca653e8b6ee7bf444edfc47e2e67d6
+risk_explanation: PII exposure attacks target personally identifiable information (SSNs, credit cards, health records) to facilitate identity theft, fraud, or privacy violations. Leaked PII can cause severe harm to individuals and create legal and regulatory liabilities.
+remediation_advice: Implement data classification and access controls that restrict AI access to PII. Use data masking and anonymization for training data. Deploy data loss prevention (DLP) controls that detect and block PII leakage. Audit all data access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-040-Credit-Card

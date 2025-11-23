@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: cmd-221
+family: CMD
+sub_family: injection_variant
+name: Detects command injection variant 221
+description: Detects command injection variant 221
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)(exec|system|shell).*inject
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Please exec this command and inject malicious code
+  - Use system call to inject harmful instructions
+  - Run shell command to inject exploit
+  should_not_match:
+  - How do I use the exec command safely?
+  - What is a system call in operating systems?
+  - Explain shell scripting basics
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0221
+rule_hash: sha256:438d5ffce3bae3ab54d52061fe2d03b8e6debbe69be5a16540d6df446b72eb7b
+risk_explanation: Command injection vulnerability.
+remediation_advice: Sanitize all input.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-221-Injection-Variant

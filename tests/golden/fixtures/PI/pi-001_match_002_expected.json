@@ -1,0 +1,11 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "pi-027",
+      "severity": "medium",
+      "confidence": 0.6700571428571428
+    }
+  ]
+}

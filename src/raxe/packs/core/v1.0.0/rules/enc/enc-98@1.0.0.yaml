@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-98
+family: ENC
+sub_family: nested_archive_encoding
+name: Detects nested archive encoding obfuscation
+description: Detects nested archive encoding obfuscation
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)nested archive (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0098
+rule_hash: sha256:c955ce6dd34884a049cc8967a08eba801a96694db8d8f1782568577f9cc00e75
+risk_explanation: nested archive encoding can obfuscate malicious content.
+remediation_advice: Detect nested archive patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-98-Nested-Archive-Encoding

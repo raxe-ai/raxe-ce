@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3006
+family: PII
+sub_family: api_keys
+name: Anthropic API Key Detection
+description: Detects Anthropic Claude API keys (sk-ant- pattern)
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: \b(sk-ant-[A-Za-z0-9\-_]{95,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "ANTHROPIC_API_KEY=sk-ant-api03-1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnop"
+  - "claude_key: sk-ant-sid01-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  should_not_match:
+  - "Anthropic keys start with sk-ant-"
+  - "How to get a Claude API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: ai_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3006-Anthropic-Api-Key-Detection

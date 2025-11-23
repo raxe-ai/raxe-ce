@@ -1,0 +1,36 @@
+version: 1.0.0
+rule_id: pii-3029
+family: PII
+sub_family: authentication
+name: JWT Token Detection
+description: Detects JSON Web Tokens (JWT) in format header.payload.signature
+severity: high
+confidence: 0.97
+patterns:
+- pattern: \b(eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
+  - "token = eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+  should_not_match:
+  - "JWT tokens start with eyJ"
+  - "How to decode JWT?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: authentication_tokens
+rule_hash: null
+risk_explanation: Authentication token exposure (JWTs, bearer tokens, session cookies) grants attackers immediate access to authenticated sessions and user accounts. Unlike passwords, tokens provide direct access without needing additional authentication steps.
+remediation_advice: Implement short token lifetimes and automatic rotation. Use secure token storage and transmission. Deploy token validation and revocation mechanisms. Never log or expose tokens in error messages or responses.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3029-Jwt-Token-Detection

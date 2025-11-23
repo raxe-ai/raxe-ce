@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: cmd-021
+family: CMD
+sub_family: sql_injection
+name: Detects SQL xp_cmdshell and advanced stored procedure execution
+description: Detects SQL xp_cmdshell and advanced stored procedure execution
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)';?\s*xp_cmdshell\s*['"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)xp_cmdshell\s+['"](?:net\s+user|cmd|powershell)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)EXEC\s+master\.\.xp_cmdshell
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - '''; xp_cmdshell ''net user admin password''--'
+  - admin'; EXEC xp_cmdshell 'cmd /c dir'--
+  - 1'; EXEC master..xp_cmdshell 'whoami'--
+  should_not_match:
+  - What is xp_cmdshell used for?
+  - SQL Server documentation for stored procedures
+  - How to disable xp_cmdshell for security
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0021
+rule_hash: sha256:e6850d9146d855a9632cdc01d8a2e4075cd23ec2968c6025bf719b89229761f3
+risk_explanation: SQL injection attacks inject malicious SQL commands to manipulate database queries, enabling data theft, unauthorized modifications, or complete database compromise. Critical commands like DROP, DELETE, and TRUNCATE can cause catastrophic data loss.
+remediation_advice: Always use parameterized queries and prepared statements. Never concatenate user input into SQL commands. Implement input validation and sanitization. Use database accounts with minimal required privileges. Deploy SQL injection detection and blocking at multiple layers.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-021-Sql-Xp_Cmdshell

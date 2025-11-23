@@ -1,0 +1,11 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "rag-028",
+      "severity": "critical",
+      "confidence": 0.8063999999999999
+    }
+  ]
+}

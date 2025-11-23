@@ -1,0 +1,1 @@
+dir %SystemRoot%\System32\config\

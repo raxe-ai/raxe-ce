@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-74
+family: ENC
+sub_family: decimal_encoding
+name: Detects decimal encoding obfuscation
+description: Detects decimal encoding obfuscation
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)decimal (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0074
+rule_hash: sha256:75d7c22427aab832bf27a921574cf6ceb1ba7182eccaabddb4a0ea6b25256901
+risk_explanation: Decimal Encoding encoding can obfuscate malicious content.
+remediation_advice: Detect decimal encoding patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-74-Decimal-Encoding

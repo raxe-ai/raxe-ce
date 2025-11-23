@@ -1,0 +1,65 @@
+{
+  "tenant_id": "org-3f8a9b2c1d5e6f7a",
+  "project_id": "proj-a1b2c3d4e5f6g7h8",
+  "period": {
+    "start": "2025-11-01T00:00:00Z",
+    "end": "2025-11-30T23:59:59Z",
+    "type": "monthly",
+    "timezone": "UTC"
+  },
+  "metrics": {
+    "scans_performed": 45230,
+    "l1_detections": 342,
+    "l2_detections": 23,
+    "l2_inferences": 1245,
+    "api_calls": 45230,
+    "events_sent": 365,
+    "total_text_scanned_bytes": 123456789,
+    "unique_sessions": 1523,
+    "threats_blocked": 87,
+    "severity_breakdown": {
+      "critical": 5,
+      "high": 23,
+      "medium": 98,
+      "low": 216,
+      "info": 23
+    },
+    "performance": {
+      "avg_scan_duration_ms": 4.5,
+      "p95_scan_duration_ms": 8.2,
+      "avg_queue_depth": 12.3
+    }
+  },
+  "tier_limits": {
+    "scans_limit": 50000,
+    "scans_used": 45230,
+    "scans_remaining": 4770,
+    "scans_overage": 0,
+    "l2_limit": 1000,
+    "l2_used": 1245,
+    "l2_remaining": 0,
+    "custom_rules_limit": 100,
+    "custom_rules_used": 23
+  },
+  "cost": {
+    "currency": "USD",
+    "base_fee": 99.00,
+    "scan_overage_cost": 0.00,
+    "l2_overage_cost": 12.25,
+    "other_charges": 0.00,
+    "subtotal": 111.25,
+    "tax": 8.90,
+    "total": 120.15,
+    "credits_applied": 0.00,
+    "amount_due": 120.15
+  },
+  "billing_status": "overage",
+  "warnings": [
+    {
+      "type": "overage_warning",
+      "message": "L2 inference limit exceeded by 245 inferences",
+      "threshold": 1.0
+    }
+  ],
+  "generated_at": "2025-11-15T12:00:00Z"
+}

@@ -1,0 +1,31 @@
+{
+  "has_detections": true,
+  "detection_count": 5,
+  "detections": [
+    {
+      "rule_id": "enc-019",
+      "severity": "medium",
+      "confidence": 0.7051999999999999
+    },
+    {
+      "rule_id": "pi-001",
+      "severity": "critical",
+      "confidence": 0.7979999999999999
+    },
+    {
+      "rule_id": "pi-022",
+      "severity": "high",
+      "confidence": 0.77352
+    },
+    {
+      "rule_id": "pi-202",
+      "severity": "high",
+      "confidence": 0.714
+    },
+    {
+      "rule_id": "rag-201",
+      "severity": "high",
+      "confidence": 0.7541599999999999
+    }
+  ]
+}

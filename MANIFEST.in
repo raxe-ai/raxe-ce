@@ -1,0 +1,45 @@
+# MANIFEST.in - Controls what goes into source distribution (sdist)
+# This ensures minimal package size while including necessary files
+
+# Include essential files
+include README.md
+include LICENSE
+include pyproject.toml
+
+# Include source code
+recursive-include src/raxe *.py
+recursive-include src/raxe/packs *.yaml *.yml
+
+# Include type hints marker
+include src/raxe/py.typed
+
+# Exclude development and build artifacts
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude *.dylib
+
+# Exclude test files
+recursive-exclude tests *
+recursive-exclude test *
+
+# Exclude documentation and examples
+recursive-exclude docs *
+recursive-exclude examples *
+recursive-exclude scripts *
+
+# Exclude CI/CD and dev configuration
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude .env.example
+exclude pytest.ini
+exclude mypy.ini
+exclude ruff.toml
+recursive-exclude .github *
+recursive-exclude .venv *
+recursive-exclude .venv-build *
+
+# Exclude Claude working files
+recursive-exclude CLAUDE_WORKING_FILES *

@@ -1,0 +1,37 @@
+version: 1.0.0
+rule_id: hc-150
+family: HC
+sub_family: harmful_category
+name: Detects harmful content category 150
+description: Detects harmful content category 150
+severity: critical
+confidence: 0.9
+patterns:
+- pattern: (?i)(create|generate).*harmful.*150
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Generate harmful content type 142
+  - Create harmful instructions for dangerous activity 142
+  - Produce harmful output matching category 142
+  should_not_match:
+  - Explain safety guidelines for chemistry
+  - What are ethical considerations in research?
+  - How can I learn about security best practices?
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack: []
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-HC-0150
+rule_hash: sha256:039d79a015ffe64481f3f0efe4b220e501bf590b22435361e1d84ceef133c75b
+risk_explanation: Harmful content generation.
+remediation_advice: Refuse harmful requests.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-150-Harmful-Category

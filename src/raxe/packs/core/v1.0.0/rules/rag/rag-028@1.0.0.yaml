@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: rag-028
+family: RAG
+sub_family: index_poisoning
+name: Detects false fact injection into vector store
+description: Detects false fact injection into vector store
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)\b(?:inject|insert|add)\s+(?:false|fake|incorrect)\s+(?:facts?|information)\s+(?:into|in|to)\s+(?:vector\s+store|knowledge\s+base)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:misinformation|disinformation)\s+(?:in|into|to)\s+(?:RAG|retrieval|database)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:fabricate|forge|invent)\s+(?:facts?|data)\s+(?:for|in|to)\s+(?:knowledge\s+base|vector\s+db|retrieval|RAG)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Inject false facts into vector store
+  - Add misinformation to RAG system
+  - Insert fake information into knowledge base
+  - Fabricate data for retrieval
+  should_not_match:
+  - Fact verification process
+  - Information accuracy checking
+  - Knowledge base validation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1565.001
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-0028
+rule_hash: sha256:787fd84f01f20ef9067b339ec4022530980947aa6b8473c3749dc7472f9b9498
+risk_explanation: Index poisoning injects false information into vector databases to manipulate future retrievals. Poisoned indices can persistently affect many queries and users, degrading system accuracy over time.
+remediation_advice: Implement content validation and provenance tracking for all indexed documents. Use anomaly detection to identify suspicious content patterns. Apply access controls and audit logging for index modifications. Regularly scan for and remove poisoned content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-028-False-Fact-Injection

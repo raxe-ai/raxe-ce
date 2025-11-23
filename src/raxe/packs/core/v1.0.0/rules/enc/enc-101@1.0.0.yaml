@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-101
+family: ENC
+sub_family: chunked_encoding
+name: Detects chunked encoding obfuscation
+description: Detects chunked encoding obfuscation
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)chunked (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0101
+rule_hash: sha256:4735289105f2851dcfbdc04d3539c053fbb522022ddb03afa9b8ec406c66c0c0
+risk_explanation: chunked encoding can obfuscate malicious content.
+remediation_advice: Detect chunked patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-101-Chunked-Encoding

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-100
+family: ENC
+sub_family: split_encoding
+name: Detects split encoding obfuscation
+description: Detects split encoding obfuscation
+severity: critical
+confidence: 0.9
+patterns:
+- pattern: (?i)split (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0100
+rule_hash: sha256:49ee13a7b5ae505871ee4d5c9973ee7c82a9208aee8f8ec049820c4ca5127cf2
+risk_explanation: split encoding can obfuscate malicious content.
+remediation_advice: Detect split patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-100-Split-Encoding

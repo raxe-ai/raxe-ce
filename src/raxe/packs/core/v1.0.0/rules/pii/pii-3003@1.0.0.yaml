@@ -1,0 +1,36 @@
+version: 1.0.0
+rule_id: pii-3003
+family: PII
+sub_family: api_keys
+name: Google Cloud API Key Detection
+description: Detects Google Cloud API keys (AIza prefix pattern)
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: \b(AIza[0-9A-Za-z\-_]{35})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "gcloud_api_key: AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY"
+  - "My API key is AIzaAbCdEfGhIjKlMnOpQrStUvWxYz1234567890"
+  should_not_match:
+  - "Google API keys start with AIza"
+  - "How to generate a GCP API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cloud_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3003-Google-Cloud-Api-Key

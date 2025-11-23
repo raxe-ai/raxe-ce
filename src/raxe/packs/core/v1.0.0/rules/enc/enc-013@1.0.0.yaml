@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: enc-013
+family: ENC
+sub_family: unicode_attacks
+name: Detects zero-width and invisible Unicode characters in commands
+description: Detects zero-width and invisible Unicode characters in commands
+severity: high
+confidence: 0.93
+patterns:
+- pattern: (?i)(?:exec|eval|system|run|execute)[\u200b\u200c\u200d\u2060\ufeff].*?(?:command|code|script)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i).*[\u200b\u200c\u200d\u2060].*?(?:inject|execute|call)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:bypass|override|ignore)[\u00ad\u061c\u180e]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Execute​this​command
+  - System‌call‍with⁠injection
+  - Bypass­security؜check
+  should_not_match:
+  - Execute this command
+  - System call with injection
+  - Bypass security check
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0013
+rule_hash: sha256:11bddfcb69f38c3adc1463b92e8439ff6d9e0ea63329f033f259df5de8ebd725
+risk_explanation: Unicode attacks use zero-width characters, invisible characters, or special Unicode features to hide malicious content, evade detection, or create visual spoofs. These attacks exploit the complexity of Unicode processing.
+remediation_advice: Normalize Unicode input to standard forms. Filter or reject zero-width and invisible characters. Implement visual similarity detection. Use Unicode-aware security analysis and validation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-013-Zero-Width-Invisible

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-79
+family: ENC
+sub_family: uuencode_encoding
+name: Detects UUEncode obfuscation
+description: Detects UUEncode obfuscation
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: (?i)uuencode (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0079
+rule_hash: sha256:5fde7a9a84a92b13d0b634a1d5332d184d8b3bf6461a5bb53bcd8fc9809451ec
+risk_explanation: Uuencode encoding can obfuscate malicious content.
+remediation_advice: Detect UUEncode patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-79-Uuencode-Encoding

@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: cmd-054
+family: CMD
+sub_family: shell_commands
+name: Detects sudo privilege escalation attempts
+description: Detects sudo privilege escalation attempts
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: '[;&]\s*sudo\s+-[uli](?:\s+|$)'
+  flags: []
+  timeout: 5.0
+- pattern: ;\s*sudo\s+su\s+-
+  flags: []
+  timeout: 5.0
+- pattern: ;\s*sudo\s+(?:bash|sh|zsh)\s*(?:$|\||&|;)
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - ; sudo -i
+  - ; sudo su -
+  - ; sudo bash
+  - '&& sudo -u root /bin/sh'
+  should_not_match:
+  - Using sudo for admin tasks
+  - Sudo command documentation
+  - Privilege escalation prevention
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0054
+rule_hash: sha256:78daaa63e81fe0edc67fb528dac44f47cf08153109bdd039c11ddfcbbc63e580
+risk_explanation: Shell command injection exploits enable arbitrary system command execution through vulnerable inputs. Attackers can read sensitive files, modify system configurations, escalate privileges, install backdoors, or completely compromise the underlying system.
+remediation_advice: Never execute shell commands with user-controlled input. If command execution is necessary, use strict allowlisting of permitted commands and arguments. Implement input validation and sanitization. Use least-privilege execution contexts. Deploy command injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-054-Sudo-Privilege-Escalation

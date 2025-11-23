@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: cmd-1090
+family: CMD
+sub_family: unix_commands
+name: Detects dd for disk manipulation
+description: Detects dd for disk manipulation
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: \bdd\s+if=/dev/\w+\s+of=
+  flags: []
+  timeout: 5.0
+- pattern: \bdd\s+if=[^\s]+\s+of=/dev/\w+
+  flags: []
+  timeout: 5.0
+- pattern: \bdd\s+[^\n]*bs=\d+[MG]
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - dd if=/dev/sda of=/tmp/disk.img
+  - dd if=malware of=/dev/sdb
+  - dd if=/dev/zero of=/dev/sda bs=1M
+  should_not_match:
+  - dd command documentation
+  - Disk cloning with dd
+  - Creating bootable USB with dd
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-1090
+rule_hash: sha256:ce96e6202739f29aa9ac1b9d4413ed969ca0a11387d27d618ad59282b165a6a0
+risk_explanation: Dangerous Unix commands (dd, rm -rf, mkfs) can destroy data, corrupt file systems, or cause denial of service. These commands are particularly risky because they can cause irrecoverable damage to systems and data.
+remediation_advice: Implement strict command allowlisting that excludes dangerous utilities. Use read-only file systems where possible. Deploy command execution monitoring and anomaly detection. Restrict access to destructive commands through permissions.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-1090-Dd-Disk

@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3037
+family: PII
+sub_family: database_credentials
+name: MongoDB Connection String Detection
+description: Detects MongoDB connection strings with embedded credentials
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: mongodb(?:\+srv)?://[^:]+:([^@\s]+)@[^/\s]+
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "mongodb://admin:password123@cluster0.mongodb.net/test"
+  - "mongodb+srv://user:P@ssw0rd@cluster.mongodb.net/mydb"
+  should_not_match:
+  - "How to connect to MongoDB?"
+  - "MongoDB connection string format"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: database_credentials
+rule_hash: null
+risk_explanation: Database connection string exposure reveals database locations, credentials, and configuration details. Attackers can use this information to directly access databases, extract sensitive data, modify records, or completely compromise data stores.
+remediation_advice: Use secure secret management for database credentials. Implement connection string encryption and access controls. Never hardcode connection strings in code or configuration files. Use service principals and managed identities where possible.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3037-Mongodb-Connection-String-Detection

@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: enc-029
+family: ENC
+sub_family: url_encoding
+name: Detects URL-encoded SQL injection
+description: Detects URL-encoded SQL injection
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)%27%20OR%20%27
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: '%20UNION%20SELECT'
+  flags: []
+  timeout: 5.0
+- pattern: '%27%20DROP%20TABLE'
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - '%27%20OR%20%271%27%3D%271'
+  - id%3D1%20UNION%20SELECT%20
+  - '%27%20DROP%20TABLE%20users'
+  should_not_match:
+  - URL encoding of SQL queries
+  - Encoded database parameters
+  - Safe SQL in URLs
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0029
+rule_hash: sha256:2dc051b809fff1903e3db55cc1a8d20f9542ab647e0aa93dc71514a05b99de04
+risk_explanation: URL encoding obfuscates SQL injection and other attacks by encoding special characters. This technique exploits the gap between different decoding layers to slip malicious payloads past security controls.
+remediation_advice: Implement recursive URL decoding and normalization. Use canonicalization before security analysis. Deploy multi-layer validation that examines both encoded and decoded forms. Monitor for nested or repeated encoding.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-029-Url-Encoded-Sql-Injection

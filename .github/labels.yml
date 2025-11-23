@@ -1,0 +1,181 @@
+# GitHub Issue Labels Configuration
+# Use with actions/labeler or manually import
+
+# Priority Labels
+- name: "priority: critical"
+  color: "d73a4a"
+  description: "Critical priority - security vulnerabilities, data loss"
+
+- name: "priority: high"
+  color: "ff6b6b"
+  description: "High priority - major bugs, important features"
+
+- name: "priority: medium"
+  color: "ffa500"
+  description: "Medium priority - standard features and improvements"
+
+- name: "priority: low"
+  color: "ffd700"
+  description: "Low priority - nice-to-have features"
+
+# Type Labels
+- name: "type: bug"
+  color: "d73a4a"
+  description: "Something isn't working"
+
+- name: "type: feature"
+  color: "0e8a16"
+  description: "New feature request"
+
+- name: "type: enhancement"
+  color: "a2eeef"
+  description: "Improvement to existing feature"
+
+- name: "type: documentation"
+  color: "0075ca"
+  description: "Improvements or additions to documentation"
+
+- name: "type: performance"
+  color: "5319e7"
+  description: "Performance improvements"
+
+- name: "type: refactor"
+  color: "fbca04"
+  description: "Code refactoring without functionality change"
+
+- name: "type: security"
+  color: "b60205"
+  description: "Security-related issue"
+
+- name: "type: question"
+  color: "d876e3"
+  description: "General question or support request"
+
+# Component Labels
+- name: "component: cli"
+  color: "c2e0c6"
+  description: "Related to CLI interface"
+
+- name: "component: sdk"
+  color: "c2e0c6"
+  description: "Related to Python SDK"
+
+- name: "component: async"
+  color: "c2e0c6"
+  description: "Related to async functionality"
+
+- name: "component: detection"
+  color: "c2e0c6"
+  description: "Related to threat detection rules"
+
+- name: "component: infrastructure"
+  color: "c2e0c6"
+  description: "Related to infrastructure (database, config, etc.)"
+
+- name: "component: integrations"
+  color: "c2e0c6"
+  description: "Related to LLM provider integrations"
+
+- name: "component: telemetry"
+  color: "c2e0c6"
+  description: "Related to telemetry and analytics"
+
+- name: "component: tests"
+  color: "c2e0c6"
+  description: "Related to testing infrastructure"
+
+# Difficulty Labels
+- name: "difficulty: easy"
+  color: "7057ff"
+  description: "Easy to implement, good for beginners"
+
+- name: "difficulty: medium"
+  color: "7057ff"
+  description: "Moderate difficulty"
+
+- name: "difficulty: hard"
+  color: "7057ff"
+  description: "Complex implementation required"
+
+# Community Labels
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention needed from the community"
+
+- name: "community"
+  color: "0e8a16"
+  description: "Community contribution"
+
+- name: "hacktoberfest"
+  color: "ff6b00"
+  description: "Hacktoberfest eligible"
+
+# Status Labels
+- name: "status: blocked"
+  color: "d73a4a"
+  description: "Blocked by another issue or external dependency"
+
+- name: "status: in-progress"
+  color: "0e8a16"
+  description: "Currently being worked on"
+
+- name: "status: needs-discussion"
+  color: "d876e3"
+  description: "Needs discussion before implementation"
+
+- name: "status: needs-triage"
+  color: "ededed"
+  description: "Needs to be triaged by maintainers"
+
+- name: "status: waiting-for-response"
+  color: "fef2c0"
+  description: "Waiting for response from issue author"
+
+- name: "status: wontfix"
+  color: "ffffff"
+  description: "This will not be worked on"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "This issue or pull request already exists"
+
+- name: "stale"
+  color: "eeeeee"
+  description: "No recent activity"
+
+# Special Labels
+- name: "breaking-change"
+  color: "d73a4a"
+  description: "Introduces breaking changes"
+
+- name: "dependencies"
+  color: "0366d6"
+  description: "Pull requests that update a dependency file"
+
+- name: "rules"
+  color: "0e8a16"
+  description: "Related to detection rules"
+
+- name: "new-rule"
+  color: "0e8a16"
+  description: "Submission of new detection rule"
+
+- name: "false-positive"
+  color: "ffa500"
+  description: "Detection rule producing false positives"
+
+- name: "false-negative"
+  color: "ff6b6b"
+  description: "Threat not detected (missed detection)"
+
+- name: "research"
+  color: "1d76db"
+  description: "Research-related tasks"
+
+- name: "needs-benchmark"
+  color: "5319e7"
+  description: "Requires performance benchmarking"

@@ -1,0 +1,22 @@
+{
+  "model_type": "combined_threat_classifier",
+  "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+  "embedding_dim": 768,
+  "num_binary_classes": 2,
+  "num_family_classes": 6,
+  "num_subfamily_classes": 19,
+  "files": {
+    "embeddings": "embeddings.onnx",
+    "binary_classifier": "classifier_binary.onnx",
+    "family_classifier": "classifier_family.onnx",
+    "subfamily_classifier": "classifier_subfamily.onnx",
+    "tokenizer": "tokenizer.json",
+    "label_encoders": "label_encoders.json"
+  },
+  "inference_pipeline": [
+    "1. Tokenize text with tokenizer.json",
+    "2. Run embeddings.onnx to get 768-dim embeddings",
+    "3. Run classifier_binary.onnx for threat detection (0=safe, 1=threat)",
+    "4. If threat (1), run classifier_family.onnx and classifier_subfamily.onnx"
+  ]
+}

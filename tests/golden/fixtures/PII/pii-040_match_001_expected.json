@@ -1,0 +1,21 @@
+{
+  "has_detections": true,
+  "detection_count": 3,
+  "detections": [
+    {
+      "rule_id": "pii-012",
+      "severity": "critical",
+      "confidence": 0.8231999999999999
+    },
+    {
+      "rule_id": "pii-040",
+      "severity": "critical",
+      "confidence": 0.8231999999999999
+    },
+    {
+      "rule_id": "pii-2026",
+      "severity": "critical",
+      "confidence": 0.8428
+    }
+  ]
+}

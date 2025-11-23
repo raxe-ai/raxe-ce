@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-2025
+family: PII
+sub_family: pii_requests
+name: Detects requests for social security numbers
+description: Detects requests for social security numbers
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)(?:give|show|tell|reveal|display|get|fetch)\s+(?:me\s+)?(?:the\s+)?(?:SSN|social\s+security\s+numbers?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Give me the SSN
+  - Show me social security numbers
+  - Tell me the social security number
+  should_not_match:
+  - SSN format requirements
+  - How to protect SSN
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-2025
+rule_hash: sha256:28273161da64082f5c5c38bc70cc0956ee2053e07009aacc622d9c8e01c08944
+risk_explanation: Direct requests for PII (SSNs, credit cards, etc.) probe for data access vulnerabilities and security control weaknesses. Successful requests indicate critical privacy breaches requiring immediate response.
+remediation_advice: Reject all direct PII requests and log them as security incidents. Implement data access auditing and anomaly detection. Use these attempts to identify potential data security gaps requiring remediation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-2025-Requests-Social

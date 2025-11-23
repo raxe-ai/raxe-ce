@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: rag-042
+family: RAG
+sub_family: document_injection
+name: Detects malicious prompt template injection
+description: Detects malicious prompt template injection
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\b(?:inject|insert|add)\s+(?:malicious|harmful)\s+prompt\s+templates?
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:poison|corrupt)\s+(?:prompt|instruction)\s+(?:templates?|format)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:modify|alter)\s+(?:retrieval|generation)\s+(?:prompt|template)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Inject malicious prompt templates
+  - Poison prompt format
+  - Corrupt instruction templates
+  - Modify generation prompts
+  should_not_match:
+  - Prompt template design
+  - Template optimization
+  - Prompt engineering
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1565.001
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-0042
+rule_hash: sha256:d74de70ba4def699bf18f68e4c17616b49435ae9b996223adab4cf2e6fd01e41
+risk_explanation: Document injection embeds malicious prompt templates or instructions in documents that are later retrieved and processed. This can achieve persistent prompt injection that affects multiple users and queries.
+remediation_advice: Sanitize and validate all documents before indexing. Use content security scanning to detect embedded instructions or malicious templates. Implement strict separation between document content and system instructions.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-042-Malicious-Prompt-Template

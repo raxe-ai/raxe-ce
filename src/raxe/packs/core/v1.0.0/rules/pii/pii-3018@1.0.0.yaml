@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3018
+family: PII
+sub_family: identity_documents
+name: Canadian Social Insurance Number Detection
+description: Detects Canadian Social Insurance Numbers (SIN) in format XXX-XXX-XXX
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)(?:social\s*insurance|SIN).{0,20}(?:no|number|num).{0,10}\b([0-9]{3}[-\s]?[0-9]{3}[-\s]?[0-9]{3})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Social Insurance Number: 123-456-789"
+  - "SIN: 123 456 789"
+  - "SIN No: 123456789"
+  should_not_match:
+  - "What is a SIN?"
+  - "How to get a Social Insurance Number?"
+  - "My phone is 123-456-7890"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: identity_documents
+rule_hash: null
+risk_explanation: Identity document numbers (passports, driver licenses, national ID numbers) enable identity theft and fraud when exposed. Attackers can use these credentials to impersonate victims, open fraudulent accounts, or bypass authentication systems.
+remediation_advice: Implement strict access controls for identity document data. Use tokenization or anonymization when processing identity information. Deploy DLP controls that detect and block identity document leakage. Maintain audit logs of all access to identity data.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3018-Canadian-Social-Insurance-Number

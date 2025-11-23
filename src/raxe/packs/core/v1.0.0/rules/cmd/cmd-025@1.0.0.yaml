@@ -1,0 +1,93 @@
+version: 1.0.0
+rule_id: cmd-025
+family: CMD
+sub_family: file_access
+name: Detects credential harvesting and sensitive file access attempts
+description: Detects attempts to access sensitive system files containing credentials, passwords, secrets, or authentication data
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)(cat|less|more|head|tail|grep)\s+(/etc/shadow|/etc/passwd|/etc/security/passwd)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(cat|grep|find).*\.(pem|key|p12|pfx|crt|cer|kdb)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(grep|find)\s+-[ria]+.*\b(password|passwd|pwd|secret|token|api[-_]?key|private[-_]?key)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(cat|type)\s+.*\.(bash_history|zsh_history|history|mysql_history|psql_history)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(cat|type|more)\s+(~/|/root/|C:\\Users\\.*\\)\.ssh/(id_rsa|id_dsa|id_ecdsa|identity)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(cat|grep)\s+.*\.aws/(credentials|config)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(cat|type|dir)\s+.*SAM\s+file
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)mimikatz|sekurlsa|lsadump
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)reg\s+save\s+HKLM\\(SAM|SECURITY|SYSTEM)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - cat /etc/shadow
+  - grep -r "password" /home/user
+  - find / -name "*.pem"
+  - cat ~/.ssh/id_rsa
+  - type C:\Users\admin\.ssh\id_rsa
+  - cat ~/.bash_history
+  - grep -i "api_key" /var/log/
+  - cat ~/.aws/credentials
+  - mimikatz.exe
+  - sekurlsa::logonpasswords
+  - reg save HKLM\SAM sam.save
+  - find /root -name "*.key"
+  - cat /etc/security/passwd
+  - tail ~/.zsh_history
+  - more ~/.mysql_history
+  should_not_match:
+  - Understanding Linux password files
+  - How /etc/passwd works
+  - SSH key generation tutorial
+  - AWS credentials best practices
+  - Securing API keys
+  - Password management tips
+  - History command in bash
+  - Linux file permissions on /etc/shadow
+  - Documentation about credential storage
+  - Security audit procedures
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1003.008
+- T1552.001
+- T1552.004
+- T1552.006
+- T1087
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  legacy_rx_id: null
+rule_hash: sha256:NEW_RULE_CREDENTIAL_HARVESTING
+risk_explanation: File access attacks target sensitive system files (passwords, SAM database, shadow files, cloud metadata) to extract credentials or configuration data. Successful access enables privilege escalation, account compromise, or cloud resource hijacking.
+remediation_advice: Implement strict file access controls and permissions. Use least-privilege principles for file system access. Deploy file integrity monitoring for sensitive files. Restrict AI access to file systems. Monitor for unauthorized file access attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-025-Credential-Harvesting

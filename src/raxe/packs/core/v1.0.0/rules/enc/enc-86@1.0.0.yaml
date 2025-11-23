@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-86
+family: ENC
+sub_family: zero_width_chars_encoding
+name: Detects zero-width characters obfuscation
+description: Detects zero-width characters obfuscation
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)zero width chars (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0086
+rule_hash: sha256:6c6d7836381248c34d5c8ccffdb56fa3d43260d3c7f39aecfe01adb9ee1f60f5
+risk_explanation: Zero-Width Characters encoding can obfuscate malicious content.
+remediation_advice: Detect zero-width characters patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-86-Zero-Width-Chars-Encoding

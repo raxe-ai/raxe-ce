@@ -1,0 +1,36 @@
+version: 1.0.0
+rule_id: pii-3013
+family: PII
+sub_family: api_keys
+name: Datadog API Key Detection
+description: Detects Datadog API keys (32-character hex strings in context)
+severity: high
+confidence: 0.93
+patterns:
+- pattern: (?i)datadog.{0,20}(?:api|app).{0,20}key.{0,20}['\"]([a-f0-9]{32})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "DATADOG_API_KEY='1234567890abcdef1234567890abcdef'"
+  - "dd_app_key: 'abcdef1234567890abcdef1234567890'"
+  should_not_match:
+  - "Datadog API keys are 32 characters"
+  - "How to find my Datadog key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: monitoring_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3013-Datadog-Api-Key-Detection

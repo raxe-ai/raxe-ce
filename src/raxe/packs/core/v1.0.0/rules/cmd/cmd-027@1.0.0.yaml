@@ -1,0 +1,82 @@
+version: 1.0.0
+rule_id: cmd-027
+family: CMD
+sub_family: code_execution
+name: Detects unsafe deserialization attacks and object injection
+description: Detects attempts to exploit unsafe deserialization in Python pickle, YAML, PHP, Java, and other serialization libraries
+severity: high
+confidence: 0.91
+patterns:
+- pattern: (?i)pickle\.loads?\s*\(
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)yaml\.load\s*\((?!.*Loader\s*=\s*yaml\.SafeLoader)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)yaml\.unsafe_load\s*\(
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)unserialize\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)__reduce__|__setstate__|__wakeup__
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)ObjectInputStream.*readObject\s*\(\s*\)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)Marshaller.*unmarshal\s*\(
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)json\.loads?\s*\(.*object_hook
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - pickle.loads(user_input)
+  - pickle.load(open('data.pkl', 'rb'))
+  - yaml.load(untrusted_data)
+  - yaml.unsafe_load(content)
+  - unserialize($_GET['data'])
+  - unserialize($_POST['obj'])
+  - 'class Exploit: def __reduce__(self):'
+  - ObjectInputStream.readObject()
+  - Marshaller.unmarshal(source)
+  - json.loads(data, object_hook=custom_decoder)
+  should_not_match:
+  - pickle documentation
+  - yaml.safe_load(data)
+  - yaml.load(data, Loader=yaml.SafeLoader)
+  - Secure deserialization practices
+  - Understanding object serialization
+  - pickle.dumps() for serialization
+  - YAML safe loading tutorial
+  - PHP serialize() function
+  - Java serialization best practices
+  - Preventing deserialization attacks
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+- T1203
+- T1027.009
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  legacy_rx_id: null
+rule_hash: sha256:NEW_RULE_DESERIALIZATION_ATTACKS
+risk_explanation: Code execution attacks inject and execute arbitrary code (Python, JavaScript, Node.js) to gain control over application logic or system resources. Successful exploitation can lead to complete system compromise, data theft, or deployment of malware.
+remediation_advice: Never use eval(), exec(), or similar functions with user input. Implement strict input validation and sanitization. Use sandboxing and containerization to isolate code execution. Deploy runtime application self-protection (RASP) to detect code injection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-027-Unsafe-Deserialization-Attacks

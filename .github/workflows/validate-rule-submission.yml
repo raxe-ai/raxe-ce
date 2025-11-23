@@ -1,0 +1,255 @@
+name: Validate Rule Submission
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, reopened]
+    paths:
+      - 'src/raxe/packs/*/rules/**/*.yaml'
+      - 'src/raxe/packs/*/rules/**/*.yml'
+
+jobs:
+  validate:
+    name: Validate New Rules
+    runs-on: ubuntu-latest
+    # Only run if PR has 'new-rule' label
+    if: contains(github.event.pull_request.labels.*.name, 'new-rule')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for comparison
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyyaml pydantic click rich
+
+      - name: Find changed rule files
+        id: changed-files
+        run: |
+          # Get list of changed YAML files in rules directories
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }}...HEAD | grep -E 'src/raxe/packs/.*/rules/.*\.(yaml|yml)$' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No rule files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "files=" >> $GITHUB_OUTPUT
+          else
+            echo "Changed rule files:"
+            echo "$CHANGED_FILES"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            # Convert to JSON array for matrix
+            echo "files=$(echo "$CHANGED_FILES" | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate rules
+        if: steps.changed-files.outputs.has_changes == 'true'
+        id: validate
+        run: |
+          echo "# Rule Validation Results" > validation_report.md
+          echo "" >> validation_report.md
+
+          VALIDATION_FAILED=0
+          FILES='${{ steps.changed-files.outputs.files }}'
+
+          # Parse JSON array and validate each file
+          echo "$FILES" | jq -r '.[]' | while read -r file; do
+            echo "## Validating: $file" >> validation_report.md
+            echo "" >> validation_report.md
+
+            if [ -f "$file" ]; then
+              echo "Validating $file..."
+
+              # Run validation and capture output
+              if raxe validate-rule "$file" --json > validation_output.json 2>&1; then
+                echo "✅ **PASSED**" >> validation_report.md
+
+                # Extract summary from JSON
+                ERRORS=$(jq -r '.summary.errors' validation_output.json)
+                WARNINGS=$(jq -r '.summary.warnings' validation_output.json)
+                INFO=$(jq -r '.summary.info' validation_output.json)
+
+                echo "" >> validation_report.md
+                echo "- Errors: $ERRORS" >> validation_report.md
+                echo "- Warnings: $WARNINGS" >> validation_report.md
+                echo "- Info: $INFO" >> validation_report.md
+                echo "" >> validation_report.md
+
+                # Show issues if any
+                ISSUES=$(jq -r '.issues' validation_output.json)
+                if [ "$ISSUES" != "[]" ]; then
+                  echo "<details>" >> validation_report.md
+                  echo "<summary>View Details</summary>" >> validation_report.md
+                  echo "" >> validation_report.md
+                  echo "\`\`\`json" >> validation_report.md
+                  echo "$ISSUES" | jq '.' >> validation_report.md
+                  echo "\`\`\`" >> validation_report.md
+                  echo "</details>" >> validation_report.md
+                fi
+              else
+                echo "❌ **FAILED**" >> validation_report.md
+                echo "" >> validation_report.md
+                echo "<details>" >> validation_report.md
+                echo "<summary>View Errors</summary>" >> validation_report.md
+                echo "" >> validation_report.md
+                echo "\`\`\`json" >> validation_report.md
+                cat validation_output.json >> validation_report.md
+                echo "\`\`\`" >> validation_report.md
+                echo "</details>" >> validation_report.md
+                VALIDATION_FAILED=1
+              fi
+            else
+              echo "⚠️ **FILE NOT FOUND**" >> validation_report.md
+              VALIDATION_FAILED=1
+            fi
+
+            echo "" >> validation_report.md
+            echo "---" >> validation_report.md
+            echo "" >> validation_report.md
+          done
+
+          # Set output for later steps
+          echo "validation_failed=$VALIDATION_FAILED" >> $GITHUB_OUTPUT
+
+      - name: Check for rule conflicts
+        if: steps.changed-files.outputs.has_changes == 'true'
+        id: conflicts
+        run: |
+          echo "# Rule Conflict Check" >> validation_report.md
+          echo "" >> validation_report.md
+
+          CONFLICT_FOUND=0
+          FILES='${{ steps.changed-files.outputs.files }}'
+
+          # Get all existing rule IDs from the base branch
+          git checkout origin/${{ github.base_ref }} -- src/raxe/packs/ 2>/dev/null || true
+          EXISTING_IDS=$(find src/raxe/packs -name "*.yaml" -o -name "*.yml" | xargs grep -h "^rule_id:" | cut -d: -f2 | tr -d ' ' | sort)
+
+          # Check back to PR branch
+          git checkout ${{ github.head_ref }} -- src/raxe/packs/ 2>/dev/null || true
+
+          # Check each new rule ID
+          echo "$FILES" | jq -r '.[]' | while read -r file; do
+            if [ -f "$file" ]; then
+              NEW_ID=$(grep "^rule_id:" "$file" | cut -d: -f2 | tr -d ' ')
+
+              if echo "$EXISTING_IDS" | grep -q "^$NEW_ID$"; then
+                echo "⚠️ Rule ID conflict detected: **$NEW_ID** already exists in $file" >> validation_report.md
+                echo "" >> validation_report.md
+                CONFLICT_FOUND=1
+              else
+                echo "✅ Rule ID **$NEW_ID** is unique" >> validation_report.md
+                echo "" >> validation_report.md
+              fi
+            fi
+          done
+
+          echo "conflict_found=$CONFLICT_FOUND" >> $GITHUB_OUTPUT
+
+      - name: Run rule test suite
+        if: steps.changed-files.outputs.has_changes == 'true'
+        id: test
+        run: |
+          echo "# Test Suite Results" >> validation_report.md
+          echo "" >> validation_report.md
+
+          # Run pytest on rule-related tests
+          if pytest tests/unit/domain/test_custom_rules.py -v --tb=short > test_output.txt 2>&1; then
+            echo "✅ All tests passed" >> validation_report.md
+          else
+            echo "❌ Some tests failed" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "<details>" >> validation_report.md
+            echo "<summary>View Test Output</summary>" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "\`\`\`" >> validation_report.md
+            cat test_output.txt >> validation_report.md
+            echo "\`\`\`" >> validation_report.md
+            echo "</details>" >> validation_report.md
+          fi
+          echo "" >> validation_report.md
+
+      - name: Comment PR with results
+        if: steps.changed-files.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('validation_report.md', 'utf8');
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Rule Validation Results')
+            );
+
+            const commentBody = `## 🤖 Automated Rule Validation
+
+            ${report}
+
+            ---
+
+            ### Next Steps
+
+            ${process.env.VALIDATION_FAILED === '1' ?
+              '❌ **Validation failed.** Please fix the errors above and push your changes.' :
+              '✅ **Validation passed!** Your rule submission looks good. A maintainer will review it soon.'}
+
+            ${process.env.CONFLICT_FOUND === '1' ?
+              '\n⚠️ **Rule ID conflict detected.** Please choose a different rule ID.' : ''}
+
+            <sub>This comment will be automatically updated when you push changes.</sub>`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+        env:
+          VALIDATION_FAILED: ${{ steps.validate.outputs.validation_failed }}
+          CONFLICT_FOUND: ${{ steps.conflicts.outputs.conflict_found }}
+
+      - name: Fail if validation failed
+        if: steps.validate.outputs.validation_failed == '1' || steps.conflicts.outputs.conflict_found == '1'
+        run: |
+          echo "::error::Rule validation or conflict check failed. Please review the PR comment for details."
+          exit 1
+
+      - name: Success message
+        if: steps.changed-files.outputs.has_changes == 'true' && steps.validate.outputs.validation_failed != '1' && steps.conflicts.outputs.conflict_found != '1'
+        run: |
+          echo "✅ All validation checks passed!"
+          echo "The rule submission is ready for maintainer review."
+
+      - name: No rules changed
+        if: steps.changed-files.outputs.has_changes == 'false'
+        run: |
+          echo "ℹ️ No rule files were changed in this PR."
+          echo "If you intended to submit a rule, make sure:"
+          echo "  1. The file is in src/raxe/packs/*/rules/**/*.yaml"
+          echo "  2. The PR has the 'new-rule' label"

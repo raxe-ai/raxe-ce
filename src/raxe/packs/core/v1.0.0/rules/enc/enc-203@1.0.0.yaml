@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: enc-203
+family: ENC
+sub_family: null_byte_injection
+name: Null Byte Injection Detection
+description: Detects null byte injection attempts for filter bypass
+severity: high
+confidence: 0.94
+patterns:
+- pattern: (?i)%00|\\x00|\\0(?![0-9])|\u0000
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:\.php|\.asp|\.jsp)%00\.(?:jpg|png|txt|pdf)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "shell.php%00.jpg"
+  - "file=../../../etc/passwd%00"
+  - "upload.asp\\x00.txt"
+  should_not_match:
+  - "What is null byte injection?"
+  - "File upload validation"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: evasion
+rule_hash: null
+risk_explanation: Null byte injection exploits null byte handling differences to truncate strings, bypass filters, or manipulate file operations. This can enable path traversal, filter bypass, or other injection attacks.
+remediation_advice: Reject or strip null bytes from all input. Implement consistent null byte handling across all components. Use safe string handling functions. Deploy null byte injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-203-Null-Byte-Injection-Detection

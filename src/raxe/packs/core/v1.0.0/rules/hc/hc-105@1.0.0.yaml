@@ -1,0 +1,48 @@
+version: 1.0.0
+rule_id: hc-105
+family: HC
+sub_family: harmful_code
+name: Malicious Code Output Detection
+description: Detects when AI outputs actual malicious code (ransomware, trojans, etc.)
+severity: critical
+confidence: 0.88
+patterns:
+- pattern: (?i)(?:import|require|from)\s+(?:cryptography|pycrypto).*(?:encrypt|ransom).*(?:files?|documents?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:def|function|class)\s+(?:encrypt_files|ransom|lock_system)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)os\.system.*(?:rm\s+-rf\s+/|del\s+/f\s+/q|format\s+c:)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "import cryptography\ndef encrypt_files_for_ransom():"
+  - "function lock_system() { os.system('rm -rf /') }"
+  - "class RansomwareEncryptor:"
+  should_not_match:
+  - "How do ransomware attacks work?"
+  - "Example of encrypted file detection"
+  - "Analyzing malware samples safely"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1486
+- T1490
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_safety
+  scan_target: response
+rule_hash: null
+risk_explanation: Harmful code outputs include malware, exploits, or code designed to cause damage. Generated harmful code can be used in attacks even if the AI didn't intend malicious results.
+remediation_advice: Scan all code outputs for malicious patterns. Use static analysis and behavior prediction for generated code. Implement policies against generating code with harmful capabilities. Deploy malware detection in code generation pipelines.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-105-Malicious-Code-Output-Detection

@@ -1,0 +1,624 @@
+"""Integration tests for threat scoring system.
+
+Tests the full pipeline from raw ML scores through scorer to final classification.
+Tests configuration loading, scorer integration with folder_detector, and end-to-end workflows.
+
+These tests verify:
+1. Full pipeline: raw scores → scorer → classification → action
+2. Configuration loading (simple and expert modes)
+3. Invalid configuration handling
+4. Scorer integration with FolderL2Detector
+5. Metadata attachment to L2Result
+6. Error handling and graceful degradation
+"""
+from __future__ import annotations
+
+from unittest.mock import Mock, patch
+
+import pytest
+
+from raxe.domain.engine.executor import ScanResult as L1ScanResult
+from raxe.domain.ml.protocol import L2Prediction, L2Result, L2ThreatType
+from raxe.domain.ml.scoring_models import (
+    ActionType,
+    ScoringMode,
+    ScoringResult,
+    ThreatLevel,
+    ThreatScore,
+)
+from raxe.domain.ml.threat_scorer import HierarchicalThreatScorer
+
+# ============================================================================
+# Test Fixtures
+# ============================================================================
+
+
+@pytest.fixture
+def mock_l1_results():
+    """Create mock L1 results for testing."""
+    return L1ScanResult(
+        is_blocked=False,
+        detections=[],
+        scan_time_ms=1.5,
+        rules_evaluated=10,
+        metadata={"scan_id": "test-123"}
+    )
+
+
+@pytest.fixture
+def mock_ml_predictions():
+    """Create mock ML predictions that simulate FolderL2Detector output."""
+    return {
+        "binary_score": 0.85,
+        "family": "TOX",
+        "family_score": 0.35,
+        "subfamily": "tox_hate_speech",
+        "subfamily_score": 0.25,
+    }
+
+
+@pytest.fixture
+def scorer_balanced():
+    """Create scorer in balanced mode."""
+    return ThreatScorer(mode=ScorerMode.BALANCED)
+
+
+@pytest.fixture
+def scorer_low_fp():
+    """Create scorer in low_fp mode."""
+    return ThreatScorer(mode=ScorerMode.LOW_FP)
+
+
+# ============================================================================
+# Test: Full Pipeline Integration
+# ============================================================================
+
+
+class TestFullPipeline:
+    """Test complete pipeline from ML output to final decision."""
+
+    def test_pipeline_with_typical_fp(self, scorer_balanced, mock_ml_predictions):
+        """Test full pipeline with typical false positive pattern."""
+        # Step 1: Calculate hierarchical score
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=mock_ml_predictions["binary_score"],
+            family_score=mock_ml_predictions["family_score"],
+            subfamily_score=mock_ml_predictions["subfamily_score"],
+        )
+
+        # Step 2: Classify threat
+        classification = scorer_balanced.classify(score_obj)
+
+        # Step 3: Recommend action
+        action = scorer_balanced.recommend_action(classification)
+
+        # Verify pipeline results
+        assert isinstance(score_obj, ThreatScore)
+        assert isinstance(classification, ClassificationLevel)
+        assert isinstance(action, ActionType)
+
+        # For this FP pattern, should classify as FP_LIKELY
+        assert classification in [
+            ClassificationLevel.FP_LIKELY,
+            ClassificationLevel.REVIEW
+        ]
+        assert action in [ActionType.ALLOW, ActionType.LOG]
+
+    def test_pipeline_with_high_confidence_threat(self, scorer_balanced):
+        """Test pipeline with clear threat."""
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=0.95,
+            family_score=0.92,
+            subfamily_score=0.88,
+        )
+
+        classification = scorer_balanced.classify(score_obj)
+        action = scorer_balanced.recommend_action(classification)
+
+        # Should be classified as threat and blocked
+        assert classification == ClassificationLevel.THREAT
+        assert action == ActionType.BLOCK
+
+    def test_pipeline_with_benign_input(self, scorer_balanced):
+        """Test pipeline with clearly benign input."""
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=0.25,
+            family_score=0.15,
+            subfamily_score=0.10,
+        )
+
+        classification = scorer_balanced.classify(score_obj)
+        action = scorer_balanced.recommend_action(classification)
+
+        # Should be classified as benign and allowed
+        assert classification == ClassificationLevel.BENIGN
+        assert action == ActionType.ALLOW
+
+    def test_pipeline_produces_metadata(self, scorer_balanced):
+        """Test that pipeline produces rich metadata."""
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=0.75,
+            family_score=0.65,
+            subfamily_score=0.55,
+        )
+
+        # Verify metadata attached
+        assert hasattr(score_obj, 'hierarchical_score')
+        assert hasattr(score_obj, 'consistency')
+        assert hasattr(score_obj, 'margin')
+
+        # All metadata should be valid
+        assert 0.0 <= score_obj.hierarchical_score <= 1.0
+        assert 0.0 <= score_obj.consistency <= 1.0
+
+
+# ============================================================================
+# Test: Configuration Loading
+# ============================================================================
+
+
+class TestConfigurationLoading:
+    """Test loading scorer configurations."""
+
+    def test_load_simple_mode_config(self):
+        """Test loading configuration in simple mode."""
+        scorer = ThreatScorer(mode=ScorerMode.BALANCED)
+
+        config = scorer.get_config()
+
+        # Verify config structure
+        assert "mode" in config
+        assert "weights" in config
+        assert "threat_threshold" in config
+        assert "fp_threshold" in config
+
+        # Verify weights sum to 1.0
+        assert sum(config["weights"].values()) == pytest.approx(1.0)
+
+    def test_load_expert_mode_config(self):
+        """Test loading configuration with custom thresholds (expert mode)."""
+        scorer = ThreatScorer(
+            mode=ScorerMode.BALANCED,
+            custom_thresholds={
+                "threat_threshold": 0.80,
+                "fp_threshold": 0.30,
+            }
+        )
+
+        config = scorer.get_config()
+
+        # Verify custom thresholds applied
+        assert config["threat_threshold"] == 0.80
+        assert config["fp_threshold"] == 0.30
+
+    def test_config_validation(self):
+        """Test that invalid configs are rejected."""
+        # Threat threshold must be > FP threshold
+        with pytest.raises(ValueError, match="threat_threshold must be greater than fp_threshold"):
+            ThreatScorer(
+                mode=ScorerMode.BALANCED,
+                custom_thresholds={
+                    "threat_threshold": 0.30,
+                    "fp_threshold": 0.80,
+                }
+            )
+
+    def test_config_serialization(self):
+        """Test that config can be serialized for storage/logging."""
+        scorer = ThreatScorer(mode=ScorerMode.LOW_FP)
+
+        config = scorer.get_config()
+
+        # Should be JSON-serializable
+        import json
+        json_str = json.dumps(config)
+        assert isinstance(json_str, str)
+
+        # Should round-trip
+        restored = json.loads(json_str)
+        assert restored["mode"] == ScorerMode.LOW_FP.value
+
+
+# ============================================================================
+# Test: Invalid Configuration Handling
+# ============================================================================
+
+
+class TestInvalidConfiguration:
+    """Test handling of invalid configurations."""
+
+    def test_invalid_threshold_range(self):
+        """Test that out-of-range thresholds are rejected."""
+        with pytest.raises(ValueError):
+            ThreatScorer(
+                mode=ScorerMode.BALANCED,
+                custom_thresholds={"threat_threshold": 1.5}
+            )
+
+    def test_negative_threshold(self):
+        """Test that negative thresholds are rejected."""
+        with pytest.raises(ValueError):
+            ThreatScorer(
+                mode=ScorerMode.BALANCED,
+                custom_thresholds={"fp_threshold": -0.1}
+            )
+
+    def test_invalid_weights(self):
+        """Test that invalid weight configurations are rejected."""
+        with pytest.raises(ValueError):
+            ThreatScorer(
+                mode=ScorerMode.BALANCED,
+                custom_weights={"binary": 0.5, "family": 0.3}  # Missing subfamily
+            )
+
+    def test_graceful_degradation_on_invalid_input(self, scorer_balanced):
+        """Test that scorer handles invalid inputs gracefully."""
+        # Should not crash on edge cases
+        try:
+            score_obj = scorer_balanced.calculate_score(
+                binary_score=0.99999999,
+                family_score=0.50000001,
+                subfamily_score=0.00000001,
+            )
+            assert score_obj is not None
+        except Exception as e:
+            pytest.fail(f"Scorer should handle edge case values: {e}")
+
+
+# ============================================================================
+# Test: Scorer Integration with FolderDetector
+# ============================================================================
+
+
+class TestFolderDetectorIntegration:
+    """Test integration between scorer and FolderL2Detector."""
+
+    @patch('raxe.domain.ml.folder_detector.FolderL2Detector')
+    def test_scorer_processes_detector_output(self, mock_detector_class, mock_l1_results):
+        """Test that scorer can process FolderL2Detector output."""
+        # Setup mock detector
+        mock_detector = Mock()
+        mock_detector_class.return_value = mock_detector
+
+        # Mock detector returns predictions with scores
+        mock_detector.analyze.return_value = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type=L2ThreatType.UNKNOWN,
+                    confidence=0.85,
+                    metadata={
+                        "family": "TOX",
+                        "sub_family": "tox_hate_speech",
+                        "scores": {
+                            "attack_probability": 0.85,
+                            "family_confidence": 0.35,
+                            "subfamily_confidence": 0.25,
+                        }
+                    }
+                )
+            ],
+            confidence=0.85,
+            processing_time_ms=5.2,
+            model_version="folder-test",
+        )
+
+        # Create scorer and process detector output
+        scorer = ThreatScorer(mode=ScorerMode.BALANCED)
+
+        result = mock_detector.analyze("test prompt", mock_l1_results)
+        assert result.has_predictions
+
+        # Extract scores from prediction metadata
+        pred = result.predictions[0]
+        scores = pred.metadata["scores"]
+
+        # Score with scorer
+        score_obj = scorer.calculate_score(
+            binary_score=scores["attack_probability"],
+            family_score=scores["family_confidence"],
+            subfamily_score=scores["subfamily_confidence"],
+        )
+
+        # Verify scoring works
+        assert isinstance(score_obj, ThreatScore)
+        assert 0.0 <= score_obj.hierarchical_score <= 1.0
+
+    def test_scorer_enriches_l2_result(self, mock_l1_results):
+        """Test that scorer adds enriched metadata to L2Result."""
+        # Create a basic L2Result
+        l2_result = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type=L2ThreatType.UNKNOWN,
+                    confidence=0.75,
+                    metadata={
+                        "family": "TOX",
+                        "scores": {
+                            "attack_probability": 0.80,
+                            "family_confidence": 0.40,
+                            "subfamily_confidence": 0.30,
+                        }
+                    }
+                )
+            ],
+            confidence=0.75,
+            processing_time_ms=4.5,
+            model_version="test",
+        )
+
+        # Apply scoring
+        scorer = ThreatScorer(mode=ScorerMode.BALANCED)
+
+        pred = l2_result.predictions[0]
+        scores = pred.metadata["scores"]
+
+        score_obj = scorer.calculate_score(
+            binary_score=scores["attack_probability"],
+            family_score=scores["family_confidence"],
+            subfamily_score=scores["subfamily_confidence"],
+        )
+
+        classification = scorer.classify(score_obj)
+        action = scorer.recommend_action(classification)
+
+        # Verify enrichment
+        enriched_metadata = {
+            "scorer_metadata": {
+                "hierarchical_score": score_obj.hierarchical_score,
+                "consistency": score_obj.consistency,
+                "margin": score_obj.margin,
+                "classification": classification.value,
+                "action": action.value,
+                "scorer_mode": ScorerMode.BALANCED.value,
+            }
+        }
+
+        assert "hierarchical_score" in enriched_metadata["scorer_metadata"]
+        assert "classification" in enriched_metadata["scorer_metadata"]
+        assert "action" in enriched_metadata["scorer_metadata"]
+
+
+# ============================================================================
+# Test: Metadata Attachment
+# ============================================================================
+
+
+class TestMetadataAttachment:
+    """Test that scorer properly attaches metadata to results."""
+
+    def test_score_object_contains_all_metadata(self, scorer_balanced):
+        """Test that ThreatScore contains all required metadata."""
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=0.75,
+            family_score=0.65,
+            subfamily_score=0.55,
+        )
+
+        # Verify all fields present
+        assert hasattr(score_obj, 'hierarchical_score')
+        assert hasattr(score_obj, 'binary_score')
+        assert hasattr(score_obj, 'family_score')
+        assert hasattr(score_obj, 'subfamily_score')
+        assert hasattr(score_obj, 'consistency')
+        assert hasattr(score_obj, 'margin')
+
+    def test_classification_includes_reasoning(self, scorer_balanced):
+        """Test that classification includes reasoning metadata."""
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=0.85,
+            family_score=0.35,
+            subfamily_score=0.25,
+        )
+
+        classification = scorer_balanced.classify(score_obj)
+
+        # Get reasoning
+        reasoning = scorer_balanced.get_classification_reasoning(score_obj, classification)
+
+        # Verify reasoning contains useful info
+        assert "score" in reasoning.lower() or "confidence" in reasoning.lower()
+        assert isinstance(reasoning, str)
+        assert len(reasoning) > 0
+
+    def test_metadata_serializable(self, scorer_balanced):
+        """Test that all metadata is JSON-serializable."""
+        import json
+
+        score_obj = scorer_balanced.calculate_score(
+            binary_score=0.75,
+            family_score=0.65,
+            subfamily_score=0.55,
+        )
+
+        classification = scorer_balanced.classify(score_obj)
+        action = scorer_balanced.recommend_action(classification)
+
+        # Create metadata dict
+        metadata = {
+            "hierarchical_score": score_obj.hierarchical_score,
+            "consistency": score_obj.consistency,
+            "margin": score_obj.margin,
+            "classification": classification.value,
+            "action": action.value,
+        }
+
+        # Should serialize successfully
+        json_str = json.dumps(metadata)
+        assert isinstance(json_str, str)
+
+        # Should deserialize
+        restored = json.loads(json_str)
+        assert restored["hierarchical_score"] == pytest.approx(score_obj.hierarchical_score)
+
+
+# ============================================================================
+# Test: Error Handling
+# ============================================================================
+
+
+class TestErrorHandling:
+    """Test error handling and graceful degradation."""
+
+    def test_handles_missing_scores_gracefully(self, scorer_balanced):
+        """Test handling of missing score values."""
+        # Should handle None or missing values
+        with pytest.raises((ValueError, TypeError)):
+            scorer_balanced.calculate_score(
+                binary_score=None,  # type: ignore
+                family_score=0.5,
+                subfamily_score=0.5,
+            )
+
+    def test_handles_nan_scores(self, scorer_balanced):
+        """Test handling of NaN scores."""
+        import math
+
+        with pytest.raises((ValueError, TypeError)):
+            scorer_balanced.calculate_score(
+                binary_score=math.nan,
+                family_score=0.5,
+                subfamily_score=0.5,
+            )
+
+    def test_handles_inf_scores(self, scorer_balanced):
+        """Test handling of infinite scores."""
+        import math
+
+        with pytest.raises((ValueError, TypeError)):
+            scorer_balanced.calculate_score(
+                binary_score=math.inf,
+                family_score=0.5,
+                subfamily_score=0.5,
+            )
+
+    def test_graceful_fallback_on_error(self):
+        """Test that scorer provides fallback classification on error."""
+        scorer = ThreatScorer(mode=ScorerMode.BALANCED)
+
+        try:
+            # Simulate error scenario
+            score_obj = ThreatScore(
+                hierarchical_score=0.0,
+                binary_score=0.0,
+                family_score=0.0,
+                subfamily_score=0.0,
+                consistency=0.0,
+                margin=-1.0,
+            )
+
+            classification = scorer.classify(score_obj)
+
+            # Should still return valid classification
+            assert isinstance(classification, ClassificationLevel)
+
+        except Exception as e:
+            pytest.fail(f"Scorer should handle edge cases gracefully: {e}")
+
+
+# ============================================================================
+# Test: Mode Switching
+# ============================================================================
+
+
+class TestModeSwitching:
+    """Test switching between different scorer modes."""
+
+    def test_different_modes_different_results(self):
+        """Test that different modes produce different classifications."""
+        # Borderline case
+        binary_score = 0.68
+        family_score = 0.48
+        subfamily_score = 0.38
+
+        # Score in different modes
+        scorer_balanced = ThreatScorer(mode=ScorerMode.BALANCED)
+        scorer_low_fp = ThreatScorer(mode=ScorerMode.LOW_FP)
+        scorer_high_sec = ThreatScorer(mode=ScorerMode.HIGH_SECURITY)
+
+        score_balanced = scorer_balanced.calculate_score(
+            binary_score, family_score, subfamily_score
+        )
+        score_low_fp = scorer_low_fp.calculate_score(
+            binary_score, family_score, subfamily_score
+        )
+        score_high_sec = scorer_high_sec.calculate_score(
+            binary_score, family_score, subfamily_score
+        )
+
+        class_balanced = scorer_balanced.classify(score_balanced)
+        class_low_fp = scorer_low_fp.classify(score_low_fp)
+        class_high_sec = scorer_high_sec.classify(score_high_sec)
+
+        # Classifications may differ based on mode
+        # (exact behavior depends on implementation)
+        assert isinstance(class_balanced, ClassificationLevel)
+        assert isinstance(class_low_fp, ClassificationLevel)
+        assert isinstance(class_high_sec, ClassificationLevel)
+
+    def test_mode_persistence(self):
+        """Test that scorer maintains mode across operations."""
+        scorer = ThreatScorer(mode=ScorerMode.LOW_FP)
+
+        # Perform multiple operations
+        scorer.calculate_score(0.7, 0.6, 0.5)
+        scorer.calculate_score(0.8, 0.5, 0.4)
+
+        # Mode should remain consistent
+        config = scorer.get_config()
+        assert config["mode"] == ScorerMode.LOW_FP.value
+
+
+# ============================================================================
+# Test: Performance
+# ============================================================================
+
+
+class TestIntegrationPerformance:
+    """Test performance of integrated pipeline."""
+
+    def test_full_pipeline_latency(self, scorer_balanced):
+        """Test that full pipeline completes quickly."""
+        import time
+
+        iterations = 100
+        start = time.perf_counter()
+
+        for _ in range(iterations):
+            score_obj = scorer_balanced.calculate_score(0.75, 0.65, 0.55)
+            classification = scorer_balanced.classify(score_obj)
+            scorer_balanced.recommend_action(classification)
+
+        end = time.perf_counter()
+        avg_time_ms = ((end - start) / iterations) * 1000
+
+        # Full pipeline should be under 1ms
+        assert avg_time_ms < 1.0
+
+    def test_scoring_adds_minimal_overhead(self):
+        """Test that scoring adds <1ms overhead to ML inference."""
+        import time
+
+        # Simulate ML inference time (5ms)
+        ml_inference_time_ms = 5.0
+
+        # Measure scoring overhead
+        scorer = ThreatScorer(mode=ScorerMode.BALANCED)
+
+        iterations = 100
+        start = time.perf_counter()
+
+        for _ in range(iterations):
+            scorer.calculate_score(0.75, 0.65, 0.55)
+
+        end = time.perf_counter()
+        scoring_time_ms = ((end - start) / iterations) * 1000
+
+        # Scoring should add <1ms overhead
+        assert scoring_time_ms < 1.0
+
+        # Total pipeline time should be dominated by ML inference
+        total_time = ml_inference_time_ms + scoring_time_ms
+        scoring_overhead_pct = (scoring_time_ms / total_time) * 100
+
+        # Scoring should be <20% of total time
+        assert scoring_overhead_pct < 20

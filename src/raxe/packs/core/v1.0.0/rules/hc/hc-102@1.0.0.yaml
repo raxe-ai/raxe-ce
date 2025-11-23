@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: hc-102
+family: HC
+sub_family: toxic_output
+name: Violence Glorification Detection
+description: Detects content glorifying violence, terrorism, or mass harm in responses
+severity: critical
+confidence: 0.89
+patterns:
+- pattern: (?i)(?:how\s+to|instructions\s+(?:for|to)|guide\s+to)\s+(?:build|make|create|assemble)\s+(?:a\s+)?(?:bomb|explosive|ied|weapon)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:step\s+by\s+step|detailed\s+instructions).*(?:mass\s+shooting|terrorist\s+attack|suicide\s+bombing)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:celebrate|glorify|praise).*(?:mass\s+murder|genocide|terrorism|school\s+shooting)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Here's how to build a bomb step by step"
+  - "Detailed instructions for a mass shooting attack"
+  - "We should glorify terrorists who fight the system"
+  should_not_match:
+  - "History of terrorism and its impact"
+  - "How do bomb disposal units work?"
+  - "Documentary about preventing mass violence"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1498
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_safety
+  scan_target: response
+rule_hash: null
+risk_explanation: Toxic outputs (hate speech, violence glorification, self-harm encouragement) can cause psychological harm, promote dangerous behaviors, or violate content policies and regulations. These outputs damage users and create legal liabilities.
+remediation_advice: Implement comprehensive content filtering for toxic outputs across all categories. Use toxicity scoring and threshold-based blocking. Deploy classifier models trained on diverse toxic content. Maintain zero-tolerance policies for high-severity toxic content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-102-Violence-Glorification-Detection

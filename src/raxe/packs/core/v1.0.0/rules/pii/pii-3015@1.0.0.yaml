@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3015
+family: PII
+sub_family: identity_documents
+name: US Passport Number Detection
+description: Detects US passport numbers (9 digits or 1-2 letters + 8 digits)
+severity: high
+confidence: 0.92
+patterns:
+- pattern: (?i)(?:passport|pass\.?\s*(?:no|number|num|#)).{0,20}\b([A-Z]{1,2}[0-9]{8})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:passport|pass\.?\s*(?:no|number|num|#)).{0,20}\b([0-9]{9})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "My passport number is A12345678"
+  - "Passport No: 123456789"
+  - "Pass #: AB12345678"
+  should_not_match:
+  - "What is a passport number?"
+  - "US passports have 9 digits"
+  - "I need to renew my passport"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: identity_documents
+rule_hash: null
+risk_explanation: Identity document numbers (passports, driver licenses, national ID numbers) enable identity theft and fraud when exposed. Attackers can use these credentials to impersonate victims, open fraudulent accounts, or bypass authentication systems.
+remediation_advice: Implement strict access controls for identity document data. Use tokenization or anonymization when processing identity information. Deploy DLP controls that detect and block identity document leakage. Maintain audit logs of all access to identity data.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3015-Us-Passport-Number-Detection

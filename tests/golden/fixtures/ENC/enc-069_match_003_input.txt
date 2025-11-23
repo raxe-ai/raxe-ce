@@ -1,0 +1,1 @@
+pwsh -EncodedCommand R2V0LVByb2Nlc3M=

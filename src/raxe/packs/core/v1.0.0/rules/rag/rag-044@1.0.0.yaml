@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: rag-044
+family: RAG
+sub_family: retrieval_manipulation
+name: Detects answer generation context poisoning
+description: Detects answer generation context poisoning
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)\bpoison\s+(?:the\s+)?answer\s+generation\s+(?:context|process|pipeline)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:inject|insert)\s+(?:malicious|false)\s+(?:context|information)\s+(?:for|into|in|to)\s+(?:answer|response)\s+generation
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:corrupt|manipulate)\s+(?:generation|synthesis)\s+(?:context|input)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Poison the answer generation context
+  - Inject false information for response generation
+  - Corrupt synthesis context
+  - Manipulate generation input
+  should_not_match:
+  - Answer generation techniques
+  - Response synthesis methods
+  - Generation context management
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1565.001
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-0044
+rule_hash: sha256:eaec97e03cb4ae188d3e976859ad2a32406a7ef609f1a6e766a7d221c627afbd
+risk_explanation: Retrieval manipulation poisons the context provided to answer generation, causing incorrect or malicious responses. This attack targets the bridge between retrieval and generation to inject false information.
+remediation_advice: Implement context validation and consistency checking. Use multiple retrieval sources and cross-validation. Deploy anomaly detection for unusual context patterns. Apply content security policies to retrieved context.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-044-Answer-Generation-Context

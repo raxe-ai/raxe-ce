@@ -1,0 +1,40 @@
+version: 1.0.0
+rule_id: pii-3055
+family: PII
+sub_family: identity_documents
+name: Australian Tax File Number (TFN) Detection
+description: Detects Australian Tax File Numbers
+severity: high
+confidence: 0.90
+patterns:
+- pattern: (?i)(?:TFN|tax\s*file).{0,20}(?:no|number|num).{0,10}\b([0-9]{3}\s*[0-9]{3}\s*[0-9]{3})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:TFN|tax\s*file).{0,20}(?:no|number|num).{0,10}\b([0-9]{9})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "TFN: 123 456 789"
+  - "Tax File Number: 987654321"
+  should_not_match:
+  - "What is a TFN?"
+  - "How to apply for Tax File Number?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: identity_documents
+rule_hash: null
+risk_explanation: Identity document numbers (passports, driver licenses, national ID numbers) enable identity theft and fraud when exposed. Attackers can use these credentials to impersonate victims, open fraudulent accounts, or bypass authentication systems.
+remediation_advice: Implement strict access controls for identity document data. Use tokenization or anonymization when processing identity information. Deploy DLP controls that detect and block identity document leakage. Maintain audit logs of all access to identity data.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3055-Australian-Tax-File-Number

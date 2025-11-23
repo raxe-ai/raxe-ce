@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-99
+family: ENC
+sub_family: password_archive_encoding
+name: Detects password archive encoding obfuscation
+description: Detects password archive encoding obfuscation
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: (?i)password archive (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0099
+rule_hash: sha256:8d4b09187a138052a6ca664a44cc47c1597f954b41dd276c7d973625e69078ad
+risk_explanation: password archive encoding can obfuscate malicious content.
+remediation_advice: Detect password archive patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-99-Password-Archive-Encoding

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-87
+family: ENC
+sub_family: rtl_override_encoding
+name: Detects RTL override obfuscation
+description: Detects RTL override obfuscation
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)rtl override (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0087
+rule_hash: sha256:21e12603f8164e78dd9594fc15ee218fb42058863ca4bd482f71a269e5f672ad
+risk_explanation: Rtl Override encoding can obfuscate malicious content.
+remediation_advice: Detect RTL override patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-87-Rtl-Override-Encoding

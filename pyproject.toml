@@ -73,7 +73,7 @@ wrappers = [
 # ML detection (ONNX-based L2 detector)
 ml = [
     "onnxruntime>=1.16.0,<2.0",
-    "sentence-transformers>=2.2.0,<3.0",
+    "sentence-transformers>=2.2.0,<6.0",
     "numpy>=1.24.0,<2.0",
 ]
 
@@ -85,7 +85,7 @@ all = [
     "prompt-toolkit>=3.0,<4.0",
     "tomli-w>=1.0,<2.0",
     "onnxruntime>=1.16.0,<2.0",
-    "sentence-transformers>=2.2.0,<3.0",
+    "sentence-transformers>=2.2.0,<6.0",
     "numpy>=1.24.0,<2.0",
 ]
 

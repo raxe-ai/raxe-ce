@@ -74,7 +74,7 @@ wrappers = [
 ml = [
     "onnxruntime>=1.16.0,<2.0",
     "sentence-transformers>=2.2.0,<3.0",
-    "numpy>=1.24.0,<2.0",
+    "numpy>=1.24.0,<3.0",
 ]
 
 # All optional features
@@ -86,7 +86,7 @@ all = [
     "tomli-w>=1.0,<2.0",
     "onnxruntime>=1.16.0,<2.0",
     "sentence-transformers>=2.2.0,<3.0",
-    "numpy>=1.24.0,<2.0",
+    "numpy>=1.24.0,<3.0",
 ]
 
 [project.urls]

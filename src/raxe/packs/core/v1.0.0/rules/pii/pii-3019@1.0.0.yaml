@@ -1,0 +1,40 @@
+version: 1.0.0
+rule_id: pii-3019
+family: PII
+sub_family: financial
+name: IBAN Detection
+description: Detects International Bank Account Numbers (IBAN) - European standard
+severity: high
+confidence: 0.95
+patterns:
+- pattern: \b([A-Z]{2}[0-9]{2}[A-Z0-9]{11,30})\b
+  flags: []
+  timeout: 5.0
+- pattern: (?i)iban.{0,10}[:\s]+([A-Z]{2}[0-9]{2}[\s]?[A-Z0-9]{4}[\s]?[A-Z0-9]{4}[\s]?[A-Z0-9]{4}[\s]?[A-Z0-9]{0,18})
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "IBAN: GB82 WEST 1234 5698 7654 32"
+  - "Account: DE89370400440532013000"
+  - "IBAN FR1420041010050500013M02606"
+  should_not_match:
+  - "What is an IBAN?"
+  - "IBAN format for UK banks"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: financial
+rule_hash: null
+risk_explanation: Financial credential exposure (account numbers, routing numbers, cryptocurrency addresses) enables direct financial fraud and theft. Attackers can initiate unauthorized transactions, drain accounts, or conduct money laundering operations.
+remediation_advice: Apply PCI DSS and financial data security standards. Use encryption and tokenization for financial data. Implement transaction monitoring and fraud detection. Restrict AI access to financial systems and data stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3019-Iban-Detection

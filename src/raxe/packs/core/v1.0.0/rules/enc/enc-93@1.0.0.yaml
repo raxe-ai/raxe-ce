@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-93
+family: ENC
+sub_family: dna_encoding
+name: Detects DNA encoding obfuscation
+description: Detects DNA encoding obfuscation
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)dna (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0093
+rule_hash: sha256:28856261a191c47dbfffe76ac0649d50c29211a4ae95c87969b8a07a80d87e9f
+risk_explanation: DNA encoding can obfuscate malicious content.
+remediation_advice: Detect DNA patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-93-Dna-Encoding

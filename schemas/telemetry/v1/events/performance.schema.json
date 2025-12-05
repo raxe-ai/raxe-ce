@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/performance.schema.json",
+  "title": "Performance Event",
+  "description": "Aggregated performance metrics (sent periodically)",
+  "type": "object",
+  "required": [
+    "period_start",
+    "period_end",
+    "scan_count"
+  ],
+  "properties": {
+    "period_start": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start of measurement period"
+    },
+    "period_end": {
+      "type": "string",
+      "format": "date-time",
+      "description": "End of measurement period"
+    },
+    "scan_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of scans in period"
+    },
+    "latency_percentiles": {
+      "type": "object",
+      "description": "Scan latency distribution",
+      "properties": {
+        "p50_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": ["p50_ms", "p95_ms", "p99_ms"]
+    },
+    "l1_latency_percentiles": {
+      "type": "object",
+      "description": "L1 scan latency distribution",
+      "properties": {
+        "p50_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "l2_latency_percentiles": {
+      "type": "object",
+      "description": "L2 scan latency distribution",
+      "properties": {
+        "p50_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "memory_usage": {
+      "type": "object",
+      "description": "Memory usage statistics",
+      "properties": {
+        "current_mb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "peak_mb": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "threat_detection_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Percentage of scans with threats detected"
+    },
+    "rules_loaded": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of rules loaded"
+    },
+    "l2_enabled": {
+      "type": "boolean",
+      "description": "Whether L2 ML detection is enabled"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

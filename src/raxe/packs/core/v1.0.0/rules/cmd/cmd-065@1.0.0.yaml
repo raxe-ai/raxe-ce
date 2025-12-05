@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: cmd-065
+family: CMD
+sub_family: code_execution
+name: Detects Node.js child_process execution
+description: Detects Node.js child_process execution
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)require\s*\(['"]child_process['"]\)\.(?:exec|spawn|execFile)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)child_process\.(?:exec|spawn)\s*\(
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)execSync\s*\(['"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - require('child_process').exec('ls')
+  - child_process.spawn('whoami')
+  - execSync('cat /etc/passwd')
+  should_not_match:
+  - Node.js child process documentation
+  - Safe command execution in Node
+  - child_process module guide
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0065
+rule_hash: sha256:fda69e262e9579842376a02676cd1921ae709e187394615a03c815597f523887
+risk_explanation: Code execution attacks inject and execute arbitrary code (Python, JavaScript, Node.js) to gain control over application logic or system resources. Successful exploitation can lead to complete system compromise, data theft, or deployment of malware.
+remediation_advice: Never use eval(), exec(), or similar functions with user input. Implement strict input validation and sanitization. Use sandboxing and containerization to isolate code execution. Deploy runtime application self-protection (RASP) to detect code injection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-065-Node.Js-Child_Process-Execution

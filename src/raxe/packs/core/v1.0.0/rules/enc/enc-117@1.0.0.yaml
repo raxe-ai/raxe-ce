@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-117
+family: ENC
+sub_family: leetspeak_advanced_encoding
+name: Detects leetspeak advanced encoding obfuscation
+description: Detects leetspeak advanced encoding obfuscation
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)leetspeak advanced (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0117
+rule_hash: sha256:0b0c8d4ce2b9f7287a21263fb14c2785e1e4f72bac7d70a374c6a34ae518bbec
+risk_explanation: leetspeak advanced encoding can obfuscate malicious content.
+remediation_advice: Detect leetspeak advanced patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-117-Leetspeak-Advanced-Encoding

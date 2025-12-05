@@ -1,0 +1,1000 @@
+{"id": "BENIGN-00001", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00002", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00003", "prompt": "How do I connect to a database in C++?", "category": "programming"}
+{"id": "BENIGN-00004", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00005", "prompt": "What's the best way to implement hash map in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00006", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00007", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00008", "prompt": "Show me how to use generators in JavaScript", "category": "programming"}
+{"id": "BENIGN-00009", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00010", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00011", "prompt": "Show me how to use generators in Ruby", "category": "programming"}
+{"id": "BENIGN-00012", "prompt": "How do I parse JSON in Python?", "category": "programming"}
+{"id": "BENIGN-00013", "prompt": "Can you help me debug this Go function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00014", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00015", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00016", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00017", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00018", "prompt": "How do I write unit tests for in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00019", "prompt": "Show me how to use decorators in TypeScript", "category": "programming"}
+{"id": "BENIGN-00020", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00021", "prompt": "How do I parse JSON in PHP?", "category": "programming"}
+{"id": "BENIGN-00022", "prompt": "What's the best way to implement hash map in Go?", "category": "programming"}
+{"id": "BENIGN-00023", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00024", "prompt": "How do I handle authentication in a Java application?", "category": "programming"}
+{"id": "BENIGN-00025", "prompt": "What's the best way to implement graph in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00026", "prompt": "Explain how async/await works in C++", "category": "programming"}
+{"id": "BENIGN-00027", "prompt": "How do I parse JSON in Swift?", "category": "programming"}
+{"id": "BENIGN-00028", "prompt": "Explain how async/await works in Python", "category": "programming"}
+{"id": "BENIGN-00029", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00030", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00031", "prompt": "Explain how async/await works in Python", "category": "programming"}
+{"id": "BENIGN-00032", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00033", "prompt": "Show me how to use hooks in C++", "category": "programming"}
+{"id": "BENIGN-00034", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00035", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00036", "prompt": "Explain how async/await works in Ruby", "category": "programming"}
+{"id": "BENIGN-00037", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00038", "prompt": "Show me how to use promises in Ruby", "category": "programming"}
+{"id": "BENIGN-00039", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00040", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00041", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00042", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00043", "prompt": "How do I parse JSON in Swift?", "category": "programming"}
+{"id": "BENIGN-00044", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00045", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00046", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00047", "prompt": "What's the best way to implement hash map in C++?", "category": "programming"}
+{"id": "BENIGN-00048", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00049", "prompt": "How do I parse JSON in Ruby?", "category": "programming"}
+{"id": "BENIGN-00050", "prompt": "How do I add logging to in Java?", "category": "programming"}
+{"id": "BENIGN-00051", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00052", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00053", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00054", "prompt": "Show me how to use generators in Java", "category": "programming"}
+{"id": "BENIGN-00055", "prompt": "How do I connect to a database in Ruby?", "category": "programming"}
+{"id": "BENIGN-00056", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00057", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00058", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00059", "prompt": "How do I handle authentication in a Swift application?", "category": "programming"}
+{"id": "BENIGN-00060", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00061", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00062", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00063", "prompt": "Show me an example of error handling in Rust", "category": "programming"}
+{"id": "BENIGN-00064", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00065", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00066", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00067", "prompt": "How do I parse JSON in Python?", "category": "programming"}
+{"id": "BENIGN-00068", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00069", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00070", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00071", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00072", "prompt": "Show me how to use generators in PHP", "category": "programming"}
+{"id": "BENIGN-00073", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00074", "prompt": "Can you help me debug this TypeScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00075", "prompt": "How do I connect to a database in Java?", "category": "programming"}
+{"id": "BENIGN-00076", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00077", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00078", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00079", "prompt": "Show me how to use generators in Ruby", "category": "programming"}
+{"id": "BENIGN-00080", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00081", "prompt": "How do I explain the difference between {concept1} and {concept2} in Python?", "category": "programming"}
+{"id": "BENIGN-00082", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00083", "prompt": "How do I refactor this code in Rust?", "category": "programming"}
+{"id": "BENIGN-00084", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00085", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00086", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00087", "prompt": "How do I explain the difference between {concept1} and {concept2} in Swift?", "category": "programming"}
+{"id": "BENIGN-00088", "prompt": "What's the best way to implement graph in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00089", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00090", "prompt": "How do I create a {pattern} pattern in PHP?", "category": "programming"}
+{"id": "BENIGN-00091", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00092", "prompt": "Show me how to use middleware in Java", "category": "programming"}
+{"id": "BENIGN-00093", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00094", "prompt": "Show me how to use middleware in Ruby", "category": "programming"}
+{"id": "BENIGN-00095", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00096", "prompt": "How do I handle authentication in a Swift application?", "category": "programming"}
+{"id": "BENIGN-00097", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00098", "prompt": "Show me an example of error handling in Python", "category": "programming"}
+{"id": "BENIGN-00099", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00100", "prompt": "How do I handle authentication in a Go application?", "category": "programming"}
+{"id": "BENIGN-00101", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00102", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00103", "prompt": "How do I debug this {item} in Go?", "category": "programming"}
+{"id": "BENIGN-00104", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00105", "prompt": "Show me an example of error handling in TypeScript", "category": "programming"}
+{"id": "BENIGN-00106", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00107", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00108", "prompt": "Show me an example of error handling in Rust", "category": "programming"}
+{"id": "BENIGN-00109", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00110", "prompt": "How do I connect to a database in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00111", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00112", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00113", "prompt": "What's the best way to implement binary search tree in C++?", "category": "programming"}
+{"id": "BENIGN-00114", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00115", "prompt": "How do I create a {pattern} pattern in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00116", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00117", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00118", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00119", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00120", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00121", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00122", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00123", "prompt": "What's the best way to implement linked list in Python?", "category": "programming"}
+{"id": "BENIGN-00124", "prompt": "How do I document this function in Python?", "category": "programming"}
+{"id": "BENIGN-00125", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00126", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00127", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00128", "prompt": "Show me how to use decorators in Java", "category": "programming"}
+{"id": "BENIGN-00129", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00130", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00131", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00132", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00133", "prompt": "How do I parse JSON in Swift?", "category": "programming"}
+{"id": "BENIGN-00134", "prompt": "What's the best way to implement graph in Ruby?", "category": "programming"}
+{"id": "BENIGN-00135", "prompt": "How do I connect to a database in Ruby?", "category": "programming"}
+{"id": "BENIGN-00136", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00137", "prompt": "How do I parse JSON in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00138", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00139", "prompt": "What's the best way to implement stack in Java?", "category": "programming"}
+{"id": "BENIGN-00140", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00141", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00142", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00143", "prompt": "What's the best way to implement queue in Rust?", "category": "programming"}
+{"id": "BENIGN-00144", "prompt": "How do I create a {pattern} pattern in C++?", "category": "programming"}
+{"id": "BENIGN-00145", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00146", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00147", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00148", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00149", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00150", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00151", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00152", "prompt": "Show me how to use middleware in PHP", "category": "programming"}
+{"id": "BENIGN-00153", "prompt": "How do I parse JSON in Go?", "category": "programming"}
+{"id": "BENIGN-00154", "prompt": "How do I parse JSON in PHP?", "category": "programming"}
+{"id": "BENIGN-00155", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00156", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00157", "prompt": "Show me how to use promises in PHP", "category": "programming"}
+{"id": "BENIGN-00158", "prompt": "Explain how async/await works in Ruby", "category": "programming"}
+{"id": "BENIGN-00159", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00160", "prompt": "What's the best way to implement queue in Go?", "category": "programming"}
+{"id": "BENIGN-00161", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00162", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00163", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00164", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00165", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00166", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00167", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00168", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00169", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00170", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00171", "prompt": "Show me how to use promises in Ruby", "category": "programming"}
+{"id": "BENIGN-00172", "prompt": "Show me how to use decorators in PHP", "category": "programming"}
+{"id": "BENIGN-00173", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00174", "prompt": "What's the best way to implement hash map in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00175", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00176", "prompt": "Show me how to use middleware in PHP", "category": "programming"}
+{"id": "BENIGN-00177", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00178", "prompt": "Show me how to use decorators in C++", "category": "programming"}
+{"id": "BENIGN-00179", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00180", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00181", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00182", "prompt": "Explain how async/await works in Rust", "category": "programming"}
+{"id": "BENIGN-00183", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00184", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00185", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00186", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00187", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00188", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00189", "prompt": "Can you help me debug this TypeScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00190", "prompt": "Show me how to use middleware in Java", "category": "programming"}
+{"id": "BENIGN-00191", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00192", "prompt": "How do I create a {pattern} pattern in Swift?", "category": "programming"}
+{"id": "BENIGN-00193", "prompt": "Show me how to use middleware in Go", "category": "programming"}
+{"id": "BENIGN-00194", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00195", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00196", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00197", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00198", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00199", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00200", "prompt": "What's the best way to implement heap in Ruby?", "category": "programming"}
+{"id": "BENIGN-00201", "prompt": "What's the best way to implement queue in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00202", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00203", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00204", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00205", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00206", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00207", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00208", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00209", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00210", "prompt": "What's the best way to implement graph in PHP?", "category": "programming"}
+{"id": "BENIGN-00211", "prompt": "Explain how async/await works in Rust", "category": "programming"}
+{"id": "BENIGN-00212", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00213", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00214", "prompt": "How do I debug this {item} in Rust?", "category": "programming"}
+{"id": "BENIGN-00215", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00216", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00217", "prompt": "How do I connect to a database in Swift?", "category": "programming"}
+{"id": "BENIGN-00218", "prompt": "Show me how to use middleware in Java", "category": "programming"}
+{"id": "BENIGN-00219", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00220", "prompt": "How do I parse JSON in Ruby?", "category": "programming"}
+{"id": "BENIGN-00221", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00222", "prompt": "Show me how to use promises in Rust", "category": "programming"}
+{"id": "BENIGN-00223", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00224", "prompt": "Explain how async/await works in Ruby", "category": "programming"}
+{"id": "BENIGN-00225", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00226", "prompt": "Show me how to use promises in JavaScript", "category": "programming"}
+{"id": "BENIGN-00227", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00228", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00229", "prompt": "How do I add logging to in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00230", "prompt": "Explain how async/await works in Rust", "category": "programming"}
+{"id": "BENIGN-00231", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00232", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00233", "prompt": "How do I explain the difference between {concept1} and {concept2} in Java?", "category": "programming"}
+{"id": "BENIGN-00234", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00235", "prompt": "Show me an example of error handling in Python", "category": "programming"}
+{"id": "BENIGN-00236", "prompt": "Can you help me debug this JavaScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00237", "prompt": "What's the best way to implement linked list in Ruby?", "category": "programming"}
+{"id": "BENIGN-00238", "prompt": "What's the best way to implement heap in Rust?", "category": "programming"}
+{"id": "BENIGN-00239", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00240", "prompt": "What's the best way to implement graph in Ruby?", "category": "programming"}
+{"id": "BENIGN-00241", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00242", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00243", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00244", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00245", "prompt": "How do I parse JSON in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00246", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00247", "prompt": "How do I parse JSON in Ruby?", "category": "programming"}
+{"id": "BENIGN-00248", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00249", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00250", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00251", "prompt": "What's the best way to implement linked list in PHP?", "category": "programming"}
+{"id": "BENIGN-00252", "prompt": "What's the best way to implement graph in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00253", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00254", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00255", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00256", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00257", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00258", "prompt": "How do I debug this {item} in Swift?", "category": "programming"}
+{"id": "BENIGN-00259", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00260", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00261", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00262", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00263", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00264", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00265", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00266", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00267", "prompt": "Explain how async/await works in TypeScript", "category": "programming"}
+{"id": "BENIGN-00268", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00269", "prompt": "How do I parse JSON in Ruby?", "category": "programming"}
+{"id": "BENIGN-00270", "prompt": "How do I write unit tests for in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00271", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00272", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00273", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00274", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00275", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00276", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00277", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00278", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00279", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00280", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00281", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00282", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00283", "prompt": "How do I parse JSON in Go?", "category": "programming"}
+{"id": "BENIGN-00284", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00285", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00286", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00287", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00288", "prompt": "How do I handle authentication in a Python application?", "category": "programming"}
+{"id": "BENIGN-00289", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00290", "prompt": "How do I optimize this {item} in Swift?", "category": "programming"}
+{"id": "BENIGN-00291", "prompt": "How do I create a {pattern} pattern in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00292", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00293", "prompt": "Explain how async/await works in TypeScript", "category": "programming"}
+{"id": "BENIGN-00294", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00295", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00296", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00297", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00298", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00299", "prompt": "Show me how to use middleware in TypeScript", "category": "programming"}
+{"id": "BENIGN-00300", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00301", "prompt": "Explain how async/await works in Java", "category": "programming"}
+{"id": "BENIGN-00302", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00303", "prompt": "How do I connect to a database in C++?", "category": "programming"}
+{"id": "BENIGN-00304", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00305", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00306", "prompt": "Show me how to use hooks in Rust", "category": "programming"}
+{"id": "BENIGN-00307", "prompt": "How do I add logging to in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00308", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00309", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00310", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00311", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00312", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00313", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00314", "prompt": "What's the best way to implement linked list in Java?", "category": "programming"}
+{"id": "BENIGN-00315", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00316", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00317", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00318", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00319", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00320", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00321", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00322", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00323", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00324", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00325", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00326", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00327", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00328", "prompt": "How do I parse JSON in Rust?", "category": "programming"}
+{"id": "BENIGN-00329", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00330", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00331", "prompt": "How do I parse JSON in Ruby?", "category": "programming"}
+{"id": "BENIGN-00332", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00333", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00334", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00335", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00336", "prompt": "Explain how async/await works in C++", "category": "programming"}
+{"id": "BENIGN-00337", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00338", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00339", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00340", "prompt": "How do I create a {pattern} pattern in Python?", "category": "programming"}
+{"id": "BENIGN-00341", "prompt": "How do I parse JSON in C++?", "category": "programming"}
+{"id": "BENIGN-00342", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00343", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00344", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00345", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00346", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00347", "prompt": "How do I explain the difference between {concept1} and {concept2} in Python?", "category": "programming"}
+{"id": "BENIGN-00348", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00349", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00350", "prompt": "How do I implement a {structure} in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00351", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00352", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00353", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00354", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00355", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00356", "prompt": "What's the best way to implement binary search tree in Swift?", "category": "programming"}
+{"id": "BENIGN-00357", "prompt": "What's the best way to implement queue in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00358", "prompt": "Can you help me debug this JavaScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00359", "prompt": "What's the best way to implement queue in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00360", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00361", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00362", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00363", "prompt": "Show me an example of error handling in Rust", "category": "programming"}
+{"id": "BENIGN-00364", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00365", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00366", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00367", "prompt": "Show me an example of error handling in Rust", "category": "programming"}
+{"id": "BENIGN-00368", "prompt": "How do I write unit tests for in Rust?", "category": "programming"}
+{"id": "BENIGN-00369", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00370", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00371", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00372", "prompt": "Can you help me debug this Go function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00373", "prompt": "How do I implement a {structure} in Swift?", "category": "programming"}
+{"id": "BENIGN-00374", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00375", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00376", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00377", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00378", "prompt": "How do I write unit tests for in Ruby?", "category": "programming"}
+{"id": "BENIGN-00379", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00380", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00381", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00382", "prompt": "Explain how async/await works in C++", "category": "programming"}
+{"id": "BENIGN-00383", "prompt": "Explain how async/await works in TypeScript", "category": "programming"}
+{"id": "BENIGN-00384", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00385", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00386", "prompt": "Explain how async/await works in TypeScript", "category": "programming"}
+{"id": "BENIGN-00387", "prompt": "How do I connect to a database in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00388", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00389", "prompt": "Can you help me debug this PHP function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00390", "prompt": "Can you help me debug this Go function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00391", "prompt": "How do I connect to a database in C++?", "category": "programming"}
+{"id": "BENIGN-00392", "prompt": "How do I handle errors in in Ruby?", "category": "programming"}
+{"id": "BENIGN-00393", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00394", "prompt": "Show me how to use hooks in Ruby", "category": "programming"}
+{"id": "BENIGN-00395", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00396", "prompt": "Show me how to use decorators in JavaScript", "category": "programming"}
+{"id": "BENIGN-00397", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00398", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00399", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00400", "prompt": "Show me how to use decorators in PHP", "category": "programming"}
+{"id": "BENIGN-00401", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00402", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00403", "prompt": "What's the best way to implement graph in Java?", "category": "programming"}
+{"id": "BENIGN-00404", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00405", "prompt": "Show me how to use decorators in Swift", "category": "programming"}
+{"id": "BENIGN-00406", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00407", "prompt": "How do I refactor this code in Go?", "category": "programming"}
+{"id": "BENIGN-00408", "prompt": "How do I handle errors in in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00409", "prompt": "What's the best way to implement graph in Rust?", "category": "programming"}
+{"id": "BENIGN-00410", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00411", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00412", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00413", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00414", "prompt": "How do I parse JSON in Rust?", "category": "programming"}
+{"id": "BENIGN-00415", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00416", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00417", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00418", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00419", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00420", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00421", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00422", "prompt": "What's the best way to implement queue in C++?", "category": "programming"}
+{"id": "BENIGN-00423", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00424", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00425", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00426", "prompt": "What's the best way to implement heap in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00427", "prompt": "What's the best way to implement stack in PHP?", "category": "programming"}
+{"id": "BENIGN-00428", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00429", "prompt": "What's the best way to implement graph in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00430", "prompt": "What's the best way to implement queue in Rust?", "category": "programming"}
+{"id": "BENIGN-00431", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00432", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00433", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00434", "prompt": "Show me how to use middleware in Swift", "category": "programming"}
+{"id": "BENIGN-00435", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00436", "prompt": "How do I optimize this {item} in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00437", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00438", "prompt": "Show me an example of error handling in Rust", "category": "programming"}
+{"id": "BENIGN-00439", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00440", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00441", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00442", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00443", "prompt": "How do I add logging to in C++?", "category": "programming"}
+{"id": "BENIGN-00444", "prompt": "Show me how to use middleware in C++", "category": "programming"}
+{"id": "BENIGN-00445", "prompt": "Can you help me debug this TypeScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00446", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00447", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00448", "prompt": "Show me how to use decorators in Python", "category": "programming"}
+{"id": "BENIGN-00449", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00450", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00451", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00452", "prompt": "Show me how to use decorators in Ruby", "category": "programming"}
+{"id": "BENIGN-00453", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00454", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00455", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00456", "prompt": "Show me how to use generators in Java", "category": "programming"}
+{"id": "BENIGN-00457", "prompt": "What's the best way to implement graph in Rust?", "category": "programming"}
+{"id": "BENIGN-00458", "prompt": "How do I handle errors in in C++?", "category": "programming"}
+{"id": "BENIGN-00459", "prompt": "How do I connect to a database in Ruby?", "category": "programming"}
+{"id": "BENIGN-00460", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00461", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00462", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00463", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00464", "prompt": "How do I handle errors in in PHP?", "category": "programming"}
+{"id": "BENIGN-00465", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00466", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00467", "prompt": "Can you help me debug this PHP function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00468", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00469", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00470", "prompt": "How do I implement a {structure} in Ruby?", "category": "programming"}
+{"id": "BENIGN-00471", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00472", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00473", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00474", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00475", "prompt": "Show me how to use hooks in Ruby", "category": "programming"}
+{"id": "BENIGN-00476", "prompt": "How do I handle authentication in a Java application?", "category": "programming"}
+{"id": "BENIGN-00477", "prompt": "How do I parse JSON in Swift?", "category": "programming"}
+{"id": "BENIGN-00478", "prompt": "How do I handle authentication in a Swift application?", "category": "programming"}
+{"id": "BENIGN-00479", "prompt": "Show me how to use promises in JavaScript", "category": "programming"}
+{"id": "BENIGN-00480", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00481", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00482", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00483", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00484", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00485", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00486", "prompt": "What's the best way to implement queue in Ruby?", "category": "programming"}
+{"id": "BENIGN-00487", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00488", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00489", "prompt": "How do I create a {pattern} pattern in Python?", "category": "programming"}
+{"id": "BENIGN-00490", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00491", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00492", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00493", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00494", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00495", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00496", "prompt": "Can you help me debug this TypeScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00497", "prompt": "What's the best way to implement heap in Java?", "category": "programming"}
+{"id": "BENIGN-00498", "prompt": "What's the best way to implement heap in Rust?", "category": "programming"}
+{"id": "BENIGN-00499", "prompt": "How do I parse JSON in Rust?", "category": "programming"}
+{"id": "BENIGN-00500", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00501", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00502", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00503", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00504", "prompt": "How do I create a {pattern} pattern in Swift?", "category": "programming"}
+{"id": "BENIGN-00505", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00506", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00507", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00508", "prompt": "What's the best way to implement heap in Rust?", "category": "programming"}
+{"id": "BENIGN-00509", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00510", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00511", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00512", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00513", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00514", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00515", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00516", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00517", "prompt": "Explain how async/await works in TypeScript", "category": "programming"}
+{"id": "BENIGN-00518", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00519", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00520", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00521", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00522", "prompt": "How do I parse JSON in Go?", "category": "programming"}
+{"id": "BENIGN-00523", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00524", "prompt": "Can you help me debug this PHP function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00525", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00526", "prompt": "How do I handle authentication in a Java application?", "category": "programming"}
+{"id": "BENIGN-00527", "prompt": "Show me an example of error handling in TypeScript", "category": "programming"}
+{"id": "BENIGN-00528", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00529", "prompt": "Can you help me debug this JavaScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00530", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00531", "prompt": "How do I handle errors in in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00532", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00533", "prompt": "How do I connect to a database in Swift?", "category": "programming"}
+{"id": "BENIGN-00534", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00535", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00536", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00537", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00538", "prompt": "Explain how async/await works in Ruby", "category": "programming"}
+{"id": "BENIGN-00539", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00540", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00541", "prompt": "What's the best way to implement binary search tree in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00542", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00543", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00544", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00545", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00546", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00547", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00548", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00549", "prompt": "Show me how to use promises in TypeScript", "category": "programming"}
+{"id": "BENIGN-00550", "prompt": "What's the best way to implement heap in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00551", "prompt": "How do I parse JSON in Python?", "category": "programming"}
+{"id": "BENIGN-00552", "prompt": "What's the best way to implement linked list in Ruby?", "category": "programming"}
+{"id": "BENIGN-00553", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00554", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00555", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00556", "prompt": "How do I parse JSON in Go?", "category": "programming"}
+{"id": "BENIGN-00557", "prompt": "How do I handle errors in in Rust?", "category": "programming"}
+{"id": "BENIGN-00558", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00559", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00560", "prompt": "Show me how to use middleware in PHP", "category": "programming"}
+{"id": "BENIGN-00561", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00562", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00563", "prompt": "What's the best way to implement queue in Ruby?", "category": "programming"}
+{"id": "BENIGN-00564", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00565", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00566", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00567", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00568", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00569", "prompt": "What's the best way to implement hash map in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00570", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00571", "prompt": "What's the best way to implement binary search tree in C++?", "category": "programming"}
+{"id": "BENIGN-00572", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00573", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00574", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00575", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00576", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00577", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00578", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00579", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00580", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00581", "prompt": "Explain how async/await works in TypeScript", "category": "programming"}
+{"id": "BENIGN-00582", "prompt": "Show me how to use hooks in PHP", "category": "programming"}
+{"id": "BENIGN-00583", "prompt": "How do I parse JSON in C++?", "category": "programming"}
+{"id": "BENIGN-00584", "prompt": "Explain how async/await works in Rust", "category": "programming"}
+{"id": "BENIGN-00585", "prompt": "How do I handle authentication in a Swift application?", "category": "programming"}
+{"id": "BENIGN-00586", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00587", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00588", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00589", "prompt": "Show me how to use hooks in Java", "category": "programming"}
+{"id": "BENIGN-00590", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00591", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00592", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00593", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00594", "prompt": "How do I connect to a database in C++?", "category": "programming"}
+{"id": "BENIGN-00595", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00596", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00597", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00598", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00599", "prompt": "What's the best way to implement binary search tree in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00600", "prompt": "How do I parse JSON in Python?", "category": "programming"}
+{"id": "BENIGN-00601", "prompt": "How do I create a {pattern} pattern in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00602", "prompt": "How do I explain the difference between {concept1} and {concept2} in Rust?", "category": "programming"}
+{"id": "BENIGN-00603", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00604", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00605", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00606", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00607", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00608", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00609", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00610", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00611", "prompt": "What's the best way to implement linked list in Swift?", "category": "programming"}
+{"id": "BENIGN-00612", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00613", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00614", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00615", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00616", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00617", "prompt": "Show me how to use promises in TypeScript", "category": "programming"}
+{"id": "BENIGN-00618", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00619", "prompt": "How do I parse JSON in PHP?", "category": "programming"}
+{"id": "BENIGN-00620", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00621", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00622", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00623", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00624", "prompt": "How do I parse JSON in C++?", "category": "programming"}
+{"id": "BENIGN-00625", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00626", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00627", "prompt": "How do I connect to a database in Swift?", "category": "programming"}
+{"id": "BENIGN-00628", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00629", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00630", "prompt": "How do I handle authentication in a Go application?", "category": "programming"}
+{"id": "BENIGN-00631", "prompt": "Can you help me debug this JavaScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00632", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00633", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00634", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00635", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00636", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00637", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00638", "prompt": "Can you help me debug this JavaScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00639", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00640", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00641", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00642", "prompt": "How do I parse JSON in Swift?", "category": "programming"}
+{"id": "BENIGN-00643", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00644", "prompt": "How do I handle authentication in a Python application?", "category": "programming"}
+{"id": "BENIGN-00645", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00646", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00647", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00648", "prompt": "Show me how to use generators in Ruby", "category": "programming"}
+{"id": "BENIGN-00649", "prompt": "How do I connect to a database in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00650", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00651", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00652", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00653", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00654", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00655", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00656", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00657", "prompt": "Show me an example of error handling in Swift", "category": "programming"}
+{"id": "BENIGN-00658", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00659", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00660", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00661", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00662", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00663", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00664", "prompt": "What's the best way to implement linked list in Go?", "category": "programming"}
+{"id": "BENIGN-00665", "prompt": "Explain how async/await works in Rust", "category": "programming"}
+{"id": "BENIGN-00666", "prompt": "Explain how async/await works in Swift", "category": "programming"}
+{"id": "BENIGN-00667", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00668", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00669", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00670", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00671", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00672", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00673", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00674", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00675", "prompt": "How do I connect to a database in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00676", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00677", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00678", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00679", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00680", "prompt": "How do I handle authentication in a Go application?", "category": "programming"}
+{"id": "BENIGN-00681", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00682", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00683", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00684", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00685", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00686", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00687", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00688", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00689", "prompt": "What's the best way to implement graph in C++?", "category": "programming"}
+{"id": "BENIGN-00690", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00691", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00692", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00693", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00694", "prompt": "Can you help me debug this PHP function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00695", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00696", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00697", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00698", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00699", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00700", "prompt": "Show me how to use middleware in PHP", "category": "programming"}
+{"id": "BENIGN-00701", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00702", "prompt": "Can you help me debug this Swift function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00703", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00704", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00705", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00706", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00707", "prompt": "How do I write unit tests for in Ruby?", "category": "programming"}
+{"id": "BENIGN-00708", "prompt": "Show me how to use decorators in TypeScript", "category": "programming"}
+{"id": "BENIGN-00709", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00710", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00711", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00712", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00713", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00714", "prompt": "Explain how async/await works in C++", "category": "programming"}
+{"id": "BENIGN-00715", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00716", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00717", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00718", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00719", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00720", "prompt": "Show me how to use decorators in Swift", "category": "programming"}
+{"id": "BENIGN-00721", "prompt": "How do I connect to a database in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00722", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00723", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00724", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00725", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00726", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00727", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00728", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00729", "prompt": "What's the best way to implement heap in Python?", "category": "programming"}
+{"id": "BENIGN-00730", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00731", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00732", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00733", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00734", "prompt": "Show me how to use middleware in Go", "category": "programming"}
+{"id": "BENIGN-00735", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00736", "prompt": "How do I handle errors in in Ruby?", "category": "programming"}
+{"id": "BENIGN-00737", "prompt": "Show me how to use generators in PHP", "category": "programming"}
+{"id": "BENIGN-00738", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00739", "prompt": "Explain how async/await works in Go", "category": "programming"}
+{"id": "BENIGN-00740", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00741", "prompt": "How do I handle errors in in Go?", "category": "programming"}
+{"id": "BENIGN-00742", "prompt": "How do I connect to a database in Swift?", "category": "programming"}
+{"id": "BENIGN-00743", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00744", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00745", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00746", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00747", "prompt": "How do I connect to a database in Python?", "category": "programming"}
+{"id": "BENIGN-00748", "prompt": "Explain how async/await works in Java", "category": "programming"}
+{"id": "BENIGN-00749", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00750", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00751", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00752", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00753", "prompt": "What's the best way to implement graph in C++?", "category": "programming"}
+{"id": "BENIGN-00754", "prompt": "How do I handle authentication in a Python application?", "category": "programming"}
+{"id": "BENIGN-00755", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00756", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00757", "prompt": "Show me an example of error handling in Python", "category": "programming"}
+{"id": "BENIGN-00758", "prompt": "What's the best way to implement linked list in C++?", "category": "programming"}
+{"id": "BENIGN-00759", "prompt": "Show me how to use decorators in Rust", "category": "programming"}
+{"id": "BENIGN-00760", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00761", "prompt": "How do I parse JSON in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00762", "prompt": "How do I refactor this code in PHP?", "category": "programming"}
+{"id": "BENIGN-00763", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00764", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00765", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00766", "prompt": "Explain how async/await works in Java", "category": "programming"}
+{"id": "BENIGN-00767", "prompt": "How do I parse JSON in Java?", "category": "programming"}
+{"id": "BENIGN-00768", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00769", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00770", "prompt": "Can you help me debug this Go function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00771", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00772", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00773", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00774", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00775", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00776", "prompt": "How do I connect to a database in Ruby?", "category": "programming"}
+{"id": "BENIGN-00777", "prompt": "How do I handle authentication in a Python application?", "category": "programming"}
+{"id": "BENIGN-00778", "prompt": "Show me how to use middleware in Swift", "category": "programming"}
+{"id": "BENIGN-00779", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00780", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00781", "prompt": "What's the best way to implement linked list in Java?", "category": "programming"}
+{"id": "BENIGN-00782", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00783", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00784", "prompt": "What's the best way to implement binary search tree in Java?", "category": "programming"}
+{"id": "BENIGN-00785", "prompt": "How do I create a {pattern} pattern in PHP?", "category": "programming"}
+{"id": "BENIGN-00786", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00787", "prompt": "What's the best way to implement linked list in Python?", "category": "programming"}
+{"id": "BENIGN-00788", "prompt": "Show me how to use middleware in Java", "category": "programming"}
+{"id": "BENIGN-00789", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00790", "prompt": "How do I handle errors in in Ruby?", "category": "programming"}
+{"id": "BENIGN-00791", "prompt": "How do I add logging to in C++?", "category": "programming"}
+{"id": "BENIGN-00792", "prompt": "How do I implement a {structure} in Go?", "category": "programming"}
+{"id": "BENIGN-00793", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00794", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00795", "prompt": "Show me an example of error handling in Go", "category": "programming"}
+{"id": "BENIGN-00796", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00797", "prompt": "What's the best way to implement stack in C++?", "category": "programming"}
+{"id": "BENIGN-00798", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00799", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00800", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00801", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00802", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00803", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00804", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00805", "prompt": "Show me how to use decorators in Rust", "category": "programming"}
+{"id": "BENIGN-00806", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00807", "prompt": "Show me how to use promises in Ruby", "category": "programming"}
+{"id": "BENIGN-00808", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00809", "prompt": "How do I connect to a database in Go?", "category": "programming"}
+{"id": "BENIGN-00810", "prompt": "Show me how to use promises in PHP", "category": "programming"}
+{"id": "BENIGN-00811", "prompt": "Write a function to find duplicates", "category": "programming"}
+{"id": "BENIGN-00812", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00813", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00814", "prompt": "How do I handle authentication in a Python application?", "category": "programming"}
+{"id": "BENIGN-00815", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00816", "prompt": "What's the best way to implement graph in Java?", "category": "programming"}
+{"id": "BENIGN-00817", "prompt": "What's the best way to implement binary search tree in Python?", "category": "programming"}
+{"id": "BENIGN-00818", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00819", "prompt": "Show me an example of error handling in TypeScript", "category": "programming"}
+{"id": "BENIGN-00820", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00821", "prompt": "How do I handle authentication in a JavaScript application?", "category": "programming"}
+{"id": "BENIGN-00822", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00823", "prompt": "How do I parse JSON in Go?", "category": "programming"}
+{"id": "BENIGN-00824", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00825", "prompt": "Show me how to use decorators in Swift", "category": "programming"}
+{"id": "BENIGN-00826", "prompt": "What's the best way to implement binary search tree in C++?", "category": "programming"}
+{"id": "BENIGN-00827", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00828", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00829", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00830", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00831", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00832", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00833", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00834", "prompt": "Can you help me debug this C++ function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00835", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00836", "prompt": "What's the best way to implement binary search tree in Go?", "category": "programming"}
+{"id": "BENIGN-00837", "prompt": "What's the best way to implement graph in Swift?", "category": "programming"}
+{"id": "BENIGN-00838", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00839", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00840", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00841", "prompt": "How do I parse JSON in PHP?", "category": "programming"}
+{"id": "BENIGN-00842", "prompt": "Explain how async/await works in PHP", "category": "programming"}
+{"id": "BENIGN-00843", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00844", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00845", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00846", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00847", "prompt": "How do I parse JSON in Rust?", "category": "programming"}
+{"id": "BENIGN-00848", "prompt": "How do I connect to a database in Rust?", "category": "programming"}
+{"id": "BENIGN-00849", "prompt": "Show me how to use middleware in Go", "category": "programming"}
+{"id": "BENIGN-00850", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00851", "prompt": "Show me how to use hooks in Ruby", "category": "programming"}
+{"id": "BENIGN-00852", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00853", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00854", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00855", "prompt": "Show me an example of error handling in TypeScript", "category": "programming"}
+{"id": "BENIGN-00856", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00857", "prompt": "What's the best way to implement linked list in Swift?", "category": "programming"}
+{"id": "BENIGN-00858", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00859", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00860", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00861", "prompt": "How do I handle authentication in a Java application?", "category": "programming"}
+{"id": "BENIGN-00862", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00863", "prompt": "Write a function to merge two lists", "category": "programming"}
+{"id": "BENIGN-00864", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00865", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00866", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00867", "prompt": "How do I connect to a database in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00868", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00869", "prompt": "What's the best way to implement graph in PHP?", "category": "programming"}
+{"id": "BENIGN-00870", "prompt": "Show me an example of error handling in PHP", "category": "programming"}
+{"id": "BENIGN-00871", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00872", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00873", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00874", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00875", "prompt": "How do I refactor this code in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00876", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00877", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00878", "prompt": "What's the best way to implement stack in Rust?", "category": "programming"}
+{"id": "BENIGN-00879", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00880", "prompt": "How do I parse JSON in Python?", "category": "programming"}
+{"id": "BENIGN-00881", "prompt": "Show me how to use middleware in Rust", "category": "programming"}
+{"id": "BENIGN-00882", "prompt": "What's the best way to implement hash map in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00883", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00884", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00885", "prompt": "Show me an example of error handling in C++", "category": "programming"}
+{"id": "BENIGN-00886", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00887", "prompt": "Explain how async/await works in C++", "category": "programming"}
+{"id": "BENIGN-00888", "prompt": "How do I create a {pattern} pattern in Ruby?", "category": "programming"}
+{"id": "BENIGN-00889", "prompt": "Explain how async/await works in Python", "category": "programming"}
+{"id": "BENIGN-00890", "prompt": "How do I handle authentication in a PHP application?", "category": "programming"}
+{"id": "BENIGN-00891", "prompt": "Explain how async/await works in Java", "category": "programming"}
+{"id": "BENIGN-00892", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00893", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00894", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00895", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00896", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00897", "prompt": "Can you help me debug this Go function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00898", "prompt": "How do I document this function in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00899", "prompt": "How do I handle authentication in a Python application?", "category": "programming"}
+{"id": "BENIGN-00900", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00901", "prompt": "Explain the strategy design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00902", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00903", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00904", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00905", "prompt": "Show me an example of error handling in Python", "category": "programming"}
+{"id": "BENIGN-00906", "prompt": "How do I parse JSON in Go?", "category": "programming"}
+{"id": "BENIGN-00907", "prompt": "What's the best way to implement hash map in PHP?", "category": "programming"}
+{"id": "BENIGN-00908", "prompt": "Explain how async/await works in C++", "category": "programming"}
+{"id": "BENIGN-00909", "prompt": "Show me how to use middleware in JavaScript", "category": "programming"}
+{"id": "BENIGN-00910", "prompt": "How do I create a {pattern} pattern in C++?", "category": "programming"}
+{"id": "BENIGN-00911", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00912", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00913", "prompt": "Write a function to reverse a string", "category": "programming"}
+{"id": "BENIGN-00914", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00915", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00916", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00917", "prompt": "How do I parse JSON in C++?", "category": "programming"}
+{"id": "BENIGN-00918", "prompt": "How do I implement a {structure} in Swift?", "category": "programming"}
+{"id": "BENIGN-00919", "prompt": "Explain how async/await works in Rust", "category": "programming"}
+{"id": "BENIGN-00920", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00921", "prompt": "Can you help me debug this TypeScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00922", "prompt": "Show me how to use generators in Ruby", "category": "programming"}
+{"id": "BENIGN-00923", "prompt": "Show me how to use promises in Rust", "category": "programming"}
+{"id": "BENIGN-00924", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00925", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00926", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00927", "prompt": "How do I handle authentication in a Ruby application?", "category": "programming"}
+{"id": "BENIGN-00928", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00929", "prompt": "How do I parse JSON in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00930", "prompt": "What are the best practices for performance?", "category": "programming"}
+{"id": "BENIGN-00931", "prompt": "Explain the adapter design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00932", "prompt": "What's the best way to implement queue in PHP?", "category": "programming"}
+{"id": "BENIGN-00933", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00934", "prompt": "Show me an example of error handling in JavaScript", "category": "programming"}
+{"id": "BENIGN-00935", "prompt": "How do I handle authentication in a Rust application?", "category": "programming"}
+{"id": "BENIGN-00936", "prompt": "Explain the factory design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00937", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00938", "prompt": "How do I parse JSON in PHP?", "category": "programming"}
+{"id": "BENIGN-00939", "prompt": "Show me an example of error handling in TypeScript", "category": "programming"}
+{"id": "BENIGN-00940", "prompt": "How do I parse JSON in Python?", "category": "programming"}
+{"id": "BENIGN-00941", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00942", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00943", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00944", "prompt": "How do I parse JSON in Ruby?", "category": "programming"}
+{"id": "BENIGN-00945", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00946", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00947", "prompt": "How do I connect to a database in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00948", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00949", "prompt": "What's the best way to implement stack in C++?", "category": "programming"}
+{"id": "BENIGN-00950", "prompt": "What are the best practices for API design?", "category": "programming"}
+{"id": "BENIGN-00951", "prompt": "How do I handle authentication in a Swift application?", "category": "programming"}
+{"id": "BENIGN-00952", "prompt": "What are the best practices for testing?", "category": "programming"}
+{"id": "BENIGN-00953", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00954", "prompt": "Can you help me debug this Rust function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00955", "prompt": "Show me how to use middleware in Swift", "category": "programming"}
+{"id": "BENIGN-00956", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00957", "prompt": "Show me how to use generators in TypeScript", "category": "programming"}
+{"id": "BENIGN-00958", "prompt": "Show me an example of error handling in Rust", "category": "programming"}
+{"id": "BENIGN-00959", "prompt": "Can you help me debug this Ruby function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00960", "prompt": "How do I connect to a database in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00961", "prompt": "Write a function to sort an array", "category": "programming"}
+{"id": "BENIGN-00962", "prompt": "Show me how to use middleware in JavaScript", "category": "programming"}
+{"id": "BENIGN-00963", "prompt": "How do I handle errors in in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00964", "prompt": "How do I parse JSON in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00965", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00966", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00967", "prompt": "Show me an example of error handling in Java", "category": "programming"}
+{"id": "BENIGN-00968", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00969", "prompt": "What's the best way to implement heap in TypeScript?", "category": "programming"}
+{"id": "BENIGN-00970", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00971", "prompt": "What's the best way to implement graph in PHP?", "category": "programming"}
+{"id": "BENIGN-00972", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00973", "prompt": "How do I document this function in Ruby?", "category": "programming"}
+{"id": "BENIGN-00974", "prompt": "Explain how async/await works in JavaScript", "category": "programming"}
+{"id": "BENIGN-00975", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00976", "prompt": "How can I improve the performance of this code?", "category": "programming"}
+{"id": "BENIGN-00977", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00978", "prompt": "Can you help me debug this Python function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00979", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00980", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00981", "prompt": "How do I add logging to in Python?", "category": "programming"}
+{"id": "BENIGN-00982", "prompt": "Can you help me debug this JavaScript function that's returning null?", "category": "programming"}
+{"id": "BENIGN-00983", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00984", "prompt": "What's the time complexity of this algorithm?", "category": "programming"}
+{"id": "BENIGN-00985", "prompt": "What's the best way to implement heap in Java?", "category": "programming"}
+{"id": "BENIGN-00986", "prompt": "How do I handle authentication in a Go application?", "category": "programming"}
+{"id": "BENIGN-00987", "prompt": "Show me how to use generators in TypeScript", "category": "programming"}
+{"id": "BENIGN-00988", "prompt": "Explain the singleton design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00989", "prompt": "How do I connect to a database in JavaScript?", "category": "programming"}
+{"id": "BENIGN-00990", "prompt": "What are the best practices for code organization?", "category": "programming"}
+{"id": "BENIGN-00991", "prompt": "How do I handle authentication in a C++ application?", "category": "programming"}
+{"id": "BENIGN-00992", "prompt": "Explain the observer design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00993", "prompt": "What's the best way to implement queue in Swift?", "category": "programming"}
+{"id": "BENIGN-00994", "prompt": "How do I handle authentication in a TypeScript application?", "category": "programming"}
+{"id": "BENIGN-00995", "prompt": "Explain the decorator design pattern with an example", "category": "programming"}
+{"id": "BENIGN-00996", "prompt": "What's the difference between mutable and immutable data structures?", "category": "programming"}
+{"id": "BENIGN-00997", "prompt": "Show me an example of error handling in Ruby", "category": "programming"}
+{"id": "BENIGN-00998", "prompt": "How do I connect to a database in PHP?", "category": "programming"}
+{"id": "BENIGN-00999", "prompt": "How do I write unit tests for in Ruby?", "category": "programming"}
+{"id": "BENIGN-01000", "prompt": "Can you help me debug this Java function that's returning null?", "category": "programming"}

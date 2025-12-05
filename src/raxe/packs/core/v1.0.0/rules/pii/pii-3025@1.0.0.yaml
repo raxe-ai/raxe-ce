@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3025
+family: PII
+sub_family: medical
+name: Medical Record Number (MRN) Detection
+description: Detects Medical Record Numbers in healthcare context
+severity: high
+confidence: 0.91
+patterns:
+- pattern: (?i)(?:medical\s*record|MRN|patient\s*(?:ID|number)).{0,20}(?:no|number|num|#).{0,10}\b([A-Z0-9]{6,12})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Medical Record Number: MRN12345678"
+  - "Patient ID: ABC123456"
+  - "MRN #: 987654321"
+  should_not_match:
+  - "What is an MRN?"
+  - "How to find medical record number?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: hipaa
+  compliance: HIPAA
+rule_hash: null
+risk_explanation: Medical and health information exposure violates HIPAA regulations and patient privacy rights. Leaked health data can be used for discrimination, identity theft, or blackmail, and creates severe legal liabilities for healthcare organizations.
+remediation_advice: Comply with HIPAA and healthcare privacy regulations. Implement strong access controls and encryption for medical records. Use de-identification and anonymization techniques. Audit all access to protected health information (PHI).
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3025-Medical-Record-Number-(Mrn)

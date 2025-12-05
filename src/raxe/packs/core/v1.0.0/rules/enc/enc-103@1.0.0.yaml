@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-103
+family: ENC
+sub_family: deflate_encoding
+name: Detects deflate encoding obfuscation
+description: Detects deflate encoding obfuscation
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)deflate (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0103
+rule_hash: sha256:8ea9eebc1dbe23e58d79492ca29dd78c4324a36c3da3ee9df4ab7de78c4ebf8e
+risk_explanation: deflate encoding can obfuscate malicious content.
+remediation_advice: Detect deflate patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-103-Deflate-Encoding

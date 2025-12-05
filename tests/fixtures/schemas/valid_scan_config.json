@@ -1,0 +1,18 @@
+{
+  "enabled_tiers": ["core", "community", "custom"],
+  "l1_enabled": true,
+  "l2_enabled": true,
+  "l2_confidence_threshold": 0.8,
+  "performance_mode": "fail_open",
+  "sample_rate": 1.0,
+  "max_scan_duration_ms": 500,
+  "max_text_length": 50000,
+  "rules_to_exclude": ["pi-042", "jb-015"],
+  "severity_threshold": "medium",
+  "block_on_threat": true,
+  "block_threshold": "high",
+  "return_positions": true,
+  "return_redacted_text": false,
+  "cache_rules": true,
+  "cache_ttl_seconds": 1800
+}

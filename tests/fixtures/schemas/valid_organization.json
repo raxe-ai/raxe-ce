@@ -1,0 +1,38 @@
+{
+  "tenant_id": "org-3f8a9b2c1d5e6f7a",
+  "name": "Acme Corporation",
+  "display_name": "ACME Corp",
+  "settings": {
+    "risk_tolerance": "MEDIUM",
+    "data_retention_days": 90,
+    "allowed_environments": ["local", "development", "staging", "production"],
+    "require_mfa": true,
+    "ip_whitelist": ["203.0.113.0/24", "198.51.100.42"],
+    "sso_enabled": true,
+    "sso_provider": "okta"
+  },
+  "subscription": {
+    "tier": "PRO",
+    "status": "active",
+    "limits": {
+      "scans_per_month": 100000,
+      "projects": 10,
+      "api_keys": 50,
+      "custom_rules": 500,
+      "users": 25
+    },
+    "billing_period_start": "2025-11-01T00:00:00Z",
+    "billing_period_end": "2025-11-30T23:59:59Z"
+  },
+  "billing_contact": {
+    "email": "billing@acme.com",
+    "name": "Jane Smith",
+    "phone": "+14155551234"
+  },
+  "created_at": "2025-01-15T10:00:00Z",
+  "updated_at": "2025-11-15T12:30:00Z",
+  "metadata": {
+    "industry": "technology",
+    "employee_count": 500
+  }
+}

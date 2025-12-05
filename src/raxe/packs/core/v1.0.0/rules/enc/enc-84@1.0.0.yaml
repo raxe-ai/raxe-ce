@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-84
+family: ENC
+sub_family: zalgo_text_encoding
+name: Detects Zalgo text obfuscation
+description: Detects Zalgo text obfuscation
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)zalgo text (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0084
+rule_hash: sha256:7d9300202252f2793038e71f5179a2dcbf3345180ebf47ebbe41530313d45ada
+risk_explanation: Zalgo Text encoding can obfuscate malicious content.
+remediation_advice: Detect Zalgo text patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-84-Zalgo-Text-Encoding

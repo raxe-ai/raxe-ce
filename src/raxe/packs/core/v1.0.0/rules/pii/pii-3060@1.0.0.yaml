@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3060
+family: PII
+sub_family: authentication
+name: Generic Password in Code Detection
+description: Detects hardcoded passwords in code and configuration files
+severity: high
+confidence: 0.78
+patterns:
+- pattern: (?i)(?:password|passwd|pwd).{0,10}[=:]\s*['\"](?!(?:password|passwd|your_password|change_me|example|\*+|x+)).{8,}['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+# REDOS FIX: Replaced cascading .{0,10} with specific [\w_]{0,10} and added maximum bound to password
+# Removed middle .{0,10} and replaced with \s* for cleaner matching
+- pattern: (?i)(?:db|database|admin|root|user)[\w_]{0,10}(?:password|passwd)\s*[=:]\s*['\"]([A-Za-z0-9!@#$%^&*()_+=\-[\]{}|;:,.<>?/~`]{8,100})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "password='MySecretP@ssw0rd123'"
+  - "db_password: 'Production2024!'"
+  - "ADMIN_PWD='SuperAdmin456'"
+  should_not_match:
+  - "password='password'"
+  - "pwd='YOUR_PASSWORD_HERE'"
+  - "password='*********'"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-17'
+  author: raxe-ce
+  category: generic_credentials
+  redos_fix: 'Pattern 2 fixed on 2025-11-17 to prevent cascading quantifier backtracking and add max bounds'
+rule_hash: null

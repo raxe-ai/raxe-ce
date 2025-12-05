@@ -1,0 +1,43 @@
+version: 1.0.0
+rule_id: cmd-056
+family: CMD
+sub_family: path_traversal
+name: Detects extensive directory traversal patterns
+description: Detects extensive directory traversal patterns
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?:\.\./){3,}
+  flags: []
+  timeout: 5.0
+- pattern: (?:\.\./){2,}etc/(?:passwd|shadow|hosts)
+  flags: []
+  timeout: 5.0
+- pattern: (?:\\\.\.){3,}
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - ../../../../../../../etc/passwd
+  - ../../../../etc/shadow
+  - ..\..\..\..\windows\system32
+  should_not_match:
+  - Relative path navigation
+  - Directory traversal vulnerability explanation
+  - File path security best practices
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1083
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0056
+rule_hash: sha256:e8c7c93376529ceb3c466fdaf254d306a5fcb7eda679dd8558e4023092b96f10
+risk_explanation: Path traversal attacks use directory traversal sequences (../, etc.) to access files outside intended directories. This can expose sensitive files, configuration data, or enable reading of arbitrary files on the system.
+remediation_advice: Implement strict path validation and normalization. Use allowlisting for permitted file paths and reject traversal sequences. Deploy chroot jails or similar isolation. Never construct file paths from user input without validation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-056-Extensive-Directory-Traversal

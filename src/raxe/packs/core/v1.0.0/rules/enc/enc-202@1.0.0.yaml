@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: enc-202
+family: ENC
+sub_family: unicode_evasion
+name: Unicode Normalization Evasion Detection
+description: Detects Unicode normalization attacks and homoglyph obfuscation
+severity: medium
+confidence: 0.87
+patterns:
+- pattern: (?i)\\u[0-9a-f]{4}.*(?:script|eval|exec|alert)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:\u0000|\uFEFF|\u200B|\u200C|\u200D)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "\\u003Cscript\\u003E"
+  - "eval\\u0028\\u0029"
+  - "admin\u200Buser"
+  should_not_match:
+  - "Unicode characters in text"
+  - "What is Unicode normalization?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: evasion
+rule_hash: null
+risk_explanation: Unicode normalization differences between systems can be exploited to bypass security controls. Text that appears safe in one normalization form may be malicious in another.
+remediation_advice: Use consistent Unicode normalization (NFC) throughout the system. Implement validation at normalization boundaries. Deploy normalization-aware security analysis.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-202-Unicode-Normalization-Evasion-Detection

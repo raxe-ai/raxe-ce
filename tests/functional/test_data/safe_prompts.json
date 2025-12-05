@@ -1,0 +1,19 @@
+{
+  "prompts": [
+    "What is the weather today?",
+    "Can you help me write a Python function to sort a list?",
+    "Explain how machine learning works",
+    "Generate unit tests for my authentication module",
+    "Review this code for security vulnerabilities",
+    "How do I implement a REST API in FastAPI?",
+    "What are the best practices for Docker containers?",
+    "Translate this text to Spanish: Hello world",
+    "Summarize this research paper about quantum computing",
+    "Debug this SQL query that returns duplicate results",
+    "Create a regex pattern for email validation",
+    "Explain the difference between TCP and UDP",
+    "Help me optimize this database query for performance",
+    "What are the SOLID principles in software design?",
+    "How can I improve the accessibility of my website?"
+  ]
+}

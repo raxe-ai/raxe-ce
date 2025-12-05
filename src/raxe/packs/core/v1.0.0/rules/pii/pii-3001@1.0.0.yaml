@@ -1,0 +1,39 @@
+version: 1.0.0
+rule_id: pii-3001
+family: PII
+sub_family: api_keys
+name: AWS Access Key ID Detection
+description: Detects AWS Access Key IDs which follow the pattern AKIA[0-9A-Z]{16}
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: \b(AKIA[0-9A-Z]{16})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Here's my AWS key: AKIAIOSFODNN7EXAMPLE"
+  - "export AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE"
+  - "Credentials: AKIAJKLMNOPQRSTUVWXY"
+  should_not_match:
+  - "AWS keys start with AKIA"
+  - "What is an AKIA key?"
+  - "I need to configure AWS credentials"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cloud_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3001-Aws-Access-Key-Id

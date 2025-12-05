@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: cmd-206
+family: CMD
+sub_family: deserialization
+name: Insecure Deserialization Attack Detection
+description: Detects malicious serialized payloads and deserialization attempts
+severity: critical
+confidence: 0.92
+patterns:
+- pattern: (?i)(?:rO0|aced0005|yv66vg).*(?:Runtime|ProcessBuilder|exec|eval)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)__reduce__|__setstate__|pickle|marshal|yaml\.load|unserialize
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)O:\d+:"(?:stdClass|PDO|SimpleXMLElement)"
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "rO0ABXNyABdqYXZhLnV0aWwuUHJpb3JpdHlRdWV1ZQ=="
+  - "__reduce__ = lambda self: (os.system, ('whoami',))"
+  - "O:8:\"stdClass\":1:{s:4:\"exec\";s:6:\"whoami\";}"
+  should_not_match:
+  - "What is deserialization?"
+  - "Safe serialization practices"
+  - "Pickle security documentation"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+- T1059
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: Insecure deserialization attacks exploit object deserialization to execute arbitrary code, manipulate application logic, or cause denial of service. Deserializing untrusted data is extremely dangerous.
+remediation_advice: Never deserialize untrusted data. Use safe serialization formats (JSON) instead of language-specific formats (pickle, serialized PHP). Implement type checking and validation. Use allowlisting for permitted classes. Deploy deserialization attack detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-206-Insecure-Deserialization-Attack-Detection

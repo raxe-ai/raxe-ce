@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: cmd-207
+family: CMD
+sub_family: nosql_injection
+name: NoSQL Injection Detection
+description: Detects NoSQL injection attempts (MongoDB, etc.)
+severity: high
+confidence: 0.91
+patterns:
+- pattern: (?i)\$(?:ne|eq|gt|gte|lt|lte|in|nin|and|or|not|nor|exists|where|regex)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\{\s*['"]\$ne['"]:\s*null\s*\}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:username|password|user|email)\[(?:\$ne|\$regex|\$gt)\]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "username[$ne]=admin&password[$ne]=null"
+  - '{"$where": "this.password == ''password''"}'
+  - "user[$regex]=.*"
+  should_not_match:
+  - "What is NoSQL injection?"
+  - "MongoDB query operators documentation"
+  - "Database security best practices"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: NoSQL injection attacks manipulate queries to NoSQL databases (MongoDB, etc.) to bypass authentication, extract data, or modify records. These attacks exploit different syntax than SQL but can be equally devastating.
+remediation_advice: Use parameterized queries and prepared statements for NoSQL databases. Implement input validation and type checking. Use database security features like role-based access control. Never concatenate user input into queries.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-207-Nosql-Injection-Detection

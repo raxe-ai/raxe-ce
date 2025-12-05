@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/session_end.schema.json",
+  "title": "Session End Event",
+  "description": "Fired when Python interpreter session ends (engagement metrics)",
+  "type": "object",
+  "required": [
+    "session_id",
+    "duration_seconds",
+    "scans_in_session",
+    "threats_in_session"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "pattern": "^sess_[a-zA-Z0-9]+$",
+      "description": "Session being ended"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total session duration"
+    },
+    "scans_in_session": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of scans performed"
+    },
+    "threats_in_session": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of threats detected"
+    },
+    "end_reason": {
+      "type": "string",
+      "enum": ["normal", "error", "timeout", "interrupt", "unknown"],
+      "description": "How session ended"
+    },
+    "peak_memory_mb": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Peak memory usage during session"
+    },
+    "features_used": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["cli", "sdk", "wrapper", "integration", "repl", "explain", "custom_rules"]
+      },
+      "description": "Features used during session"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

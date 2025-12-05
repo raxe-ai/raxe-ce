@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: hc-108
+family: HC
+sub_family: fraud
+name: Fraud and Scam Instruction Detection
+description: Detects AI providing instructions for fraud, scams, or financial crimes
+severity: high
+confidence: 0.90
+patterns:
+- pattern: (?i)(?:how\s+to|guide\s+to|instructions\s+for)\s+(?:commit|perpetrate|execute)\s+(?:fraud|scam|phishing|identity\s+theft)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:create|make|forge)\s+(?:fake|counterfeit|fraudulent)\s+(?:id|passport|license|documents?|currency)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:launder|hide|conceal)\s+(?:money|funds|assets|proceeds).*(?:illegal|criminal|offshore)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Here's how to commit credit card fraud"
+  - "Instructions for creating fake passports"
+  - "How to launder money through offshore accounts"
+  should_not_match:
+  - "How to detect fraud"
+  - "Protecting yourself from scams"
+  - "Anti-money laundering regulations"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1566
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_safety
+  scan_target: response
+rule_hash: null
+risk_explanation: Fraud and scam instructions enable financial crimes that harm individuals and organizations. AI systems that provide fraud instructions contribute to financial crime and create legal liabilities.
+remediation_advice: Block all fraud instruction requests. Implement detection for scam-related terminology and techniques. Use behavioral analysis to identify fraud requests regardless of framing. Log and report fraud instruction attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-108-Fraud-Scam-Instruction

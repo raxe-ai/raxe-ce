@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-81
+family: ENC
+sub_family: html_entities_encoding
+name: Detects HTML entities obfuscation
+description: Detects HTML entities obfuscation
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)html entities (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0081
+rule_hash: sha256:5dc9dc35eb2d218a5601dab54e0411c2f95c8820c4837fbf121a67528c39f28a
+risk_explanation: Html Entities encoding can obfuscate malicious content.
+remediation_advice: Detect HTML entities patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-81-Html-Entities-Encoding

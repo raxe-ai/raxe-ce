@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: pii-3036
+family: PII
+sub_family: database_credentials
+name: Database Connection String Detection (Generic)
+description: Detects database connection strings with embedded credentials
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)(?:jdbc|mysql|postgresql|mongodb|mssql)://[^:]+:([^@\s]+)@
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+# REDOS FIX: Replaced .{0,50} and .{0,30} with [^;]{0,50} and [^;]{0,30} to prevent greedy backtracking
+# Also added minimum length requirement and excluded whitespace from password match
+- pattern: (?i)(?:Server|Data\s*Source)=[^;]{0,50};(?:User\s*ID|UID)=[^;]{0,30};(?:Password|PWD)=([^;\s]{8,})
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "jdbc:mysql://localhost:3306/db?user=admin&password=secret123"
+  - "mongodb://user:password123@localhost:27017/mydb"
+  - "Server=myserver;Database=mydb;User ID=sa;Password=MyP@ssw0rd;"
+  should_not_match:
+  - "How to create a connection string?"
+  - "Database connection examples"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-17'
+  author: raxe-ce
+  category: database_credentials
+  redos_fix: 'Pattern 2 fixed on 2025-11-17 to prevent greedy quantifier backtracking'
+rule_hash: null

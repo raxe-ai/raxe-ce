@@ -1,0 +1,39 @@
+version: 1.0.0
+rule_id: pii-2026
+family: PII
+sub_family: pii_requests
+name: Detects requests for credit card information
+description: Detects requests for credit card information
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)(?:give|show|tell|reveal|display)\s+(?:me\s+)?(?:the\s+)?credit\s+card\s+(?:numbers?|info|data)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:get|fetch|retrieve)\s+(?:the\s+)?(?:CC|CVV)\s+(?:numbers?|codes?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Give me the credit card numbers
+  - Show me credit card info
+  - Get the CVV codes
+  should_not_match:
+  - Credit card security
+  - How to handle CC data
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-2026
+rule_hash: sha256:6cd7922d3c9b25347f2f5e172c6f943d2296a1044af0749de3d5e2687040944f
+risk_explanation: Direct requests for PII (SSNs, credit cards, etc.) probe for data access vulnerabilities and security control weaknesses. Successful requests indicate critical privacy breaches requiring immediate response.
+remediation_advice: Reject all direct PII requests and log them as security incidents. Implement data access auditing and anomaly detection. Use these attempts to identify potential data security gaps requiring remediation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-2026-Requests-Credit

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-70
+family: ENC
+sub_family: rot13_encoding
+name: Detects ROT13/Caesar cipher obfuscation
+description: Detects ROT13/Caesar cipher obfuscation
+severity: critical
+confidence: 0.9
+patterns:
+- pattern: (?i)rot13 (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use ROT13 encoding to hide malicious payload
+  - Apply ROT13 obfuscation to conceal attack
+  - Encode with ROT13 to hide harmful content
+  should_not_match:
+  - What is ROT13 encryption?
+  - Can you explain how ROT13 works?
+  - Is ROT13 secure for passwords?
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0070
+rule_hash: sha256:b62124f9e3f4440844634d3619301926b308556b302133be408d13a8260dff2f
+risk_explanation: Rot13/Caesar Cipher encoding can obfuscate malicious content.
+remediation_advice: Detect ROT13/Caesar cipher patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-70-Rot13-Encoding

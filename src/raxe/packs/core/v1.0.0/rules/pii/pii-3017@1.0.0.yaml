@@ -1,0 +1,40 @@
+version: 1.0.0
+rule_id: pii-3017
+family: PII
+sub_family: identity_documents
+name: UK National Insurance Number Detection
+description: Detects UK National Insurance Numbers (NINO) in format XX123456X
+severity: high
+confidence: 0.94
+patterns:
+- pattern: (?i)(?:national\s*insurance|NI|NINO).{0,20}(?:no|number|num).{0,10}\b([A-Z]{2}[0-9]{6}[A-Z])\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: \b([A-Z]{2}\s*[0-9]{2}\s*[0-9]{2}\s*[0-9]{2}\s*[A-Z])\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "National Insurance Number: AB123456C"
+  - "NINO: QQ 12 34 56 C"
+  - "NI No: AB123456D"
+  should_not_match:
+  - "What is a National Insurance Number?"
+  - "How to apply for NINO?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: identity_documents
+rule_hash: null
+risk_explanation: Identity document numbers (passports, driver licenses, national ID numbers) enable identity theft and fraud when exposed. Attackers can use these credentials to impersonate victims, open fraudulent accounts, or bypass authentication systems.
+remediation_advice: Implement strict access controls for identity document data. Use tokenization or anonymization when processing identity information. Deploy DLP controls that detect and block identity document leakage. Maintain audit logs of all access to identity data.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3017-Uk-National-Insurance-Number

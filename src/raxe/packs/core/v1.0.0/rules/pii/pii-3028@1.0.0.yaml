@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3028
+family: PII
+sub_family: medical
+name: Prescription Number Detection (DEA)
+description: Detects DEA prescription numbers and Rx numbers
+severity: high
+confidence: 0.90
+patterns:
+- pattern: (?i)(?:prescription|Rx|DEA).{0,20}(?:no|number|num|#).{0,10}\b([A-Z]{2}[0-9]{7})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:prescription|Rx).{0,20}(?:no|number|num|#).{0,10}\b([0-9]{7,10})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "DEA number: AB1234567"
+  - "Prescription #: 12345678"
+  - "Rx no: 987654321"
+  should_not_match:
+  - "What is a DEA number?"
+  - "How to refill prescription?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: hipaa
+  compliance: HIPAA
+rule_hash: null
+risk_explanation: Medical and health information exposure violates HIPAA regulations and patient privacy rights. Leaked health data can be used for discrimination, identity theft, or blackmail, and creates severe legal liabilities for healthcare organizations.
+remediation_advice: Comply with HIPAA and healthcare privacy regulations. Implement strong access controls and encryption for medical records. Use de-identification and anonymization techniques. Audit all access to protected health information (PHI).
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3028-Prescription-Number-Detection-(Dea)

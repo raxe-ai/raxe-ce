@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-111
+family: ENC
+sub_family: null_byte_encoding
+name: Detects null byte encoding obfuscation
+description: Detects null byte encoding obfuscation
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)null byte (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0111
+rule_hash: sha256:252402859d9025cc728b75104a64f1a70fd684d7b56f1fe6e9b8bd567ae7451e
+risk_explanation: null byte encoding can obfuscate malicious content.
+remediation_advice: Detect null byte patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-111-Null-Byte-Encoding

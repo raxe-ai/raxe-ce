@@ -1,0 +1,1 @@
+copy C:\Windows\System32\config\SYSTEM

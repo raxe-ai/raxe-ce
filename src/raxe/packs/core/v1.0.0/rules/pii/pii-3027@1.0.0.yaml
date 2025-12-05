@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3027
+family: PII
+sub_family: medical
+name: ICD-10 Diagnosis Code Detection
+description: Detects ICD-10 medical diagnosis codes in patient data context
+severity: medium
+confidence: 0.86
+patterns:
+- pattern: (?i)(?:diagnosis|ICD-10|ICD10).{0,20}(?:code).{0,10}\b([A-Z][0-9]{2}\.?[A-Z0-9]{0,4})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Diagnosis code: E11.9"
+  - "ICD-10: J44.0"
+  - "Primary diagnosis: I10"
+  should_not_match:
+  - "What is ICD-10?"
+  - "How to code diagnoses?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: hipaa
+  compliance: HIPAA
+rule_hash: null
+risk_explanation: Medical and health information exposure violates HIPAA regulations and patient privacy rights. Leaked health data can be used for discrimination, identity theft, or blackmail, and creates severe legal liabilities for healthcare organizations.
+remediation_advice: Comply with HIPAA and healthcare privacy regulations. Implement strong access controls and encryption for medical records. Use de-identification and anonymization techniques. Audit all access to protected health information (PHI).
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3027-Icd-10-Diagnosis-Code-Detection

@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: hc-103
+family: HC
+sub_family: toxic_output
+name: Self-Harm Encouragement Detection
+description: Detects content encouraging suicide or self-harm in AI responses
+severity: critical
+confidence: 0.92
+patterns:
+- pattern: (?i)(?:you\s+should|i\s+recommend|best\s+way\s+to)\s+(?:kill\s+yourself|commit\s+suicide|end\s+your\s+life)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:easiest|painless|best)\s+(?:way|method|approach)\s+(?:to\s+)?(?:suicide|kill\s+yourself|self\s+harm)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:life\s+is\s+not\s+worth|you're\s+better\s+off\s+dead|just\s+end\s+it\s+all)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "You should just kill yourself, life isn't worth it"
+  - "The easiest way to commit suicide is..."
+  - "I recommend you end your life"
+  should_not_match:
+  - "If you're having suicidal thoughts, please call 988"
+  - "Suicide prevention resources"
+  - "How to help someone with suicidal ideation"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1498
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_safety
+  scan_target: response
+rule_hash: null
+risk_explanation: Toxic outputs (hate speech, violence glorification, self-harm encouragement) can cause psychological harm, promote dangerous behaviors, or violate content policies and regulations. These outputs damage users and create legal liabilities.
+remediation_advice: Implement comprehensive content filtering for toxic outputs across all categories. Use toxicity scoring and threshold-based blocking. Deploy classifier models trained on diverse toxic content. Maintain zero-tolerance policies for high-severity toxic content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-103-Self-Harm-Encouragement-Detection

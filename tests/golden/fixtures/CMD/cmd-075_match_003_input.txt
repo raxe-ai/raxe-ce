@@ -1,0 +1,1 @@
+http://metadata.azure.com/metadata/instance

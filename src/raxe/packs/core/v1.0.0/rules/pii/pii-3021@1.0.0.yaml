@@ -1,0 +1,39 @@
+version: 1.0.0
+rule_id: pii-3021
+family: PII
+sub_family: financial
+name: Bitcoin Wallet Address Detection
+description: Detects Bitcoin (BTC) wallet addresses (P2PKH, P2SH, Bech32 formats)
+severity: high
+confidence: 0.96
+patterns:
+- pattern: \b(bc1[a-z0-9]{39,59})\b
+  flags: []
+  timeout: 5.0
+- pattern: \b([13][a-km-zA-HJ-NP-Z1-9]{25,34})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "Send BTC to: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+  - "Wallet: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+  - "Address: 3J98t1WpEZ73CNmYviecrnyiWrnqRhWNLy"
+  should_not_match:
+  - "Bitcoin addresses start with 1, 3, or bc1"
+  - "How to create a BTC wallet?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cryptocurrency
+rule_hash: null
+risk_explanation: Financial credential exposure (account numbers, routing numbers, cryptocurrency addresses) enables direct financial fraud and theft. Attackers can initiate unauthorized transactions, drain accounts, or conduct money laundering operations.
+remediation_advice: Apply PCI DSS and financial data security standards. Use encryption and tokenization for financial data. Implement transaction monitoring and fraud detection. Restrict AI access to financial systems and data stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3021-Bitcoin-Wallet-Address-Detection

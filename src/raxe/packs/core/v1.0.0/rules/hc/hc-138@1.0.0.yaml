@@ -1,0 +1,51 @@
+version: 1.0.0
+rule_id: hc-138
+family: HC
+sub_family: tax_evasion
+name: Detects requests to evade taxes or commit tax fraud
+description: Detects requests to evade taxes or commit tax fraud
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)\b(evade|avoid\s+paying|hide\s+from)\s+(taxes|irs|tax\s+authorities)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(create|generate|produce)\s+(fake|false|fraudulent)\s+(tax\s+return|w-2|1099|tax\s+documents?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(hide|conceal|offshore)\s+(income|money|assets)\s+(from|to\s+avoid)\s+(taxes|irs|tax\s+authorities)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(claim|file)\s+(fake|false|fraudulent)\s+(deductions?|credits?|dependents?|expenses?)\s+(on\s+)?tax
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - How to evade paying taxes
+  - Create fake W-2 forms for tax return
+  - Hide income from the IRS
+  - Claim fraudulent deductions on tax return
+  should_not_match:
+  - Legal tax deductions
+  - Tax planning strategies
+  - What is tax evasion?
+  - Legitimate tax advice
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack: []
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-HC-0138
+rule_hash: sha256:edf1dafad5f2bb2bd1546ce8c7c0b072b32b01fa28fa899ac7202ddc275ca842
+risk_explanation: Tax evasion requests seek to illegally avoid tax obligations through fraud or concealment. Tax crimes carry significant penalties including fines and imprisonment.
+remediation_advice: Refuse tax evasion assistance. Provide information on legal tax planning and deductions instead. Distinguish between tax avoidance (legal) and tax evasion (illegal). Log attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-138-Tax-Evasion

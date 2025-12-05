@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: pii-3050
+family: PII
+sub_family: api_keys
+name: PayPal Client Secret Detection
+description: Detects PayPal API client secrets and access tokens
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)paypal.{0,20}(?:secret|client).{0,10}['\"]([A-Za-z0-9\-_]{80,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Here is PII type 3050 information
+  - Accessing sensitive data 3050
+  - Personal information 3050 exposure
+  should_not_match:
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: payment_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates
+  critical security vulnerabilities. Leaked API keys grant attackers access to cloud
+  services, third-party platforms, and internal systems, potentially leading to data
+  breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement
+  automated key rotation and revocation. Use secret detection tools in development
+  and production pipelines. Never log or persist API keys. Apply access controls to
+  prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3050-Paypal-Client-Secret-Detection

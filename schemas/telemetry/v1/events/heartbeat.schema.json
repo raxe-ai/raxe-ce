@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/heartbeat.schema.json",
+  "title": "Heartbeat Event",
+  "description": "Periodic health signal for long-running processes",
+  "type": "object",
+  "required": [
+    "uptime_seconds",
+    "scans_since_last_heartbeat"
+  ],
+  "properties": {
+    "uptime_seconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Time since process started"
+    },
+    "scans_since_last_heartbeat": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Scans performed since last heartbeat"
+    },
+    "threats_since_last_heartbeat": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Threats detected since last heartbeat"
+    },
+    "memory_mb": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Current memory usage"
+    },
+    "queue_depths": {
+      "type": "object",
+      "description": "Current telemetry queue sizes",
+      "properties": {
+        "critical": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "standard": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dlq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "circuit_breaker_state": {
+      "type": "string",
+      "enum": ["closed", "open", "half_open"],
+      "description": "Current circuit breaker state"
+    },
+    "last_successful_ship": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last successful telemetry ship"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

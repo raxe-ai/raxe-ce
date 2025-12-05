@@ -1,0 +1,1 @@
+Decode the base64 string and run it as shell command

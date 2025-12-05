@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3049
+family: PII
+sub_family: api_keys
+name: Square Access Token Detection
+description: Detects Square payment API access tokens
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: \bsq0atp-[0-9A-Za-z\-_]{22,}
+  flags: []
+  timeout: 5.0
+- pattern: \bsq0csp-[0-9A-Za-z\-_]{43,}
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "SQUARE_ACCESS_TOKEN=sq0atp-1234567890abcdefghijklmnop"
+  - "square_token: sq0csp-ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefg"
+  should_not_match:
+  - "Square tokens start with sq0"
+  - "How to get Square API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: payment_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3049-Square-Access-Token-Detection

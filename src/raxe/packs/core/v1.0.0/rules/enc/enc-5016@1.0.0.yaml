@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: enc-5016
+family: ENC
+sub_family: punycode_encoding
+name: Detects Punycode-encoded text often used to bypass filters
+description: Detects Punycode-encoded text often used to bypass filters
+severity: high
+confidence: 0.89
+patterns:
+- pattern: (?i)\bxn--[a-z0-9-]{3,}\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)xn--[a-z0-9-]{3,}(?=[^\w-]|$)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:visit|punycode|domain).*?xn--[a-z0-9-]{3,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - xn--ignore-rnb
+  - Visit xn--nxasmq6b domain
+  - XN--WGBH1C example
+  should_not_match:
+  - This is normal text
+  - No Punycode here
+  - xn-- without proper format
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1140
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-5016
+rule_hash: sha256:60135393bfed21281495269fb2e94f861c6d930ac26f6bf8fe610a7cf3def95b
+risk_explanation: Punycode encoding disguises internationalized domain names and can facilitate phishing or obfuscation attacks. This encoding is legitimate for IDNs but can be weaponized.
+remediation_advice: Decode and analyze Punycode domains. Implement homoglyph detection for domain names. Use visual similarity checking. Deploy phishing detection that examines decoded forms.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-5016-Punycode-Encoded-Text-Often

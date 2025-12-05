@@ -1,0 +1,314 @@
+version: "0.0.1"
+
+model:
+  id: "threat-classifier-fp16-v0.0.1"
+  name: "Threat Classifier FP16"
+  version: "0.0.1"
+  variant: "onnx_fp16"
+  description: "Multi-stage cascade threat classifier with FP16 quantized MPNet embeddings. Higher accuracy variant with 6 threat families and 19 subfamilies."
+  status: "active"
+  created_date: "2025-11-20"
+  author: "RAXE ML Team"
+
+architecture:
+  type: "cascade_classifier"
+  embedding_model: "sentence-transformers/all-mpnet-base-v2"
+  embedding_dim: 768
+  stages:
+    - name: "binary"
+      description: "Safe vs Threat detection"
+      num_classes: 2
+      early_exit: true
+    - name: "family"
+      description: "Threat family classification"
+      num_classes: 6
+      classes: ["CMD", "JB", "PI", "PII", "TOX", "XX"]
+    - name: "subfamily"
+      description: "Fine-grained threat classification"
+      num_classes: 19
+      classes:
+        - "cmd_code_execution"
+        - "jb_hypothetical_scenario"
+        - "jb_other"
+        - "jb_persona_attack"
+        - "pi_instruction_override"
+        - "pi_role_manipulation"
+        - "pii_data_extraction"
+        - "pii_other"
+        - "tox_harassment"
+        - "tox_hate_speech"
+        - "tox_other"
+        - "tox_self_harm"
+        - "tox_sexual_content"
+        - "tox_violence"
+        - "xx_fraud"
+        - "xx_harmful_advice"
+        - "xx_illegal_activity"
+        - "xx_malware"
+        - "xx_other"
+
+files:
+  embeddings:
+    path: "embeddings_quantized_fp16.onnx"
+    size_mb: 209
+    format: "onnx"
+    quantization: "fp16"
+    input_names: ["input_ids", "attention_mask"]
+    output_names: ["sentence_embedding"]
+    input_shapes:
+      input_ids: [1, 128]
+      attention_mask: [1, 128]
+    output_shapes:
+      sentence_embedding: [1, 768]
+
+  classifiers:
+    binary:
+      path: "classifier_binary_quantized_fp16.onnx"
+      size_kb: 8.2
+      format: "onnx"
+      quantization: "fp16"
+      input_names: ["embeddings"]
+      output_names: ["logits"]
+      input_shapes:
+        embeddings: [1, 768]
+      output_shapes:
+        logits: [1, 2]
+
+    family:
+      path: "classifier_family_quantized_fp16.onnx"
+      size_kb: 23
+      format: "onnx"
+      quantization: "fp16"
+      input_names: ["embeddings"]
+      output_names: ["logits"]
+      input_shapes:
+        embeddings: [1, 768]
+      output_shapes:
+        logits: [1, 6]
+
+    subfamily:
+      path: "classifier_subfamily_quantized_fp16.onnx"
+      size_kb: 72
+      format: "onnx"
+      quantization: "fp16"
+      input_names: ["embeddings"]
+      output_names: ["logits"]
+      input_shapes:
+        embeddings: [1, 768]
+      output_shapes:
+        logits: [1, 19]
+
+  metadata:
+    label_encoders: "label_encoders.json"
+    model_metadata: "model_metadata.json"
+    model_config: "config.json"
+    special_tokens_map: "special_tokens_map.json"
+
+tokenizer:
+  name: "sentence-transformers/all-mpnet-base-v2"
+  type: "MPNetTokenizer"
+  class: "MPNetTokenizer"
+  vocab_size: 30527
+  model_max_length: 512
+  default_length: 128
+  do_lower_case: true
+  padding_side: "right"
+  truncation_side: "right"
+  files:
+    config: "tokenizer_config.json"
+    tokenizer: "tokenizer.json"
+    vocab: "vocab.txt"
+  special_tokens:
+    bos_token: "<s>"
+    eos_token: "</s>"
+    pad_token: "<pad>"
+    unk_token: "[UNK]"
+    mask_token: "<mask>"
+    cls_token: "<s>"
+    sep_token: "</s>"
+
+performance:
+  inference_latency:
+    mean_ms: 4.5
+    p50_ms: 4.0
+    p95_ms: 5.5
+    p99_ms: 7.5
+    note: "Measured on single-threaded CPU inference"
+  throughput:
+    requests_per_second: 200
+    note: "Single-threaded, non-batched inference"
+  memory:
+    model_size_mb: 209.9
+    runtime_memory_mb: 280
+    peak_memory_mb: 350
+  initialization:
+    cold_start_ms: 1000
+    warm_start_ms: 80
+
+accuracy:
+  binary_classification:
+    target: 0.95
+    expected: 0.98
+    note: "Safe vs Threat detection accuracy"
+  family_classification:
+    target: 0.90
+    expected: 0.95
+    note: "6-way family classification accuracy"
+  subfamily_classification:
+    target: 0.85
+    expected: 0.90
+    note: "19-way subfamily classification accuracy"
+  false_positive_rate:
+    target: 0.01
+    expected: 0.012
+    note: "Safe inputs incorrectly flagged as threats"
+  improvement_over_int8:
+    binary: "+1-2%"
+    family: "+1-2%"
+    subfamily: "+1-2%"
+    note: "Expected accuracy improvement compared to INT8 variant"
+
+requirements:
+  runtime: "onnxruntime>=1.16.0"
+  python: ">=3.8"
+  dependencies:
+    - "numpy>=1.20.0"
+    - "transformers>=4.30.0"
+  hardware:
+    min_memory_mb: 384
+    recommended_memory_mb: 768
+    cpu_architecture: "x86_64, arm64"
+    gpu_required: false
+    gpu_recommended: false
+
+inference:
+  pipeline:
+    - step: 1
+      name: "tokenization"
+      description: "Tokenize input text using MPNetTokenizer"
+      input: "text (string)"
+      output: "input_ids [1, 128], attention_mask [1, 128]"
+    - step: 2
+      name: "embedding_generation"
+      description: "Generate 768-dim sentence embedding"
+      model: "embeddings_quantized_fp16.onnx"
+      input: "input_ids, attention_mask"
+      output: "sentence_embedding [1, 768]"
+    - step: 3
+      name: "binary_classification"
+      description: "Classify as safe (0) or threat (1)"
+      model: "classifier_binary_quantized_fp16.onnx"
+      input: "sentence_embedding [1, 768]"
+      output: "logits [1, 2]"
+    - step: 4
+      name: "family_classification"
+      description: "Classify threat family (conditional on step 3)"
+      model: "classifier_family_quantized_fp16.onnx"
+      input: "sentence_embedding [1, 768]"
+      output: "logits [1, 6]"
+      condition: "binary_classification == 1"
+    - step: 5
+      name: "subfamily_classification"
+      description: "Classify threat subfamily (conditional on step 3)"
+      model: "classifier_subfamily_quantized_fp16.onnx"
+      input: "sentence_embedding [1, 768]"
+      output: "logits [1, 19]"
+      condition: "binary_classification == 1"
+
+  output_format:
+    is_threat:
+      type: "boolean"
+      description: "True if threat detected, False otherwise"
+    family:
+      type: "string or null"
+      description: "Threat family code (CMD, JB, PI, PII, TOX, XX) or null if safe"
+    subfamily:
+      type: "string or null"
+      description: "Specific threat subfamily or null if safe"
+    confidence:
+      type: "float"
+      range: [0.0, 1.0]
+      description: "Binary classification confidence"
+    family_confidence:
+      type: "float or null"
+      range: [0.0, 1.0]
+      description: "Family classification confidence (null if safe)"
+    subfamily_confidence:
+      type: "float or null"
+      range: [0.0, 1.0]
+      description: "Subfamily classification confidence (null if safe)"
+
+limitations:
+  - "Model size (209 MB) significantly exceeds RAXE 50 MB constraint"
+  - "Optimized for English language only"
+  - "Maximum input length: 512 tokens (~400 words)"
+  - "Not specifically hardened against adversarial attacks"
+  - "Requires retraining for new threat categories"
+  - "May have lower accuracy on rare subfamily classes"
+  - "Cold start initialization: ~1000ms"
+  - "Higher memory footprint than INT8 variant"
+
+optimization_opportunities:
+  - "Model distillation to reduce embedding size (target: <50 MB)"
+  - "Pruning to remove less important weights"
+  - "Batched inference for higher throughput"
+  - "Embedding caching for repeated texts"
+  - "ONNX graph optimization (operator fusion, constant folding)"
+  - "Hardware-specific optimizations (AVX512, NEON)"
+  - "Consider INT8 variant for production if accuracy delta is acceptable"
+
+use_cases:
+  primary:
+    - "High-accuracy threat detection for critical applications"
+    - "Reference model for accuracy benchmarking"
+    - "Offline batch analysis where latency is less critical"
+    - "Research and development testing"
+  secondary:
+    - "A/B testing against INT8 variant"
+    - "Fallback option if INT8 accuracy insufficient"
+    - "Quality assurance validation"
+
+integration:
+  scanner_type: "L2"
+  execution_mode: "on_device"
+  privacy_compliant: true
+  external_api_required: false
+  configuration:
+    confidence_threshold: 0.7
+    max_input_length: 128
+    batch_size: 1
+    enable_caching: false
+  recommendation: "Use INT8 variant for production unless accuracy testing shows significant degradation"
+
+versioning:
+  model_version: "0.0.1"
+  manifest_version: "0.0.1"
+  training_date: "2025-11-20"
+  last_updated: "2025-11-20"
+  changelog:
+    - version: "0.0.1"
+      date: "2025-11-20"
+      changes:
+        - "Initial release of FP16 quantized threat classifier"
+        - "Multi-stage cascade architecture"
+        - "6 families, 19 subfamilies"
+        - "MPNet-based embeddings with FP16 quantization"
+        - "Higher accuracy variant for reference benchmarking"
+
+comparison_to_int8:
+  advantages:
+    - "1-2% higher accuracy across all classification stages"
+    - "Lower quantization error, better numerical precision"
+    - "More robust to edge cases and boundary conditions"
+  disadvantages:
+    - "2x larger model size (209 MB vs 106 MB)"
+    - "30% slower inference (4.5ms vs 3.5ms mean)"
+    - "50% longer cold start (1000ms vs 650ms)"
+    - "75% more memory usage (280 MB vs 180 MB)"
+  recommendation: "Use INT8 for production deployment unless accuracy benchmarks show unacceptable degradation"
+
+contact:
+  team: "RAXE ML Engineering"
+  email: "ml-team@raxe.ai"
+  documentation: "https://docs.raxe.ai/models/threat-classifier-fp16"
+  issues: "https://github.com/raxe-ai/raxe-ce/issues"

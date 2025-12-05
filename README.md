@@ -7,8 +7,8 @@
 
   <p>
     <a href="https://raxe.ai">Website</a> &bull;
-    <a href="https://twitter.com/raboraxe">Twitter</a> &bull;
-    <a href="https://raxe.ai/docs">Docs</a> &bull;
+    <a href="https://x.com/raxeai">Twitter</a> &bull;
+    <a href="https://docs.raxe.ai">Docs</a> &bull;
     <a href="QUICKSTART.md">Quick Start</a>
   </p>
 </div>

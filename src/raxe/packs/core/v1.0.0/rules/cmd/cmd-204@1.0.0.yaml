@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: cmd-204
+family: CMD
+sub_family: ssrf
+name: Server-Side Request Forgery (SSRF) Detection
+description: Detects SSRF attempts targeting internal/cloud metadata services
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)(?:url|link|fetch|curl|wget).*(?:169\.254\.169\.254|metadata\.google\.internal|169\.254\.170\.2)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:url|link|fetch).*(?:localhost|127\.0\.0\.1|0\.0\.0\.0|::1).*(?:admin|internal|private)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:file|dict|gopher|ftp|ldap|tftp):\/\/.*(?:localhost|127\.0\.0\.1|192\.168\.|10\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[01]\.)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "fetch http://169.254.169.254/latest/meta-data/"
+  - "curl http://metadata.google.internal/computeMetadata/v1/"
+  - "url=gopher://127.0.0.1:6379/_"
+  should_not_match:
+  - "What is SSRF?"
+  - "How to prevent SSRF attacks?"
+  - "Cloud metadata security"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1071
+- T1590
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: Server-Side Request Forgery (SSRF) tricks servers into making requests to unintended destinations, often internal systems. This can expose internal services, read cloud metadata, or bypass network security controls.
+remediation_advice: Implement strict allowlisting for external requests. Validate and sanitize all URLs. Use network segmentation to isolate internal services. Deploy SSRF detection. Never make requests to user-supplied URLs without validation.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-204-Server-Side-Request-Forgery-(Ssrf)

@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-73
+family: ENC
+sub_family: binary_encoding
+name: Detects binary encoding obfuscation
+description: Detects binary encoding obfuscation
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)binary (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0073
+rule_hash: sha256:cb0b3ec7f25aed12f7be025347a9fe22378ad1440278d5a4caa451334ac72aa2
+risk_explanation: Binary Encoding encoding can obfuscate malicious content.
+remediation_advice: Detect binary encoding patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-73-Binary-Encoding

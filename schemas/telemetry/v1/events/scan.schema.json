@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/scan.schema.json",
+  "title": "Scan Event",
+  "description": "Fired for each threat detection scan (core telemetry event)",
+  "type": "object",
+  "required": [
+    "threat_detected",
+    "scan_duration_ms",
+    "prompt_hash"
+  ],
+  "properties": {
+    "prompt_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "minLength": 71,
+      "maxLength": 71,
+      "description": "SHA-256 hash of prompt with sha256: prefix (71 chars total)"
+    },
+    "threat_detected": {
+      "type": "boolean",
+      "description": "Whether any threat was detected"
+    },
+    "detection_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of detections found"
+    },
+    "highest_severity": {
+      "type": "string",
+      "enum": ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      "description": "Highest severity among detections"
+    },
+    "rule_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10,
+      "description": "List of triggered rule IDs (up to 10)"
+    },
+    "families": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["PI", "JB", "PII", "CMD", "ENC", "HC", "RAG"]
+      },
+      "description": "Threat families detected"
+    },
+    "scan_duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total scan duration in milliseconds"
+    },
+    "l1_duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "L1 (rule-based) scan duration"
+    },
+    "l2_duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "L2 (ML-based) scan duration"
+    },
+    "l1_hit": {
+      "type": "boolean",
+      "description": "L1 detection triggered"
+    },
+    "l2_hit": {
+      "type": "boolean",
+      "description": "L2 detection triggered"
+    },
+    "l2_enabled": {
+      "type": "boolean",
+      "description": "Whether L2 was enabled for this scan"
+    },
+    "prompt_length": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Character length of scanned prompt"
+    },
+    "action_taken": {
+      "type": "string",
+      "enum": ["allow", "block", "warn", "redact"],
+      "description": "Action taken based on policy"
+    },
+    "entry_point": {
+      "type": "string",
+      "enum": ["cli", "sdk", "wrapper", "integration"],
+      "description": "How the scan was triggered"
+    },
+    "wrapper_type": {
+      "type": "string",
+      "enum": ["openai", "anthropic", "langchain", "none"],
+      "description": "Wrapper used if applicable"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

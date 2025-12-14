@@ -1,0 +1,431 @@
+# RAXE Security Scan - GitLab CI Template
+#
+# This template scans LLM prompts and AI-generated content for security threats.
+# Include it in your .gitlab-ci.yml to add RAXE scanning to your pipeline.
+#
+# Usage:
+#   include:
+#     - project: 'raxe-ai/raxe-ce'
+#       ref: main
+#       file: '/.gitlab/ci-templates/raxe-scan.yml'
+#
+#   # Or copy this file and include locally:
+#   include:
+#     - local: '/.gitlab/ci-templates/raxe-scan.yml'
+#
+#   raxe_security_scan:
+#     extends: .raxe-scan
+#     variables:
+#       SCAN_PATH: "./prompts/"
+#       FAIL_ON_THREAT: "true"
+#
+# Exit Codes:
+#   0 - Success: scan completed, no threats detected
+#   1 - Threat detected: one or more threats found
+#   2 - Invalid input: bad arguments or no files to scan
+#   3 - Configuration error: RAXE not properly configured
+#   4 - Scan error: execution failed
+#
+# Required Variables:
+#   RAXE_API_KEY (optional): API key for enhanced cloud features
+#                            Set in CI/CD Settings > Variables
+#
+# Optional Variables:
+#   SCAN_PATH:       Path to scan (default: "./prompts/")
+#   FAIL_ON_THREAT:  Fail job if threats detected (default: "true")
+#   MIN_SEVERITY:    Minimum severity to report (default: "low")
+#   RAXE_VERSION:    Version constraint (default: ">=0.2.0")
+
+# Base template for RAXE scanning
+.raxe-scan:
+  image: python:3.11-slim
+  stage: test
+
+  variables:
+    SCAN_PATH: "./prompts/"
+    FAIL_ON_THREAT: "true"
+    MIN_SEVERITY: "low"
+    RAXE_VERSION: ">=0.2.0"
+    RAXE_QUIET: "true"
+    RAXE_NO_COLOR: "true"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+  cache:
+    key: raxe-${CI_JOB_NAME}
+    paths:
+      - .cache/pip/
+
+  before_script:
+    # Install RAXE
+    - pip install --quiet --upgrade pip
+    - pip install --quiet "raxe${RAXE_VERSION}"
+    - raxe --version
+
+    # Initialize RAXE
+    - |
+      if [ -n "$RAXE_API_KEY" ]; then
+        raxe init --api-key "$RAXE_API_KEY" --force
+      else
+        raxe init --force
+      fi
+
+  script:
+    - |
+      set +e  # Don't exit on error - we handle exit codes
+
+      SCAN_OUTPUT="raxe-scan-results.json"
+
+      echo "=========================================="
+      echo "RAXE Security Scan"
+      echo "=========================================="
+      echo "Scan Path: $SCAN_PATH"
+      echo "Fail on Threat: $FAIL_ON_THREAT"
+      echo "Minimum Severity: $MIN_SEVERITY"
+      echo "=========================================="
+      echo ""
+
+      # Check if path exists
+      if [ ! -e "$SCAN_PATH" ]; then
+        echo "Error: Scan path '$SCAN_PATH' does not exist"
+
+        # Try common locations
+        for alt_path in "prompts" "src/prompts" "data/prompts" "."; do
+          if [ -d "$alt_path" ]; then
+            echo "Found alternative path: $alt_path"
+            SCAN_PATH="$alt_path"
+            break
+          fi
+        done
+
+        if [ ! -e "$SCAN_PATH" ]; then
+          echo "No valid scan path found"
+          exit 2
+        fi
+      fi
+
+      # Perform scan based on path type
+      if [ -f "$SCAN_PATH" ]; then
+        # Single file scan
+        echo "Scanning single file: $SCAN_PATH"
+        raxe scan --stdin --format json --quiet < "$SCAN_PATH" > "$SCAN_OUTPUT"
+        SCAN_EXIT_CODE=$?
+
+      elif [ -d "$SCAN_PATH" ]; then
+        # Directory scan
+        echo "Scanning directory: $SCAN_PATH"
+
+        # Find all scannable files
+        find "$SCAN_PATH" -type f \( \
+          -name "*.txt" -o \
+          -name "*.md" -o \
+          -name "*.prompt" -o \
+          -name "*.yaml" -o \
+          -name "*.yml" \
+        \) > /tmp/files_to_scan.txt
+
+        if [ ! -s /tmp/files_to_scan.txt ]; then
+          echo "No scannable files found in $SCAN_PATH"
+          echo '{"has_detections": false, "detections": [], "files_scanned": 0}' > "$SCAN_OUTPUT"
+          SCAN_EXIT_CODE=0
+        else
+          # Initialize results
+          echo '{"results": [' > "$SCAN_OUTPUT"
+          FIRST_FILE=true
+          THREAT_FOUND=false
+          FILES_SCANNED=0
+          TOTAL_THREATS=0
+          HIGHEST_SEVERITY="none"
+
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              FILES_SCANNED=$((FILES_SCANNED + 1))
+
+              if [ "$FIRST_FILE" = false ]; then
+                echo "," >> "$SCAN_OUTPUT"
+              fi
+              FIRST_FILE=false
+
+              echo "  Scanning: $file"
+              RESULT=$(raxe scan --stdin --format json --quiet < "$file" 2>/dev/null || echo '{"has_detections": false, "detections": [], "error": true}')
+
+              # Check if threats were found
+              HAS_THREATS=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print('true' if d.get('has_detections', False) else 'false')" 2>/dev/null || echo "false")
+
+              if [ "$HAS_THREATS" = "true" ]; then
+                THREAT_FOUND=true
+
+                # Count threats
+                THREAT_COUNT=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('detections', [])))" 2>/dev/null || echo "0")
+                TOTAL_THREATS=$((TOTAL_THREATS + THREAT_COUNT))
+
+                # Get highest severity
+                FILE_SEVERITY=$(echo "$RESULT" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+severities = [det.get('severity', 'info') for det in d.get('detections', [])]
+order = {'critical': 5, 'high': 4, 'medium': 3, 'low': 2, 'info': 1, 'none': 0}
+if severities:
+    print(max(severities, key=lambda s: order.get(s, 0)))
+else:
+    print('none')
+" 2>/dev/null || echo "none")
+
+                # Update highest severity
+                case "$HIGHEST_SEVERITY" in
+                  none|info)
+                    HIGHEST_SEVERITY="$FILE_SEVERITY"
+                    ;;
+                  low)
+                    if [ "$FILE_SEVERITY" != "info" ] && [ "$FILE_SEVERITY" != "none" ]; then
+                      HIGHEST_SEVERITY="$FILE_SEVERITY"
+                    fi
+                    ;;
+                  medium)
+                    if [ "$FILE_SEVERITY" = "high" ] || [ "$FILE_SEVERITY" = "critical" ]; then
+                      HIGHEST_SEVERITY="$FILE_SEVERITY"
+                    fi
+                    ;;
+                  high)
+                    if [ "$FILE_SEVERITY" = "critical" ]; then
+                      HIGHEST_SEVERITY="$FILE_SEVERITY"
+                    fi
+                    ;;
+                esac
+              fi
+
+              # Use Python for proper JSON escaping
+              python3 -c "
+import sys, json
+file_path = '$file'
+result = '''$RESULT'''
+try:
+    result_json = json.loads(result)
+except:
+    result_json = {'error': True, 'raw': result}
+print(json.dumps({'file': file_path, 'result': result_json}))
+" >> "$SCAN_OUTPUT"
+            fi
+          done < /tmp/files_to_scan.txt
+
+          # Close results array and add summary
+          echo "]," >> "$SCAN_OUTPUT"
+          echo "\"files_scanned\": $FILES_SCANNED," >> "$SCAN_OUTPUT"
+          echo "\"total_threats\": $TOTAL_THREATS," >> "$SCAN_OUTPUT"
+          echo "\"highest_severity\": \"$HIGHEST_SEVERITY\"," >> "$SCAN_OUTPUT"
+          echo "\"has_detections\": $THREAT_FOUND" >> "$SCAN_OUTPUT"
+          echo "}" >> "$SCAN_OUTPUT"
+
+          if [ "$THREAT_FOUND" = true ]; then
+            SCAN_EXIT_CODE=1
+          else
+            SCAN_EXIT_CODE=0
+          fi
+        fi
+      else
+        echo "Error: '$SCAN_PATH' is neither a file nor a directory"
+        SCAN_EXIT_CODE=2
+      fi
+
+      # Display summary
+      echo ""
+      echo "=========================================="
+      echo "Scan Summary"
+      echo "=========================================="
+
+      if [ -f "$SCAN_OUTPUT" ]; then
+        python3 -c "
+import json
+with open('$SCAN_OUTPUT') as f:
+    data = json.load(f)
+print(f\"Files Scanned: {data.get('files_scanned', 1)}\")
+print(f\"Threats Found: {data.get('has_detections', False)}\")
+print(f\"Total Threats: {data.get('total_threats', len(data.get('detections', [])))}\")
+print(f\"Highest Severity: {data.get('highest_severity', 'none')}\")
+
+if data.get('has_detections'):
+    print('')
+    print('Detected Threats:')
+    print('-' * 40)
+    for item in data.get('results', []):
+        result = item.get('result', {})
+        if result.get('has_detections'):
+            print(f\"  File: {item.get('file')}\")
+            for det in result.get('detections', []):
+                print(f\"    - {det.get('rule_id')} ({det.get('severity')}): {det.get('message', 'N/A')[:60]}\")
+    # Handle single file scan
+    if 'detections' in data and data.get('has_detections'):
+        for det in data.get('detections', []):
+            print(f\"    - {det.get('rule_id')} ({det.get('severity')}): {det.get('message', 'N/A')[:60]}\")
+" 2>/dev/null || echo "Could not parse results"
+      fi
+
+      echo "=========================================="
+
+      # Determine final exit code
+      if [ "$FAIL_ON_THREAT" = "true" ] && [ "$SCAN_EXIT_CODE" -eq 1 ]; then
+        echo ""
+        echo "FAILED: Security threats detected!"
+        exit 1
+      elif [ "$SCAN_EXIT_CODE" -gt 1 ]; then
+        echo ""
+        echo "ERROR: Scan failed with exit code $SCAN_EXIT_CODE"
+        exit $SCAN_EXIT_CODE
+      fi
+
+      echo ""
+      echo "PASSED: No security threats detected"
+      exit 0
+
+  artifacts:
+    when: always
+    paths:
+      - raxe-scan-results.json
+    reports:
+      # GitLab security report format
+      sast: raxe-scan-results.json
+    expire_in: 30 days
+
+  rules:
+    # Run on merge requests
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # Run on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # Run when triggered manually
+    - if: $CI_PIPELINE_SOURCE == "web"
+    # Run on schedule
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+# Quick scan template (no artifacts, faster)
+.raxe-scan-quick:
+  extends: .raxe-scan
+  artifacts:
+    when: never
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - prompts/**/*
+        - "**/*.prompt"
+        - "**/*.prompt.txt"
+
+# Full scan with SARIF output
+.raxe-scan-full:
+  extends: .raxe-scan
+  after_script:
+    - |
+      # Convert to SARIF format for security dashboards
+      if [ -f raxe-scan-results.json ]; then
+        python3 << 'PYTHON_EOF'
+import json
+import sys
+
+# Read RAXE results
+with open('raxe-scan-results.json') as f:
+    raxe_results = json.load(f)
+
+# Build SARIF report
+sarif = {
+    "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+    "version": "2.1.0",
+    "runs": [{
+        "tool": {
+            "driver": {
+                "name": "RAXE",
+                "informationUri": "https://raxe.ai",
+                "version": "0.0.1",
+                "rules": []
+            }
+        },
+        "results": []
+    }]
+}
+
+# Map severity to SARIF level
+severity_map = {
+    "critical": "error",
+    "high": "error",
+    "medium": "warning",
+    "low": "note",
+    "info": "note"
+}
+
+# Process results
+results_list = raxe_results.get('results', [])
+if not results_list and raxe_results.get('detections'):
+    # Single file result
+    results_list = [{'file': 'input', 'result': raxe_results}]
+
+for item in results_list:
+    result = item.get('result', {})
+    file_path = item.get('file', 'unknown')
+
+    for detection in result.get('detections', []):
+        sarif['runs'][0]['results'].append({
+            "ruleId": detection.get('rule_id', 'unknown'),
+            "level": severity_map.get(detection.get('severity', 'info'), 'note'),
+            "message": {"text": detection.get('message', 'Security threat detected')},
+            "locations": [{
+                "physicalLocation": {
+                    "artifactLocation": {"uri": file_path}
+                }
+            }]
+        })
+
+# Write SARIF output
+with open('raxe-results.sarif', 'w') as f:
+    json.dump(sarif, f, indent=2)
+
+print("Generated SARIF report: raxe-results.sarif")
+PYTHON_EOF
+      fi
+  artifacts:
+    when: always
+    paths:
+      - raxe-scan-results.json
+      - raxe-results.sarif
+    reports:
+      sast: raxe-scan-results.json
+    expire_in: 30 days
+
+# Scheduled nightly scan
+.raxe-scan-scheduled:
+  extends: .raxe-scan-full
+  variables:
+    SCAN_PATH: "."
+    FAIL_ON_THREAT: "false"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+# Example usage in your .gitlab-ci.yml:
+#
+# stages:
+#   - test
+#   - security
+#
+# include:
+#   - local: '/.gitlab/ci-templates/raxe-scan.yml'
+#
+# # Basic usage
+# raxe_security_scan:
+#   extends: .raxe-scan
+#   stage: security
+#   variables:
+#     SCAN_PATH: "./prompts/"
+#
+# # Custom configuration
+# raxe_custom_scan:
+#   extends: .raxe-scan
+#   stage: security
+#   variables:
+#     SCAN_PATH: "./data/ai-prompts/"
+#     FAIL_ON_THREAT: "true"
+#     MIN_SEVERITY: "medium"
+#
+# # Quick MR scan (only on prompt changes)
+# raxe_mr_scan:
+#   extends: .raxe-scan-quick
+#   stage: test
+#
+# # Nightly full scan
+# raxe_nightly:
+#   extends: .raxe-scan-scheduled
+#   stage: security

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/config_changed.schema.json",
+  "title": "Config Changed Event",
+  "description": "Fired when configuration is changed (tracks opt-outs and preferences)",
+  "type": "object",
+  "required": [
+    "changed_via",
+    "changes"
+  ],
+  "properties": {
+    "changed_via": {
+      "type": "string",
+      "enum": ["cli", "sdk", "config_file", "env_var"],
+      "description": "How configuration was changed"
+    },
+    "changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["key", "new_value"],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "telemetry.enabled",
+              "l2.enabled",
+              "policy.mode",
+              "output.format",
+              "logging.level"
+            ],
+            "description": "Configuration key that changed"
+          },
+          "old_value": {
+            "type": ["string", "boolean", "number", "null"],
+            "description": "Previous value (if known)"
+          },
+          "new_value": {
+            "type": ["string", "boolean", "number", "null"],
+            "description": "New value"
+          }
+        }
+      },
+      "description": "List of configuration changes"
+    },
+    "is_final_event": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this is the last event before telemetry disable"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

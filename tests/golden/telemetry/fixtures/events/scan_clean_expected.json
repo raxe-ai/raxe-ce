@@ -1,0 +1,17 @@
+{
+  "customer_id": "cust-12345678",
+  "event_id": "<VOLATILE>",
+  "scan_result": {
+    "detection_count": 0,
+    "highest_severity": null,
+    "l1_detections": [],
+    "l2_predictions": [],
+    "policy_decision": {
+      "action": "ALLOW"
+    },
+    "text_hash": "<HASH_64>",
+    "text_length": 22,
+    "threat_detected": false
+  },
+  "timestamp": "<VOLATILE>"
+}

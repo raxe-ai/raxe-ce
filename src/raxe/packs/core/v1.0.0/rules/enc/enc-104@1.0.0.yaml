@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-104
+family: ENC
+sub_family: brotli_encoding
+name: Detects brotli encoding obfuscation
+description: Detects brotli encoding obfuscation
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)brotli (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0104
+rule_hash: sha256:4b03d21f74d5b8bdb83ec692be9a0c858fea1d520475de7e8b1ff41607d1dcf3
+risk_explanation: brotli encoding can obfuscate malicious content.
+remediation_advice: Detect brotli patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-104-Brotli-Encoding

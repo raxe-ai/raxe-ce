@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/responses/health.schema.json",
+  "title": "Health Check Response",
+  "description": "Response for health check endpoint",
+  "type": "object",
+  "required": [
+    "status",
+    "server_time",
+    "api_version",
+    "key"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["healthy", "degraded", "unhealthy"],
+      "description": "Server health status"
+    },
+    "server_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server timestamp for clock drift detection"
+    },
+    "api_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "API version"
+    },
+    "region": {
+      "type": "string",
+      "description": "Server region (e.g., europe-west4)"
+    },
+    "key": {
+      "type": "object",
+      "required": [
+        "key_id",
+        "type",
+        "tier"
+      ],
+      "properties": {
+        "key_id": {
+          "type": "string",
+          "pattern": "^key_[a-zA-Z0-9]+$",
+          "description": "API key identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["live", "test", "temp"],
+          "description": "Key type"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When key was created"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When key expires (null for permanent)"
+        },
+        "first_seen_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When key was first used"
+        },
+        "customer_id": {
+          "type": "string",
+          "description": "Customer identifier"
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["temporary", "community", "pro", "enterprise"],
+          "description": "Subscription tier"
+        },
+        "rate_limit": {
+          "type": "object",
+          "properties": {
+            "requests_per_minute": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "events_per_day": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "features": {
+          "type": "object",
+          "properties": {
+            "can_disable_telemetry": {
+              "type": "boolean",
+              "description": "Whether telemetry can be disabled"
+            },
+            "offline_mode": {
+              "type": "boolean",
+              "description": "Whether offline mode is allowed"
+            },
+            "extended_retention": {
+              "type": "boolean",
+              "description": "Whether extended data retention is enabled"
+            },
+            "priority_support": {
+              "type": "boolean",
+              "description": "Whether priority support is available"
+            }
+          }
+        },
+        "usage_today": {
+          "type": "object",
+          "properties": {
+            "events_sent": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "events_remaining": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "trial_status": {
+          "type": "object",
+          "properties": {
+            "is_trial": {
+              "type": "boolean"
+            },
+            "days_remaining": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scans_during_trial": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "threats_detected_during_trial": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

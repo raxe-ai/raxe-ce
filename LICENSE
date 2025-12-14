@@ -1,0 +1,56 @@
+# RAXE Community Edition License
+
+Copyright (c) 2025 RAXE Technologies, Inc.
+
+## Grant of License
+
+RAXE Technologies, Inc. ("RAXE") grants you a non-exclusive, non-transferable, revocable license to use RAXE Community Edition ("Software") subject to the terms and conditions below.
+
+## Permitted Use
+
+You may:
+- ✅ Use the Software for personal, educational, or commercial purposes
+- ✅ Integrate the Software into your applications
+- ✅ Use the Software in production environments
+- ✅ Redistribute the Software as part of your application (with attribution)
+
+## Restrictions
+
+You may NOT:
+- ❌ Modify, reverse engineer, or decompile the Software
+- ❌ Remove or alter copyright notices or attribution
+- ❌ Sublicense, sell, or rent the Software
+- ❌ Use the Software to build competing threat detection products
+- ❌ Extract detection rules or ML models for use in other products
+
+## Detection Rules
+
+Detection rules included in Community Edition are shared with the community under the following terms:
+- ✅ You may use rules for threat detection in your applications
+- ✅ You may propose new rules via the contribution process
+- ❌ You may not extract rules for use in competing products
+- ❌ You may not redistribute rules outside of RAXE Software
+
+## Telemetry
+
+The Software may collect anonymized telemetry data (detection metadata only, zero PII) to improve detection accuracy. Telemetry can be disabled at any time. See [PRIVACY.md](PRIVACY.md) for details.
+
+## Warranty Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+## Limitation of Liability
+
+IN NO EVENT SHALL RAXE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+## Enterprise Edition
+
+Advanced features, GPU classifiers, cloud dashboards, and dedicated support are available exclusively in RAXE Enterprise Edition. Contact enterprise@raxe.ai for licensing information.
+
+## Termination
+
+This license is effective until terminated. RAXE may terminate this license at any time if you breach these terms. Upon termination, you must cease using and destroy all copies of the Software.
+
+---
+
+**Questions?** Contact legal@raxe.ai

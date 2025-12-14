@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3026
+family: PII
+sub_family: medical
+name: Health Insurance Policy Number Detection
+description: Detects health insurance policy and member ID numbers
+severity: high
+confidence: 0.88
+patterns:
+- pattern: (?i)(?:insurance|policy|member|subscriber).{0,20}(?:ID|no|number|num|#).{0,10}\b([A-Z]{2,3}[0-9]{8,12})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:insurance|policy|member).{0,20}(?:ID|no|number).{0,10}\b([0-9]{9,12})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Insurance ID: ABC123456789"
+  - "Member number: 987654321012"
+  - "Policy #: XYZ12345678"
+  should_not_match:
+  - "What is an insurance ID?"
+  - "How to find policy number?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: hipaa
+  compliance: HIPAA
+rule_hash: null
+risk_explanation: Medical and health information exposure violates HIPAA regulations and patient privacy rights. Leaked health data can be used for discrimination, identity theft, or blackmail, and creates severe legal liabilities for healthcare organizations.
+remediation_advice: Comply with HIPAA and healthcare privacy regulations. Implement strong access controls and encryption for medical records. Use de-identification and anonymization techniques. Audit all access to protected health information (PHI).
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3026-Health-Insurance-Policy-Number

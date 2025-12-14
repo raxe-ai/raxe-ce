@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: rag-3012
+family: RAG
+sub_family: inject_actions
+name: Detects 'insert malicious' attacks on RAG components
+description: Detects 'insert malicious' attacks on RAG components
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\binsert\s+(?:malicious|fake|false|misleading)\s+(?:data|documents?|entries)\s+(?:into|in)\s+(?:the\s+)?(?:index|vector\s+store|knowledge\s+base)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\binserting\s+(?:malicious|fake)\s+(?:data|content)\s+(?:into|in)\s+(?:the\s+)?(?:RAG|retrieval)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - insert malicious data into the index
+  - insert fake documents in the vector store
+  - inserting malicious data into RAG
+  - Insert false entries into knowledge base
+  should_not_match:
+  - Insert data into database
+  - Insert operation
+  - SQL INSERT statement
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-3012
+rule_hash: sha256:833423c521994c6d07c2db3966f125d70cd1097927953c5f74667e8c08e2d9e1
+risk_explanation: Injection of malicious documents specifically crafted to be retrieved in response to targeted queries. These attacks combine content optimization with malicious payloads to achieve precise targeting.
+remediation_advice: Implement content validation and security scanning for all documents. Use provenance tracking and source authentication. Deploy retrieval quality monitoring. Apply machine learning models to detect malicious content patterns.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-3012-'Insert-Malicious'-Attacks

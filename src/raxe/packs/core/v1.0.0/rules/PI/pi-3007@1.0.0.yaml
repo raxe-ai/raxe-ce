@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: pi-3007
+family: PI
+sub_family: natural_variations
+name: Detects 'follow mine instead' pattern
+description: Detects 'follow mine instead' pattern
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)(?:and\s+)?follow\s+(?:my|mine|these|this)\s+(?:instructions?|rules?|commands?|one)\s+instead
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:now\s+)?follow\s+(?:only\s+)?(?:my|these|this)\s+(?:new\s+)?(?:directions?|instructions?|command|rule)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)follow\s+(?:my|mine|these)\s+(?:instead|now)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - and follow my instructions instead
+  - follow mine instead
+  - now follow these new directions
+  should_not_match:
+  - Follow the instructions
+  - Follow these steps
+  - Follow best practices
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PI-3007
+rule_hash: sha256:09b02f2a2b8535e2503c4df9ab19a861e6e035a59c3a02430d4e20a1ffa4eec4
+risk_explanation: Natural language variations of attacks use different phrasing and vocabulary to express malicious intent while appearing benign. These attacks exploit the gap between formal attack patterns and natural language understanding to bypass detection.
+remediation_advice: Deploy semantic analysis that detects malicious intent across varied phrasings. Use AI-based detection models trained on attack variations. Implement behavioral monitoring that identifies harmful outcomes regardless of input phrasing.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PI-3007-'Follow-Mine-Instead'

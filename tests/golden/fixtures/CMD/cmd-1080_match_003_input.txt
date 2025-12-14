@@ -1,0 +1,1 @@
+exec; type C:\Windows\System32\config\SAM

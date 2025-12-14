@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-71
+family: ENC
+sub_family: ascii_art_encoding
+name: Detects ASCII art visual obfuscation
+description: Detects ASCII art visual obfuscation
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)ascii art (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0071
+rule_hash: sha256:53d3a602101ad47b16893d1844d87edf6cd8860d48675a5198caf9245966302f
+risk_explanation: Ascii Art Visual encoding can obfuscate malicious content.
+remediation_advice: Detect ASCII art visual patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-71-Ascii-Art-Encoding

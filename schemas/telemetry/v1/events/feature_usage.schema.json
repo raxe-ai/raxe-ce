@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/feature_usage.schema.json",
+  "title": "Feature Usage Event",
+  "description": "Tracks usage of specific features for product analytics",
+  "type": "object",
+  "required": [
+    "feature",
+    "action"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "enum": [
+        "cli_scan",
+        "cli_rules_list",
+        "cli_rules_show",
+        "cli_config",
+        "cli_stats",
+        "cli_repl",
+        "cli_explain",
+        "cli_validate_rule",
+        "cli_doctor",
+        "cli_telemetry_dlq",
+        "sdk_scan",
+        "sdk_batch_scan",
+        "sdk_layer_control",
+        "wrapper_openai",
+        "wrapper_anthropic",
+        "integration_langchain",
+        "custom_rule_loaded",
+        "policy_applied"
+      ],
+      "description": "Feature being used"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["invoked", "completed", "failed", "cancelled"],
+      "description": "Action taken with feature"
+    },
+    "duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Time spent using feature"
+    },
+    "success": {
+      "type": "boolean",
+      "description": "Whether feature usage was successful"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Feature-specific non-sensitive metadata",
+      "properties": {
+        "command_args_hash": {
+          "type": "string",
+          "description": "Hash of non-sensitive CLI args"
+        },
+        "output_format": {
+          "type": "string",
+          "enum": ["text", "json", "table"]
+        },
+        "items_processed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

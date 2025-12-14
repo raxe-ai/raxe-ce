@@ -1,0 +1,48 @@
+version: 1.0.0
+rule_id: cmd-001
+family: CMD
+sub_family: sql_injection
+name: Detects SQL DROP, DELETE, and TRUNCATE injection attempts
+description: Detects SQL DROP, DELETE, and TRUNCATE injection attempts
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)';?\s*DROP\s+(TABLE|DATABASE)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)';?\s*DELETE\s+FROM
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)';?\s*TRUNCATE\s+TABLE
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - '''; DROP TABLE users;--'
+  - admin'; DELETE FROM passwords;--
+  - ''' OR ''1''=''1''; TRUNCATE TABLE logs;--'
+  - 1'; DROP DATABASE production;--
+  should_not_match:
+  - How do I use DROP TABLE in SQL?
+  - What's the syntax for DELETE FROM?
+  - Can you explain TRUNCATE TABLE command?
+  - 'SQL tutorial: DROP TABLE statement'
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0001
+rule_hash: sha256:300cb8e21d486a15b44adfc5033401b687ebd65a60c2beaf0f29d7a7380f4052
+risk_explanation: SQL injection attacks can lead to catastrophic data loss, unauthorized access, or complete database compromise. DROP, DELETE, and TRUNCATE commands are especially dangerous as they permanently destroy data and can cripple systems.
+remediation_advice: Use parameterized queries and prepared statements exclusively. Never concatenate user input into SQL commands. Implement strict input validation and sanitization. Use database user accounts with minimal required privileges.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-001-SQL-Injection

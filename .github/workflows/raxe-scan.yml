@@ -1,0 +1,356 @@
+# RAXE Security Scan - Reusable GitHub Action
+#
+# This workflow scans LLM prompts and AI-generated content for security threats.
+# It can be used standalone or as part of your CI/CD pipeline.
+#
+# Usage:
+#   1. Copy this file to your repository: .github/workflows/raxe-scan.yml
+#   2. Set RAXE_API_KEY secret in repository settings (optional for enhanced features)
+#   3. Customize the scan paths and options below
+#
+# Exit Codes:
+#   0 - Success: scan completed, no threats detected
+#   1 - Threat detected: one or more threats found (fails build if fail-on-threat: true)
+#   2 - Invalid input: bad arguments or no files to scan
+#   3 - Configuration error: RAXE not properly configured
+#   4 - Scan error: execution failed
+
+name: RAXE Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "prompts/**"
+      - "*.prompt"
+      - "**/*.prompt.txt"
+      - "**/*.prompt.md"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "prompts/**"
+      - "*.prompt"
+      - "**/*.prompt.txt"
+      - "**/*.prompt.md"
+  workflow_dispatch:
+    inputs:
+      scan_path:
+        description: "Path to scan (directory or file)"
+        required: false
+        default: "./prompts/"
+      fail_on_threat:
+        description: "Fail build if threats are detected"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      min_severity:
+        description: "Minimum severity to report"
+        required: false
+        default: "low"
+        type: choice
+        options:
+          - "info"
+          - "low"
+          - "medium"
+          - "high"
+          - "critical"
+
+env:
+  RAXE_VERSION: ">=0.2.0"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  scan:
+    name: RAXE Security Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write  # For SARIF upload (if enabled)
+      pull-requests: write    # For PR comments (if enabled)
+
+    outputs:
+      threats_found: ${{ steps.scan.outputs.threats_found }}
+      threat_count: ${{ steps.scan.outputs.threat_count }}
+      highest_severity: ${{ steps.scan.outputs.highest_severity }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for accurate diff scanning
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install RAXE
+        run: |
+          python -m pip install --upgrade pip
+          pip install "raxe${{ env.RAXE_VERSION }}"
+
+          # Verify installation
+          raxe --version
+
+      - name: Initialize RAXE
+        run: |
+          # Initialize with API key if provided (enables cloud features)
+          if [ -n "${{ secrets.RAXE_API_KEY }}" ]; then
+            raxe init --api-key "${{ secrets.RAXE_API_KEY }}" --force
+          else
+            raxe init --force
+          fi
+        env:
+          RAXE_API_KEY: ${{ secrets.RAXE_API_KEY }}
+
+      - name: Determine scan path
+        id: config
+        run: |
+          # Use workflow_dispatch input if provided, otherwise use default
+          SCAN_PATH="${{ github.event.inputs.scan_path || './prompts/' }}"
+          FAIL_ON_THREAT="${{ github.event.inputs.fail_on_threat || 'true' }}"
+          MIN_SEVERITY="${{ github.event.inputs.min_severity || 'low' }}"
+
+          echo "scan_path=$SCAN_PATH" >> $GITHUB_OUTPUT
+          echo "fail_on_threat=$FAIL_ON_THREAT" >> $GITHUB_OUTPUT
+          echo "min_severity=$MIN_SEVERITY" >> $GITHUB_OUTPUT
+
+          # Check if scan path exists
+          if [ ! -e "$SCAN_PATH" ]; then
+            echo "::warning::Scan path '$SCAN_PATH' does not exist. Checking for alternative paths..."
+
+            # Try common locations
+            for alt_path in "prompts" "src/prompts" "data/prompts" "."; do
+              if [ -d "$alt_path" ]; then
+                echo "Found alternative path: $alt_path"
+                echo "scan_path=$alt_path" >> $GITHUB_OUTPUT
+                break
+              fi
+            done
+          fi
+
+      - name: Run RAXE scan
+        id: scan
+        run: |
+          set +e  # Don't exit on error - we handle exit codes
+
+          SCAN_PATH="${{ steps.config.outputs.scan_path }}"
+          SCAN_OUTPUT="raxe-scan-results.json"
+
+          echo "Scanning: $SCAN_PATH"
+          echo "---"
+
+          # Check if path is a file or directory
+          if [ -f "$SCAN_PATH" ]; then
+            # Single file scan
+            raxe scan --stdin --format json --quiet < "$SCAN_PATH" > "$SCAN_OUTPUT"
+            SCAN_EXIT_CODE=$?
+          elif [ -d "$SCAN_PATH" ]; then
+            # Directory scan - batch mode
+            # Find all prompt files and scan them
+            find "$SCAN_PATH" -type f \( -name "*.txt" -o -name "*.md" -o -name "*.prompt" -o -name "*.yaml" -o -name "*.yml" \) > /tmp/files_to_scan.txt
+
+            if [ ! -s /tmp/files_to_scan.txt ]; then
+              echo "No scannable files found in $SCAN_PATH"
+              echo '{"has_detections": false, "detections": [], "files_scanned": 0}' > "$SCAN_OUTPUT"
+              SCAN_EXIT_CODE=0
+            else
+              # Create batch scan results
+              echo '{"results": [' > "$SCAN_OUTPUT"
+              FIRST_FILE=true
+              THREAT_FOUND=false
+              FILES_SCANNED=0
+
+              while IFS= read -r file; do
+                if [ -f "$file" ]; then
+                  FILES_SCANNED=$((FILES_SCANNED + 1))
+
+                  if [ "$FIRST_FILE" = false ]; then
+                    echo "," >> "$SCAN_OUTPUT"
+                  fi
+                  FIRST_FILE=false
+
+                  echo "Scanning: $file"
+                  RESULT=$(raxe scan --stdin --format json --quiet < "$file" 2>/dev/null || echo '{"error": true}')
+
+                  # Check if threats were found
+                  if echo "$RESULT" | jq -e '.has_detections == true' > /dev/null 2>&1; then
+                    THREAT_FOUND=true
+                  fi
+
+                  echo "{\"file\": \"$file\", \"result\": $RESULT}" >> "$SCAN_OUTPUT"
+                fi
+              done < /tmp/files_to_scan.txt
+
+              echo "]," >> "$SCAN_OUTPUT"
+              echo "\"files_scanned\": $FILES_SCANNED," >> "$SCAN_OUTPUT"
+              echo "\"has_detections\": $THREAT_FOUND" >> "$SCAN_OUTPUT"
+              echo "}" >> "$SCAN_OUTPUT"
+
+              if [ "$THREAT_FOUND" = true ]; then
+                SCAN_EXIT_CODE=1
+              else
+                SCAN_EXIT_CODE=0
+              fi
+            fi
+          else
+            echo "::error::Scan path '$SCAN_PATH' not found"
+            SCAN_EXIT_CODE=2
+          fi
+
+          # Parse results for outputs
+          if [ -f "$SCAN_OUTPUT" ]; then
+            THREATS_FOUND=$(jq -r '.has_detections // false' "$SCAN_OUTPUT")
+            THREAT_COUNT=$(jq -r '[.results[]?.result?.detections // [] | length] | add // 0' "$SCAN_OUTPUT")
+            HIGHEST_SEVERITY=$(jq -r '[.results[]?.result?.detections[]?.severity // "none"] | unique | sort | last // "none"' "$SCAN_OUTPUT")
+
+            echo "threats_found=$THREATS_FOUND" >> $GITHUB_OUTPUT
+            echo "threat_count=$THREAT_COUNT" >> $GITHUB_OUTPUT
+            echo "highest_severity=$HIGHEST_SEVERITY" >> $GITHUB_OUTPUT
+
+            # Display summary
+            echo ""
+            echo "================================"
+            echo "RAXE Scan Summary"
+            echo "================================"
+            echo "Threats Found: $THREATS_FOUND"
+            echo "Threat Count: $THREAT_COUNT"
+            echo "Highest Severity: $HIGHEST_SEVERITY"
+            echo "================================"
+
+            # Pretty print results
+            if [ "$THREATS_FOUND" = "true" ]; then
+              echo ""
+              echo "Detected Threats:"
+              jq -r '.results[] | select(.result.has_detections == true) | "File: \(.file)\n  Detections: \(.result.detections | map(.rule_id + " (" + .severity + ")") | join(", "))\n"' "$SCAN_OUTPUT" 2>/dev/null || true
+            fi
+          fi
+
+          # Store exit code for later use
+          echo "scan_exit_code=$SCAN_EXIT_CODE" >> $GITHUB_OUTPUT
+
+          # Exit with appropriate code based on configuration
+          if [ "${{ steps.config.outputs.fail_on_threat }}" = "true" ] && [ "$SCAN_EXIT_CODE" -eq 1 ]; then
+            echo "::error::Security threats detected! Build will fail."
+            exit 1
+          fi
+
+          exit $SCAN_EXIT_CODE
+        env:
+          RAXE_QUIET: "true"
+          RAXE_NO_COLOR: "true"
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raxe-scan-results
+          path: raxe-scan-results.json
+          retention-days: 30
+
+      - name: Add PR comment with results
+        if: github.event_name == 'pull_request' && steps.scan.outputs.threats_found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('raxe-scan-results.json', 'utf8'));
+
+            let comment = '## RAXE Security Scan Results\n\n';
+            comment += '| Status | Threats Found | Highest Severity |\n';
+            comment += '|--------|---------------|------------------|\n';
+
+            const status = results.has_detections ? ':x: Failed' : ':white_check_mark: Passed';
+            const threatCount = '${{ steps.scan.outputs.threat_count }}';
+            const severity = '${{ steps.scan.outputs.highest_severity }}';
+
+            comment += `| ${status} | ${threatCount} | ${severity} |\n\n`;
+
+            if (results.has_detections && results.results) {
+              comment += '### Detected Threats\n\n';
+              for (const item of results.results) {
+                if (item.result && item.result.has_detections) {
+                  comment += `**File:** \`${item.file}\`\n`;
+                  for (const detection of item.result.detections || []) {
+                    comment += `- ${detection.rule_id} (${detection.severity}): ${detection.message || 'No description'}\n`;
+                  }
+                  comment += '\n';
+                }
+              }
+            }
+
+            comment += '\n---\n*Scanned by [RAXE](https://raxe.ai) - AI Security for LLMs*';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Optional: Generate SARIF report for GitHub Security tab
+  sarif-report:
+    name: Generate SARIF Report
+    runs-on: ubuntu-latest
+    needs: scan
+    if: always() && needs.scan.outputs.threats_found == 'true'
+
+    permissions:
+      security-events: write
+
+    steps:
+      - name: Download scan results
+        uses: actions/download-artifact@v4
+        with:
+          name: raxe-scan-results
+
+      - name: Convert to SARIF
+        run: |
+          # Create SARIF report from RAXE results
+          cat > raxe-results.sarif << 'SARIF_EOF'
+          {
+            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+            "version": "2.1.0",
+            "runs": [
+              {
+                "tool": {
+                  "driver": {
+                    "name": "RAXE",
+                    "informationUri": "https://raxe.ai",
+                    "version": "0.0.1",
+                    "rules": []
+                  }
+                },
+                "results": []
+              }
+            ]
+          }
+          SARIF_EOF
+
+          # Parse RAXE results and add to SARIF (simplified)
+          if [ -f raxe-scan-results.json ]; then
+            jq '
+              .runs[0].results = [
+                (input | .results[]? | select(.result.has_detections == true) |
+                  .result.detections[]? |
+                  {
+                    "ruleId": .rule_id,
+                    "level": (if .severity == "critical" or .severity == "high" then "error" elif .severity == "medium" then "warning" else "note" end),
+                    "message": {"text": (.message // "Security threat detected")},
+                    "locations": []
+                  }
+                ) // []
+              ]
+            ' raxe-results.sarif raxe-scan-results.json > raxe-results-final.sarif || cp raxe-results.sarif raxe-results-final.sarif
+          fi
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: raxe-results-final.sarif
+          category: raxe-security-scan

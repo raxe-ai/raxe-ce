@@ -1,0 +1,39 @@
+version: 1.0.0
+rule_id: pii-3041
+family: PII
+sub_family: network
+name: MAC Address Detection
+description: Detects MAC (Media Access Control) addresses in various formats
+severity: low
+confidence: 0.89
+patterns:
+- pattern: \b([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b
+  flags: []
+  timeout: 5.0
+- pattern: \b([0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4}\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "Device MAC: 00:1A:2B:3C:4D:5E"
+  - "MAC address: 00-1A-2B-3C-4D-5E"
+  - "Network adapter: 001a.2b3c.4d5e"
+  should_not_match:
+  - "What is a MAC address?"
+  - "MAC address format examples"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1590.005
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: network_info
+rule_hash: null
+risk_explanation: Network information exposure (IP addresses, MAC addresses, SSH keys) can enable reconnaissance, targeted attacks, or lateral movement within networks. This information helps attackers map infrastructure and identify potential entry points.
+remediation_advice: Implement network segmentation and access controls. Use private IP addressing and NAT where appropriate. Monitor for network information leakage. Apply principles of least privilege for network access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3041-Mac-Address-Detection

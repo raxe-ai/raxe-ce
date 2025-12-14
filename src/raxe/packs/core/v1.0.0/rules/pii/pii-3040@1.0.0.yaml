@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: pii-3040
+family: PII
+sub_family: network
+name: IPv4 Address in Sensitive Context Detection
+description: Detects IPv4 addresses mentioned in security-sensitive contexts (internal, private, server)
+severity: medium
+confidence: 0.85
+patterns:
+- pattern: (?i)(?:server|host|internal|private|vpn).{0,20}(?:IP|address).{0,10}\b((?:10|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\.[0-9]{1,3}\.[0-9]{1,3})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:database|admin|management).{0,20}(?:IP|address).{0,10}\b([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Internal server IP: 10.0.1.50"
+  - "Database host address: 172.16.254.1"
+  - "Admin panel at 192.168.1.100"
+  should_not_match:
+  - "What is an IP address?"
+  - "Example: 192.168.1.1"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1590.005
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: network_info
+rule_hash: null
+risk_explanation: Network information exposure (IP addresses, MAC addresses, SSH keys) can enable reconnaissance, targeted attacks, or lateral movement within networks. This information helps attackers map infrastructure and identify potential entry points.
+remediation_advice: Implement network segmentation and access controls. Use private IP addressing and NAT where appropriate. Monitor for network information leakage. Apply principles of least privilege for network access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3040-Ipv4-Address-In-Sensitive

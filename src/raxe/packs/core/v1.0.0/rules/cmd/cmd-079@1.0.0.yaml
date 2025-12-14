@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: cmd-079
+family: CMD
+sub_family: shell_commands
+name: Detects fork bomb and resource exhaustion patterns
+description: Detects fork bomb and resource exhaustion patterns
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: ':\(\)\{\s*:\|:&\s*\};:'
+  flags: []
+  timeout: 5.0
+- pattern: (?i)while\s*:\s*;\s*do\s+fork
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: \.\(\)\.\|\.\.&
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - ':(){ :|:& };:'
+  - 'while : ; do fork; done'
+  - .().|..&
+  should_not_match:
+  - Fork bomb explanation
+  - Bash infinite loop examples
+  - Resource limits in Linux
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0079
+rule_hash: sha256:6c09e2f52868e498610ff3d06759c44715a07b0d0cc946cd8a814313e5ede61a
+risk_explanation: Shell command injection exploits enable arbitrary system command execution through vulnerable inputs. Attackers can read sensitive files, modify system configurations, escalate privileges, install backdoors, or completely compromise the underlying system.
+remediation_advice: Never execute shell commands with user-controlled input. If command execution is necessary, use strict allowlisting of permitted commands and arguments. Implement input validation and sanitization. Use least-privilege execution contexts. Deploy command injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-079-Fork-Bomb

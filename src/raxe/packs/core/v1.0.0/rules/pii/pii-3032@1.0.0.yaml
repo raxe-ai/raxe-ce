@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3032
+family: PII
+sub_family: authentication
+name: Session Cookie/Token Detection
+description: Detects session IDs and session tokens in cookies or headers
+severity: medium
+confidence: 0.87
+patterns:
+- pattern: (?i)(?:session|sess).{0,10}(?:id|token|key).{0,10}[=:]\s*([A-Za-z0-9]{32,})
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)PHPSESSID=([A-Za-z0-9]{26,})
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "sessionId=abc123def456ghi789jkl012mno345pqr"
+  - "PHPSESSID=1234567890abcdefghijklmnopqrstuvwxyz"
+  - "session_token: ABCD1234EFGH5678IJKL9012MNOP3456"
+  should_not_match:
+  - "What is a session ID?"
+  - "How to manage sessions?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1539
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: authentication_tokens
+rule_hash: null
+risk_explanation: Authentication token exposure (JWTs, bearer tokens, session cookies) grants attackers immediate access to authenticated sessions and user accounts. Unlike passwords, tokens provide direct access without needing additional authentication steps.
+remediation_advice: Implement short token lifetimes and automatic rotation. Use secure token storage and transmission. Deploy token validation and revocation mechanisms. Never log or expose tokens in error messages or responses.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3032-Session-Cookie/Token-Detection

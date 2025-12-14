@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: hc-141
+family: HC
+sub_family: wireless_attacks
+name: Detects requests for wireless network attacks or WiFi hacking
+description: Detects requests for wireless network attacks or WiFi hacking
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)\b(hack|crack|break\s+into)\s+(wifi|wireless|wpa|wep|wpa2|router)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(deauth|deauthentication)\s+(attack|packets?)\s+(to|for)\s+(disconnect|kick\s+off)\s+users?
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Hack into WiFi network
+  - Deauth attack to disconnect users
+  should_not_match:
+  - WiFi security best practices
+  - How to secure wireless network
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1557
+- T1040
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-HC-0141
+rule_hash: sha256:4a2d42ea5f151097b9fee11d5beff874fabbf21d3099d3484144fce7beb071a4
+risk_explanation: Wireless network attacks exploit WiFi vulnerabilities to gain unauthorized access.
+remediation_advice: Refuse wireless hacking requests. Provide WiFi security guidance instead.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-141-Wireless-Attacks

@@ -1,0 +1,105 @@
+# RAXE Policy Template: Balanced Mode (Recommended)
+#
+# Use Case: Standard production deployment
+#
+# Behavior:
+# - CRITICAL (high confidence) → Blocked
+# - HIGH (>80% confidence) → Flagged for review
+# - MEDIUM/LOW/INFO → Logged only (passive monitoring)
+#
+# Recommended For:
+# - General SaaS applications
+# - Most production use cases
+# - Balance between security and false positives
+#
+# Tuning:
+# - Adjust min_confidence based on false positive rate
+# - Add ALLOW policies for known false positives
+# - Increase priority for specific threat families
+
+version: "1.0.0"
+customer_id: "local"
+
+policies:
+  # Block critical threats with high confidence
+  - policy_id: "block-critical"
+    name: "Block CRITICAL threats"
+    description: "Zero tolerance for critical-severity threats (high confidence)"
+    conditions:
+      - severity: "CRITICAL"
+        min_confidence: 0.9
+    action: "BLOCK"
+    priority: 100
+    enabled: true
+    metadata:
+      mode: "balanced"
+      enforcement: "strict"
+
+  # Flag high-severity threats for manual review
+  - policy_id: "flag-high"
+    name: "Flag HIGH severity for review"
+    description: "Queue high-severity threats for security team review"
+    conditions:
+      - severity: "HIGH"
+        min_confidence: 0.8
+    action: "FLAG"
+    priority: 75
+    enabled: true
+    metadata:
+      mode: "balanced"
+      review_queue: "security-team"
+      alert_channel: "#security-alerts"
+
+  # Allow medium severity (passive monitoring)
+  - policy_id: "allow-medium"
+    name: "Monitor MEDIUM threats"
+    description: "Log medium-severity threats without enforcement"
+    conditions:
+      - severity: "MEDIUM"
+    action: "ALLOW"
+    priority: 10
+    enabled: true
+    metadata:
+      mode: "balanced"
+      monitoring: "passive"
+
+  # Allow low severity (passive monitoring)
+  - policy_id: "allow-low"
+    name: "Monitor LOW threats"
+    description: "Log low-severity threats without enforcement"
+    conditions:
+      - severity: "LOW"
+    action: "ALLOW"
+    priority: 10
+    enabled: true
+    metadata:
+      mode: "balanced"
+      monitoring: "passive"
+
+  # Allow info level (passive monitoring)
+  - policy_id: "allow-info"
+    name: "Monitor INFO detections"
+    description: "Log informational detections without enforcement"
+    conditions:
+      - severity: "INFO"
+    action: "ALLOW"
+    priority: 10
+    enabled: true
+    metadata:
+      mode: "balanced"
+      monitoring: "passive"
+
+  # Example: Suppress known false positives (customize for your app)
+  # Uncomment and adjust rule_ids based on your false positive analysis
+  #
+  # - policy_id: "suppress-pii-code"
+  #   name: "Suppress PII false positives in code examples"
+  #   description: "Code snippets trigger PII detection but are safe"
+  #   conditions:
+  #     - rule_ids: ["pii-3001", "pii-3002"]  # Credit card patterns
+  #       max_confidence: 0.7
+  #   action: "ALLOW"
+  #   priority: 80
+  #   enabled: true
+  #   metadata:
+  #     false_positive: "code-examples"

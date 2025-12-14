@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-76
+family: ENC
+sub_family: atbash_encoding
+name: Detects Atbash cipher obfuscation
+description: Detects Atbash cipher obfuscation
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)atbash (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0076
+rule_hash: sha256:06fa10fa5068759fd06a84233c426e1b826fa71417f3f91bf1130a9f097e8561
+risk_explanation: Atbash Cipher encoding can obfuscate malicious content.
+remediation_advice: Detect Atbash cipher patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-76-Atbash-Encoding

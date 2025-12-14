@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/activation.schema.json",
+  "title": "Activation Event",
+  "description": "Tracks first use of specific features (time-to-value metrics)",
+  "type": "object",
+  "required": [
+    "feature",
+    "seconds_since_install"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "enum": [
+        "first_scan",
+        "first_threat",
+        "first_block",
+        "first_cli",
+        "first_sdk",
+        "first_decorator",
+        "first_wrapper",
+        "first_langchain",
+        "first_l2_detection",
+        "first_custom_rule"
+      ],
+      "description": "Feature being activated for the first time (canonical values aligned with backend)"
+    },
+    "seconds_since_install": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Time elapsed since installation event (time-to-value metric)"
+    },
+    "activation_context": {
+      "type": "object",
+      "description": "Additional context about the activation",
+      "properties": {
+        "entry_point": {
+          "type": "string",
+          "enum": ["cli", "sdk", "wrapper", "integration", "decorator"],
+          "description": "How the feature was accessed"
+        },
+        "wrapper_type": {
+          "type": "string",
+          "enum": ["openai", "anthropic", "langchain", "none"],
+          "description": "Wrapper used if applicable"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "What triggered the activation"
+        }
+      }
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

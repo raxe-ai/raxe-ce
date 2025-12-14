@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3056
+family: PII
+sub_family: financial
+name: CVV/CVC Security Code Detection
+description: Detects credit card CVV/CVC security codes in context
+severity: high
+confidence: 0.88
+patterns:
+- pattern: (?i)(?:cvv|cvc|cid|cvv2|csc).{0,10}(?:code|number|no)?.{0,10}\b([0-9]{3,4})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "CVV: 123"
+  - "CVC code: 4567"
+  - "Card CVV2 number is 789"
+  should_not_match:
+  - "What is CVV?"
+  - "Where to find CVC code?"
+  - "CVV is on the back of the card"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: financial
+rule_hash: null
+risk_explanation: Financial credential exposure (account numbers, routing numbers, cryptocurrency addresses) enables direct financial fraud and theft. Attackers can initiate unauthorized transactions, drain accounts, or conduct money laundering operations.
+remediation_advice: Apply PCI DSS and financial data security standards. Use encryption and tokenization for financial data. Implement transaction monitoring and fraud detection. Restrict AI access to financial systems and data stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3056-Cvv/Cvc-Security-Code-Detection

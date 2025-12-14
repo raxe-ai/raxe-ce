@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: pii-037
+family: PII
+sub_family: pii_exposure
+name: Detects SSN and tax ID extraction attempts
+description: Detects SSN and tax ID extraction attempts
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)\b(?:show|display|reveal|get|list)\s+(?:all\s+)?(?:ssn|social\s+security)(?:\s+numbers?)?
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:tax\s+(?:id|identification)|tin|ein)\s+(?:numbers?|data)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:extract|dump|export)\s+(?:ssn|social\s+security)\s+(?:data|information)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Show all SSN numbers
+  - Display Social Security Numbers
+  - Get tax identification numbers
+  - Extract SSN data from database
+  should_not_match:
+  - SSN format validation
+  - Tax ID requirements
+  - Social security number privacy
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-0037
+rule_hash: sha256:81167ba083de02a933f8a89906b6dbf41eb4d47b48d020cc035a09ab8e7dfa19
+risk_explanation: PII exposure attacks target personally identifiable information (SSNs, credit cards, health records) to facilitate identity theft, fraud, or privacy violations. Leaked PII can cause severe harm to individuals and create legal and regulatory liabilities.
+remediation_advice: Implement data classification and access controls that restrict AI access to PII. Use data masking and anonymization for training data. Deploy data loss prevention (DLP) controls that detect and block PII leakage. Audit all data access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-037-Ssn-Tax

@@ -1,0 +1,37 @@
+version: 1.0.0
+rule_id: pii-3046
+family: PII
+sub_family: api_keys
+name: Bitbucket App Password Detection
+description: Detects Bitbucket app passwords and access tokens
+severity: high
+confidence: 0.92
+patterns:
+- pattern: (?i)bitbucket.{0,20}(?:password|token|app).{0,10}['\"]([A-Za-z0-9]{16,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "BITBUCKET_APP_PASSWORD='ABCDEFGHIJKLMNOP'"
+  - "bitbucket_token: '1234567890ABCDEFGHIJ'"
+  should_not_match:
+  - "How to create Bitbucket app password?"
+  - "Bitbucket authentication guide"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: vcs_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3046-Bitbucket-App-Password-Detection

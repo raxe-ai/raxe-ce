@@ -1,0 +1,5 @@
+{
+  "pooling_mode": "mean",
+  "embedding_dim": 256,
+  "normalize": true
+}

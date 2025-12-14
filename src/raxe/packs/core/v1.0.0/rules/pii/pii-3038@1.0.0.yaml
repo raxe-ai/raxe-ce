@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3038
+family: PII
+sub_family: database_credentials
+name: PostgreSQL Connection String Detection
+description: Detects PostgreSQL connection strings with embedded credentials
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: postgres(?:ql)?://[^:]+:([^@\s]+)@[^/\s]+
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "postgresql://user:mypassword@localhost:5432/mydb"
+  - "postgres://admin:secret123@db.example.com/production"
+  should_not_match:
+  - "How to connect to PostgreSQL?"
+  - "PostgreSQL connection examples"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: database_credentials
+rule_hash: null
+risk_explanation: Database connection string exposure reveals database locations, credentials, and configuration details. Attackers can use this information to directly access databases, extract sensitive data, modify records, or completely compromise data stores.
+remediation_advice: Use secure secret management for database credentials. Implement connection string encryption and access controls. Never hardcode connection strings in code or configuration files. Use service principals and managed identities where possible.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3038-Postgresql-Connection-String-Detection

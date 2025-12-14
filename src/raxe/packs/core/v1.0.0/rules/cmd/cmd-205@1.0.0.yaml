@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: cmd-205
+family: CMD
+sub_family: template_injection
+name: Server-Side Template Injection (SSTI) Detection
+description: Detects SSTI attempts in various template engines
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: \{\{.*(?:config|self|request|lipsum|cycler|joiner|namespace).*\}\}
+  flags: []
+  timeout: 5.0
+- pattern: \$\{.*(?:7\*7|Runtime|Class\.forName|eval|exec).*\}
+  flags: []
+  timeout: 5.0
+- pattern: <%=.*(?:system|exec|eval|File|Runtime).*%>
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "{{config.items()}}"
+  - "${7*7}"
+  - "{{request.application.__globals__}}"
+  - "<%=system('whoami')%>"
+  should_not_match:
+  - "What is SSTI?"
+  - "Template injection examples"
+  - "{{user.name}} in templates"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: Server-Side Template Injection (SSTI) exploits template engines to execute arbitrary code. Attackers inject malicious template syntax to gain code execution, access sensitive data, or compromise the application server.
+remediation_advice: Never use user input directly in templates without sanitization. Use template sandboxing when available. Implement strict input validation. Consider using logic-less template engines. Deploy template injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-205-Server-Side-Template-Injection-(Ssti)

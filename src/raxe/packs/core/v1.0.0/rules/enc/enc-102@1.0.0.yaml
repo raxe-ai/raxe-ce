@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-102
+family: ENC
+sub_family: gzip_encoding
+name: Detects gzip encoding obfuscation
+description: Detects gzip encoding obfuscation
+severity: critical
+confidence: 0.92
+patterns:
+- pattern: (?i)gzip (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0102
+rule_hash: sha256:0bf2533669e4f48ef57f0ae1de2fefa3db4a8a0bdad1a817c222df70b9c49d3f
+risk_explanation: gzip encoding can obfuscate malicious content.
+remediation_advice: Detect gzip patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-102-Gzip-Encoding

@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: rag-3006
+family: RAG
+sub_family: corrupt_actions
+name: Detects 'tamper' attacks on RAG components
+description: Detects 'tamper' attacks on RAG components
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)\btamper\s+with\s+(the\s+)?(?:index|vector\s+store|embeddings?|knowledge\s+base)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\btampering\s+with\s+(the\s+)?(?:RAG|retrieval)\s+(?:system|data)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - tamper with the index
+  - tamper with the vector store
+  - tampering with the RAG system
+  - Tamper with knowledge base
+  should_not_match:
+  - Tamper-proof design
+  - Tamper detection
+  - Anti-tamper mechanisms
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-3006
+rule_hash: sha256:98051b9d4cae5a6b9441f21b4b7f354385c91228eb0c8ce441ba4665abf892c6
+risk_explanation: Tampering attacks alter existing documents or indices to change retrieval behavior. Unlike poisoning, these attacks modify authentic content to inject misinformation while maintaining apparent legitimacy.
+remediation_advice: Use cryptographic hashing and digital signatures for document integrity. Implement version control and change tracking. Deploy anomaly detection for document modifications. Maintain backup copies of authoritative sources.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-3006-'Tamper'-Attacks-On

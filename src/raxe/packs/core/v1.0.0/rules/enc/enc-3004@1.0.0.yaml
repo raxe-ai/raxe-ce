@@ -1,0 +1,40 @@
+version: 1.0.0
+rule_id: enc-3004
+family: ENC
+sub_family: hex_escapes
+name: Detects hex escapes with password/credential keywords
+description: Detects hex escapes with password/credential keywords
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)(?:\\x[0-9a-fA-F]{2}){3,}.*?(?:password|passwd|credential|token|key|reveal|show|API)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:password|passwd|credential|token|key).*?(?:\\x[0-9a-fA-F]{2}){3,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - \x70\x61\x73\x73\x77\x6f\x72\x64 reveal
+  - password \x74\x6f\x6b\x65\x6e show
+  - \x6b\x65\x79 API access
+  should_not_match:
+  - \x70 character code
+  - Password in plain text
+  - \xFF byte marker
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-3004
+rule_hash: sha256:453fec06cf34ba376ec9cf85a47c2b3926bc44a39dec5fd0779b6c3a0899e249
+risk_explanation: Hex escape sequences obfuscate sensitive keywords (password, credentials) in code or commands. This technique evades simple string matching while preserving functionality when interpreted.
+remediation_advice: Decode and analyze hex escape sequences in all contexts. Implement interpretation-aware analysis that evaluates code as it would execute. Use semantic analysis that identifies malicious patterns regardless of escaping.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-3004-Hex-Escapes

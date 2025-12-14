@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/installation.schema.json",
+  "title": "Installation Event",
+  "description": "Fired once on first import/install of RAXE",
+  "type": "object",
+  "required": [
+    "installation_id",
+    "client_version",
+    "python_version",
+    "platform",
+    "install_method",
+    "acquisition_source"
+  ],
+  "properties": {
+    "installation_id": {
+      "type": "string",
+      "pattern": "^inst_[a-zA-Z0-9]+$",
+      "description": "Unique installation identifier"
+    },
+    "client_version": {
+      "type": "string",
+      "description": "RAXE version installed"
+    },
+    "python_version": {
+      "type": "string",
+      "description": "Python interpreter version"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["darwin", "linux", "win32"],
+      "description": "Operating system platform"
+    },
+    "platform_version": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "OS version string"
+    },
+    "machine_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 hash of machine identifiers (privacy-preserving)"
+    },
+    "architecture": {
+      "type": "string",
+      "enum": ["x86_64", "arm64", "aarch64", "i386"],
+      "description": "CPU architecture"
+    },
+    "timezone_offset_hours": {
+      "type": "integer",
+      "minimum": -12,
+      "maximum": 14,
+      "description": "Timezone offset from UTC in hours"
+    },
+    "locale": {
+      "type": "string",
+      "maxLength": 10,
+      "description": "User locale (e.g., en_US)"
+    },
+    "install_method": {
+      "type": "string",
+      "enum": ["pip", "uv", "pipx", "poetry", "conda", "source", "docker", "unknown"],
+      "description": "Package manager used for installation"
+    },
+    "acquisition_source": {
+      "type": "string",
+      "enum": [
+        "pip_install",
+        "github_release",
+        "docker",
+        "homebrew",
+        "website_download",
+        "referral",
+        "enterprise_deploy",
+        "ci_integration",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "How the user discovered/acquired RAXE. Values: pip_install (via pip install raxe), github_release (from GitHub releases), docker (Docker image), homebrew (brew install raxe), website_download (from raxe.ai), referral (via RAXE_REFERRAL_CODE), enterprise_deploy (enterprise deployment), ci_integration (CI/CD pipeline), unknown (default/fallback)"
+    },
+    "upgrade_from_version": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Previous RAXE version if this is an upgrade"
+    },
+    "ml_available": {
+      "type": "boolean",
+      "description": "Whether ML dependencies are installed"
+    },
+    "onnx_version": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "ONNX runtime version if ML is available"
+    },
+    "rules_loaded": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000,
+      "description": "Number of detection rules loaded"
+    },
+    "packs_loaded": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 50,
+      "description": "List of rule packs loaded"
+    },
+    "installed_extras": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ml", "openai", "anthropic", "langchain", "dev", "all"]
+      },
+      "description": "List of installed optional extras"
+    },
+    "is_ci_environment": {
+      "type": "boolean",
+      "description": "Whether running in a CI/CD environment"
+    },
+    "ci_platform": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "CI platform name if is_ci_environment is true"
+    },
+    "key_type": {
+      "type": "string",
+      "enum": ["temporary", "live", "test"],
+      "description": "Type of API key configured"
+    },
+    "key_days_remaining": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 365,
+      "description": "Days remaining on temporary key"
+    },
+    "initialization_time_ms": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 300000,
+      "description": "Total initialization time in milliseconds"
+    },
+    "rules_load_time_ms": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 60000,
+      "description": "Time to load detection rules in milliseconds"
+    },
+    "ml_load_time_ms": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 60000,
+      "description": "Time to load ML model in milliseconds"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

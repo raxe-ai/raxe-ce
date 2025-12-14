@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: rag-050
+family: RAG
+sub_family: embedding_attacks
+name: Detects adversarial embedding generation
+description: Detects adversarial embedding generation
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)\b(?:generate|create|craft)\s+adversarial\s+(?:embeddings?|vectors?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:adversarial|attack)\s+(?:embeddings?|vectors?)\s+(?:for|against)\s+RAG
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:evade|bypass)\s+detection\s+(?:using|with|via)\s+(?:adversarial\s+)?(?:embeddings?|vectors?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Generate adversarial embeddings
+  - Create attack vectors for RAG
+  - Craft adversarial embeddings to bypass detection
+  - Evade detection using adversarial vectors
+  should_not_match:
+  - Adversarial training
+  - Robustness testing
+  - Embedding security evaluation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1565.001
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-0050
+rule_hash: sha256:86509aee2d169c9738b948e0e4fa9dca69a00eadcad1c1ce877bdde62abff68d
+risk_explanation: Adversarial embedding generation crafts documents optimized to be retrieved in response to specific queries, enabling targeted misinformation. These attacks exploit the mathematical properties of embedding spaces.
+remediation_advice: Implement adversarial robustness in embedding models. Use ensemble retrieval methods that are harder to optimize against. Deploy anomaly detection for unusual embedding patterns. Monitor retrieval quality metrics.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-050-Adversarial-Embedding-Generation

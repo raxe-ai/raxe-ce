@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/responses/success.schema.json",
+  "title": "Successful Batch Response",
+  "description": "Response when batch is successfully processed",
+  "type": "object",
+  "required": [
+    "status",
+    "batch_id",
+    "accepted",
+    "rejected",
+    "duplicates"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "partial"],
+      "description": "Overall status (ok = all accepted, partial = some rejected)"
+    },
+    "batch_id": {
+      "type": "string",
+      "pattern": "^batch_[a-zA-Z0-9]+$",
+      "description": "Echo of submitted batch ID"
+    },
+    "accepted": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of events accepted"
+    },
+    "rejected": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of events rejected"
+    },
+    "duplicates": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of duplicate events (already received)"
+    },
+    "rejected_events": {
+      "type": "array",
+      "description": "Details of rejected events",
+      "items": {
+        "type": "object",
+        "required": ["event_id", "error"],
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "server_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server timestamp for clock drift detection"
+    }
+  },
+  "additionalProperties": false
+}

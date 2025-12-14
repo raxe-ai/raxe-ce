@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: cmd-208
+family: CMD
+sub_family: ldap_injection
+name: LDAP Injection Attack Detection
+description: Detects LDAP injection attempts using special characters
+severity: high
+confidence: 0.90
+patterns:
+- pattern: (?i)(?:\*|\(|\)|\||&).*(?:objectClass|cn=|ou=|dc=|uid=)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:cn|uid|ou|dc)=.*[\*\(\)\|&]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "cn=*)(uid=*))(|(cn=*"
+  - "user=admin)(|(password=*))"
+  - "uid=*)(objectClass=*"
+  should_not_match:
+  - "What is LDAP injection?"
+  - "LDAP query syntax"
+  - "Active Directory security"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1087
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: LDAP injection manipulates directory service queries to bypass authentication, extract user information, or escalate privileges. This can compromise directory services that control authentication and authorization.
+remediation_advice: Use parameterized LDAP queries or safe query builders. Implement strict input validation and escaping. Use least-privilege LDAP service accounts. Deploy LDAP injection detection and blocking.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-208-Ldap-Injection-Attack-Detection

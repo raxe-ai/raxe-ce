@@ -1,0 +1,81 @@
+# RAXE Policy Template: Learning Mode
+#
+# Use Case: Initial deployment, building detection baselines
+#
+# Behavior:
+# - All detections logged to database
+# - Nothing blocked (passive monitoring)
+# - Build understanding of false positive rates
+# - Safe for production rollout
+#
+# Duration: Run for 1-2 weeks to establish baseline
+#
+# Next Steps:
+# 1. Review logs: raxe stats
+# 2. Identify false positives
+# 3. Graduate to balanced.yaml or strict.yaml
+
+version: "1.0.0"
+customer_id: "local"
+
+policies:
+  # Allow everything - passive monitoring only
+  - policy_id: "learning-mode-critical"
+    name: "Learning mode - ALLOW CRITICAL"
+    description: "Monitor CRITICAL threats without enforcement"
+    conditions:
+      - severity: "CRITICAL"
+    action: "ALLOW"
+    priority: 0
+    enabled: true
+    metadata:
+      mode: "learning"
+      phase: "baseline"
+
+  - policy_id: "learning-mode-high"
+    name: "Learning mode - ALLOW HIGH"
+    description: "Monitor HIGH threats without enforcement"
+    conditions:
+      - severity: "HIGH"
+    action: "ALLOW"
+    priority: 0
+    enabled: true
+    metadata:
+      mode: "learning"
+      phase: "baseline"
+
+  - policy_id: "learning-mode-medium"
+    name: "Learning mode - ALLOW MEDIUM"
+    description: "Monitor MEDIUM threats without enforcement"
+    conditions:
+      - severity: "MEDIUM"
+    action: "ALLOW"
+    priority: 0
+    enabled: true
+    metadata:
+      mode: "learning"
+      phase: "baseline"
+
+  - policy_id: "learning-mode-low"
+    name: "Learning mode - ALLOW LOW"
+    description: "Monitor LOW threats without enforcement"
+    conditions:
+      - severity: "LOW"
+    action: "ALLOW"
+    priority: 0
+    enabled: true
+    metadata:
+      mode: "learning"
+      phase: "baseline"
+
+  - policy_id: "learning-mode-info"
+    name: "Learning mode - ALLOW INFO"
+    description: "Monitor INFO detections without enforcement"
+    conditions:
+      - severity: "INFO"
+    action: "ALLOW"
+    priority: 0
+    enabled: true
+    metadata:
+      mode: "learning"
+      phase: "baseline"

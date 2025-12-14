@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: hc-104
+family: HC
+sub_family: misinformation
+name: Medical Misinformation Detection
+description: Detects dangerous medical misinformation in AI responses
+severity: high
+confidence: 0.84
+patterns:
+- pattern: (?i)(?:vaccines?|vaccination)\s+(?:cause|caused|causes|lead\s+to)\s+(?:autism|cancer|death|infertility)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:bleach|chlorine\s+dioxide|hydrogen\s+peroxide)\s+(?:cures?|treats?|heals?)\s+(?:covid|cancer|autism|diabetes)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:don't|never|avoid)\s+(?:see\s+a\s+doctor|seek\s+medical\s+help|go\s+to\s+hospital).*(?:serious|emergency|life-threatening)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Vaccines cause autism and infertility"
+  - "Bleach cures COVID-19 and cancer"
+  - "Never see a doctor for serious conditions, use herbs instead"
+  should_not_match:
+  - "Common vaccine misconceptions include autism claims"
+  - "Dangerous medical misinformation spreads online"
+  - "Always consult a doctor for medical advice"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1498
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_safety
+  scan_target: response
+rule_hash: null
+risk_explanation: Medical misinformation can cause serious health harm when users follow incorrect medical advice. AI-generated health misinformation can be convincing while being dangerously inaccurate.
+remediation_advice: Implement fact-checking and verification for medical information. Use authoritative medical sources and databases. Add disclaimers that AI should not replace professional medical advice. Deploy accuracy monitoring for health-related outputs.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-104-Medical-Misinformation-Detection

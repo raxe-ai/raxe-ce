@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-114
+family: ENC
+sub_family: double_encode_encoding
+name: Detects double encode encoding obfuscation
+description: Detects double encode encoding obfuscation
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)double encode (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0114
+rule_hash: sha256:9ac442024fcaf853a14e79184e7a49128714a1b776ff59020d98a7aa6085cc51
+risk_explanation: double encode encoding can obfuscate malicious content.
+remediation_advice: Detect double encode patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-114-Double-Encode-Encoding

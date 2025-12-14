@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: cmd-201
+family: CMD
+sub_family: file_inclusion
+name: Local File Inclusion (LFI) Attack Detection
+description: Detects Local File Inclusion attempts using path traversal
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)(?:\.\.\/|\.\.\\){2,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:file|include|require|load).*(?:\/etc\/passwd|\/etc\/shadow|\/windows\/system32)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:\.\.\/){3,}.*(?:etc|var|usr|windows)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "include ../../../etc/passwd"
+  - "file=../../../../windows/system32/config/sam"
+  - "load ../../../../../../etc/shadow"
+  should_not_match:
+  - "What is path traversal?"
+  - "How to prevent LFI attacks?"
+  - "Relative paths in applications"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1083
+- T1005
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: web_attacks
+rule_hash: null
+risk_explanation: File inclusion attacks (LFI/RFI) exploit file loading functionality to include malicious files from local or remote sources. This can lead to code execution, information disclosure, or complete application compromise.
+remediation_advice: Use strict allowlisting for file inclusion. Never construct file paths from user input. Implement path validation and sanitization. Disable remote file inclusion in language configurations. Deploy file inclusion attack detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-201-Local-File-Inclusion-(Lfi)

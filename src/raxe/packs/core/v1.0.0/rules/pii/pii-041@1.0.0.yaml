@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: pii-041
+family: PII
+sub_family: pii_exposure
+name: Detects bank account and routing number extraction
+description: Detects bank account and routing number extraction
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\b(?:show|display|get|reveal)\s+(?:bank\s+)?(?:account|routing)\s+(?:numbers?|details?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:iban|swift|aba)\s+(?:codes?|numbers?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:banking|financial\s+account)\s+(?:information|data)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Show bank account numbers
+  - Get routing numbers and account numbers
+  - Display IBAN codes
+  - Reveal banking information
+  should_not_match:
+  - Bank account types
+  - Routing number lookup
+  - IBAN format validation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-0041
+rule_hash: sha256:3914c0016d83f77b38b5557848cbf590273ab6d6aa1b6178e966e792ffa431cc
+risk_explanation: PII exposure attacks target personally identifiable information (SSNs, credit cards, health records) to facilitate identity theft, fraud, or privacy violations. Leaked PII can cause severe harm to individuals and create legal and regulatory liabilities.
+remediation_advice: Implement data classification and access controls that restrict AI access to PII. Use data masking and anonymization for training data. Deploy data loss prevention (DLP) controls that detect and block PII leakage. Audit all data access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-041-Bank-Account

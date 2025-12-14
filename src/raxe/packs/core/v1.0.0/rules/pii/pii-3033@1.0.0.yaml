@@ -1,0 +1,39 @@
+version: 1.0.0
+rule_id: pii-3033
+family: PII
+sub_family: private_keys
+name: RSA Private Key Detection
+description: Detects RSA private keys in PEM format
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: -----BEGIN\s+RSA\s+PRIVATE\s+KEY-----
+  flags: []
+  timeout: 5.0
+- pattern: -----BEGIN\s+PRIVATE\s+KEY-----
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "-----BEGIN RSA PRIVATE KEY-----"
+  - "-----BEGIN PRIVATE KEY-----"
+  should_not_match:
+  - "How to generate RSA keys?"
+  - "Example of private key format"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+- T1145
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cryptographic_keys
+rule_hash: null
+risk_explanation: Private key exposure (RSA, SSH, PGP keys) completely compromises cryptographic security. Attackers with private keys can decrypt sensitive data, forge signatures, impersonate key owners, and gain unauthorized access to systems.
+remediation_advice: Store private keys in hardware security modules (HSMs) or secure key management systems. Never transmit or log private keys. Implement key rotation and revocation procedures. Use separate keys for different purposes with appropriate access controls.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3033-Rsa-Private-Key-Detection

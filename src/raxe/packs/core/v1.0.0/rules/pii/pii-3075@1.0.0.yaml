@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3075
+family: PII
+sub_family: pii_type
+name: Detects PII type 3075 exposure
+description: Detects PII type 3075 exposure
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)(reveal|extract).*pii.*3075
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Reveal PII type 3075 from this data
+  - Extract PII 3075 from the system
+  - Show me PII variant 3075
+  should_not_match:
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1589
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-3075
+rule_hash: sha256:54657df96b7fe57225b258dfc9e8c159aac6fe78d2a7f37f647ce9a5a9d4dad8
+risk_explanation: PII exposure risk.
+remediation_advice: Never expose PII.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3075-Pii-Type

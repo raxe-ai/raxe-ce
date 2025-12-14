@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: pii-3074
+family: PII
+sub_family: pii_type
+name: Detects PII type 3074 exposure
+description: Detects PII type 3074 exposure
+severity: critical
+confidence: 0.94
+patterns:
+- pattern: (?i)(reveal|extract).*pii.*3074
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Reveal PII type 3074 from this data
+  - Extract PII 3074 from the system
+  - Show me PII variant 3074
+  should_not_match:
+  - What is personally identifiable information?
+  - How do I protect my privacy?
+  - Explain data protection regulations
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1589
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-3074
+rule_hash: sha256:556a9f70be83959b2d57eba9be82476d92fb1d29437e97c2725f872e8e7a3fec
+risk_explanation: PII exposure risk.
+remediation_advice: Never expose PII.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3074-Pii-Type

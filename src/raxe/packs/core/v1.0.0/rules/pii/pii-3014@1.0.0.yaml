@@ -1,0 +1,36 @@
+version: 1.0.0
+rule_id: pii-3014
+family: PII
+sub_family: api_keys
+name: Heroku API Key Detection
+description: Detects Heroku API keys (UUID format in context)
+severity: high
+confidence: 0.94
+patterns:
+- pattern: (?i)heroku.{0,20}(?:api|token|key).{0,20}['\"]([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "HEROKU_API_KEY='12345678-1234-1234-1234-123456789abc'"
+  - "heroku_token: 'abcdef12-3456-7890-abcd-ef1234567890'"
+  should_not_match:
+  - "Heroku uses UUID format for API keys"
+  - "How to get a Heroku API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: platform_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3014-Heroku-Api-Key-Detection

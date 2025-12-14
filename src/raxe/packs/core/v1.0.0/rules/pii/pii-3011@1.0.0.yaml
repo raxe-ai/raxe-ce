@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3011
+family: PII
+sub_family: api_keys
+name: SendGrid API Key Detection
+description: Detects SendGrid API keys (SG. pattern)
+severity: high
+confidence: 0.97
+patterns:
+- pattern: \b(SG\.[A-Za-z0-9\-_]{22}\.[A-Za-z0-9\-_]{43})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "SENDGRID_API_KEY=SG.abcdefghijklmnopqrstuv.1234567890abcdefghijklmnopqrstuvwxyzABCDEFG"
+  - "api_key: SG.AAAAAAAAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  should_not_match:
+  - "SendGrid keys start with SG."
+  - "How to create a SendGrid API key?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: email_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3011-Sendgrid-Api-Key-Detection

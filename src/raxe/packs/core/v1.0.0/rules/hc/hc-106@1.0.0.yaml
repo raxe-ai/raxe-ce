@@ -1,0 +1,40 @@
+version: 1.0.0
+rule_id: hc-106
+family: HC
+sub_family: hallucination
+name: Factual Inconsistency Pattern Detection
+description: Detects common hallucination patterns indicating fabricated information
+severity: medium
+confidence: 0.79
+patterns:
+- pattern: (?i)(?:as\s+of|according\s+to)\s+(?:my\s+)?(?:last\s+update|latest\s+knowledge).*(?:202[5-9]|20[3-9][0-9])
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:the\s+)?(?:study|research|paper)\s+(?:published|released)\s+(?:in|on).*(?:showed|found|concluded).*(?:but\s+)?(?:i\s+cannot|no\s+citation|cannot\s+verify)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "According to my latest knowledge in 2027, the results show..."
+  - "The study published in Nature in 2026 found that..."
+  should_not_match:
+  - "According to my knowledge cutoff in 2024"
+  - "Research from 2023 indicates"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack: []
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_quality
+  scan_target: response
+rule_hash: null
+risk_explanation: Factual inconsistencies and hallucinations erode trust in AI systems and can cause harm when users rely on inaccurate information. While not always malicious, consistent hallucination patterns indicate system weaknesses.
+remediation_advice: Implement fact-checking and verification where possible. Use confidence scoring and uncertainty quantification. Provide source citations and attribution. Deploy hallucination detection and warning systems.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-106-Factual-Inconsistency-Pattern-Detection

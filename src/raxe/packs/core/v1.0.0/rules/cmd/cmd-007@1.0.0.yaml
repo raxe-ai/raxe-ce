@@ -1,0 +1,48 @@
+version: 1.0.0
+rule_id: cmd-007
+family: CMD
+sub_family: sql_injection
+name: Detects SQL EXEC and stored procedure injection
+description: Detects SQL EXEC and stored procedure injection
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)';?\s*EXEC(UTE)?\s+(sp_|xp_)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)';?\s*EXEC(UTE)?\s+\(
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)EXEC\s+master\.\.
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - '''; EXEC sp_executesql--'
+  - admin'; EXEC xp_cmdshell 'dir'--
+  - 1'; EXECUTE sp_addlogin 'hacker'--
+  - '''; EXEC master..xp_cmdshell--'
+  should_not_match:
+  - SQL Server EXEC command documentation
+  - How to EXECUTE stored procedures
+  - Using EXEC in T-SQL
+  - Stored procedure execution examples
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0007
+rule_hash: sha256:8fc8200232dfe9e1d4a61930931389c622d2fc7c1396b67c2480578231e75093
+risk_explanation: SQL EXEC and stored procedure injections can execute arbitrary system commands (especially xp_cmdshell), create backdoor accounts, or escalate privileges. These attacks can completely compromise the database server and underlying operating system.
+remediation_advice: Disable dangerous stored procedures like xp_cmdshell unless absolutely necessary. Use parameterized queries exclusively. Implement strict database permissions with least privilege. Monitor for suspicious stored procedure executions.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-007-SQL-Stored-Proc-Injection

@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3016
+family: PII
+sub_family: identity_documents
+name: US Driver License Number Detection
+description: Detects US driver license numbers in various state formats
+severity: high
+confidence: 0.88
+patterns:
+- pattern: (?i)(?:driver.{0,5}license|DL|drivers?\s*lic).{0,20}(?:no|number|num|#).{0,10}\b([A-Z]{1,2}[0-9]{6,8})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:driver.{0,5}license|DL|drivers?\s*lic).{0,20}(?:no|number|num|#).{0,10}\b([0-9]{7,9})\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Driver License No: A1234567"
+  - "DL#: 12345678"
+  - "Drivers Lic Number: B12345678"
+  should_not_match:
+  - "What is a driver license number?"
+  - "How to get a DL?"
+  - "Driver license requirements"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: identity_documents
+rule_hash: null
+risk_explanation: Identity document numbers (passports, driver licenses, national ID numbers) enable identity theft and fraud when exposed. Attackers can use these credentials to impersonate victims, open fraudulent accounts, or bypass authentication systems.
+remediation_advice: Implement strict access controls for identity document data. Use tokenization or anonymization when processing identity information. Deploy DLP controls that detect and block identity document leakage. Maintain audit logs of all access to identity data.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3016-Us-Driver-License-Number

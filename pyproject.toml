@@ -1,0 +1,240 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raxe"
+version = "0.0.1"
+description = "RAXE Community Edition - AI Security for Everyone. 460+ threat detection rules, L2 CPU-based ML, always free."
+authors = [{name = "RAXE Technologies, Inc.", email = "hello@raxe.ai"}]
+license = {text = "Proprietary - See LICENSE file"}
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+keywords = [
+    "ai-security",
+    "llm-security",
+    "prompt-injection",
+    "threat-detection",
+    "ml-security",
+    "community-edition",
+    "privacy-first"
+]
+
+# Core dependencies - includes ML for L2 detection
+dependencies = [
+    "click>=8.0,<9.0",
+    "pydantic>=2.0,<3.0",
+    "httpx>=0.24,<1.0",
+    "structlog>=23.0,<25.0",
+    "sqlalchemy>=2.0,<3.0",
+    "pyyaml>=6.0,<7.0",
+    "rich>=13.0,<14.0",
+    "tomli>=2.0,<3.0; python_version < '3.11'",
+    "jsonschema>=4.17,<5.0",
+    # ML dependencies for L2 detection (model auto-downloads on first use)
+    "onnxruntime>=1.16.0,<2.0",
+    "sentence-transformers>=2.2.0,<3.0",
+    "numpy>=1.24.0,<2.0",
+]
+
+[project.optional-dependencies]
+# Development dependencies - not included in package
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-asyncio>=0.21",
+    "pytest-benchmark>=4.0",
+    "pytest-xdist>=3.0",  # Parallel test execution
+    "ruff>=0.1.0",
+    "mypy>=1.5",
+    "pre-commit>=3.3",
+    "black>=23.0",
+    "types-pyyaml",
+    "types-requests",
+    "build>=1.0",
+]
+
+# Interactive REPL mode
+repl = [
+    "prompt-toolkit>=3.0,<4.0",
+]
+
+# Config management (writing TOML files)
+config-tools = [
+    "tomli-w>=1.0,<2.0",
+]
+
+# Optional LLM client wrappers
+wrappers = [
+    "openai>=1.0",
+    "anthropic>=0.5",
+    "langchain>=0.1",
+]
+
+# All optional features (ML is now in core dependencies)
+all = [
+    "openai>=1.0",
+    "anthropic>=0.5",
+    "langchain>=0.1",
+    "prompt-toolkit>=3.0,<4.0",
+    "tomli-w>=1.0,<2.0",
+]
+
+[project.urls]
+Homepage = "https://raxe.ai"
+Documentation = "https://docs.raxe.ai"
+Repository = "https://github.com/raxe-ai/raxe-ce"
+"Bug Tracker" = "https://github.com/raxe-ai/raxe-ce/issues"
+"Enterprise Edition" = "https://raxe.ai/enterprise"
+"Schedule Demo" = "https://raxe.ai/demo"
+
+[project.scripts]
+raxe = "raxe.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["raxe*"]
+exclude = ["tests*", "docs*", "scripts*", "examples*"]
+
+[tool.setuptools.package-data]
+raxe = [
+    "py.typed",
+    "packs/core/**/*.yaml",
+    "packs/core/**/*.yml",
+    "domain/ml/models/*.onnx",
+    "domain/ml/models/*.json",
+    "domain/ml/models/*.bundle",
+]
+
+# Exclude unnecessary files from package
+[tool.setuptools.exclude-package-data]
+"*" = [
+    "*.pyc",
+    "*.pyo",
+    "__pycache__",
+    "*.so",
+    "*.dylib",
+    ".DS_Store",
+    "*.md",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "S",   # bandit security
+    "B",   # bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "T20", # flake8-print (no print statements)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101",  # Allow assert in tests
+    "S105",  # Allow hardcoded passwords in tests
+    "S106",  # Allow hardcoded passwords in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105", "S106", "T20"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+show_error_codes = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--color=yes",
+    "-ra",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "benchmark: marks tests as benchmarks",
+    "integration: marks tests as integration tests",
+    "golden: marks tests as golden file tests",
+    "fast: marks tests as fast (<100ms each)",
+    "unit: marks tests as pure unit tests",
+    "asyncio: marks tests as async tests",
+    "domain: marks tests as domain layer tests (pure functions, no I/O)",
+    "telemetry: marks tests as telemetry-related tests",
+]
+
+# Performance optimizations
+console_output_style = "progress"
+
+[tool.coverage.run]
+source = ["src/raxe"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+fail_under = 80
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+
+[tool.bandit]
+# Exclude test files and migrations
+exclude_dirs = ["tests", "scripts"]
+# Skip specific checks that have documented exceptions
+# B608: SQL injection (safe parameterized queries with placeholders)
+# B310: URL open (URL scheme validated to be https://)
+# B108: Temp file (regex pattern matching, not file usage)
+# B615: HuggingFace download (pinned to specific revision)
+skips = ["B608", "B310", "B108", "B615"]

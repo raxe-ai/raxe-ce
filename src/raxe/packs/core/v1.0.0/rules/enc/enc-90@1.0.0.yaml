@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-90
+family: ENC
+sub_family: emoji_encoding_encoding
+name: Detects emoji encoding obfuscation
+description: Detects emoji encoding obfuscation
+severity: critical
+confidence: 0.9
+patterns:
+- pattern: (?i)emoji encoding (encod|obfuscat|hide)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0090
+rule_hash: sha256:4b871c7a30caa6d846149a1fda1a44db5fc6f1f70fd0cd2c84819b297e1ce951
+risk_explanation: Emoji Encoding encoding can obfuscate malicious content.
+remediation_advice: Detect emoji encoding patterns. Decode and analyze content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-90-Emoji-Encoding-Encoding

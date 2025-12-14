@@ -1,0 +1,11 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "enc-5016",
+      "severity": "high",
+      "confidence": 0.8027799999999999
+    }
+  ]
+}

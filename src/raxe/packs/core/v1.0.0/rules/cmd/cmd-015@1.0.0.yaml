@@ -1,0 +1,56 @@
+version: 1.0.0
+rule_id: cmd-015
+family: CMD
+sub_family: sql_injection
+name: Detects SQL UNION SELECT injection attempts
+description: Detects SQL UNION and UNION ALL SELECT attacks for data exfiltration from database systems
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)';?\s*UNION\s+(ALL\s+)?SELECT
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\bUNION\s+(ALL\s+)?SELECT\s+.*\s+FROM\s+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)'\s*UNION\s+(ALL\s+)?SELECT\s+(NULL|[\d]+|.*)\s*(,\s*(NULL|[\d]+|.*))*
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\d+'\s*UNION\s+(ALL\s+)?SELECT
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "1' UNION SELECT password FROM users--"
+  - "'; UNION ALL SELECT * FROM accounts--"
+  - "admin' UNION SELECT username, password FROM admin--"
+  - "1 UNION SELECT NULL, table_name FROM information_schema.tables--"
+  - "' UNION SELECT 1,2,3,4--"
+  - "999' UNION ALL SELECT credit_card FROM payments--"
+  should_not_match:
+  - How does UNION SELECT work in SQL?
+  - Explain UNION in database queries
+  - SQL tutorial on UNION operator
+  - The UNION keyword combines result sets
+  - What is the difference between UNION and UNION ALL?
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+- T1190
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  gap_addressed: "Command Injection - SQL UNION attacks (validation gap: 30% miss rate)"
+rule_hash: null
+risk_explanation: UNION SELECT attacks allow attackers to exfiltrate data from other tables by combining results with the original query. This is one of the most dangerous SQL injection techniques, enabling data breaches, credential theft, and unauthorized access to sensitive information across the entire database schema.
+remediation_advice: Use parameterized queries exclusively. Implement strict input validation and SQL parsing. Apply principle of least privilege to database accounts. Deploy web application firewalls (WAF) to filter malicious SQL patterns. Never concatenate user input directly into SQL queries.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-015-SQL-UNION-Injection

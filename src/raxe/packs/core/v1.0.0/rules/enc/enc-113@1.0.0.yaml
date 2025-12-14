@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-113
+family: ENC
+sub_family: path_traversal_encode_encoding
+name: Detects path traversal encode encoding obfuscation
+description: Detects path traversal encode encoding obfuscation
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)path traversal encode (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0113
+rule_hash: sha256:c8d8d30ad033648c4882b8af0546d498630d9f517e6a253d059f6832e4a1c9d0
+risk_explanation: path traversal encode encoding can obfuscate malicious content.
+remediation_advice: Detect path traversal encode patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-113-Path-Traversal-Encode-Encoding

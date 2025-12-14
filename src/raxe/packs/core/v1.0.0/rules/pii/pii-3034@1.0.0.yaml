@@ -1,0 +1,40 @@
+version: 1.0.0
+rule_id: pii-3034
+family: PII
+sub_family: private_keys
+name: SSH Private Key Detection
+description: Detects SSH private keys in PEM format (RSA, DSA, EC, Ed25519)
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: -----BEGIN\s+OPENSSH\s+PRIVATE\s+KEY-----
+  flags: []
+  timeout: 5.0
+- pattern: -----BEGIN\s+(?:DSA|EC|ENCRYPTED)\s+PRIVATE\s+KEY-----
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "-----BEGIN OPENSSH PRIVATE KEY-----"
+  - "-----BEGIN DSA PRIVATE KEY-----"
+  - "-----BEGIN EC PRIVATE KEY-----"
+  should_not_match:
+  - "How to generate SSH keys?"
+  - "SSH key format examples"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+- T1145
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cryptographic_keys
+rule_hash: null
+risk_explanation: Private key exposure (RSA, SSH, PGP keys) completely compromises cryptographic security. Attackers with private keys can decrypt sensitive data, forge signatures, impersonate key owners, and gain unauthorized access to systems.
+remediation_advice: Store private keys in hardware security modules (HSMs) or secure key management systems. Never transmit or log private keys. Implement key rotation and revocation procedures. Use separate keys for different purposes with appropriate access controls.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3034-Ssh-Private-Key-Detection

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/key_upgrade.schema.json",
+  "title": "Key Upgrade Event",
+  "description": "Fired when API key is upgraded (conversion tracking)",
+  "type": "object",
+  "required": [
+    "previous_key_type",
+    "new_key_type"
+  ],
+  "properties": {
+    "previous_key_type": {
+      "type": "string",
+      "enum": ["temp", "community", "pro", "enterprise"],
+      "description": "Previous key tier"
+    },
+    "new_key_type": {
+      "type": "string",
+      "enum": ["community", "pro", "enterprise"],
+      "description": "New key tier"
+    },
+    "days_on_previous": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Days spent on previous tier"
+    },
+    "scans_on_previous": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total scans on previous tier"
+    },
+    "threats_on_previous": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total threats detected on previous tier"
+    },
+    "conversion_trigger": {
+      "type": "string",
+      "enum": [
+        "trial_expiry",
+        "rate_limit_hit",
+        "feature_needed",
+        "manual_upgrade",
+        "promo_code"
+      ],
+      "description": "What triggered the upgrade"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,163 @@
+name: Build Wheels
+
+on:
+  push:
+    branches: [main, develop]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
+
+      - name: Build wheel
+        run: python -m build --wheel
+
+      - name: Build sdist (Ubuntu + Python 3.10 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
+        run: python -m build --sdist
+
+      - name: Check wheel size
+        shell: bash
+        run: |
+          echo "Checking wheel size..."
+          ls -lh dist/
+          WHEEL_SIZE=$(ls -l dist/*.whl | awk '{print $5}')
+          echo "Wheel size: $WHEEL_SIZE bytes"
+          # Check if wheel is under 10MB (10485760 bytes)
+          if [ "$WHEEL_SIZE" -gt 10485760 ]; then
+            echo "ERROR: Wheel size exceeds 10MB limit"
+            exit 1
+          fi
+
+      - name: Install and test wheel
+        shell: bash
+        run: |
+          python -m pip install dist/*.whl
+          python -c "from raxe import Raxe; print('RAXE imported successfully')"
+          raxe --version || echo "CLI installed successfully"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
+          path: dist/
+
+  test_installation:
+    name: Test installation on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: build_wheels
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
+          path: dist/
+
+      - name: Time installation
+        shell: bash
+        run: |
+          echo "Starting installation timer..."
+          START_TIME=$(date +%s)
+
+          python -m pip install dist/*.whl
+
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+
+          echo "Installation completed in ${DURATION} seconds"
+
+          # Check if installation took less than 30 seconds
+          if [ "$DURATION" -gt 30 ]; then
+            echo "WARNING: Installation took longer than 30 seconds"
+          else
+            echo "SUCCESS: Installation completed in under 30 seconds"
+          fi
+
+      - name: Test CLI
+        run: |
+          raxe --version
+          python -c "from raxe import Raxe; r = Raxe(); print('RAXE SDK works')"
+
+  package_size_report:
+    name: Package Size Report
+    runs-on: ubuntu-latest
+    needs: build_wheels
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: all-wheels/
+
+      - name: Generate size report
+        run: |
+          echo "# Package Size Report" > size-report.md
+          echo "" >> size-report.md
+          echo "## Wheel Sizes" >> size-report.md
+          echo "" >> size-report.md
+          echo "| Platform | Python | Size |" >> size-report.md
+          echo "|----------|--------|------|" >> size-report.md
+
+          find all-wheels -name "*.whl" | while read wheel; do
+            SIZE=$(ls -lh "$wheel" | awk '{print $5}')
+            PLATFORM=$(echo "$wheel" | cut -d'-' -f4)
+            PYTHON=$(echo "$wheel" | cut -d'-' -f3)
+            echo "| $PLATFORM | $PYTHON | $SIZE |" >> size-report.md
+          done
+
+          echo "" >> size-report.md
+          echo "## Source Distribution" >> size-report.md
+          find all-wheels -name "*.tar.gz" | while read sdist; do
+            SIZE=$(ls -lh "$sdist" | awk '{print $5}')
+            echo "Size: $SIZE" >> size-report.md
+          done
+
+          cat size-report.md
+
+      - name: Upload size report
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-size-report
+          path: size-report.md

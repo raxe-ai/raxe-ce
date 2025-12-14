@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3054
+family: PII
+sub_family: network
+name: SSH Authorized Keys Detection
+description: Detects SSH public keys being extracted or leaked
+severity: medium
+confidence: 0.89
+patterns:
+- pattern: \b(ssh-(?:rsa|dss|ed25519|ecdsa)\s+[A-Za-z0-9+/]{50,}[=]{0,2})
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAklOUpkDHrfHY17SbrmTIpNLTGK9Tjom/BWDSU user@host"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+  should_not_match:
+  - "How to generate SSH keys?"
+  - "SSH key format examples"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.004
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cryptographic_keys
+rule_hash: null
+risk_explanation: Network information exposure (IP addresses, MAC addresses, SSH keys) can enable reconnaissance, targeted attacks, or lateral movement within networks. This information helps attackers map infrastructure and identify potential entry points.
+remediation_advice: Implement network segmentation and access controls. Use private IP addressing and NAT where appropriate. Monitor for network information leakage. Apply principles of least privilege for network access.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3054-Ssh-Authorized-Keys-Detection

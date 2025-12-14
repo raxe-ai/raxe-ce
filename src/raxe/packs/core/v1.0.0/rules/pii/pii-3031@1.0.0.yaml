@@ -1,0 +1,37 @@
+version: 1.0.0
+rule_id: pii-3031
+family: PII
+sub_family: authentication
+name: OAuth Access Token Detection
+description: Detects OAuth 2.0 access tokens in various formats
+severity: high
+confidence: 0.93
+patterns:
+- pattern: (?i)(?:oauth|access).{0,20}token.{0,10}['\"]([A-Za-z0-9\-._~+/]{30,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "oauth_token='ya29.a0AfH6SMBxKqZ8...' "
+  - "access_token: ghr_1B2c3D4e5F6g7H8i9J0k..."
+  should_not_match:
+  - "How to get an OAuth token?"
+  - "OAuth token format"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: authentication_tokens
+rule_hash: null
+risk_explanation: Authentication token exposure (JWTs, bearer tokens, session cookies) grants attackers immediate access to authenticated sessions and user accounts. Unlike passwords, tokens provide direct access without needing additional authentication steps.
+remediation_advice: Implement short token lifetimes and automatic rotation. Use secure token storage and transmission. Deploy token validation and revocation mechanisms. Never log or expose tokens in error messages or responses.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3031-Oauth-Access-Token-Detection

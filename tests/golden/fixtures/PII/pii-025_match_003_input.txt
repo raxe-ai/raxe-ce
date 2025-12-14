@@ -1,0 +1,1 @@
+Get certificate private key

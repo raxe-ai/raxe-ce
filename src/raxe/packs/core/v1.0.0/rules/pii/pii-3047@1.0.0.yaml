@@ -1,0 +1,36 @@
+version: 1.0.0
+rule_id: pii-3047
+family: PII
+sub_family: api_keys
+name: Cloudflare API Token Detection
+description: Detects Cloudflare API tokens and keys
+severity: high
+confidence: 0.94
+patterns:
+- pattern: (?i)cloudflare.{0,20}(?:api|token|key).{0,10}['\"]([A-Za-z0-9_-]{40,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "CLOUDFLARE_API_KEY='1234567890abcdefghijklmnopqrstuvwxyz1234'"
+  - "cf_token: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd'"
+  should_not_match:
+  - "How to get Cloudflare API key?"
+  - "Cloudflare token format"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cdn_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3047-Cloudflare-Api-Token-Detection

@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3030
+family: PII
+sub_family: authentication
+name: Bearer Token Detection
+description: Detects Bearer authentication tokens in Authorization headers
+severity: high
+confidence: 0.94
+patterns:
+- pattern: (?i)bearer\s+([A-Za-z0-9\-._~+/]+=*)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)authorization:\s*bearer\s+([A-Za-z0-9\-._~+/]{20,})
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Authorization: Bearer ya29.a0AfH6SMBx..."
+  - "bearer abcdef1234567890ABCDEF"
+  - "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  should_not_match:
+  - "Use Bearer token for authentication"
+  - "What is a Bearer token?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: authentication_tokens
+rule_hash: null
+risk_explanation: Authentication token exposure (JWTs, bearer tokens, session cookies) grants attackers immediate access to authenticated sessions and user accounts. Unlike passwords, tokens provide direct access without needing additional authentication steps.
+remediation_advice: Implement short token lifetimes and automatic rotation. Use secure token storage and transmission. Deploy token validation and revocation mechanisms. Never log or expose tokens in error messages or responses.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3030-Bearer-Token-Detection

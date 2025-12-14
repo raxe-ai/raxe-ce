@@ -1,0 +1,4 @@
+src/raxe/domain/ml/models/raxe_model_l2.raxe filter=lfs diff=lfs merge=lfs -text
+src/raxe/domain/ml/models/raxe_model_l2.raxe_quantized_int8.onnx filter=lfs diff=lfs merge=lfs -text
+src/raxe/domain/ml/models/threat_classifier_int8_deploy/embeddings_quantized_int8.onnx filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text

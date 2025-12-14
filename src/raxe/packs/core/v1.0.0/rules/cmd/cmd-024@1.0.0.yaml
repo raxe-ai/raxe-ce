@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: cmd-024
+family: CMD
+sub_family: sql_injection
+name: Detects SQL file operations (LOAD_FILE, INTO OUTFILE, INTO DUMPFILE)
+description: Detects SQL file operations (LOAD_FILE, INTO OUTFILE, INTO DUMPFILE)
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)';?\s*LOAD_FILE\s*\(['"]/
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)INTO\s+OUTFILE\s+['"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)INTO\s+DUMPFILE\s+['"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - '''; LOAD_FILE(''/etc/passwd'')--'
+  - '''; INTO OUTFILE ''/var/www/shell.php''--'
+  - '''; INTO DUMPFILE ''/tmp/exploit''--'
+  should_not_match:
+  - MySQL file handling documentation
+  - How to export query results to file
+  - LOAD_FILE security considerations
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0024
+rule_hash: sha256:124503819d4cefad8ce0c4752a08f66ad2d73b22d07dbd0efc1e32f235f8e2bf
+risk_explanation: SQL injection attacks inject malicious SQL commands to manipulate database queries, enabling data theft, unauthorized modifications, or complete database compromise. Critical commands like DROP, DELETE, and TRUNCATE can cause catastrophic data loss.
+remediation_advice: Always use parameterized queries and prepared statements. Never concatenate user input into SQL commands. Implement input validation and sanitization. Use database accounts with minimal required privileges. Deploy SQL injection detection and blocking at multiple layers.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-024-Sql-File-Operations

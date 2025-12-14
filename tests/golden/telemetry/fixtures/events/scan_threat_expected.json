@@ -1,0 +1,40 @@
+{
+  "customer_id": "cust-12345678",
+  "event_id": "<VOLATILE>",
+  "scan_result": {
+    "detection_count": 2,
+    "highest_severity": "critical",
+    "l1_detections": [
+      {
+        "confidence": 0.95,
+        "rule_id": "pi-001",
+        "severity": "critical"
+      }
+    ],
+    "l2_metadata": {
+      "classification": "ATTACK_LIKELY",
+      "hierarchical_score": 0.97,
+      "model_version": "raxe-ml-v2.1.0",
+      "overall_confidence": 0.98,
+      "processing_time_ms": 0.0,
+      "signal_quality": {
+        "consistency": 0.96,
+        "margin": 0.85,
+        "variance": 0.08
+      }
+    },
+    "l2_predictions": [
+      {
+        "confidence": 0.98,
+        "threat_type": "PROMPT_INJECTION"
+      }
+    ],
+    "policy_decision": {
+      "action": "BLOCK"
+    },
+    "text_hash": "<HASH_64>",
+    "text_length": 30,
+    "threat_detected": true
+  },
+  "timestamp": "<VOLATILE>"
+}

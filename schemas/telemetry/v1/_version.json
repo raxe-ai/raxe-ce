@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.0.1",
+  "min_client_version": "0.0.1",
+  "min_server_version": "0.0.1",
+  "published_at": "2025-11-27T00:00:00Z",
+  "changelog": [
+    "1.2.0 - Standardized installation_id patterns, documentation updates",
+    "1.1.0 - Added team_invite event type",
+    "1.0.0 - Initial schema release - comprehensive telemetry for CX/Growth metrics"
+  ]
+}

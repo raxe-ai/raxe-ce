@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: hc-101
+family: HC
+sub_family: toxic_output
+name: Hate Speech Detection in AI Responses
+description: Detects hate speech, discrimination, and bigotry in AI model outputs
+severity: critical
+confidence: 0.91
+patterns:
+- pattern: (?i)\b(?:hate|despise|detest)\s+(?:all\s+)?(?:the\s+)?(?:jews|muslims|christians|blacks|whites|asians|latinos|lgbtq|gays|trans|women|men)\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:kill|eliminate|exterminate|genocide)\s+(?:all\s+)?(?:the\s+)?(?:jews|muslims|christians|blacks|whites|asians|latinos|lgbtq|gays|trans)\b
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:inferior|subhuman|animals?)\b.*\b(?:race|ethnicity|religion|gender|orientation)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "I hate all Muslims and they should be eliminated"
+  - "Trans people are subhuman"
+  - "Women are inferior to men in every way"
+  should_not_match:
+  - "I learned about historical discrimination"
+  - "The article discusses hate speech laws"
+  - "How to recognize hate speech?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1498
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: response_safety
+  scan_target: response
+rule_hash: null
+risk_explanation: Toxic outputs (hate speech, violence glorification, self-harm encouragement) can cause psychological harm, promote dangerous behaviors, or violate content policies and regulations. These outputs damage users and create legal liabilities.
+remediation_advice: Implement comprehensive content filtering for toxic outputs across all categories. Use toxicity scoring and threshold-based blocking. Deploy classifier models trained on diverse toxic content. Maintain zero-tolerance policies for high-severity toxic content.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-101-Hate-Speech-Detection-In

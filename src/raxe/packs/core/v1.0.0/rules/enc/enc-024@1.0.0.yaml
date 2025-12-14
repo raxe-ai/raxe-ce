@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: enc-024
+family: ENC
+sub_family: hex_encoding
+name: Detects hex-encoded network payloads
+description: Detects hex-encoded network payloads
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)0x(?:6e|4e)(?:65|45)(?:74|54)(?:63|43)(?:61|41)(?:74|54)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)hex.*(?:netcat|nc|ncat).*0x[0-9a-f]{12,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)payload.*0x[0-9a-f]{20,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - 'Hex payload: 0x6e6574636174202d65202f62696e2f7368'
+  - 'Run netcat from hex: 0x4e657463617420'
+  - Execute payload 0x726576657273652073686c6c
+  should_not_match:
+  - Network packet hex dump
+  - Hex representation of data
+  - Protocol hex values
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0024
+rule_hash: sha256:2341d804748f3090f85472e366fa942c6060780f98e2c7946d58c076656a1a03
+risk_explanation: Hexadecimal encoding disguises malicious payloads (network attacks, credentials) to bypass string-based security controls. This encoding preserves payload functionality while evading signature-based detection.
+remediation_advice: Decode and analyze hex-encoded content before security evaluation. Implement pattern matching that works across multiple encodings. Use semantic analysis that identifies malicious intent regardless of encoding.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-024-Hex-Encoded-Network-Payloads

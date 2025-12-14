@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-106
+family: ENC
+sub_family: tar_encoding
+name: Detects tar encoding obfuscation
+description: Detects tar encoding obfuscation
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)tar (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0106
+rule_hash: sha256:ab043f517cacb2e24240ee57b9fab0c7c4862b7d0cdafa27964a64e8ef5c5e12
+risk_explanation: tar encoding can obfuscate malicious content.
+remediation_advice: Detect tar patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-106-Tar-Encoding

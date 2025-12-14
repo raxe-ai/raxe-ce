@@ -1,0 +1,51 @@
+version: 1.0.0
+rule_id: hc-132
+family: HC
+sub_family: academic_dishonesty
+name: Detects requests for academic cheating or plagiarism
+description: Detects requests for academic cheating or plagiarism
+severity: critical
+confidence: 0.92
+patterns:
+- pattern: (?i)\b(write|complete|do)\s+(my|this)\s+(homework|assignment|essay|paper|exam|test)\s+(for\s+me)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(take|complete)\s+(my|this)\s+(online\s+)?exam\s+(for\s+me|on\s+my\s+behalf)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(plagiari[sz]e|copy|steal)\s+(this\s+)?(essay|paper|thesis|dissertation|content)\s+(from|without\s+attribution)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(contract\s+cheating|essay\s+mill|take\s+my\s+exam)\s+(service|request)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Write my homework assignment for me
+  - Complete this exam on my behalf
+  - Plagiarize this essay without attribution
+  - Take my online test for me
+  should_not_match:
+  - How to avoid plagiarism
+  - What is proper citation?
+  - Study help and tutoring
+  - Understanding academic concepts
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack: []
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-HC-0132
+rule_hash: sha256:cb3e0e9db155211cfbc11f012146eb67f05f1c26dba76b076afc726801c581bd
+risk_explanation: Academic dishonesty requests undermine educational integrity and learning outcomes. Contract cheating and plagiarism violate academic policies and can result in serious consequences for students.
+remediation_advice: Refuse to complete assignments or exams. Provide educational support and study guidance instead. Help explain concepts but don't do the work. Encourage proper citation and original work.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/HC-132-Academic-Dishonesty

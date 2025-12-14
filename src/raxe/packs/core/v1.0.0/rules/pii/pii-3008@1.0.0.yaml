@@ -1,0 +1,35 @@
+version: 1.0.0
+rule_id: pii-3008
+family: PII
+sub_family: api_keys
+name: Slack Bot Token Detection
+description: Detects Slack bot and workspace tokens (xoxb-, xoxp-, xoxa-, xoxr- patterns)
+severity: high
+confidence: 0.97
+patterns:
+- pattern: \b(xox[bpra]-[0-9]{10,13}-[0-9]{10,13}-[A-Za-z0-9]{24,})\b
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - "SLACK_BOT_TOKEN=xoxb-1234567890123-1234567890123-abcdefghijklmnopqrstuvwx"
+  - "token: xoxp-1234567890-1234567890-1234567890-abc123def456ghi789jkl012mno345pqr"
+  should_not_match:
+  - "Slack tokens start with xox"
+  - "How to get a Slack bot token?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: collaboration_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3008-Slack-Bot-Token-Detection

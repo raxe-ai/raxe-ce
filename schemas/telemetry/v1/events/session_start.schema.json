@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/session_start.schema.json",
+  "title": "Session Start Event",
+  "description": "Fired when a new Python interpreter session begins (DAU/WAU/MAU tracking)",
+  "type": "object",
+  "required": [
+    "session_id",
+    "session_number"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "pattern": "^sess_[a-zA-Z0-9]+$",
+      "description": "Unique session identifier"
+    },
+    "session_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Sequential session count for this installation"
+    },
+    "entry_point": {
+      "type": "string",
+      "enum": ["cli", "sdk", "wrapper", "integration", "repl"],
+      "description": "How RAXE was invoked"
+    },
+    "previous_session_gap_hours": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Hours since last session ended"
+    },
+    "environment": {
+      "type": "object",
+      "description": "Session environment details",
+      "properties": {
+        "is_ci": {
+          "type": "boolean",
+          "description": "Running in CI/CD environment"
+        },
+        "is_interactive": {
+          "type": "boolean",
+          "description": "Interactive terminal session"
+        },
+        "is_notebook": {
+          "type": "boolean",
+          "description": "Running in Jupyter notebook"
+        }
+      }
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

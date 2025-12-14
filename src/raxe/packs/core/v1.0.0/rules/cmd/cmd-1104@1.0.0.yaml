@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: cmd-1104
+family: CMD
+sub_family: file_access
+name: Detects Windows SAM file access
+description: Detects Windows SAM file access
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: (?i)(?:type|copy|dir|cat|more)?\s*C:\\\\Windows\\\\System32\\\\config\\\\SAM
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:type|copy|dir|cat|more)?\s*C:\\\\Windows\\\\System32\\\\config\\\\SYSTEM
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:type|copy|dir|cat|more)?\s*%SystemRoot%\\\\System32\\\\config\\\\
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - type C:\Windows\System32\config\SAM
+  - copy C:\Windows\System32\config\SYSTEM
+  - dir %SystemRoot%\System32\config\
+  should_not_match:
+  - Windows system files
+  - SAM database documentation
+  - Windows registry files
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-1104
+rule_hash: sha256:33e694474e3df17d36fdb37061eeef79b126c2559234aece8546f56daecb5ca0
+risk_explanation: File access attacks target sensitive system files (passwords, SAM database, shadow files, cloud metadata) to extract credentials or configuration data. Successful access enables privilege escalation, account compromise, or cloud resource hijacking.
+remediation_advice: Implement strict file access controls and permissions. Use least-privilege principles for file system access. Deploy file integrity monitoring for sensitive files. Restrict AI access to file systems. Monitor for unauthorized file access attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-1104-Windows-Sam-File

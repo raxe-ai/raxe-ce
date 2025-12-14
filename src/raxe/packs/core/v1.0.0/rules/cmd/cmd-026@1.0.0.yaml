@@ -1,0 +1,81 @@
+version: 1.0.0
+rule_id: cmd-026
+family: CMD
+sub_family: code_execution
+name: Detects template injection attacks (SSTI) across multiple engines
+description: Detects Server-Side Template Injection (SSTI) patterns for Jinja2, Handlebars, ERB, Thymeleaf, and other template engines
+severity: high
+confidence: 0.93
+patterns:
+- pattern: \{\{.*\*.*\}\}
+  flags: []
+  timeout: 5.0
+- pattern: \{\{.*__import__.*\}\}
+  flags: []
+  timeout: 5.0
+- pattern: \{\{.*config.*\}\}|\{\{.*self.*\}\}
+  flags: []
+  timeout: 5.0
+- pattern: \{\{.*request\.application.*\}\}
+  flags: []
+  timeout: 5.0
+- pattern: \$\{.*\*.*\}|\$\{.*java\.lang.*\}
+  flags: []
+  timeout: 5.0
+- pattern: <%=.*system\(.*%>|<%=.*`.*`.*%>
+  flags: []
+  timeout: 5.0
+- pattern: \[\[.*@.*Runtime.*\]\]|\[\[.*T\(java\.lang\.Runtime\).*\]\]
+  flags: []
+  timeout: 5.0
+- pattern: (?i)\{\{.*lipsum\..*__globals__.*\}\}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: \{\{.*\[\[.*class.*base.*subclasses.*\]\].*\}\}
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - '{{7*7}}'
+  - '{{config}}'
+  - '{{self}}'
+  - "{{''.__class__.__mro__[1].__subclasses__()}}"
+  - '{{request.application.__globals__.__builtins__.__import__("os").popen("id").read()}}'
+  - '${7*7}'
+  - '${T(java.lang.Runtime).getRuntime().exec("calc")}'
+  - '<%= system("whoami") %>'
+  - '<%= `ls -la` %>'
+  - '[[${T(java.lang.Runtime).getRuntime().exec("calc")}]]'
+  - '{{lipsum.__globals__}}'
+  - "{{''.__class__.__bases__[0].__subclasses__()}}"
+  - '${@java.lang.Runtime@getRuntime().exec("calc")}'
+  should_not_match:
+  - Template syntax documentation
+  - Jinja2 tutorial for beginners
+  - Handlebars template examples
+  - ERB rendering in Rails
+  - Thymeleaf expressions guide
+  - Template engine comparison
+  - Safe templating practices
+  - Understanding SSTI vulnerabilities
+  - How to prevent template injection
+  - Template security best practices
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+- T1190
+- T1210
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  legacy_rx_id: null
+rule_hash: sha256:NEW_RULE_TEMPLATE_INJECTION
+risk_explanation: Code execution attacks inject and execute arbitrary code (Python, JavaScript, Node.js) to gain control over application logic or system resources. Successful exploitation can lead to complete system compromise, data theft, or deployment of malware.
+remediation_advice: Never use eval(), exec(), or similar functions with user input. Implement strict input validation and sanitization. Use sandboxing and containerization to isolate code execution. Deploy runtime application self-protection (RASP) to detect code injection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-026-Template-Injection-Attacks

@@ -1,0 +1,115 @@
+{
+  "model_type": "embeddinggemma_threat_classifier",
+  "variant": "compact",
+  "embedding_model": "google/embeddinggemma-300m",
+  "embedding_dim": 256,
+  "max_seq_length": 512,
+  "classifiers": {
+    "is_threat": {
+      "type": "binary",
+      "num_classes": 2,
+      "classes": [
+        "benign",
+        "threat"
+      ],
+      "train_on": "all"
+    },
+    "threat_family": {
+      "type": "multiclass",
+      "num_classes": 9,
+      "classes": [
+        "benign",
+        "data_exfiltration",
+        "encoding_or_obfuscation_attack",
+        "jailbreak",
+        "other_security",
+        "prompt_injection",
+        "rag_or_context_attack",
+        "tool_or_command_abuse",
+        "toxic_or_policy_violating_content"
+      ],
+      "train_on": "all"
+    },
+    "severity": {
+      "type": "multiclass",
+      "num_classes": 5,
+      "classes": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "train_on": "all"
+    },
+    "primary_technique": {
+      "type": "multiclass",
+      "num_classes": 22,
+      "classes": [
+        "chain_of_thought_or_internal_state_leak",
+        "context_or_delimiter_injection",
+        "data_exfil_system_prompt_or_config",
+        "data_exfil_user_content",
+        "encoding_or_obfuscation",
+        "eval_or_guardrail_evasion",
+        "hidden_or_steganographic_prompt",
+        "indirect_injection_via_content",
+        "instruction_override",
+        "mode_switch_or_privilege_escalation",
+        "multi_turn_or_crescendo",
+        "none",
+        "other_attack_technique",
+        "payload_splitting_or_staging",
+        "policy_override_or_rewriting",
+        "rag_poisoning_or_context_bias",
+        "role_or_persona_manipulation",
+        "safety_bypass_harmful_output",
+        "social_engineering_content",
+        "system_prompt_or_config_extraction",
+        "tool_abuse_or_unintended_action",
+        "tool_or_command_injection"
+      ],
+      "train_on": "threats_only"
+    },
+    "harm_types": {
+      "type": "multilabel",
+      "num_classes": 10,
+      "classes": [
+        "cbrn_or_weapons",
+        "crime_or_fraud",
+        "cybersecurity_or_malware",
+        "hate_or_harassment",
+        "misinformation_or_disinfo",
+        "other_harm",
+        "privacy_or_pii",
+        "self_harm_or_suicide",
+        "sexual_content",
+        "violence_or_physical_harm"
+      ],
+      "train_on": "threats_only"
+    }
+  },
+  "files": {
+    "embeddings": "model.onnx",
+    "classifiers": {
+      "is_threat": "classifier_is_threat.onnx",
+      "threat_family": "classifier_threat_family.onnx",
+      "severity": "classifier_severity.onnx",
+      "primary_technique": "classifier_primary_technique.onnx",
+      "harm_types": "classifier_harm_types.onnx"
+    },
+    "tokenizer": "tokenizer.json",
+    "label_config": "label_config.json",
+    "pooling_config": "pooling_config.json"
+  },
+  "inference_pipeline": [
+    "1. Tokenize text with tokenizer.json",
+    "2. Run model.onnx to get last_hidden_state",
+    "3. Apply mean pooling, truncate to 256 dims, L2 normalize",
+    "4. Run classifier_is_threat.onnx for binary threat detection",
+    "5. Run classifier_threat_family.onnx for family classification",
+    "6. Run classifier_severity.onnx for severity level",
+    "7. If threat: run classifier_primary_technique.onnx",
+    "8. If threat: run classifier_harm_types.onnx (multi-label)"
+  ]
+}

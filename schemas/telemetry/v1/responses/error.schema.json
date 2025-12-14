@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/responses/error.schema.json",
+  "title": "Error Response",
+  "description": "Response for failed requests",
+  "type": "object",
+  "required": [
+    "error",
+    "message",
+    "code"
+  ],
+  "properties": {
+    "error": {
+      "type": "string",
+      "enum": [
+        "invalid_api_key",
+        "key_expired",
+        "rate_limited",
+        "schema_version_unsupported",
+        "validation_error",
+        "privacy_violation",
+        "batch_too_large",
+        "event_too_large",
+        "malformed_json",
+        "server_error"
+      ],
+      "description": "Error type"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable error message"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z]+_[0-9]{3}$",
+      "description": "Machine-readable error code (e.g., AUTH_001)"
+    },
+    "details": {
+      "type": "object",
+      "description": "Additional error details",
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Field that caused validation error"
+        },
+        "min_version": {
+          "type": "string",
+          "description": "Minimum supported schema version"
+        },
+        "retry_after": {
+          "type": "integer",
+          "description": "Seconds to wait before retry (rate limiting)"
+        },
+        "max_size": {
+          "type": "integer",
+          "description": "Maximum allowed size"
+        },
+        "actual_size": {
+          "type": "integer",
+          "description": "Actual size that caused error"
+        }
+      }
+    },
+    "request_id": {
+      "type": "string",
+      "description": "Request ID for debugging"
+    },
+    "console_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to console for resolution (e.g., key management)"
+    }
+  },
+  "additionalProperties": false
+}

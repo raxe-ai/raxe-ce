@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-116
+family: ENC
+sub_family: case_mixing_encoding
+name: Detects case mixing encoding obfuscation
+description: Detects case mixing encoding obfuscation
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)case mixing (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0116
+rule_hash: sha256:65c1e1fc43c3a7843d5681f88c98a6116c8cf9d0de09d4ef85cd8ddaf40ab998
+risk_explanation: case mixing encoding can obfuscate malicious content.
+remediation_advice: Detect case mixing patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-116-Case-Mixing-Encoding

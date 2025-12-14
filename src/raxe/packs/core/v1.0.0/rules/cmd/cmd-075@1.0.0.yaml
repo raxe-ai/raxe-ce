@@ -1,0 +1,45 @@
+version: 1.0.0
+rule_id: cmd-075
+family: CMD
+sub_family: shell_commands
+name: Detects cloud metadata service access (AWS, Azure, GCP)
+description: Detects cloud metadata service access (AWS, Azure, GCP)
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)169\.254\.169\.254
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)metadata\.(?:google|azure)\.(?:com|internal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: http://(?:instance-data|metadata)\.ec2
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - curl http://169.254.169.254/latest/meta-data/
+  - wget http://metadata.google.internal/computeMetadata/v1/
+  - http://metadata.azure.com/metadata/instance
+  should_not_match:
+  - Cloud metadata service documentation
+  - AWS instance metadata explained
+  - GCP metadata API reference
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-0075
+rule_hash: sha256:f000f5c57205bab0d9e0e0c661785846a392d3908964e7f8689cac684b9d3323
+risk_explanation: Shell command injection exploits enable arbitrary system command execution through vulnerable inputs. Attackers can read sensitive files, modify system configurations, escalate privileges, install backdoors, or completely compromise the underlying system.
+remediation_advice: Never execute shell commands with user-controlled input. If command execution is necessary, use strict allowlisting of permitted commands and arguments. Implement input validation and sanitization. Use least-privilege execution contexts. Deploy command injection detection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-075-Cloud-Metadata-Service

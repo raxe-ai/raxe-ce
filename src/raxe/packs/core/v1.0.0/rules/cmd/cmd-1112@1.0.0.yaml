@@ -1,0 +1,44 @@
+version: 1.0.0
+rule_id: cmd-1112
+family: CMD
+sub_family: shell_invocation
+name: Detects cmd.exe execution
+description: Detects cmd.exe execution
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)cmd\.exe\s+/c\s+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)cmd\s+/c\s+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)%COMSPEC%\s+/c\s+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - cmd.exe /c whoami
+  - cmd /c del C:\*.*
+  - '%COMSPEC% /c dir'
+  should_not_match:
+  - Windows command prompt guide
+  - cmd.exe documentation
+  - Command line in Windows
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-1112
+rule_hash: sha256:9854e5d01a8b866d1253d2fc56cabc6f1f35c08f1ea7670f45b199fd8368dda3
+risk_explanation: Direct shell invocation (cmd.exe, /bin/sh, PowerShell) provides attackers with full command execution capabilities. This is one of the highest-risk vulnerabilities as it grants complete control over command execution.
+remediation_advice: Never invoke shells with user-controlled input. Use APIs or libraries that don't require shell execution. Implement application-level command execution with strict validation. Deploy shell invocation detection and blocking.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-1112-Cmd.Exe-Execution

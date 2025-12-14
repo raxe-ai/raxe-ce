@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/error.schema.json",
+  "title": "Error Event",
+  "description": "Fired when an error occurs (for debugging and quality improvement)",
+  "type": "object",
+  "required": [
+    "error_type",
+    "error_code",
+    "component"
+  ],
+  "properties": {
+    "error_type": {
+      "type": "string",
+      "enum": [
+        "validation_error",
+        "configuration_error",
+        "rule_loading_error",
+        "ml_model_error",
+        "network_error",
+        "permission_error",
+        "timeout_error",
+        "internal_error"
+      ],
+      "description": "Category of error"
+    },
+    "error_code": {
+      "type": "string",
+      "description": "Specific error code (e.g., RAXE_001)"
+    },
+    "error_message_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "minLength": 71,
+      "maxLength": 71,
+      "description": "SHA-256 hash of error message with sha256: prefix (for grouping without PII)"
+    },
+    "component": {
+      "type": "string",
+      "enum": [
+        "cli",
+        "sdk",
+        "engine",
+        "ml",
+        "rules",
+        "config",
+        "telemetry",
+        "wrapper"
+      ],
+      "description": "Component where error occurred"
+    },
+    "operation": {
+      "type": "string",
+      "description": "Operation being performed when error occurred"
+    },
+    "is_recoverable": {
+      "type": "boolean",
+      "description": "Whether the error was recovered from"
+    },
+    "stack_trace_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "minLength": 71,
+      "maxLength": 71,
+      "description": "SHA-256 hash of stack trace with sha256: prefix (for grouping)"
+    },
+    "context": {
+      "type": "object",
+      "description": "Non-sensitive error context",
+      "properties": {
+        "python_version": {
+          "type": "string"
+        },
+        "raxe_version": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        }
+      }
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization ID for multi-tenant tracking"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team ID for team-level analytics"
+    }
+  },
+  "additionalProperties": false
+}

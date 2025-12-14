@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: pii-3004
+family: PII
+sub_family: api_keys
+name: Azure Client Secret Detection
+description: Detects Microsoft Azure client secrets and application passwords
+severity: critical
+confidence: 0.96
+patterns:
+- pattern: (?i)azure.{0,20}(?:secret|password|key).{0,20}['\"]([A-Za-z0-9~._-]{34,40})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)client.{0,20}secret.{0,20}['\"]([A-Za-z0-9~._-]{34,40})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "azure_client_secret: 'Abc~1234567890.ABCDEFGHIJKLMNOPQRSTUVWX'"
+  - "CLIENT_SECRET='xyz789~ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567'"
+  should_not_match:
+  - "How to create an Azure client secret?"
+  - "What is an Azure application password?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+- T1528
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: cloud_credentials
+rule_hash: null
+risk_explanation: API key exposure in prompts, responses, or training data creates critical security vulnerabilities. Leaked API keys grant attackers access to cloud services, third-party platforms, and internal systems, potentially leading to data breaches, resource abuse, or financial fraud.
+remediation_advice: Scan all data sources for API keys before AI processing. Implement automated key rotation and revocation. Use secret detection tools in development and production pipelines. Never log or persist API keys. Apply access controls to prevent AI systems from accessing key stores.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3004-Azure-Client-Secret-Detection

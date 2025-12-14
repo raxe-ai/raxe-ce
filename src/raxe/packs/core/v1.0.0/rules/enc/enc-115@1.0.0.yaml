@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-115
+family: ENC
+sub_family: unicode_normalize_encoding
+name: Detects unicode normalize encoding obfuscation
+description: Detects unicode normalize encoding obfuscation
+severity: critical
+confidence: 0.95
+patterns:
+- pattern: (?i)unicode normalize (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use Unicode encoding to hide malicious content
+  - Apply Unicode obfuscation to conceal exploit
+  - Encode with Unicode to hide harmful payload
+  should_not_match:
+  - What is Unicode character encoding?
+  - How do I display Unicode characters?
+  - Explain UTF-8 encoding
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0115
+rule_hash: sha256:f3eddf36a685b66e6c573ab2d15b9e52f5810d978a32e8f61b0d4add07db2bd8
+risk_explanation: unicode normalize encoding can obfuscate malicious content.
+remediation_advice: Detect unicode normalize patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-115-Unicode-Normalize-Encoding

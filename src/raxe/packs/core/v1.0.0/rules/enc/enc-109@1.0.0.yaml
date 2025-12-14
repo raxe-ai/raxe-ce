@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-109
+family: ENC
+sub_family: polyglot_pdf_encoding
+name: Detects polyglot PDF encoding obfuscation
+description: Detects polyglot PDF encoding obfuscation
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: (?i)polyglot pdf (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0109
+rule_hash: sha256:7978324b7f688c0456e357ab3973f9943e78173e7fae258e7556ff161250d5a9
+risk_explanation: polyglot PDF encoding can obfuscate malicious content.
+remediation_advice: Detect polyglot PDF patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-109-Polyglot-Pdf-Encoding

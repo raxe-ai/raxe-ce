@@ -1,0 +1,46 @@
+version: 1.0.0
+rule_id: enc-044
+family: ENC
+sub_family: cipher_encoding
+name: Detects XOR encoding patterns
+description: Detects XOR encoding patterns
+severity: high
+confidence: 0.9
+patterns:
+- pattern: (?i)XOR\s+encoded:\s+\\x[0-9a-fA-F]{2}(?:\\x[0-9a-fA-F]{2}){3,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)xor.*key.*\\x
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\^\s*0x[0-9a-fA-F]+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - 'XOR encoded: \x1a\x05\x0e\x0b\x1b\x04'
+  - 'xor with key: \x41\x42'
+  - data ^ 0xFF
+  should_not_match:
+  - XOR operation in programming
+  - Bitwise XOR explained
+  - XOR cipher documentation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0044
+rule_hash: sha256:33adcd2f6abe520917bfb23b51e82a00764299fd9a36847cca1bb035f8e2beb6
+risk_explanation: XOR and other simple ciphers encode malicious payloads to evade detection. While cryptographically weak, these encodings can bypass signature-based security controls.
+remediation_advice: Detect and analyze common cipher patterns. Implement heuristic analysis for encoded content. Use entropy analysis to identify encrypted or encoded data. Deploy behavioral monitoring that detects malicious actions regardless of encoding.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-044-Xor-Encoding-Patterns

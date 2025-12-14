@@ -1,0 +1,47 @@
+version: 1.0.0
+rule_id: pii-027
+family: PII
+sub_family: credential_extraction
+name: Detects password hash and salt extraction
+description: Detects password hash and salt extraction
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\b(?:dump|export|show|get)\s+(?:all\s+)?(?:password\s+)?(?:hashes|hash|salt)s?
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:dump|export|show|get)\s+(?:bcrypt|scrypt|pbkdf2|sha\d+)\s+(?:password\s+)?hashes?
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\bpassword\s+hash(?:es)?\s+(?:from|in)\s+(?:database|db)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Dump all password hashes
+  - Export bcrypt hashes from database
+  - Show password salt values
+  - Get SHA256 password hashes
+  should_not_match:
+  - Password hashing algorithms
+  - How to hash passwords securely
+  - Bcrypt implementation
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-PII-0027
+rule_hash: sha256:e4cbe0a46f052a97af6a141276ed48224d21099fa57b6874e57f827b63a13712
+risk_explanation: Credential extraction attacks attempt to retrieve authentication secrets (passwords, API keys, tokens) from AI systems or their accessible data. Successful extraction grants attackers unauthorized access to accounts, systems, and services, enabling further compromise.
+remediation_advice: Never store credentials in AI-accessible contexts, training data, or knowledge bases. Implement strict access controls that prevent AI from reading credential stores. Reject all prompts attempting to extract authentication data. Log extraction attempts for security review.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-027-Password-Hash

@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/batch.schema.json",
+  "title": "Telemetry Batch Request",
+  "description": "Batch envelope for telemetry event submission",
+  "type": "object",
+  "required": [
+    "batch_id",
+    "schema_version",
+    "client_version",
+    "installation_id",
+    "sent_at",
+    "event_count",
+    "events"
+  ],
+  "properties": {
+    "batch_id": {
+      "type": "string",
+      "pattern": "^batch_[a-zA-Z0-9]+$",
+      "description": "Unique batch identifier (client-generated UUID with prefix)"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Schema version for compatibility checking (semver)"
+    },
+    "client_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+",
+      "description": "RAXE client version"
+    },
+    "installation_id": {
+      "type": "string",
+      "pattern": "^inst_[a-zA-Z0-9]+$",
+      "description": "Unique installation identifier"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^sess_[a-zA-Z0-9]+$",
+      "description": "Current session identifier (optional)"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when batch was sent"
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Number of events in batch (must match events array length)"
+    },
+    "compression": {
+      "type": "string",
+      "enum": ["gzip", "none"],
+      "default": "gzip",
+      "description": "Compression algorithm used on request body"
+    },
+    "queue_stats": {
+      "type": "object",
+      "description": "Current queue statistics for monitoring",
+      "properties": {
+        "critical_pending": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Events in critical priority queue"
+        },
+        "standard_pending": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Events in standard priority queue"
+        },
+        "dlq_size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Events in dead letter queue"
+        }
+      },
+      "required": ["critical_pending", "standard_pending", "dlq_size"]
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "description": "Array of telemetry events",
+      "items": {
+        "$ref": "#/definitions/event"
+      }
+    }
+  },
+  "definitions": {
+    "event": {
+      "type": "object",
+      "required": ["event_id", "event_type", "timestamp", "priority", "payload"],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "pattern": "^evt_[a-zA-Z0-9]+$",
+          "description": "Unique event identifier"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "installation",
+            "activation",
+            "session_start",
+            "session_end",
+            "scan",
+            "error",
+            "performance",
+            "feature_usage",
+            "heartbeat",
+            "key_upgrade",
+            "config_changed",
+            "team_invite"
+          ],
+          "description": "Type of telemetry event"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when event occurred"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "standard"],
+          "description": "Event priority for queue routing"
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of retry attempts"
+        },
+        "org_id": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Organization ID for multi-tenant tracking"
+        },
+        "team_id": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Team ID for team-level analytics"
+        },
+        "payload": {
+          "type": "object",
+          "description": "Event-specific payload (schema depends on event_type)"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

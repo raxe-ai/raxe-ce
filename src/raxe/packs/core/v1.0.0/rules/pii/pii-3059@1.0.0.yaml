@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: pii-3059
+family: PII
+sub_family: authentication
+name: API Key Generic Pattern Detection
+description: Detects generic API key patterns in code and configurations
+severity: medium
+confidence: 0.82
+patterns:
+- pattern: (?i)(?:api|app).{0,10}(?:key|token|secret).{0,10}[=:]\s*['\"]([A-Za-z0-9\-_]{32,})['\"]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)(?:x-api-key|apikey):\s*([A-Za-z0-9\-_]{20,})
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "api_key='abcdefghijklmnopqrstuvwxyz1234567890'"
+  - "X-API-Key: 1234567890abcdefghijklmnop"
+  - "APP_SECRET='ABCD1234EFGH5678IJKL9012MNOP3456'"
+  should_not_match:
+  - "What is an API key?"
+  - "How to secure API keys?"
+  - "api_key=YOUR_KEY_HERE"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1552.001
+metadata:
+  created: '2025-11-16'
+  updated: '2025-11-16'
+  author: raxe-ce
+  category: generic_credentials
+rule_hash: null
+risk_explanation: Authentication token exposure (JWTs, bearer tokens, session cookies) grants attackers immediate access to authenticated sessions and user accounts. Unlike passwords, tokens provide direct access without needing additional authentication steps.
+remediation_advice: Implement short token lifetimes and automatic rotation. Use secure token storage and transmission. Deploy token validation and revocation mechanisms. Never log or expose tokens in error messages or responses.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/PII-3059-Api-Key-Generic-Pattern

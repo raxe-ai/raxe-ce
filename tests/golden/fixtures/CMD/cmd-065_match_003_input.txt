@@ -1,0 +1,1 @@
+execSync('cat /etc/passwd')

@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: cmd-1080
+family: CMD
+sub_family: shell_operators
+name: Detects semicolon with password file access
+description: Detects semicolon with password file access
+severity: critical
+confidence: 0.99
+patterns:
+- pattern: ;\s*cat\s+/etc/passwd
+  flags: []
+  timeout: 5.0
+- pattern: ;\s*type\s+.*\\SAM
+  flags: []
+  timeout: 5.0
+- pattern: ;\s*cat\s+/etc/shadow
+  flags: []
+  timeout: 5.0
+examples:
+  should_match:
+  - command; cat /etc/passwd
+  - test; cat /etc/shadow
+  - exec; type C:\Windows\System32\config\SAM
+  should_not_match:
+  - Semicolon in shell commands
+  - cat command documentation
+  - File system security
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-CMD-1080
+rule_hash: sha256:935f55ab5e9955e3d7dd28e1fba7dd5374f0605a607765d19c4a423b6385a9ec
+risk_explanation: Shell operator injection uses special characters (semicolons, pipes, redirects) to chain commands or modify command behavior. This enables attackers to execute multiple malicious operations or redirect output to exfiltrate data.
+remediation_advice: Sanitize or reject shell operator characters in user input. Use parameterized command execution that prevents operator interpretation. Implement strict allowlisting of permitted command structures. Monitor for command chaining attempts.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/CMD-1080-Semicolon-Password

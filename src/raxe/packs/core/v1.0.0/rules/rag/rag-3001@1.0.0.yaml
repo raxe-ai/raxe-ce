@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: rag-3001
+family: RAG
+sub_family: poison_actions
+name: Detects 'poison' attacks on RAG components
+description: Detects 'poison' attacks on RAG components
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\bpoison\s+(the\s+)?(?:index|vector\s+store|embeddings?|knowledge\s+base|database)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\bpoisoning\s+(the\s+)?(?:RAG|retrieval)\s+(?:system|pipeline)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - poison the index
+  - poison the vector store
+  - poisoning the RAG system
+  - Poison embeddings with malicious data
+  should_not_match:
+  - Data poisoning prevention
+  - Poison detection methods
+  - About poisoning attacks
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-3001
+rule_hash: sha256:ce2a35cc78274098563b8154535cd40223f21470ceda130669b8b4973f3e94f3
+risk_explanation: Explicit poisoning attacks on RAG components (documents, indices, retrievers) attempt to corrupt the knowledge base systematically. These direct attacks aim to degrade system quality or inject specific misinformation.
+remediation_advice: Implement strict access controls for knowledge base modifications. Use write-once or immutable storage where appropriate. Deploy integrity monitoring and verification. Maintain audit logs of all modifications.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-3001-'Poison'-Attacks-On

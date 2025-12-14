@@ -1,0 +1,41 @@
+version: 1.0.0
+rule_id: rag-3009
+family: RAG
+sub_family: overwhelm_actions
+name: Detects 'flood' attacks on RAG components
+description: Detects 'flood' attacks on RAG components
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\bflood\s+(the\s+)?(?:index|vector\s+store|knowledge\s+base)(?:\s+with)?
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\bflooding\s+(the\s+)?(?:RAG|retrieval)\s+(?:system|database)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - flood the index with malicious data
+  - flood the vector store with noise
+  - flooding the RAG system
+  - Flood knowledge base
+  should_not_match:
+  - Flood control mechanisms
+  - Rate limiting to prevent flooding
+  - Network flood protection
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-RAG-3009
+rule_hash: sha256:34686647c26a9804530de69b5a92ff0060f3de69ab037163bf2c453afbf52d33
+risk_explanation: Flooding attacks overwhelm RAG systems with massive volumes of content to degrade performance or obscure authentic information. This denial-of-service technique can make systems unusable or unreliable.
+remediation_advice: Implement rate limiting and resource quotas for document ingestion. Use anomaly detection for unusual ingestion patterns. Deploy capacity management and scaling controls. Apply access controls and authentication for knowledge base updates.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/RAG-3009-'Flood'-Attacks-On

@@ -1,0 +1,128 @@
+# RAXE Policy Template: Strict Mode (High Security)
+#
+# Use Case: High-risk applications requiring maximum security
+#
+# Behavior:
+# - CRITICAL → Blocked (any confidence level)
+# - HIGH (>70% confidence) → Blocked
+# - MEDIUM (>80% confidence) → Flagged for review
+# - LOW/INFO → Logged only
+#
+# Recommended For:
+# - Banking and financial services
+# - Healthcare (HIPAA compliance)
+# - Government applications
+# - Applications handling sensitive PII
+# - Compliance-driven environments (SOC 2, ISO 27001)
+#
+# Trade-offs:
+# - Lower false positive tolerance
+# - More aggressive blocking may impact user experience
+# - Requires careful monitoring and false positive suppression
+
+version: "1.0.0"
+customer_id: "local"
+
+policies:
+  # Block all critical threats (any confidence)
+  - policy_id: "block-critical-strict"
+    name: "Block all CRITICAL threats"
+    description: "Block critical-severity threats regardless of confidence level"
+    conditions:
+      - severity: "CRITICAL"
+    action: "BLOCK"
+    priority: 100
+    enabled: true
+    metadata:
+      mode: "strict"
+      enforcement: "maximum"
+      compliance: "required"
+
+  # Block high-severity threats (conservative threshold)
+  - policy_id: "block-high-strict"
+    name: "Block HIGH severity threats"
+    description: "Block high-severity threats with reasonable confidence (>70%)"
+    conditions:
+      - severity: "HIGH"
+        min_confidence: 0.7
+    action: "BLOCK"
+    priority: 90
+    enabled: true
+    metadata:
+      mode: "strict"
+      enforcement: "aggressive"
+      alert_soc: "true"
+
+  # Flag medium-severity threats for review
+  - policy_id: "flag-medium"
+    name: "Flag MEDIUM severity"
+    description: "Queue medium-severity threats for security review (>80% confidence)"
+    conditions:
+      - severity: "MEDIUM"
+        min_confidence: 0.8
+    action: "FLAG"
+    priority: 50
+    enabled: true
+    metadata:
+      mode: "strict"
+      review_queue: "tier-1-security"
+      sla: "4-hours"
+
+  # Allow low-severity (passive monitoring)
+  - policy_id: "allow-low"
+    name: "Monitor LOW severity"
+    description: "Log low-severity threats without enforcement"
+    conditions:
+      - severity: "LOW"
+    action: "ALLOW"
+    priority: 10
+    enabled: true
+    metadata:
+      mode: "strict"
+      monitoring: "passive"
+
+  # Allow info level (passive monitoring)
+  - policy_id: "allow-info"
+    name: "Monitor INFO detections"
+    description: "Log informational detections without enforcement"
+    conditions:
+      - severity: "INFO"
+    action: "ALLOW"
+    priority: 10
+    enabled: true
+    metadata:
+      mode: "strict"
+      monitoring: "passive"
+
+  # Strict L2 ML detection enforcement
+  - policy_id: "block-l2-high-confidence"
+    name: "Block high-confidence L2 ML detections"
+    description: "Block L2 ML detections with very high confidence (>95%)"
+    conditions:
+      - rule_ids: ["l2-prompt-injection", "l2-jailbreak", "l2-toxic"]
+        min_confidence: 0.95
+    action: "BLOCK"
+    priority: 95
+    enabled: true
+    metadata:
+      mode: "strict"
+      detection_layer: "L2-ML"
+      alert_ml_team: "true"
+
+  # Example: Suppress validated false positives
+  # Even in strict mode, you need escape hatches for known FPs
+  # Uncomment and customize based on your analysis
+  #
+  # - policy_id: "suppress-validated-fps"
+  #   name: "Allow validated false positives"
+  #   description: "Specific patterns validated as false positives"
+  #   conditions:
+  #     - rule_ids: ["pii-3001"]  # Example: Credit card in code samples
+  #       max_confidence: 0.6
+  #   action: "ALLOW"
+  #   priority: 85
+  #   enabled: true
+  #   metadata:
+  #     validated_by: "security-team"
+  #     validation_date: "2025-11-23"
+  #     jira_ticket: "SEC-1234"

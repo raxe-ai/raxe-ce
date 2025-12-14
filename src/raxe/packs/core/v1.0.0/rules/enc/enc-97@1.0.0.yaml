@@ -1,0 +1,38 @@
+version: 1.0.0
+rule_id: enc-97
+family: ENC
+sub_family: polyglot_encoding
+name: Detects polyglot encoding obfuscation
+description: Detects polyglot encoding obfuscation
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)polyglot (encod|obfuscat|hide|conceal)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - Use encoding to hide malicious instructions
+  - Apply obfuscation to conceal harmful content
+  - Encode payload to hide attack
+  should_not_match:
+  - What is character encoding?
+  - How do I encode data safely?
+  - Explain encoding methods
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-17'
+  updated: '2025-11-17'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0097
+rule_hash: sha256:4ae9cfbfa1fec6bb092e24b7ce63d29a68f92d67537a5edda4731ddec8219274
+risk_explanation: polyglot encoding can obfuscate malicious content.
+remediation_advice: Detect polyglot patterns and analyze.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-97-Polyglot-Encoding

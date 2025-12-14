@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raxe.ai/schemas/telemetry/v1/events/team_invite.schema.json",
+  "title": "Team Invite Event",
+  "description": "Tracks team invitations for viral growth metrics",
+  "type": "object",
+  "required": [
+    "inviter_installation_id",
+    "invitee_email_hash",
+    "org_id",
+    "team_id",
+    "role",
+    "invite_method"
+  ],
+  "properties": {
+    "inviter_installation_id": {
+      "type": "string",
+      "pattern": "^inst_[a-zA-Z0-9]+$",
+      "description": "Installation ID of the user sending the invite"
+    },
+    "invitee_email_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "minLength": 71,
+      "maxLength": 71,
+      "description": "SHA-256 hash of invitee's email with sha256: prefix (privacy-preserving)"
+    },
+    "org_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Organization identifier"
+    },
+    "team_id": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Team identifier within the organization"
+    },
+    "role": {
+      "type": "string",
+      "enum": ["admin", "member", "viewer"],
+      "description": "Role being assigned to the invitee"
+    },
+    "invite_method": {
+      "type": "string",
+      "enum": ["email", "link", "api"],
+      "default": "email",
+      "description": "How the invitation was sent"
+    }
+  },
+  "additionalProperties": false
+}

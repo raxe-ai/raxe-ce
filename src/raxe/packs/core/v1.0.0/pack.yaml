@@ -1,0 +1,1394 @@
+pack:
+  id: core
+  version: 1.0.0
+  name: RAXE Core LLM Safety Rules
+  type: OFFICIAL
+  schema_version: 1.1.0
+  rules:
+  - id: pi-001
+    version: 1.0.0
+    path: rules/PI/pi-001@1.0.0.yaml
+  - id: pi-006
+    version: 1.0.0
+    path: rules/PI/pi-006@1.0.0.yaml
+  - id: pi-014
+    version: 1.0.0
+    path: rules/PI/pi-014@1.0.0.yaml
+  - id: pi-017
+    version: 1.0.0
+    path: rules/PI/pi-017@1.0.0.yaml
+  - id: pi-022
+    version: 1.0.0
+    path: rules/PI/pi-022@1.0.0.yaml
+  - id: pi-023
+    version: 1.0.0
+    path: rules/PI/pi-023@1.0.0.yaml
+  - id: pi-024
+    version: 1.0.0
+    path: rules/PI/pi-024@1.0.0.yaml
+  - id: pi-025
+    version: 1.0.0
+    path: rules/PI/pi-025@1.0.0.yaml
+  - id: pi-026
+    version: 1.0.0
+    path: rules/PI/pi-026@1.0.0.yaml
+  - id: pi-027
+    version: 1.0.0
+    path: rules/PI/pi-027@1.0.0.yaml
+  - id: pi-028
+    version: 1.0.0
+    path: rules/PI/pi-028@1.0.0.yaml
+  - id: pi-029
+    version: 1.0.0
+    path: rules/PI/pi-029@1.0.0.yaml
+  - id: pi-030
+    version: 1.0.0
+    path: rules/PI/pi-030@1.0.0.yaml
+  - id: pi-033
+    version: 1.0.0
+    path: rules/PI/pi-033@1.0.0.yaml
+  - id: pi-034
+    version: 1.0.0
+    path: rules/PI/pi-034@1.0.0.yaml
+  - id: pi-035
+    version: 1.0.0
+    path: rules/PI/pi-035@1.0.0.yaml
+  - id: pi-046
+    version: 1.0.0
+    path: rules/PI/pi-046@1.0.0.yaml
+  - id: pi-047
+    version: 1.0.0
+    path: rules/PI/pi-047@1.0.0.yaml
+  - id: pi-048
+    version: 1.0.0
+    path: rules/PI/pi-048@1.0.0.yaml
+  - id: pi-049
+    version: 1.0.0
+    path: rules/PI/pi-049@1.0.0.yaml
+  - id: pi-050
+    version: 1.0.0
+    path: rules/PI/pi-050@1.0.0.yaml
+  - id: pi-068
+    version: 1.0.0
+    path: rules/PI/pi-068@1.0.0.yaml
+  - id: pi-078
+    version: 1.0.0
+    path: rules/PI/pi-078@1.0.0.yaml
+  - id: pi-2001
+    version: 1.0.0
+    path: rules/PI/pi-2001@1.0.0.yaml
+  - id: pi-2004
+    version: 1.0.0
+    path: rules/PI/pi-2004@1.0.0.yaml
+  - id: pi-201
+    version: 1.0.0
+    path: rules/PI/pi-201@1.0.0.yaml
+  - id: pi-202
+    version: 1.0.0
+    path: rules/PI/pi-202@1.0.0.yaml
+  - id: pi-203
+    version: 1.0.0
+    path: rules/PI/pi-203@1.0.0.yaml
+  - id: pi-3007
+    version: 1.0.0
+    path: rules/PI/pi-3007@1.0.0.yaml
+  - id: pi-3016
+    version: 1.0.0
+    path: rules/PI/pi-3016@1.0.0.yaml
+  - id: pi-3026
+    version: 1.0.0
+    path: rules/PI/pi-3026@1.0.0.yaml
+  - id: pi-3027
+    version: 1.0.0
+    path: rules/PI/pi-3027@1.0.0.yaml
+  - id: pi-3028
+    version: 1.0.0
+    path: rules/PI/pi-3028@1.0.0.yaml
+  - id: pi-3029
+    version: 1.0.0
+    path: rules/PI/pi-3029@1.0.0.yaml
+  - id: pi-3030
+    version: 1.0.0
+    path: rules/PI/pi-3030@1.0.0.yaml
+  - id: pi-3031
+    version: 1.0.0
+    path: rules/PI/pi-3031@1.0.0.yaml
+  - id: pi-3032
+    version: 1.0.0
+    path: rules/PI/pi-3032@1.0.0.yaml
+  - id: pi-3033
+    version: 1.0.0
+    path: rules/PI/pi-3033@1.0.0.yaml
+  - id: pi-3034
+    version: 1.0.0
+    path: rules/PI/pi-3034@1.0.0.yaml
+  - id: pi-79
+    version: 1.0.0
+    path: rules/PI/pi-79@1.0.0.yaml
+  - id: pi-80
+    version: 1.0.0
+    path: rules/PI/pi-80@1.0.0.yaml
+  - id: pi-81
+    version: 1.0.0
+    path: rules/PI/pi-81@1.0.0.yaml
+  - id: pi-82
+    version: 1.0.0
+    path: rules/PI/pi-82@1.0.0.yaml
+  - id: pi-83
+    version: 1.0.0
+    path: rules/PI/pi-83@1.0.0.yaml
+  - id: pi-84
+    version: 1.0.0
+    path: rules/PI/pi-84@1.0.0.yaml
+  - id: pi-85
+    version: 1.0.0
+    path: rules/PI/pi-85@1.0.0.yaml
+  - id: pi-86
+    version: 1.0.0
+    path: rules/PI/pi-86@1.0.0.yaml
+  - id: pi-87
+    version: 1.0.0
+    path: rules/PI/pi-87@1.0.0.yaml
+  - id: pi-88
+    version: 1.0.0
+    path: rules/PI/pi-88@1.0.0.yaml
+  - id: pi-89
+    version: 1.0.0
+    path: rules/PI/pi-89@1.0.0.yaml
+  - id: pi-90
+    version: 1.0.0
+    path: rules/PI/pi-90@1.0.0.yaml
+  - id: pi-91
+    version: 1.0.0
+    path: rules/PI/pi-91@1.0.0.yaml
+  - id: pi-92
+    version: 1.0.0
+    path: rules/PI/pi-92@1.0.0.yaml
+  - id: pi-93
+    version: 1.0.0
+    path: rules/PI/pi-93@1.0.0.yaml
+  - id: pi-94
+    version: 1.0.0
+    path: rules/PI/pi-94@1.0.0.yaml
+  - id: pi-95
+    version: 1.0.0
+    path: rules/PI/pi-95@1.0.0.yaml
+  - id: pi-96
+    version: 1.0.0
+    path: rules/PI/pi-96@1.0.0.yaml
+  - id: pi-97
+    version: 1.0.0
+    path: rules/PI/pi-97@1.0.0.yaml
+  - id: pi-98
+    version: 1.0.0
+    path: rules/PI/pi-98@1.0.0.yaml
+  - id: cmd-001
+    version: 1.0.0
+    path: rules/cmd/cmd-001@1.0.0.yaml
+  - id: cmd-007
+    version: 1.0.0
+    path: rules/cmd/cmd-007@1.0.0.yaml
+  - id: cmd-015
+    version: 1.0.0
+    path: rules/cmd/cmd-015@1.0.0.yaml
+  - id: cmd-016
+    version: 1.0.0
+    path: rules/cmd/cmd-016@1.0.0.yaml
+  - id: cmd-017
+    version: 1.0.0
+    path: rules/cmd/cmd-017@1.0.0.yaml
+  - id: cmd-021
+    version: 1.0.0
+    path: rules/cmd/cmd-021@1.0.0.yaml
+  - id: cmd-022
+    version: 1.0.0
+    path: rules/cmd/cmd-022@1.0.0.yaml
+  - id: cmd-023
+    version: 1.0.0
+    path: rules/cmd/cmd-023@1.0.0.yaml
+  - id: cmd-024
+    version: 1.0.0
+    path: rules/cmd/cmd-024@1.0.0.yaml
+  - id: cmd-025
+    version: 1.0.0
+    path: rules/cmd/cmd-025@1.0.0.yaml
+  - id: cmd-026
+    version: 1.0.0
+    path: rules/cmd/cmd-026@1.0.0.yaml
+  - id: cmd-027
+    version: 1.0.0
+    path: rules/cmd/cmd-027@1.0.0.yaml
+  - id: cmd-028
+    version: 1.0.0
+    path: rules/cmd/cmd-028@1.0.0.yaml
+  - id: cmd-033
+    version: 1.0.0
+    path: rules/cmd/cmd-033@1.0.0.yaml
+  - id: cmd-036
+    version: 1.0.0
+    path: rules/cmd/cmd-036@1.0.0.yaml
+  - id: cmd-037
+    version: 1.0.0
+    path: rules/cmd/cmd-037@1.0.0.yaml
+  - id: cmd-052
+    version: 1.0.0
+    path: rules/cmd/cmd-052@1.0.0.yaml
+  - id: cmd-054
+    version: 1.0.0
+    path: rules/cmd/cmd-054@1.0.0.yaml
+  - id: cmd-056
+    version: 1.0.0
+    path: rules/cmd/cmd-056@1.0.0.yaml
+  - id: cmd-065
+    version: 1.0.0
+    path: rules/cmd/cmd-065@1.0.0.yaml
+  - id: cmd-075
+    version: 1.0.0
+    path: rules/cmd/cmd-075@1.0.0.yaml
+  - id: cmd-079
+    version: 1.0.0
+    path: rules/cmd/cmd-079@1.0.0.yaml
+  - id: cmd-1080
+    version: 1.0.0
+    path: rules/cmd/cmd-1080@1.0.0.yaml
+  - id: cmd-1090
+    version: 1.0.0
+    path: rules/cmd/cmd-1090@1.0.0.yaml
+  - id: cmd-1104
+    version: 1.0.0
+    path: rules/cmd/cmd-1104@1.0.0.yaml
+  - id: cmd-1105
+    version: 1.0.0
+    path: rules/cmd/cmd-1105@1.0.0.yaml
+  - id: cmd-1112
+    version: 1.0.0
+    path: rules/cmd/cmd-1112@1.0.0.yaml
+  - id: cmd-201
+    version: 1.0.0
+    path: rules/cmd/cmd-201@1.0.0.yaml
+  - id: cmd-202
+    version: 1.0.0
+    path: rules/cmd/cmd-202@1.0.0.yaml
+  - id: cmd-203
+    version: 1.0.0
+    path: rules/cmd/cmd-203@1.0.0.yaml
+  - id: cmd-204
+    version: 1.0.0
+    path: rules/cmd/cmd-204@1.0.0.yaml
+  - id: cmd-205
+    version: 1.0.0
+    path: rules/cmd/cmd-205@1.0.0.yaml
+  - id: cmd-206
+    version: 1.0.0
+    path: rules/cmd/cmd-206@1.0.0.yaml
+  - id: cmd-207
+    version: 1.0.0
+    path: rules/cmd/cmd-207@1.0.0.yaml
+  - id: cmd-208
+    version: 1.0.0
+    path: rules/cmd/cmd-208@1.0.0.yaml
+  - id: cmd-209
+    version: 1.0.0
+    path: rules/cmd/cmd-209@1.0.0.yaml
+  - id: cmd-210
+    version: 1.0.0
+    path: rules/cmd/cmd-210@1.0.0.yaml
+  - id: cmd-211
+    version: 1.0.0
+    path: rules/cmd/cmd-211@1.0.0.yaml
+  - id: cmd-212
+    version: 1.0.0
+    path: rules/cmd/cmd-212@1.0.0.yaml
+  - id: cmd-213
+    version: 1.0.0
+    path: rules/cmd/cmd-213@1.0.0.yaml
+  - id: cmd-214
+    version: 1.0.0
+    path: rules/cmd/cmd-214@1.0.0.yaml
+  - id: cmd-215
+    version: 1.0.0
+    path: rules/cmd/cmd-215@1.0.0.yaml
+  - id: cmd-216
+    version: 1.0.0
+    path: rules/cmd/cmd-216@1.0.0.yaml
+  - id: cmd-217
+    version: 1.0.0
+    path: rules/cmd/cmd-217@1.0.0.yaml
+  - id: cmd-218
+    version: 1.0.0
+    path: rules/cmd/cmd-218@1.0.0.yaml
+  - id: cmd-219
+    version: 1.0.0
+    path: rules/cmd/cmd-219@1.0.0.yaml
+  - id: cmd-220
+    version: 1.0.0
+    path: rules/cmd/cmd-220@1.0.0.yaml
+  - id: cmd-221
+    version: 1.0.0
+    path: rules/cmd/cmd-221@1.0.0.yaml
+  - id: cmd-222
+    version: 1.0.0
+    path: rules/cmd/cmd-222@1.0.0.yaml
+  - id: cmd-223
+    version: 1.0.0
+    path: rules/cmd/cmd-223@1.0.0.yaml
+  - id: cmd-224
+    version: 1.0.0
+    path: rules/cmd/cmd-224@1.0.0.yaml
+  - id: cmd-225
+    version: 1.0.0
+    path: rules/cmd/cmd-225@1.0.0.yaml
+  - id: cmd-226
+    version: 1.0.0
+    path: rules/cmd/cmd-226@1.0.0.yaml
+  - id: cmd-227
+    version: 1.0.0
+    path: rules/cmd/cmd-227@1.0.0.yaml
+  - id: cmd-228
+    version: 1.0.0
+    path: rules/cmd/cmd-228@1.0.0.yaml
+  - id: cmd-229
+    version: 1.0.0
+    path: rules/cmd/cmd-229@1.0.0.yaml
+  - id: cmd-230
+    version: 1.0.0
+    path: rules/cmd/cmd-230@1.0.0.yaml
+  - id: cmd-231
+    version: 1.0.0
+    path: rules/cmd/cmd-231@1.0.0.yaml
+  - id: cmd-232
+    version: 1.0.0
+    path: rules/cmd/cmd-232@1.0.0.yaml
+  - id: cmd-233
+    version: 1.0.0
+    path: rules/cmd/cmd-233@1.0.0.yaml
+  - id: cmd-234
+    version: 1.0.0
+    path: rules/cmd/cmd-234@1.0.0.yaml
+  - id: cmd-235
+    version: 1.0.0
+    path: rules/cmd/cmd-235@1.0.0.yaml
+  - id: cmd-236
+    version: 1.0.0
+    path: rules/cmd/cmd-236@1.0.0.yaml
+  - id: cmd-237
+    version: 1.0.0
+    path: rules/cmd/cmd-237@1.0.0.yaml
+  - id: cmd-238
+    version: 1.0.0
+    path: rules/cmd/cmd-238@1.0.0.yaml
+  - id: enc-001
+    version: 1.0.0
+    path: rules/enc/enc-001@1.0.0.yaml
+  - id: enc-013
+    version: 1.0.0
+    path: rules/enc/enc-013@1.0.0.yaml
+  - id: enc-019
+    version: 1.0.0
+    path: rules/enc/enc-019@1.0.0.yaml
+  - id: enc-020
+    version: 1.0.0
+    path: rules/enc/enc-020@1.0.0.yaml
+  - id: enc-024
+    version: 1.0.0
+    path: rules/enc/enc-024@1.0.0.yaml
+  - id: enc-029
+    version: 1.0.0
+    path: rules/enc/enc-029@1.0.0.yaml
+  - id: enc-038
+    version: 1.0.0
+    path: rules/enc/enc-038@1.0.0.yaml
+  - id: enc-044
+    version: 1.0.0
+    path: rules/enc/enc-044@1.0.0.yaml
+  - id: enc-067
+    version: 1.0.0
+    path: rules/enc/enc-067@1.0.0.yaml
+  - id: enc-069
+    version: 1.0.0
+    path: rules/enc/enc-069@1.0.0.yaml
+  - id: enc-100
+    version: 1.0.0
+    path: rules/enc/enc-100@1.0.0.yaml
+  - id: enc-101
+    version: 1.0.0
+    path: rules/enc/enc-101@1.0.0.yaml
+  - id: enc-102
+    version: 1.0.0
+    path: rules/enc/enc-102@1.0.0.yaml
+  - id: enc-103
+    version: 1.0.0
+    path: rules/enc/enc-103@1.0.0.yaml
+  - id: enc-104
+    version: 1.0.0
+    path: rules/enc/enc-104@1.0.0.yaml
+  - id: enc-105
+    version: 1.0.0
+    path: rules/enc/enc-105@1.0.0.yaml
+  - id: enc-106
+    version: 1.0.0
+    path: rules/enc/enc-106@1.0.0.yaml
+  - id: enc-107
+    version: 1.0.0
+    path: rules/enc/enc-107@1.0.0.yaml
+  - id: enc-108
+    version: 1.0.0
+    path: rules/enc/enc-108@1.0.0.yaml
+  - id: enc-109
+    version: 1.0.0
+    path: rules/enc/enc-109@1.0.0.yaml
+  - id: enc-110
+    version: 1.0.0
+    path: rules/enc/enc-110@1.0.0.yaml
+  - id: enc-111
+    version: 1.0.0
+    path: rules/enc/enc-111@1.0.0.yaml
+  - id: enc-112
+    version: 1.0.0
+    path: rules/enc/enc-112@1.0.0.yaml
+  - id: enc-113
+    version: 1.0.0
+    path: rules/enc/enc-113@1.0.0.yaml
+  - id: enc-114
+    version: 1.0.0
+    path: rules/enc/enc-114@1.0.0.yaml
+  - id: enc-115
+    version: 1.0.0
+    path: rules/enc/enc-115@1.0.0.yaml
+  - id: enc-116
+    version: 1.0.0
+    path: rules/enc/enc-116@1.0.0.yaml
+  - id: enc-117
+    version: 1.0.0
+    path: rules/enc/enc-117@1.0.0.yaml
+  - id: enc-118
+    version: 1.0.0
+    path: rules/enc/enc-118@1.0.0.yaml
+  - id: enc-119
+    version: 1.0.0
+    path: rules/enc/enc-119@1.0.0.yaml
+  - id: enc-120
+    version: 1.0.0
+    path: rules/enc/enc-120@1.0.0.yaml
+  - id: enc-201
+    version: 1.0.0
+    path: rules/enc/enc-201@1.0.0.yaml
+  - id: enc-202
+    version: 1.0.0
+    path: rules/enc/enc-202@1.0.0.yaml
+  - id: enc-203
+    version: 1.0.0
+    path: rules/enc/enc-203@1.0.0.yaml
+  - id: enc-3004
+    version: 1.0.0
+    path: rules/enc/enc-3004@1.0.0.yaml
+  - id: enc-3006
+    version: 1.0.0
+    path: rules/enc/enc-3006@1.0.0.yaml
+  - id: enc-3011
+    version: 1.0.0
+    path: rules/enc/enc-3011@1.0.0.yaml
+  - id: enc-5016
+    version: 1.0.0
+    path: rules/enc/enc-5016@1.0.0.yaml
+  - id: enc-6001
+    version: 1.0.0
+    path: rules/enc/enc-6001@1.0.0.yaml
+  - id: enc-6002
+    version: 1.0.0
+    path: rules/enc/enc-6002@1.0.0.yaml
+  - id: enc-70
+    version: 1.0.0
+    path: rules/enc/enc-70@1.0.0.yaml
+  - id: enc-71
+    version: 1.0.0
+    path: rules/enc/enc-71@1.0.0.yaml
+  - id: enc-72
+    version: 1.0.0
+    path: rules/enc/enc-72@1.0.0.yaml
+  - id: enc-73
+    version: 1.0.0
+    path: rules/enc/enc-73@1.0.0.yaml
+  - id: enc-74
+    version: 1.0.0
+    path: rules/enc/enc-74@1.0.0.yaml
+  - id: enc-75
+    version: 1.0.0
+    path: rules/enc/enc-75@1.0.0.yaml
+  - id: enc-76
+    version: 1.0.0
+    path: rules/enc/enc-76@1.0.0.yaml
+  - id: enc-77
+    version: 1.0.0
+    path: rules/enc/enc-77@1.0.0.yaml
+  - id: enc-78
+    version: 1.0.0
+    path: rules/enc/enc-78@1.0.0.yaml
+  - id: enc-79
+    version: 1.0.0
+    path: rules/enc/enc-79@1.0.0.yaml
+  - id: enc-80
+    version: 1.0.0
+    path: rules/enc/enc-80@1.0.0.yaml
+  - id: enc-81
+    version: 1.0.0
+    path: rules/enc/enc-81@1.0.0.yaml
+  - id: enc-82
+    version: 1.0.0
+    path: rules/enc/enc-82@1.0.0.yaml
+  - id: enc-83
+    version: 1.0.0
+    path: rules/enc/enc-83@1.0.0.yaml
+  - id: enc-84
+    version: 1.0.0
+    path: rules/enc/enc-84@1.0.0.yaml
+  - id: enc-85
+    version: 1.0.0
+    path: rules/enc/enc-85@1.0.0.yaml
+  - id: enc-86
+    version: 1.0.0
+    path: rules/enc/enc-86@1.0.0.yaml
+  - id: enc-87
+    version: 1.0.0
+    path: rules/enc/enc-87@1.0.0.yaml
+  - id: enc-88
+    version: 1.0.0
+    path: rules/enc/enc-88@1.0.0.yaml
+  - id: enc-89
+    version: 1.0.0
+    path: rules/enc/enc-89@1.0.0.yaml
+  - id: enc-90
+    version: 1.0.0
+    path: rules/enc/enc-90@1.0.0.yaml
+  - id: enc-91
+    version: 1.0.0
+    path: rules/enc/enc-91@1.0.0.yaml
+  - id: enc-92
+    version: 1.0.0
+    path: rules/enc/enc-92@1.0.0.yaml
+  - id: enc-93
+    version: 1.0.0
+    path: rules/enc/enc-93@1.0.0.yaml
+  - id: enc-94
+    version: 1.0.0
+    path: rules/enc/enc-94@1.0.0.yaml
+  - id: enc-95
+    version: 1.0.0
+    path: rules/enc/enc-95@1.0.0.yaml
+  - id: enc-96
+    version: 1.0.0
+    path: rules/enc/enc-96@1.0.0.yaml
+  - id: enc-97
+    version: 1.0.0
+    path: rules/enc/enc-97@1.0.0.yaml
+  - id: enc-98
+    version: 1.0.0
+    path: rules/enc/enc-98@1.0.0.yaml
+  - id: enc-99
+    version: 1.0.0
+    path: rules/enc/enc-99@1.0.0.yaml
+  - id: hc-001
+    version: 1.0.0
+    path: rules/hc/hc-001@1.0.0.yaml
+  - id: hc-002
+    version: 1.0.0
+    path: rules/hc/hc-002@1.0.0.yaml
+  - id: hc-003
+    version: 1.0.0
+    path: rules/hc/hc-003@1.0.0.yaml
+  - id: hc-004
+    version: 1.0.0
+    path: rules/hc/hc-004@1.0.0.yaml
+  - id: hc-101
+    version: 1.0.0
+    path: rules/hc/hc-101@1.0.0.yaml
+  - id: hc-102
+    version: 1.0.0
+    path: rules/hc/hc-102@1.0.0.yaml
+  - id: hc-103
+    version: 1.0.0
+    path: rules/hc/hc-103@1.0.0.yaml
+  - id: hc-104
+    version: 1.0.0
+    path: rules/hc/hc-104@1.0.0.yaml
+  - id: hc-105
+    version: 1.0.0
+    path: rules/hc/hc-105@1.0.0.yaml
+  - id: hc-106
+    version: 1.0.0
+    path: rules/hc/hc-106@1.0.0.yaml
+  - id: hc-107
+    version: 1.0.0
+    path: rules/hc/hc-107@1.0.0.yaml
+  - id: hc-108
+    version: 1.0.0
+    path: rules/hc/hc-108@1.0.0.yaml
+  - id: hc-109
+    version: 1.0.0
+    path: rules/hc/hc-109@1.0.0.yaml
+  - id: hc-110
+    version: 1.0.0
+    path: rules/hc/hc-110@1.0.0.yaml
+  - id: hc-111
+    version: 1.0.0
+    path: rules/hc/hc-111@1.0.0.yaml
+  - id: hc-112
+    version: 1.0.0
+    path: rules/hc/hc-112@1.0.0.yaml
+  - id: hc-113
+    version: 1.0.0
+    path: rules/hc/hc-113@1.0.0.yaml
+  - id: hc-114
+    version: 1.0.0
+    path: rules/hc/hc-114@1.0.0.yaml
+  - id: hc-115
+    version: 1.0.0
+    path: rules/hc/hc-115@1.0.0.yaml
+  - id: hc-116
+    version: 1.0.0
+    path: rules/hc/hc-116@1.0.0.yaml
+  - id: hc-117
+    version: 1.0.0
+    path: rules/hc/hc-117@1.0.0.yaml
+  - id: hc-118
+    version: 1.0.0
+    path: rules/hc/hc-118@1.0.0.yaml
+  - id: hc-119
+    version: 1.0.0
+    path: rules/hc/hc-119@1.0.0.yaml
+  - id: hc-120
+    version: 1.0.0
+    path: rules/hc/hc-120@1.0.0.yaml
+  - id: hc-121
+    version: 1.0.0
+    path: rules/hc/hc-121@1.0.0.yaml
+  - id: hc-122
+    version: 1.0.0
+    path: rules/hc/hc-122@1.0.0.yaml
+  - id: hc-123
+    version: 1.0.0
+    path: rules/hc/hc-123@1.0.0.yaml
+  - id: hc-124
+    version: 1.0.0
+    path: rules/hc/hc-124@1.0.0.yaml
+  - id: hc-125
+    version: 1.0.0
+    path: rules/hc/hc-125@1.0.0.yaml
+  - id: hc-126
+    version: 1.0.0
+    path: rules/hc/hc-126@1.0.0.yaml
+  - id: hc-127
+    version: 1.0.0
+    path: rules/hc/hc-127@1.0.0.yaml
+  - id: hc-128
+    version: 1.0.0
+    path: rules/hc/hc-128@1.0.0.yaml
+  - id: hc-129
+    version: 1.0.0
+    path: rules/hc/hc-129@1.0.0.yaml
+  - id: hc-130
+    version: 1.0.0
+    path: rules/hc/hc-130@1.0.0.yaml
+  - id: hc-131
+    version: 1.0.0
+    path: rules/hc/hc-131@1.0.0.yaml
+  - id: hc-132
+    version: 1.0.0
+    path: rules/hc/hc-132@1.0.0.yaml
+  - id: hc-133
+    version: 1.0.0
+    path: rules/hc/hc-133@1.0.0.yaml
+  - id: hc-134
+    version: 1.0.0
+    path: rules/hc/hc-134@1.0.0.yaml
+  - id: hc-135
+    version: 1.0.0
+    path: rules/hc/hc-135@1.0.0.yaml
+  - id: hc-136
+    version: 1.0.0
+    path: rules/hc/hc-136@1.0.0.yaml
+  - id: hc-137
+    version: 1.0.0
+    path: rules/hc/hc-137@1.0.0.yaml
+  - id: hc-138
+    version: 1.0.0
+    path: rules/hc/hc-138@1.0.0.yaml
+  - id: hc-139
+    version: 1.0.0
+    path: rules/hc/hc-139@1.0.0.yaml
+  - id: hc-140
+    version: 1.0.0
+    path: rules/hc/hc-140@1.0.0.yaml
+  - id: hc-141
+    version: 1.0.0
+    path: rules/hc/hc-141@1.0.0.yaml
+  - id: hc-142
+    version: 1.0.0
+    path: rules/hc/hc-142@1.0.0.yaml
+  - id: hc-143
+    version: 1.0.0
+    path: rules/hc/hc-143@1.0.0.yaml
+  - id: hc-144
+    version: 1.0.0
+    path: rules/hc/hc-144@1.0.0.yaml
+  - id: hc-145
+    version: 1.0.0
+    path: rules/hc/hc-145@1.0.0.yaml
+  - id: hc-146
+    version: 1.0.0
+    path: rules/hc/hc-146@1.0.0.yaml
+  - id: hc-147
+    version: 1.0.0
+    path: rules/hc/hc-147@1.0.0.yaml
+  - id: hc-148
+    version: 1.0.0
+    path: rules/hc/hc-148@1.0.0.yaml
+  - id: hc-149
+    version: 1.0.0
+    path: rules/hc/hc-149@1.0.0.yaml
+  - id: hc-150
+    version: 1.0.0
+    path: rules/hc/hc-150@1.0.0.yaml
+  - id: hc-151
+    version: 1.0.0
+    path: rules/hc/hc-151@1.0.0.yaml
+  - id: hc-152
+    version: 1.0.0
+    path: rules/hc/hc-152@1.0.0.yaml
+  - id: hc-153
+    version: 1.0.0
+    path: rules/hc/hc-153@1.0.0.yaml
+  - id: hc-154
+    version: 1.0.0
+    path: rules/hc/hc-154@1.0.0.yaml
+  - id: hc-155
+    version: 1.0.0
+    path: rules/hc/hc-155@1.0.0.yaml
+  - id: hc-156
+    version: 1.0.0
+    path: rules/hc/hc-156@1.0.0.yaml
+  - id: hc-157
+    version: 1.0.0
+    path: rules/hc/hc-157@1.0.0.yaml
+  - id: hc-158
+    version: 1.0.0
+    path: rules/hc/hc-158@1.0.0.yaml
+  - id: hc-159
+    version: 1.0.0
+    path: rules/hc/hc-159@1.0.0.yaml
+  - id: hc-160
+    version: 1.0.0
+    path: rules/hc/hc-160@1.0.0.yaml
+  - id: hc-161
+    version: 1.0.0
+    path: rules/hc/hc-161@1.0.0.yaml
+  - id: jb-001
+    version: 1.0.0
+    path: rules/jb/jb-001@1.0.0.yaml
+  - id: jb-009
+    version: 1.0.0
+    path: rules/jb/jb-009@1.0.0.yaml
+  - id: jb-020
+    version: 1.0.0
+    path: rules/jb/jb-020@1.0.0.yaml
+  - id: jb-021
+    version: 1.0.0
+    path: rules/jb/jb-021@1.0.0.yaml
+  - id: jb-022
+    version: 1.0.0
+    path: rules/jb/jb-022@1.0.0.yaml
+  - id: jb-028
+    version: 1.0.0
+    path: rules/jb/jb-028@1.0.0.yaml
+  - id: jb-033
+    version: 1.0.0
+    path: rules/jb/jb-033@1.0.0.yaml
+  - id: jb-034
+    version: 1.0.0
+    path: rules/jb/jb-034@1.0.0.yaml
+  - id: jb-036
+    version: 1.0.0
+    path: rules/jb/jb-036@1.0.0.yaml
+  - id: jb-039
+    version: 1.0.0
+    path: rules/jb/jb-039@1.0.0.yaml
+  - id: jb-056
+    version: 1.0.0
+    path: rules/jb/jb-056@1.0.0.yaml
+  - id: jb-066
+    version: 1.0.0
+    path: rules/jb/jb-066@1.0.0.yaml
+  - id: jb-076
+    version: 1.0.0
+    path: rules/jb/jb-076@1.0.0.yaml
+  - id: jb-098
+    version: 1.0.0
+    path: rules/jb/jb-098@1.0.0.yaml
+  - id: jb-103
+    version: 1.0.0
+    path: rules/jb/jb-103@1.0.0.yaml
+  - id: jb-104
+    version: 1.0.0
+    path: rules/jb/jb-104@1.0.0.yaml
+  - id: jb-105
+    version: 1.0.0
+    path: rules/jb/jb-105@1.0.0.yaml
+  - id: jb-110
+    version: 1.0.0
+    path: rules/jb/jb-110@1.0.0.yaml
+  - id: jb-111
+    version: 1.0.0
+    path: rules/jb/jb-111@1.0.0.yaml
+  - id: jb-112
+    version: 1.0.0
+    path: rules/jb/jb-112@1.0.0.yaml
+  - id: jb-113
+    version: 1.0.0
+    path: rules/jb/jb-113@1.0.0.yaml
+  - id: jb-114
+    version: 1.0.0
+    path: rules/jb/jb-114@1.0.0.yaml
+  - id: jb-115
+    version: 1.0.0
+    path: rules/jb/jb-115@1.0.0.yaml
+  - id: jb-116
+    version: 1.0.0
+    path: rules/jb/jb-116@1.0.0.yaml
+  - id: jb-117
+    version: 1.0.0
+    path: rules/jb/jb-117@1.0.0.yaml
+  - id: jb-118
+    version: 1.0.0
+    path: rules/jb/jb-118@1.0.0.yaml
+  - id: jb-119
+    version: 1.0.0
+    path: rules/jb/jb-119@1.0.0.yaml
+  - id: jb-120
+    version: 1.0.0
+    path: rules/jb/jb-120@1.0.0.yaml
+  - id: jb-121
+    version: 1.0.0
+    path: rules/jb/jb-121@1.0.0.yaml
+  - id: jb-122
+    version: 1.0.0
+    path: rules/jb/jb-122@1.0.0.yaml
+  - id: jb-123
+    version: 1.0.0
+    path: rules/jb/jb-123@1.0.0.yaml
+  - id: jb-124
+    version: 1.0.0
+    path: rules/jb/jb-124@1.0.0.yaml
+  - id: jb-125
+    version: 1.0.0
+    path: rules/jb/jb-125@1.0.0.yaml
+  - id: jb-126
+    version: 1.0.0
+    path: rules/jb/jb-126@1.0.0.yaml
+  - id: jb-127
+    version: 1.0.0
+    path: rules/jb/jb-127@1.0.0.yaml
+  - id: jb-128
+    version: 1.0.0
+    path: rules/jb/jb-128@1.0.0.yaml
+  - id: jb-129
+    version: 1.0.0
+    path: rules/jb/jb-129@1.0.0.yaml
+  - id: jb-130
+    version: 1.0.0
+    path: rules/jb/jb-130@1.0.0.yaml
+  - id: jb-131
+    version: 1.0.0
+    path: rules/jb/jb-131@1.0.0.yaml
+  - id: jb-132
+    version: 1.0.0
+    path: rules/jb/jb-132@1.0.0.yaml
+  - id: jb-133
+    version: 1.0.0
+    path: rules/jb/jb-133@1.0.0.yaml
+  - id: jb-134
+    version: 1.0.0
+    path: rules/jb/jb-134@1.0.0.yaml
+  - id: jb-135
+    version: 1.0.0
+    path: rules/jb/jb-135@1.0.0.yaml
+  - id: jb-136
+    version: 1.0.0
+    path: rules/jb/jb-136@1.0.0.yaml
+  - id: jb-137
+    version: 1.0.0
+    path: rules/jb/jb-137@1.0.0.yaml
+  - id: jb-138
+    version: 1.0.0
+    path: rules/jb/jb-138@1.0.0.yaml
+  - id: jb-139
+    version: 1.0.0
+    path: rules/jb/jb-139@1.0.0.yaml
+  - id: jb-140
+    version: 1.0.0
+    path: rules/jb/jb-140@1.0.0.yaml
+  - id: jb-141
+    version: 1.0.0
+    path: rules/jb/jb-141@1.0.0.yaml
+  - id: jb-142
+    version: 1.0.0
+    path: rules/jb/jb-142@1.0.0.yaml
+  - id: jb-143
+    version: 1.0.0
+    path: rules/jb/jb-143@1.0.0.yaml
+  - id: jb-144
+    version: 1.0.0
+    path: rules/jb/jb-144@1.0.0.yaml
+  - id: jb-145
+    version: 1.0.0
+    path: rules/jb/jb-145@1.0.0.yaml
+  - id: jb-146
+    version: 1.0.0
+    path: rules/jb/jb-146@1.0.0.yaml
+  - id: jb-147
+    version: 1.0.0
+    path: rules/jb/jb-147@1.0.0.yaml
+  - id: jb-148
+    version: 1.0.0
+    path: rules/jb/jb-148@1.0.0.yaml
+  - id: jb-149
+    version: 1.0.0
+    path: rules/jb/jb-149@1.0.0.yaml
+  - id: jb-150
+    version: 1.0.0
+    path: rules/jb/jb-150@1.0.0.yaml
+  - id: jb-151
+    version: 1.0.0
+    path: rules/jb/jb-151@1.0.0.yaml
+  - id: jb-152
+    version: 1.0.0
+    path: rules/jb/jb-152@1.0.0.yaml
+  - id: jb-153
+    version: 1.0.0
+    path: rules/jb/jb-153@1.0.0.yaml
+  - id: jb-154
+    version: 1.0.0
+    path: rules/jb/jb-154@1.0.0.yaml
+  - id: jb-155
+    version: 1.0.0
+    path: rules/jb/jb-155@1.0.0.yaml
+  - id: jb-156
+    version: 1.0.0
+    path: rules/jb/jb-156@1.0.0.yaml
+  - id: jb-157
+    version: 1.0.0
+    path: rules/jb/jb-157@1.0.0.yaml
+  - id: jb-158
+    version: 1.0.0
+    path: rules/jb/jb-158@1.0.0.yaml
+  - id: jb-159
+    version: 1.0.0
+    path: rules/jb/jb-159@1.0.0.yaml
+  - id: jb-160
+    version: 1.0.0
+    path: rules/jb/jb-160@1.0.0.yaml
+  - id: jb-161
+    version: 1.0.0
+    path: rules/jb/jb-161@1.0.0.yaml
+  - id: jb-162
+    version: 1.0.0
+    path: rules/jb/jb-162@1.0.0.yaml
+  - id: jb-201
+    version: 1.0.0
+    path: rules/jb/jb-201@1.0.0.yaml
+  - id: jb-202
+    version: 1.0.0
+    path: rules/jb/jb-202@1.0.0.yaml
+  - id: jb-203
+    version: 1.0.0
+    path: rules/jb/jb-203@1.0.0.yaml
+  - id: jb-204
+    version: 1.0.0
+    path: rules/jb/jb-204@1.0.0.yaml
+  - id: jb-205
+    version: 1.0.0
+    path: rules/jb/jb-205@1.0.0.yaml
+  - id: jb-206
+    version: 1.0.0
+    path: rules/jb/jb-206@1.0.0.yaml
+  - id: jb-207
+    version: 1.0.0
+    path: rules/jb/jb-207@1.0.0.yaml
+  - id: pii-001
+    version: 1.0.0
+    path: rules/pii/pii-001@1.0.0.yaml
+  - id: pii-009
+    version: 1.0.0
+    path: rules/pii/pii-009@1.0.0.yaml
+  - id: pii-012
+    version: 1.0.0
+    path: rules/pii/pii-012@1.0.0.yaml
+  - id: pii-017
+    version: 1.0.0
+    path: rules/pii/pii-017@1.0.0.yaml
+  - id: pii-022
+    version: 1.0.0
+    path: rules/pii/pii-022@1.0.0.yaml
+  - id: pii-025
+    version: 1.0.0
+    path: rules/pii/pii-025@1.0.0.yaml
+  - id: pii-027
+    version: 1.0.0
+    path: rules/pii/pii-027@1.0.0.yaml
+  - id: pii-028
+    version: 1.0.0
+    path: rules/pii/pii-028@1.0.0.yaml
+  - id: pii-034
+    version: 1.0.0
+    path: rules/pii/pii-034@1.0.0.yaml
+  - id: pii-037
+    version: 1.0.0
+    path: rules/pii/pii-037@1.0.0.yaml
+  - id: pii-040
+    version: 1.0.0
+    path: rules/pii/pii-040@1.0.0.yaml
+  - id: pii-041
+    version: 1.0.0
+    path: rules/pii/pii-041@1.0.0.yaml
+  - id: pii-044
+    version: 1.0.0
+    path: rules/pii/pii-044@1.0.0.yaml
+  - id: pii-050
+    version: 1.0.0
+    path: rules/pii/pii-050@1.0.0.yaml
+  - id: pii-051
+    version: 1.0.0
+    path: rules/pii/pii-051@1.0.0.yaml
+  - id: pii-052
+    version: 1.0.0
+    path: rules/pii/pii-052@1.0.0.yaml
+  - id: pii-053
+    version: 1.0.0
+    path: rules/pii/pii-053@1.0.0.yaml
+  - id: pii-054
+    version: 1.0.0
+    path: rules/pii/pii-054@1.0.0.yaml
+  - id: pii-055
+    version: 1.0.0
+    path: rules/pii/pii-055@1.0.0.yaml
+  - id: pii-056
+    version: 1.0.0
+    path: rules/pii/pii-056@1.0.0.yaml
+  - id: pii-058
+    version: 1.0.0
+    path: rules/pii/pii-058@1.0.0.yaml
+  - id: pii-2015
+    version: 1.0.0
+    path: rules/pii/pii-2015@1.0.0.yaml
+  - id: pii-2025
+    version: 1.0.0
+    path: rules/pii/pii-2025@1.0.0.yaml
+  - id: pii-2026
+    version: 1.0.0
+    path: rules/pii/pii-2026@1.0.0.yaml
+  - id: pii-2035
+    version: 1.0.0
+    path: rules/pii/pii-2035@1.0.0.yaml
+  - id: pii-2037
+    version: 1.0.0
+    path: rules/pii/pii-2037@1.0.0.yaml
+  - id: pii-2042
+    version: 1.0.0
+    path: rules/pii/pii-2042@1.0.0.yaml
+  - id: pii-3001
+    version: 1.0.0
+    path: rules/pii/pii-3001@1.0.0.yaml
+  - id: pii-3002
+    version: 1.0.0
+    path: rules/pii/pii-3002@1.0.0.yaml
+  - id: pii-3003
+    version: 1.0.0
+    path: rules/pii/pii-3003@1.0.0.yaml
+  - id: pii-3004
+    version: 1.0.0
+    path: rules/pii/pii-3004@1.0.0.yaml
+  - id: pii-3005
+    version: 1.0.0
+    path: rules/pii/pii-3005@1.0.0.yaml
+  - id: pii-3006
+    version: 1.0.0
+    path: rules/pii/pii-3006@1.0.0.yaml
+  - id: pii-3007
+    version: 1.0.0
+    path: rules/pii/pii-3007@1.0.0.yaml
+  - id: pii-3008
+    version: 1.0.0
+    path: rules/pii/pii-3008@1.0.0.yaml
+  - id: pii-3009
+    version: 1.0.0
+    path: rules/pii/pii-3009@1.0.0.yaml
+  - id: pii-3010
+    version: 1.0.0
+    path: rules/pii/pii-3010@1.0.0.yaml
+  - id: pii-3011
+    version: 1.0.0
+    path: rules/pii/pii-3011@1.0.0.yaml
+  - id: pii-3012
+    version: 1.0.0
+    path: rules/pii/pii-3012@1.0.0.yaml
+  - id: pii-3013
+    version: 1.0.0
+    path: rules/pii/pii-3013@1.0.0.yaml
+  - id: pii-3014
+    version: 1.0.0
+    path: rules/pii/pii-3014@1.0.0.yaml
+  - id: pii-3015
+    version: 1.0.0
+    path: rules/pii/pii-3015@1.0.0.yaml
+  - id: pii-3016
+    version: 1.0.0
+    path: rules/pii/pii-3016@1.0.0.yaml
+  - id: pii-3017
+    version: 1.0.0
+    path: rules/pii/pii-3017@1.0.0.yaml
+  - id: pii-3018
+    version: 1.0.0
+    path: rules/pii/pii-3018@1.0.0.yaml
+  - id: pii-3019
+    version: 1.0.0
+    path: rules/pii/pii-3019@1.0.0.yaml
+  - id: pii-3020
+    version: 1.0.0
+    path: rules/pii/pii-3020@1.0.0.yaml
+  - id: pii-3021
+    version: 1.0.0
+    path: rules/pii/pii-3021@1.0.0.yaml
+  - id: pii-3022
+    version: 1.0.0
+    path: rules/pii/pii-3022@1.0.0.yaml
+  - id: pii-3023
+    version: 1.0.0
+    path: rules/pii/pii-3023@1.0.0.yaml
+  - id: pii-3024
+    version: 1.0.0
+    path: rules/pii/pii-3024@1.0.0.yaml
+  - id: pii-3025
+    version: 1.0.0
+    path: rules/pii/pii-3025@1.0.0.yaml
+  - id: pii-3026
+    version: 1.0.0
+    path: rules/pii/pii-3026@1.0.0.yaml
+  - id: pii-3027
+    version: 1.0.0
+    path: rules/pii/pii-3027@1.0.0.yaml
+  - id: pii-3028
+    version: 1.0.0
+    path: rules/pii/pii-3028@1.0.0.yaml
+  - id: pii-3029
+    version: 1.0.0
+    path: rules/pii/pii-3029@1.0.0.yaml
+  - id: pii-3030
+    version: 1.0.0
+    path: rules/pii/pii-3030@1.0.0.yaml
+  - id: pii-3031
+    version: 1.0.0
+    path: rules/pii/pii-3031@1.0.0.yaml
+  - id: pii-3032
+    version: 1.0.0
+    path: rules/pii/pii-3032@1.0.0.yaml
+  - id: pii-3033
+    version: 1.0.0
+    path: rules/pii/pii-3033@1.0.0.yaml
+  - id: pii-3034
+    version: 1.0.0
+    path: rules/pii/pii-3034@1.0.0.yaml
+  - id: pii-3035
+    version: 1.0.0
+    path: rules/pii/pii-3035@1.0.0.yaml
+  - id: pii-3036
+    version: 1.0.0
+    path: rules/pii/pii-3036@1.0.0.yaml
+  - id: pii-3037
+    version: 1.0.0
+    path: rules/pii/pii-3037@1.0.0.yaml
+  - id: pii-3038
+    version: 1.0.0
+    path: rules/pii/pii-3038@1.0.0.yaml
+  - id: pii-3039
+    version: 1.0.0
+    path: rules/pii/pii-3039@1.0.0.yaml
+  - id: pii-3040
+    version: 1.0.0
+    path: rules/pii/pii-3040@1.0.0.yaml
+  - id: pii-3041
+    version: 1.0.0
+    path: rules/pii/pii-3041@1.0.0.yaml
+  - id: pii-3042
+    version: 1.0.0
+    path: rules/pii/pii-3042@1.0.0.yaml
+  - id: pii-3043
+    version: 1.0.0
+    path: rules/pii/pii-3043@1.0.0.yaml
+  - id: pii-3044
+    version: 1.0.0
+    path: rules/pii/pii-3044@1.0.0.yaml
+  - id: pii-3045
+    version: 1.0.0
+    path: rules/pii/pii-3045@1.0.0.yaml
+  - id: pii-3046
+    version: 1.0.0
+    path: rules/pii/pii-3046@1.0.0.yaml
+  - id: pii-3047
+    version: 1.0.0
+    path: rules/pii/pii-3047@1.0.0.yaml
+  - id: pii-3048
+    version: 1.0.0
+    path: rules/pii/pii-3048@1.0.0.yaml
+  - id: pii-3049
+    version: 1.0.0
+    path: rules/pii/pii-3049@1.0.0.yaml
+  - id: pii-3050
+    version: 1.0.0
+    path: rules/pii/pii-3050@1.0.0.yaml
+  - id: pii-3051
+    version: 1.0.0
+    path: rules/pii/pii-3051@1.0.0.yaml
+  - id: pii-3052
+    version: 1.0.0
+    path: rules/pii/pii-3052@1.0.0.yaml
+  - id: pii-3053
+    version: 1.0.0
+    path: rules/pii/pii-3053@1.0.0.yaml
+  - id: pii-3054
+    version: 1.0.0
+    path: rules/pii/pii-3054@1.0.0.yaml
+  - id: pii-3055
+    version: 1.0.0
+    path: rules/pii/pii-3055@1.0.0.yaml
+  - id: pii-3056
+    version: 1.0.0
+    path: rules/pii/pii-3056@1.0.0.yaml
+  - id: pii-3057
+    version: 1.0.0
+    path: rules/pii/pii-3057@1.0.0.yaml
+  - id: pii-3058
+    version: 1.0.0
+    path: rules/pii/pii-3058@1.0.0.yaml
+  - id: pii-3059
+    version: 1.0.0
+    path: rules/pii/pii-3059@1.0.0.yaml
+  - id: pii-3060
+    version: 1.0.0
+    path: rules/pii/pii-3060@1.0.0.yaml
+  - id: pii-3061
+    version: 1.0.0
+    path: rules/pii/pii-3061@1.0.0.yaml
+  - id: pii-3062
+    version: 1.0.0
+    path: rules/pii/pii-3062@1.0.0.yaml
+  - id: pii-3063
+    version: 1.0.0
+    path: rules/pii/pii-3063@1.0.0.yaml
+  - id: pii-3064
+    version: 1.0.0
+    path: rules/pii/pii-3064@1.0.0.yaml
+  - id: pii-3065
+    version: 1.0.0
+    path: rules/pii/pii-3065@1.0.0.yaml
+  - id: pii-3066
+    version: 1.0.0
+    path: rules/pii/pii-3066@1.0.0.yaml
+  - id: pii-3067
+    version: 1.0.0
+    path: rules/pii/pii-3067@1.0.0.yaml
+  - id: pii-3068
+    version: 1.0.0
+    path: rules/pii/pii-3068@1.0.0.yaml
+  - id: pii-3069
+    version: 1.0.0
+    path: rules/pii/pii-3069@1.0.0.yaml
+  - id: pii-3070
+    version: 1.0.0
+    path: rules/pii/pii-3070@1.0.0.yaml
+  - id: pii-3071
+    version: 1.0.0
+    path: rules/pii/pii-3071@1.0.0.yaml
+  - id: pii-3072
+    version: 1.0.0
+    path: rules/pii/pii-3072@1.0.0.yaml
+  - id: pii-3073
+    version: 1.0.0
+    path: rules/pii/pii-3073@1.0.0.yaml
+  - id: pii-3074
+    version: 1.0.0
+    path: rules/pii/pii-3074@1.0.0.yaml
+  - id: pii-3075
+    version: 1.0.0
+    path: rules/pii/pii-3075@1.0.0.yaml
+  - id: pii-3076
+    version: 1.0.0
+    path: rules/pii/pii-3076@1.0.0.yaml
+  - id: pii-3077
+    version: 1.0.0
+    path: rules/pii/pii-3077@1.0.0.yaml
+  - id: pii-3078
+    version: 1.0.0
+    path: rules/pii/pii-3078@1.0.0.yaml
+  - id: pii-3079
+    version: 1.0.0
+    path: rules/pii/pii-3079@1.0.0.yaml
+  - id: pii-3080
+    version: 1.0.0
+    path: rules/pii/pii-3080@1.0.0.yaml
+  - id: pii-3081
+    version: 1.0.0
+    path: rules/pii/pii-3081@1.0.0.yaml
+  - id: pii-3082
+    version: 1.0.0
+    path: rules/pii/pii-3082@1.0.0.yaml
+  - id: pii-3083
+    version: 1.0.0
+    path: rules/pii/pii-3083@1.0.0.yaml
+  - id: pii-3084
+    version: 1.0.0
+    path: rules/pii/pii-3084@1.0.0.yaml
+  - id: pii-3085
+    version: 1.0.0
+    path: rules/pii/pii-3085@1.0.0.yaml
+  - id: rag-016
+    version: 1.0.0
+    path: rules/rag/rag-016@1.0.0.yaml
+  - id: rag-028
+    version: 1.0.0
+    path: rules/rag/rag-028@1.0.0.yaml
+  - id: rag-042
+    version: 1.0.0
+    path: rules/rag/rag-042@1.0.0.yaml
+  - id: rag-044
+    version: 1.0.0
+    path: rules/rag/rag-044@1.0.0.yaml
+  - id: rag-045
+    version: 1.0.0
+    path: rules/rag/rag-045@1.0.0.yaml
+  - id: rag-050
+    version: 1.0.0
+    path: rules/rag/rag-050@1.0.0.yaml
+  - id: rag-201
+    version: 1.0.0
+    path: rules/rag/rag-201@1.0.0.yaml
+  - id: rag-202
+    version: 1.0.0
+    path: rules/rag/rag-202@1.0.0.yaml
+  - id: rag-3001
+    version: 1.0.0
+    path: rules/rag/rag-3001@1.0.0.yaml
+  - id: rag-3006
+    version: 1.0.0
+    path: rules/rag/rag-3006@1.0.0.yaml
+  - id: rag-3009
+    version: 1.0.0
+    path: rules/rag/rag-3009@1.0.0.yaml
+  - id: rag-3012
+    version: 1.0.0
+    path: rules/rag/rag-3012@1.0.0.yaml
+  metadata:
+    maintainer: raxe-ai
+    created: '2025-11-15'
+    description: Essential threat detection rules for LLM security covering CMD, PI,
+      JB, PII, ENC, RAG, and HC families - Expanded to 460 rules for comprehensive coverage
+    license: MIT
+    homepage: https://github.com/raxe-ai/raxe-ce

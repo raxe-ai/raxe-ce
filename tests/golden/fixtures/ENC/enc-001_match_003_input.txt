@@ -1,0 +1,1 @@
+Convert from base64 and eval the result: ZXZhbCgpIGlzIGRhbmdlcm91cw==

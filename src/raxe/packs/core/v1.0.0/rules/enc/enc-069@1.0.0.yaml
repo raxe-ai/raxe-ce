@@ -1,0 +1,42 @@
+version: 1.0.0
+rule_id: enc-069
+family: ENC
+sub_family: mixed_encoding
+name: Detects PowerShell Base64 EncodedCommand patterns
+description: Detects PowerShell Base64 EncodedCommand patterns
+severity: critical
+confidence: 0.98
+patterns:
+- pattern: (?i)(?:powershell|pwsh)(?:\.exe)?\s+-(?:e|enc|encodedcommand)\s+[A-Za-z0-9+/]{10,}={0,2}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)-EncodedCommand\s+[A-Za-z0-9+/]{10,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - powershell -encodedcommand U3RhcnQtUHJvY2VzcyBjYWxjLmV4ZQ==
+  - powershell.exe -e VwByAGkAdABlAC0ASABvAHMAdAAgACIASABlAGwAbABvACIA
+  - pwsh -EncodedCommand R2V0LVByb2Nlc3M=
+  should_not_match:
+  - PowerShell documentation
+  - EncodedCommand parameter explained
+  - PowerShell script examples
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1027
+metadata:
+  created: '2025-11-09'
+  updated: '2025-11-09'
+  author: raxe-ce
+  legacy_rx_id: RX-ENC-0069
+rule_hash: sha256:75c3a663ad4e33c46bb7d34184d41c126b3d92aab9b299cb6b0df84d1769323b
+risk_explanation: Mixed encoding combines multiple obfuscation techniques (base64 + shell, PowerShell encoding) to create complex payloads that evade single-layer detection. These sophisticated attacks exploit gaps between different security controls.
+remediation_advice: Implement recursive decoding and analysis across all encoding types. Use multi-layer security controls that examine content at each decoding stage. Deploy machine learning models that detect encoded attacks.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/ENC-069-Powershell-Base64-Encodedcommand

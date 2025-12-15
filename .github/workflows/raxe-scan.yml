@@ -247,7 +247,7 @@ jobs:
 
       - name: Upload scan results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: raxe-scan-results
           path: raxe-scan-results.json

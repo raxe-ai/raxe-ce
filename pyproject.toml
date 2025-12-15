@@ -45,7 +45,7 @@ dependencies = [
     "jsonschema>=4.17,<5.0",
     # ML dependencies for L2 detection (model auto-downloads on first use)
     "onnxruntime>=1.16.0,<2.0",
-    "sentence-transformers>=2.2.0,<3.0",
+    "sentence-transformers>=2.2.0,<6.0",
     "numpy>=1.24.0,<2.0",
 ]
 

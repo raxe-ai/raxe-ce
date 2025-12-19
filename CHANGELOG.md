@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2025-12-20
+
+### 🛡️ Suppression System v1.0
+
+This release introduces a comprehensive suppression system for managing false positives in your AI security workflow.
+
+#### Added
+
+- **YAML-based suppression configuration** (`.raxe/suppressions.yaml`)
+  - Structured schema with version control
+  - Required reason field for audit compliance
+  - Expiration date support for time-limited suppressions
+  - Wildcard patterns with family prefix validation
+
+- **Policy action overrides**
+  - `SUPPRESS` - Remove detection from results (default)
+  - `FLAG` - Keep detection but mark for human review
+  - `LOG` - Keep detection for metrics/logging only
+
+- **Inline SDK suppression**
+  - `raxe.scan(text, suppress=["pi-001", "jb-*"])` parameter
+  - `with raxe.suppressed("pi-*", reason="Testing")` context manager
+  - Thread-safe scoped suppressions
+
+- **CLI suppression commands**
+  - `raxe scan --suppress pi-001` flag
+  - `raxe suppress list/add/remove/audit/stats` subcommands
+  - JSON/YAML export formats
+
+- **Security hardening**
+  - Pattern length limit (256 chars)
+  - Reason length limit (500 chars)
+  - Maximum suppressions limit (1000)
+  - Fail-closed expiration handling
+
+- **Detection flagging**
+  - `Detection.is_flagged` field for FLAG action
+  - `Detection.suppression_reason` field
+  - Visual `[FLAG]` indicator in CLI output
+
+#### Changed
+
+- Configuration location moved to `.raxe/` directory
+- Bare wildcard `*` patterns are now rejected (must use family prefix like `pi-*`)
+
+#### Deprecated
+
+- `.raxeignore` file format (still works, will be removed in v1.0.0)
+
+#### Security
+
+- No bare wildcards allowed (prevents accidental full suppression)
+- Pattern validation requires valid family prefix
+- Audit trail for all suppression operations
+
+---
+
 ## [0.0.1] - 2025-12-04
 
 **Open Beta Release**
@@ -259,4 +316,5 @@ See [SECURITY.md](SECURITY.md) for our responsible disclosure policy.
 
 **RAXE: The open-source instrument panel for AI safety.**
 
+[0.2.0]: https://github.com/raxe-ai/raxe-ce/compare/v0.0.1...v0.2.0
 [0.0.1]: https://github.com/raxe-ai/raxe-ce/releases/tag/v0.0.1

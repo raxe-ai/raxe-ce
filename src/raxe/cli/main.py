@@ -250,6 +250,37 @@ def setup():
         sys.exit(1)
 
 
+def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
+    """Parse suppress pattern with optional action override.
+
+    Formats:
+        pi-001 -> (pi-001, SUPPRESS)
+        pi-001:FLAG -> (pi-001, FLAG)
+        pi-001:LOG -> (pi-001, LOG)
+        jb-* -> (jb-*, SUPPRESS)
+        jb-*:FLAG -> (jb-*, FLAG)
+
+    Args:
+        pattern: Pattern string, optionally with :ACTION suffix
+
+    Returns:
+        Tuple of (rule_pattern, action)
+
+    Raises:
+        click.BadParameter: If action is invalid
+    """
+    if ":" in pattern:
+        parts = pattern.rsplit(":", 1)
+        rule_pattern = parts[0]
+        action = parts[1].upper()
+        if action not in ("SUPPRESS", "FLAG", "LOG"):
+            raise click.BadParameter(
+                f"Invalid action '{action}'. Valid actions: SUPPRESS, FLAG, LOG"
+            )
+        return rule_pattern, action
+    return pattern, "SUPPRESS"
+
+
 @cli.command()
 @click.argument("text", required=False)
 @click.option(
@@ -305,6 +336,12 @@ def setup():
     is_flag=True,
     help="Test scan without saving to database",
 )
+@click.option(
+    "--suppress",
+    "suppress_patterns",
+    multiple=True,
+    help="Suppress rule(s) for this scan. Supports wildcards and action override (e.g., pi-001, jb-*, pi-001:FLAG)",
+)
 @click.pass_context
 def scan(
     ctx,
@@ -319,6 +356,7 @@ def scan(
     confidence: float | None,
     explain: bool,
     dry_run: bool,
+    suppress_patterns: tuple[str, ...],
 ):
     """
     Scan text for security threats.
@@ -332,6 +370,12 @@ def scan(
       raxe scan "text" --confidence 0.8 --explain
       raxe scan "text" --ci  # CI/CD mode (JSON, exit 1 on threats)
       raxe --quiet scan "text"  # Same as --ci
+
+    \b
+    Suppression Examples:
+      raxe scan "text" --suppress pi-001                  # Suppress single rule
+      raxe scan "text" --suppress pi-001 --suppress jb-*  # Multiple suppressions
+      raxe scan "text" --suppress "pi-001:FLAG"           # Flag instead of suppress
 
     \b
     Exit Codes (for CI/CD integration):
@@ -389,6 +433,38 @@ def scan(
         display_error("Failed to initialize RAXE", str(e))
         console.print("Try running: [cyan]raxe init[/cyan]")
         sys.exit(EXIT_CONFIG_ERROR)
+
+    # Add CLI-specified suppressions (temporary, for this scan only)
+    cli_suppressions: list[tuple[str, str]] = []  # (pattern, action) tuples
+    if suppress_patterns:
+        from raxe.domain.suppression import Suppression, SuppressionAction, SuppressionValidationError
+
+        for pattern_str in suppress_patterns:
+            try:
+                rule_pattern, action_str = parse_suppress_pattern(pattern_str)
+                action = SuppressionAction(action_str)
+
+                # Add to suppression manager (temporary, runtime only)
+                raxe.suppression_manager.add_suppression(
+                    pattern=rule_pattern,
+                    reason="CLI --suppress flag",
+                    action=action,
+                    created_by="cli",
+                    log_to_audit=False,  # Don't log temporary suppressions
+                )
+                cli_suppressions.append((rule_pattern, action_str))
+            except SuppressionValidationError as e:
+                display_error(
+                    f"Invalid suppression pattern: {pattern_str}",
+                    f"{e}\n\nValid pattern examples:\n"
+                    "  pi-001         - Suppress specific rule\n"
+                    "  pi-*           - Suppress all prompt injection rules\n"
+                    "  jb-*:FLAG      - Flag jailbreak rules for review\n"
+                )
+                sys.exit(EXIT_INVALID_INPUT)
+            except click.BadParameter as e:
+                display_error(f"Invalid suppression pattern: {pattern_str}", str(e))
+                sys.exit(EXIT_INVALID_INPUT)
 
     # Scan using unified client
     # Wire all CLI flags to scan parameters
@@ -460,16 +536,21 @@ def scan(
     # Output based on format
     if format == "json" and not profile:
         # Collect L1 detections
-        l1_detections = [
-            {
+        l1_detections = []
+        for d in result.scan_result.l1_result.detections:
+            detection_dict = {
                 "rule_id": d.rule_id,
                 "severity": d.severity.value,
                 "confidence": d.confidence,
                 "layer": "L1",
                 "message": getattr(d, "message", ""),
             }
-            for d in result.scan_result.l1_result.detections
-        ]
+            # Include flag status if flagged
+            if getattr(d, "is_flagged", False):
+                detection_dict["is_flagged"] = True
+                if getattr(d, "suppression_reason", None):
+                    detection_dict["flag_reason"] = d.suppression_reason
+            l1_detections.append(detection_dict)
 
         # Collect L2 predictions
         l2_detections = []
@@ -526,16 +607,21 @@ def scan(
             import yaml
 
             # Collect L1 detections
-            l1_detections = [
-                {
+            l1_detections = []
+            for d in result.scan_result.l1_result.detections:
+                detection_dict = {
                     "rule_id": d.rule_id,
                     "severity": d.severity.value,
                     "confidence": d.confidence,
                     "layer": "L1",
                     "message": getattr(d, "message", ""),
                 }
-                for d in result.scan_result.l1_result.detections
-            ]
+                # Include flag status if flagged
+                if getattr(d, "is_flagged", False):
+                    detection_dict["is_flagged"] = True
+                    if getattr(d, "suppression_reason", None):
+                        detection_dict["flag_reason"] = d.suppression_reason
+                l1_detections.append(detection_dict)
 
             # Collect L2 predictions
             l2_detections = []

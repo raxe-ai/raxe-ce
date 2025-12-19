@@ -137,7 +137,7 @@ class TestSDKInitialization:
         client = Raxe()
 
         assert client.suppression_manager is not None
-        # Should auto-load .raxeignore if present
+        # Should auto-load .raxe/suppressions.yaml if present
 
     def test_initialization_with_environment_vars(self):
         """Test environment variable configuration."""

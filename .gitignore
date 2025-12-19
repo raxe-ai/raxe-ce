@@ -21,6 +21,20 @@ CLAUDE.md
 # Internal testing integration guides
 testing_integration/
 
+# Internal architecture documentation (design specs, not user docs)
+docs/architecture/
+
+# Internal docs (not for public release)
+docs/BRAND_ASSETS_OPTIMIZATION.md
+docs/SCAN_TELEMETRY_SCHEMA.md
+docs/VOTING_ENGINE.md
+
+# Sample .raxe config directory (user-created, not tracked)
+.raxe/
+
+# Internal update documentation (client docs kept separately)
+UPDATE.md
+
 # ML model artifacts (exclude from git - too large for pip install)
 *.safetensors                        # Hugging Face model files
 *.pt                                 # PyTorch models

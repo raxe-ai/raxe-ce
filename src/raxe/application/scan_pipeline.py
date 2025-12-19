@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from raxe.application.apply_policy import ApplyPolicyUseCase
 from raxe.application.scan_merger import CombinedScanResult, ScanMerger
 from raxe.application.telemetry_orchestrator import get_orchestrator
-from raxe.domain.engine.executor import RuleExecutor
+from raxe.domain.engine.executor import Detection, RuleExecutor
 from raxe.domain.ml.protocol import L2Detector, L2Result
 from raxe.domain.policies.models import PolicyAction
 from raxe.infrastructure.packs.registry import PackRegistry
@@ -509,28 +509,48 @@ class ScanPipeline:
                 scan_duration_ms=l1_result.scan_duration_ms,
             )
 
-        # 4.5. Apply suppressions (NEW: Filter out suppressed detections)
+        # 4.5. Apply suppressions (Filter, flag, or log detections based on action)
         suppressed_count = 0
+        flagged_count = 0
+        logged_count = 0
         if self.suppression_manager:
-            unsuppressed_detections = []
+            from raxe.domain.suppression import SuppressionAction
+
+            processed_detections = []
             for detection in l1_result.detections:
-                is_suppressed, reason = self.suppression_manager.is_suppressed(detection.rule_id)
-                if is_suppressed:
-                    suppressed_count += 1
-                    logger.debug(f"Suppressed {detection.rule_id}: {reason}")
+                check_result = self.suppression_manager.check_suppression(detection.rule_id)
+
+                if check_result.is_suppressed:
+                    if check_result.action == SuppressionAction.SUPPRESS:
+                        # Fully suppress - remove from results
+                        suppressed_count += 1
+                        logger.debug(f"Suppressed {detection.rule_id}: {check_result.reason}")
+                    elif check_result.action == SuppressionAction.FLAG:
+                        # Flag for review - keep in results but mark as flagged
+                        flagged_count += 1
+                        logger.debug(f"Flagged {detection.rule_id}: {check_result.reason}")
+                        # Use Detection.with_flag() to create flagged copy
+                        flagged_detection = detection.with_flag(check_result.reason)
+                        processed_detections.append(flagged_detection)
+                    elif check_result.action == SuppressionAction.LOG:
+                        # Log only - keep in results (for metrics/logging)
+                        logged_count += 1
+                        logger.debug(f"Logged {detection.rule_id}: {check_result.reason}")
+                        processed_detections.append(detection)
+
                     # Log suppression application to audit log
-                    self.suppression_manager.log_suppression(
-                        scan_id=None,  # scan_id not available in pipeline
+                    self.suppression_manager.log_suppression_applied(
                         rule_id=detection.rule_id,
-                        reason=reason
+                        reason=check_result.reason,
+                        action=check_result.action,
                     )
                 else:
-                    unsuppressed_detections.append(detection)
+                    processed_detections.append(detection)
 
-            # Update l1_result with unsuppressed detections
+            # Update l1_result with processed detections
             from raxe.domain.engine.executor import ScanResult
             l1_result = ScanResult(
-                detections=unsuppressed_detections,
+                detections=processed_detections,
                 scanned_at=l1_result.scanned_at,
                 text_length=l1_result.text_length,
                 rules_checked=l1_result.rules_checked,
@@ -551,7 +571,9 @@ class ScanPipeline:
             "l2_enabled": l2_enabled,
             "confidence_threshold": confidence_threshold,
             "explain": explain,
-            "suppressed_count": suppressed_count,  # NEW: Track suppressions
+            "suppressed_count": suppressed_count,  # Track fully suppressed
+            "flagged_count": flagged_count,  # Track flagged for review
+            "logged_count": logged_count,  # Track logged for metrics
         }
         if context:
             metadata["context"] = context

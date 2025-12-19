@@ -4,9 +4,11 @@ This infrastructure layer module combines:
 - YamlSuppressionRepository: .raxe/suppressions.yaml file storage
 - SQLiteSuppressionRepository: Audit log persistence
 
-Note: The legacy .raxeignore file format has been deprecated in v1.0.
-Use .raxe/suppressions.yaml instead. See UPDATE.md for migration guide.
+This is the recommended repository for new projects as it provides
+the full YAML format with action overrides, expiration dates, and
+proper audit logging.
 """
+
 import logging
 from pathlib import Path
 from typing import Any
@@ -23,42 +25,42 @@ from raxe.infrastructure.suppression.yaml_repository import (
 logger = logging.getLogger(__name__)
 
 
-class CompositeSuppressionRepository:
+class YamlCompositeSuppressionRepository:
     """Repository that combines YAML storage + SQLite audit logging.
-
-    This repository provides:
-    - Load/save suppressions from .raxe/suppressions.yaml (YamlSuppressionRepository)
-    - Log audit entries to SQLite (SQLiteSuppressionRepository)
 
     This is the recommended repository for new projects as it provides:
     - Full YAML format with action overrides (SUPPRESS, FLAG, LOG)
     - Expiration dates with proper validation
     - Schema versioning
     - SQLite audit logging for compliance
+
+    This is what should be used for projects adopting the new
+    .raxe/suppressions.yaml format.
     """
 
     def __init__(
         self,
-        config_path: Path | None = None,
+        yaml_path: Path | None = None,
         db_path: Path | None = None,
-    ):
+    ) -> None:
         """Initialize composite repository.
 
         Args:
-            config_path: Path to suppressions.yaml file.
-                        Default: ./.raxe/suppressions.yaml
-            db_path: Path to SQLite database (default: ~/.raxe/suppressions.db)
+            yaml_path: Path to suppressions.yaml file
+                      (default: ./.raxe/suppressions.yaml)
+            db_path: Path to SQLite database
+                    (default: ~/.raxe/suppressions.db)
         """
-        if config_path is None:
-            config_path = Path.cwd() / DEFAULT_SUPPRESSIONS_PATH
+        if yaml_path is None:
+            yaml_path = Path.cwd() / DEFAULT_SUPPRESSIONS_PATH
 
-        self.yaml_repo = YamlSuppressionRepository(config_path=config_path)
+        self.yaml_repo = YamlSuppressionRepository(config_path=yaml_path)
         self.sqlite_repo = SQLiteSuppressionRepository(db_path=db_path)
 
         logger.debug(
-            "composite_repository_initialized",
+            "yaml_composite_repository_initialized",
             extra={
-                "config_path": str(self.yaml_repo.config_path),
+                "yaml_path": str(self.yaml_repo.config_path),
                 "db_path": str(self.sqlite_repo.db_path),
             },
         )
@@ -136,7 +138,7 @@ class CompositeSuppressionRepository:
 
     @property
     def config_path(self) -> Path:
-        """Get the config file path (for backward compatibility)."""
+        """Get the YAML config file path (for backward compatibility)."""
         return self.yaml_repo.config_path
 
     @property

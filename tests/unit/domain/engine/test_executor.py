@@ -162,6 +162,94 @@ class TestDetection:
         assert result["match_count"] == 1
 
 
+class TestDetectionWithFlag:
+    """Tests for Detection.with_flag() method used by suppression system."""
+
+    def _create_detection(self) -> Detection:
+        """Helper to create a test detection."""
+        matches = [
+            Match(
+                pattern_index=0,
+                start=0,
+                end=4,
+                matched_text="test",
+                groups=(),
+                context_before="",
+                context_after="",
+            )
+        ]
+        return Detection(
+            rule_id="pi-001",
+            rule_version="0.0.1",
+            severity=Severity.HIGH,
+            confidence=0.85,
+            matches=matches,
+            detected_at="2025-11-15T00:00:00Z",
+            category="test_category",
+            message="Test message",
+            explanation="Test explanation",
+        )
+
+    def test_with_flag_creates_new_instance(self) -> None:
+        """Test that with_flag creates a new Detection, not modifying original."""
+        detection = self._create_detection()
+        flagged = detection.with_flag("Test suppression reason")
+
+        # Original unchanged
+        assert detection.is_flagged is False
+        assert detection.suppression_reason is None
+
+        # New instance is flagged
+        assert flagged.is_flagged is True
+        assert flagged.suppression_reason == "Test suppression reason"
+
+    def test_with_flag_preserves_all_fields(self) -> None:
+        """Test that with_flag preserves all original detection fields."""
+        detection = self._create_detection()
+        flagged = detection.with_flag("Suppressed for review")
+
+        # All original fields preserved
+        assert flagged.rule_id == detection.rule_id
+        assert flagged.rule_version == detection.rule_version
+        assert flagged.severity == detection.severity
+        assert flagged.confidence == detection.confidence
+        assert flagged.matches == detection.matches
+        assert flagged.detected_at == detection.detected_at
+        assert flagged.category == detection.category
+        assert flagged.message == detection.message
+        assert flagged.explanation == detection.explanation
+
+    def test_with_flag_reason_in_to_dict(self) -> None:
+        """Test that flagged detection serializes correctly."""
+        detection = self._create_detection()
+        flagged = detection.with_flag("Flagged for security team review")
+
+        result = flagged.to_dict()
+
+        assert result["is_flagged"] is True
+        assert result["suppression_reason"] == "Flagged for security team review"
+
+    def test_with_flag_empty_reason(self) -> None:
+        """Test with_flag with empty reason string."""
+        detection = self._create_detection()
+        flagged = detection.with_flag("")
+
+        assert flagged.is_flagged is True
+        assert flagged.suppression_reason == ""
+
+    def test_with_flag_immutability(self) -> None:
+        """Test that Detection remains immutable after with_flag."""
+        detection = self._create_detection()
+        flagged = detection.with_flag("Test reason")
+
+        # Both should be frozen dataclasses
+        with pytest.raises(Exception):  # FrozenInstanceError
+            detection.is_flagged = True  # type: ignore
+
+        with pytest.raises(Exception):  # FrozenInstanceError
+            flagged.is_flagged = False  # type: ignore
+
+
 class TestScanResult:
     """Tests for ScanResult value object."""
 

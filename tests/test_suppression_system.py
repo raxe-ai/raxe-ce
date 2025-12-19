@@ -43,18 +43,32 @@ class TestSuppression:
         assert not supp.matches("jb-001")
         assert not supp.matches("pii-email")
 
-    def test_wildcard_suffix(self):
-        """Test wildcard suffix patterns (*-injection)."""
+    def test_wildcard_suffix_requires_family_prefix(self):
+        """Test wildcard suffix patterns now require family prefix.
+
+        v1.0 change: Bare suffix wildcards like '*-injection' are no longer
+        allowed. Wildcards must start with a valid family prefix.
+        """
+        import pytest
+        from raxe.domain.suppression import SuppressionValidationError
+
+        # Suffix-only wildcards are now rejected
+        with pytest.raises(SuppressionValidationError, match="starts with wildcard"):
+            Suppression(
+                pattern="*-injection",
+                reason="Test",
+                created_at=datetime.now(timezone.utc).isoformat(),
+            )
+
+        # But family-prefixed wildcards still work
         supp = Suppression(
-            pattern="*-injection",
+            pattern="cmd-*",
             reason="Test",
             created_at=datetime.now(timezone.utc).isoformat(),
         )
-        assert supp.matches("pi-injection")
         assert supp.matches("cmd-injection")
-        assert supp.matches("jb-injection")
-        assert not supp.matches("pi-001")
-        assert not supp.matches("injection")
+        assert supp.matches("cmd-001")
+        assert not supp.matches("pi-injection")
 
     def test_wildcard_middle(self):
         """Test wildcard middle patterns (pi-*-basic)."""
@@ -191,22 +205,23 @@ class TestSuppressionManager:
             assert not is_suppressed
 
     def test_load_from_file(self):
-        """Test loading suppressions from file."""
+        """Test loading suppressions from YAML file."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = Path(tmpdir) / ".raxeignore"
+            config_path = Path(tmpdir) / ".raxe" / "suppressions.yaml"
             db_path = Path(tmpdir) / "test.db"
 
-            # Create test file
-            config_path.write_text("""
-# Test suppressions
-pi-001  # False positive in docs
-jb-regex-basic  # Too sensitive
-
-# Wildcard patterns
-pi-*  # All PI rules
-*-injection  # All injection rules
-
-# Blank lines and comments ignored
+            # Create test YAML file
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            config_path.write_text("""version: "1.0"
+suppressions:
+  - pattern: "pi-001"
+    reason: "False positive in docs"
+  - pattern: "jb-regex-basic"
+    reason: "Too sensitive"
+  - pattern: "pi-*"
+    reason: "All PI rules"
+  - pattern: "cmd-*"
+    reason: "All CMD rules"
 """)
 
             manager = create_suppression_manager(
@@ -219,16 +234,16 @@ pi-*  # All PI rules
             assert manager.is_suppressed("pi-001")[0]
             assert manager.is_suppressed("jb-regex-basic")[0]
             assert manager.is_suppressed("pi-002")[0]  # Wildcard pi-*
-            assert manager.is_suppressed("cmd-injection")[0]  # Wildcard *-injection
+            assert manager.is_suppressed("cmd-injection")[0]  # Wildcard cmd-*
 
             # Get all suppressions
             suppressions = manager.get_suppressions()
             assert len(suppressions) == 4
 
     def test_save_to_file(self):
-        """Test saving suppressions to file."""
+        """Test saving suppressions to YAML file."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = Path(tmpdir) / ".raxeignore"
+            config_path = Path(tmpdir) / ".raxe" / "suppressions.yaml"
             db_path = Path(tmpdir) / "test.db"
 
             manager = create_suppression_manager(
@@ -368,19 +383,22 @@ class TestSuppressionPatterns:
             # Reason could be either - depends on dict ordering
 
     def test_multiple_wildcards(self):
-        """Test multiple wildcard patterns."""
+        """Test multiple wildcard patterns.
+
+        v1.0 change: All wildcards must have family prefix.
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"
             manager = create_suppression_manager(db_path=db_path, auto_load=False)
 
             manager.add_suppression("pi-*", "All PI rules")
-            manager.add_suppression("*-injection", "All injection rules")
+            manager.add_suppression("cmd-*", "All CMD rules")  # Changed from *-injection
             manager.add_suppression("jb-regex-*", "Jailbreak regex rules")
 
             # Test various matches
             assert manager.is_suppressed("pi-001")[0]
-            assert manager.is_suppressed("pi-injection")[0]
-            assert manager.is_suppressed("cmd-injection")[0]
+            assert manager.is_suppressed("pi-injection")[0]  # Matches pi-*
+            assert manager.is_suppressed("cmd-injection")[0]  # Matches cmd-*
             assert manager.is_suppressed("jb-regex-basic")[0]
 
             # Test non-matches
@@ -413,7 +431,11 @@ def example_basic_usage():
 
 
 def example_wildcard_usage():
-    """Example: Wildcard pattern usage."""
+    """Example: Wildcard pattern usage.
+
+    v1.0 change: All wildcards must have family prefix (e.g., pi-*, cmd-*).
+    Suffix-only wildcards like *-injection are no longer allowed.
+    """
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"
         manager = create_suppression_manager(db_path=db_path, auto_load=False)
@@ -424,33 +446,35 @@ def example_wildcard_usage():
             reason="Disable all prompt injection detection",
         )
 
-        # Suppress all injection-related rules
+        # Suppress all CMD rules (v1.0: must use family prefix, not *-injection)
         manager.add_suppression(
-            pattern="*-injection",
-            reason="Injection rules too sensitive",
+            pattern="cmd-*",
+            reason="CMD rules too sensitive",
         )
 
         # Check various rules
         print(manager.is_suppressed("pi-001"))  # (True, "Disable all...")
         print(manager.is_suppressed("pi-002"))  # (True, "Disable all...")
-        print(manager.is_suppressed("cmd-injection"))  # (True, "Injection rules...")
+        print(manager.is_suppressed("cmd-injection"))  # (True, "CMD rules...")
         print(manager.is_suppressed("jb-001"))  # (False, "")
 
 
 def example_file_usage():
-    """Example: File-based suppressions."""
+    """Example: YAML file-based suppressions."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        config_path = Path(tmpdir) / ".raxeignore"
+        config_path = Path(tmpdir) / ".raxe" / "suppressions.yaml"
         db_path = Path(tmpdir) / "test.db"
 
-        # Create .raxeignore file
-        config_path.write_text("""
-# Suppress specific rules
-pi-001  # False positive in docs
-jb-regex-basic  # Too sensitive
-
-# Suppress entire family
-pi-*  # All prompt injection rules
+        # Create .raxe/suppressions.yaml file
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text("""version: "1.0"
+suppressions:
+  - pattern: "pi-001"
+    reason: "False positive in docs"
+  - pattern: "jb-regex-basic"
+    reason: "Too sensitive"
+  - pattern: "pi-*"
+    reason: "All prompt injection rules"
 """)
 
         # Load suppressions

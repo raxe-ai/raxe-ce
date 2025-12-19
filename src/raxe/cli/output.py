@@ -99,7 +99,7 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console, expla
         box=None,  # Cleaner look without box
         padding=(0, 1)
     )
-    table.add_column("Rule", style="cyan", no_wrap=True, width=10)
+    table.add_column("Rule", style="cyan", no_wrap=True, width=14)
     table.add_column("Severity", style="bold", width=10)
     table.add_column("Confidence", justify="right", width=12)
     table.add_column("Description", style="white")
@@ -112,12 +112,25 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console, expla
         # Format confidence as percentage
         confidence_pct = f"{detection.confidence * 100:.1f}%"
 
-        # Message - truncate if too long
+        # Message - truncate if too long, include flag indicator
         message = getattr(detection, "message", "No description available")
+        is_flagged = getattr(detection, "is_flagged", False)
+        suppression_reason = getattr(detection, "suppression_reason", None)
+
+        if is_flagged:
+            # Show flag indicator for flagged detections
+            message = f"[FLAG] {message}"
+            if suppression_reason:
+                message = f"{message} (flagged: {suppression_reason})"
         if len(message) > 60:
             message = message[:57] + "..."
 
-        table.add_row(detection.rule_id, severity_text, confidence_pct, message)
+        # Add flag indicator to rule column if flagged
+        rule_display = detection.rule_id
+        if is_flagged:
+            rule_display = f"[yellow]{detection.rule_id}[/yellow]"
+
+        table.add_row(rule_display, severity_text, confidence_pct, message)
 
     # Add L2 predictions
     if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:

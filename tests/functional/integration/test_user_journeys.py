@@ -223,9 +223,15 @@ class TestUserJourneys:
             capture_output=True
         )
 
-        # 2. Create .raxeignore
-        ignore_file = project_dir / ".raxeignore"
-        ignore_file.write_text("# Ignore test patterns\ntest_*\n*_test.py\n")
+        # 2. Create .raxe/suppressions.yaml
+        raxe_dir = project_dir / ".raxe"
+        raxe_dir.mkdir(exist_ok=True)
+        suppress_file = raxe_dir / "suppressions.yaml"
+        suppress_file.write_text("""version: "1.0"
+suppressions:
+  - pattern: "pi-test"
+    reason: "Test pattern"
+""")
 
         # 3. Use SDK in code
         test_script = project_dir / "app.py"

@@ -36,6 +36,8 @@ class Detection:
         risk_explanation: Explanation of why this pattern is dangerous
         remediation_advice: How to fix or mitigate this threat
         docs_url: Link to documentation for learning more
+        is_flagged: True if detection was matched by a FLAG suppression
+        suppression_reason: Reason for suppression (if flagged or logged)
     """
     rule_id: str
     rule_version: str
@@ -51,6 +53,8 @@ class Detection:
     risk_explanation: str = ""
     remediation_advice: str = ""
     docs_url: str = ""
+    is_flagged: bool = False
+    suppression_reason: str | None = None
 
     def __post_init__(self) -> None:
         """Validate detection after construction."""
@@ -111,7 +115,40 @@ class Detection:
             "risk_explanation": self.risk_explanation,
             "remediation_advice": self.remediation_advice,
             "docs_url": self.docs_url,
+            "is_flagged": self.is_flagged,
+            "suppression_reason": self.suppression_reason,
         }
+
+    def with_flag(self, reason: str) -> "Detection":
+        """Create a copy of this detection with is_flagged=True.
+
+        Used by suppression system when FLAG action is matched.
+
+        Args:
+            reason: The reason for flagging this detection
+
+        Returns:
+            New Detection instance with is_flagged=True
+        """
+        # Since Detection is frozen, we must create a new instance
+        return Detection(
+            rule_id=self.rule_id,
+            rule_version=self.rule_version,
+            severity=self.severity,
+            confidence=self.confidence,
+            matches=self.matches,
+            detected_at=self.detected_at,
+            detection_layer=self.detection_layer,
+            layer_latency_ms=self.layer_latency_ms,
+            category=self.category,
+            message=self.message,
+            explanation=self.explanation,
+            risk_explanation=self.risk_explanation,
+            remediation_advice=self.remediation_advice,
+            docs_url=self.docs_url,
+            is_flagged=True,
+            suppression_reason=reason,
+        )
 
 
 @dataclass(frozen=True)

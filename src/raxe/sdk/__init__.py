@@ -20,11 +20,19 @@ Usage patterns:
         from openai import OpenAI
         client = raxe.wrap(OpenAI())
 
+    4. Inline suppression:
+        result = raxe.scan(text, suppress=["pi-001", "jb-*"])
+
+    5. Scoped suppression:
+        with raxe.suppressed("pi-*", reason="Testing"):
+            result = raxe.scan(text)
+
 Public exports:
     - Raxe: Main client class
     - RaxeException: Base exception
     - SecurityException: Threat detected exception
     - RaxeBlockedError: Request blocked exception
+    - suppression_scope: Function for scoped suppression without client
 """
 
 from raxe.sdk.client import Raxe
@@ -33,10 +41,12 @@ from raxe.sdk.exceptions import (
     RaxeException,
     SecurityException,
 )
+from raxe.sdk.suppression_context import suppression_scope
 
 __all__ = [
     "Raxe",
     "RaxeBlockedError",
     "RaxeException",
     "SecurityException",
+    "suppression_scope",
 ]

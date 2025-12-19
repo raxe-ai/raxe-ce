@@ -14,24 +14,26 @@ from __future__ import annotations
 import atexit
 import threading
 from collections.abc import Callable
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, ClassVar
 
-from datetime import datetime, timezone
-
 from raxe.application.preloader import preload_pipeline
-from raxe.application.scan_pipeline import ScanPipelineResult
 from raxe.application.scan_merger import ScanMerger
+from raxe.application.scan_pipeline import ScanPipelineResult
 from raxe.application.telemetry_orchestrator import get_orchestrator
 from raxe.domain.engine.executor import Detection
 from raxe.domain.engine.matcher import Match
+from raxe.domain.inline_suppression import parse_inline_suppressions
 from raxe.domain.ml.protocol import L2Prediction
 from raxe.domain.rules.models import Severity
+from raxe.domain.suppression import SuppressionAction, check_suppressions
 from raxe.domain.suppression_factory import create_suppression_manager
 from raxe.domain.telemetry.events import generate_event_id
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.infrastructure.database.scan_history import ScanHistoryDB
 from raxe.infrastructure.tracking.usage import UsageTracker
+from raxe.sdk.suppression_context import SuppressedContext, get_scoped_suppressions
 from raxe.utils.logging import get_logger
 
 # Use structured logging for better observability (privacy-preserving)
@@ -221,7 +223,7 @@ class Raxe:
         self._scan_history: ScanHistoryDB | None = None
         self._streak_tracker = None
 
-        # Initialize suppression manager (auto-loads .raxeignore from cwd)
+        # Initialize suppression manager (auto-loads .raxe/suppressions.yaml from cwd)
         self.suppression_manager = create_suppression_manager(auto_load=True)
 
         # Preload pipeline (one-time startup cost ~100-200ms)
@@ -541,6 +543,146 @@ class Raxe:
 
         return instance
 
+    def _apply_inline_suppressions(
+        self,
+        result: ScanPipelineResult,
+        inline_suppress: list[str | dict[str, Any]] | None,
+    ) -> ScanPipelineResult:
+        """Apply inline and scoped suppressions to scan result.
+
+        This method processes suppressions in order of precedence:
+        1. Scoped suppressions (from context manager)
+        2. Inline suppressions (from suppress parameter)
+        3. Config file suppressions (already applied by pipeline)
+
+        Actions are handled as follows:
+        - SUPPRESS: Remove detection from results
+        - FLAG: Keep detection with is_flagged=True
+        - LOG: Keep detection in results (for logging only)
+
+        Args:
+            result: Original scan result from pipeline
+            inline_suppress: Inline suppression specs from scan() call
+
+        Returns:
+            Modified ScanPipelineResult with suppressions applied
+        """
+        # Parse inline suppressions
+        inline_suppressions = parse_inline_suppressions(inline_suppress)
+
+        # Get scoped suppressions from context manager
+        scoped_suppressions = get_scoped_suppressions()
+
+        # If no inline or scoped suppressions, return original result
+        if not inline_suppressions and not scoped_suppressions:
+            return result
+
+        # Merge all suppressions (scoped + inline take precedence)
+        # Config file suppressions are already handled by the pipeline
+        all_suppressions = scoped_suppressions + inline_suppressions
+
+        # No detections to process
+        if not result.scan_result or not result.scan_result.l1_result:
+            return result
+
+        # Process detections
+        from raxe.domain.engine.executor import ScanResult
+
+        processed_detections: list[Detection] = []
+        suppressed_count = 0
+        flagged_count = 0
+
+        for detection in result.scan_result.l1_result.detections:
+            check_result = check_suppressions(detection.rule_id, all_suppressions)
+
+            if check_result.is_suppressed:
+                if check_result.action == SuppressionAction.SUPPRESS:
+                    # Remove from results
+                    suppressed_count += 1
+                    logger.debug(
+                        "inline_suppression_applied",
+                        rule_id=detection.rule_id,
+                        action="SUPPRESS",
+                        reason=check_result.reason,
+                    )
+                elif check_result.action == SuppressionAction.FLAG:
+                    # Keep with is_flagged=True
+                    flagged_detection = detection.with_flag(check_result.reason)
+                    processed_detections.append(flagged_detection)
+                    flagged_count += 1
+                    logger.debug(
+                        "inline_suppression_applied",
+                        rule_id=detection.rule_id,
+                        action="FLAG",
+                        reason=check_result.reason,
+                    )
+                elif check_result.action == SuppressionAction.LOG:
+                    # Keep in results (LOG action just logs, doesn't modify)
+                    processed_detections.append(detection)
+                    logger.debug(
+                        "inline_suppression_applied",
+                        rule_id=detection.rule_id,
+                        action="LOG",
+                        reason=check_result.reason,
+                    )
+            else:
+                # No suppression matched, keep detection
+                processed_detections.append(detection)
+
+        # Create new L1 result with processed detections
+        new_l1_result = ScanResult(
+            detections=processed_detections,
+            scanned_at=result.scan_result.l1_result.scanned_at,
+            text_length=result.scan_result.l1_result.text_length,
+            rules_checked=result.scan_result.l1_result.rules_checked,
+            scan_duration_ms=result.scan_result.l1_result.scan_duration_ms,
+        )
+
+        # Create new combined result
+        from raxe.application.scan_merger import CombinedScanResult
+
+        new_combined = CombinedScanResult(
+            l1_result=new_l1_result,
+            l2_result=result.scan_result.l2_result,
+            combined_severity=result.scan_result.combined_severity,
+            total_processing_ms=result.scan_result.total_processing_ms,
+            metadata={
+                **result.scan_result.metadata,
+                "inline_suppressed_count": suppressed_count,
+                "inline_flagged_count": flagged_count,
+            },
+        )
+
+        # Recalculate combined severity based on remaining detections
+        if new_l1_result.has_detections:
+            new_combined = CombinedScanResult(
+                l1_result=new_l1_result,
+                l2_result=result.scan_result.l2_result,
+                combined_severity=new_l1_result.highest_severity,
+                total_processing_ms=result.scan_result.total_processing_ms,
+                metadata=new_combined.metadata,
+            )
+
+        # Create new pipeline result
+        new_metadata = dict(result.metadata) if result.metadata else {}
+        new_metadata["inline_suppressed_count"] = suppressed_count
+        new_metadata["inline_flagged_count"] = flagged_count
+
+
+        return ScanPipelineResult(
+            scan_result=new_combined,
+            policy_decision=result.policy_decision,
+            should_block=result.should_block,
+            duration_ms=result.duration_ms,
+            text_hash=result.text_hash,
+            metadata=new_metadata,
+            l1_detections=len([d for d in processed_detections if d.detection_layer == "L1"]),
+            l2_detections=result.l2_detections,
+            plugin_detections=result.plugin_detections,
+            l1_duration_ms=result.l1_duration_ms,
+            l2_duration_ms=result.l2_duration_ms,
+        )
+
     def scan(
         self,
         text: str,
@@ -555,6 +697,7 @@ class Raxe:
         explain: bool = False,
         dry_run: bool = False,
         use_async: bool = True,
+        suppress: list[str | dict[str, Any]] | None = None,
     ) -> ScanPipelineResult:
         """Scan text for security threats with layer control.
 
@@ -563,11 +706,12 @@ class Raxe:
         The scan method:
         1. Validates input
         2. Executes full scan pipeline (L1, L2, policy, telemetry)
-        3. Returns comprehensive results
-        4. Optionally raises exception if blocking enabled
+        3. Applies suppressions (inline + config file + scoped)
+        4. Returns comprehensive results
+        5. Optionally raises exception if blocking enabled
 
         Response Scanning Warning:
-            ⚠️ RAXE can DETECT threats in LLM responses but CANNOT MODIFY them.
+            RAXE can DETECT threats in LLM responses but CANNOT MODIFY them.
             Response scanning is for monitoring and alerting only. Implement
             application-level fallbacks when threats are detected in responses.
 
@@ -590,6 +734,11 @@ class Raxe:
             explain: Include explanations in detection results (default: False)
             dry_run: Test scan without saving to database (default: False)
             use_async: Use async pipeline for parallel L1+L2 execution (5x speedup, default: True)
+            suppress: Optional list of inline suppressions. Can be:
+                - String patterns: ["pi-001", "jb-*"]
+                - Dicts with action: [{"pattern": "jb-*", "action": "FLAG", "reason": "..."}]
+                Actions: SUPPRESS (remove), FLAG (keep with is_flagged=True), LOG (keep)
+                Inline suppressions take precedence over config file suppressions.
 
         Returns:
             ScanPipelineResult with:
@@ -625,6 +774,15 @@ class Raxe:
                 )
             except SecurityException as e:
                 print(f"Blocked: {e.result.severity}")
+
+            # Suppress specific rules
+            result = raxe.scan(text, suppress=["pi-001", "jb-*"])
+
+            # Suppress with action override (FLAG instead of remove)
+            result = raxe.scan(text, suppress=[
+                "pi-001",  # Remove from results
+                {"pattern": "jb-*", "action": "FLAG", "reason": "Under review"}
+            ])
         """
         # Handle empty text - return clean result (no threats)
         if not text or not text.strip():
@@ -741,6 +899,10 @@ class Raxe:
                 confidence_threshold=confidence_threshold,
                 explain=explain,
             )
+
+        # Apply inline and scoped suppressions (takes precedence over config file)
+        # This must happen after the scan but before tracking
+        result = self._apply_inline_suppressions(result, suppress)
 
         # Record scan in tracking and history
         # This captures:
@@ -1053,6 +1215,50 @@ class Raxe:
 
         return wrap_client(self, client)
 
+    def suppressed(
+        self,
+        *patterns: str,
+        action: str = "SUPPRESS",
+        reason: str = "Scoped suppression",
+    ) -> SuppressedContext:
+        """Context manager for scoped suppression.
+
+        All scans within the context will have the specified patterns suppressed.
+        This is useful for temporarily disabling specific rules during testing
+        or for specific code paths where false positives are known.
+
+        The context manager is thread-safe using contextvars.
+
+        Args:
+            *patterns: One or more rule ID patterns to suppress (e.g., "pi-*", "jb-001")
+            action: Action to take - "SUPPRESS" (remove), "FLAG" (mark), or "LOG" (keep)
+            reason: Reason for suppression (for audit trail)
+
+        Returns:
+            Context manager that applies suppressions within its scope
+
+        Example:
+            # Suppress all prompt injection rules during testing
+            with raxe.suppressed("pi-*", reason="Testing auth flow"):
+                result = raxe.scan(text)
+                # pi-* patterns are suppressed in this scan
+
+            # Suppress multiple patterns
+            with raxe.suppressed("pi-*", "jb-*", reason="Known false positives"):
+                result = raxe.scan(text)
+
+            # Flag instead of suppress (keeps detection with is_flagged=True)
+            with raxe.suppressed("pi-*", action="FLAG", reason="Under review"):
+                result = raxe.scan(text)
+                # Detections have is_flagged=True instead of being removed
+        """
+        return SuppressedContext(
+            self,
+            *patterns,
+            action=action,
+            reason=reason,
+        )
+
     # === PUBLIC API METHODS ===
     # These methods provide controlled access to internal components
     # for CLI commands and diagnostic tools, eliminating the need for
@@ -1337,7 +1543,7 @@ class Raxe:
             cls._flushed = False
             cls._atexit_registered = False
 
-    def __enter__(self) -> "Raxe":
+    def __enter__(self) -> Raxe:
         """Enter context manager.
 
         Returns:

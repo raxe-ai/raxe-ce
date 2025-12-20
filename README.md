@@ -6,10 +6,10 @@
   <p><em>v0.3.1 Beta | Community Edition | Free Forever</em></p>
 
   <p>
-    <a href="https://pypi.org/project/raxe/"><img src="https://img.shields.io/pypi/v/raxe.svg" alt="PyPI Version"></a>
-    <a href="https://pypi.org/project/raxe/"><img src="https://img.shields.io/pypi/dm/raxe.svg" alt="PyPI Downloads"></a>
-    <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+">
-    <a href="LICENSE"><img src="https://img.shields.io/badge/license-proprietary-lightgrey.svg" alt="License"></a>
+    <a href="https://pypi.org/project/raxe/"><img src="https://img.shields.io/pypi/v/raxe?style=flat-square&color=0366d6" alt="PyPI"></a>
+    <img src="https://img.shields.io/badge/L1-460%2B_pattern_rules-3498db?style=flat-square" alt="L1: 460+ Rules">
+    <img src="https://img.shields.io/badge/L2-Gemma_ML_classifier-ff6f00?style=flat-square" alt="L2: Gemma ML">
+    <img src="https://img.shields.io/badge/runs_locally-no_API_calls-27ae60?style=flat-square" alt="Runs Locally">
   </p>
 
   <p>

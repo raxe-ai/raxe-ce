@@ -333,29 +333,75 @@ def _calculate_sha256(file_path: Path) -> str:
 
 
 def _extract_tarball(archive_path: Path, dest_dir: Path) -> None:
-    """Extract a tarball to destination directory.
+    """Extract a tarball to destination directory safely.
+
+    Uses Python 3.12+ data_filter for security, with fallback to
+    validated members list for Python 3.10-3.11.
 
     Args:
         archive_path: Path to .tar.gz file
         dest_dir: Directory to extract into
 
     Raises:
-        RuntimeError: If extraction fails
+        RuntimeError: If extraction fails or path traversal detected
     """
+    import sys
+
     try:
         with tarfile.open(archive_path, "r:gz") as tar:
-            # Security: check for path traversal attacks
-            for member in tar.getmembers():
-                member_path = dest_dir / member.name
-                if not str(member_path.resolve()).startswith(str(dest_dir.resolve())):
-                    raise RuntimeError(
-                        f"Tarball contains unsafe path: {member.name}"
-                    )
-
-            tar.extractall(dest_dir)
+            # Python 3.12+ has built-in filter parameter for secure extraction
+            if sys.version_info >= (3, 12):
+                tar.extractall(dest_dir, filter="data")
+            else:
+                # Python 3.10-3.11: validate members and extract safe ones only
+                safe_members = _get_safe_members(tar, dest_dir)
+                tar.extractall(dest_dir, members=safe_members)
 
     except tarfile.TarError as e:
         raise RuntimeError(f"Failed to extract model archive: {e}") from e
+
+
+def _get_safe_members(tar: tarfile.TarFile, dest_dir: Path) -> list[tarfile.TarInfo]:
+    """Filter tarball members to prevent path traversal attacks.
+
+    Validates each member path to ensure it stays within dest_dir.
+    Defense-in-depth for Python 3.10-3.11 which lack the data_filter.
+
+    Args:
+        tar: Open tarfile object
+        dest_dir: Target extraction directory
+
+    Returns:
+        List of validated TarInfo members
+
+    Raises:
+        RuntimeError: If any member would escape dest_dir
+    """
+    dest_resolved = str(dest_dir.resolve())
+    safe_members: list[tarfile.TarInfo] = []
+
+    for member in tar.getmembers():
+        # Block absolute paths
+        if member.name.startswith("/"):
+            raise RuntimeError(f"Tarball contains absolute path: {member.name}")
+
+        # Block path traversal
+        if ".." in member.name.split("/"):
+            raise RuntimeError(f"Tarball contains path traversal: {member.name}")
+
+        # Resolve full target path and verify it's under dest_dir
+        member_path = (dest_dir / member.name).resolve()
+        if not str(member_path).startswith(dest_resolved):
+            raise RuntimeError(f"Tarball contains unsafe path: {member.name}")
+
+        # Skip symlinks (security protection)
+        if member.issym() or member.islnk():
+            logger.warning(f"Skipping symlink in tarball: {member.name}")
+            continue
+
+        safe_members.append(member)
+
+    return safe_members
 
 
 def download_default_model(

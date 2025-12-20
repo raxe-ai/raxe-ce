@@ -352,3 +352,59 @@ class TestPatternMatcherEdgeCases:
 
         assert len(matches) == 1
         assert "\n" in matches[0].matched_text
+
+
+class TestPatternMatcherTimeout:
+    """Security tests for timeout enforcement (ReDoS protection)."""
+
+    def test_timeout_raises_on_slow_pattern(self) -> None:
+        """Test that timeout is enforced for pathological patterns.
+
+        This verifies the fix for S-001: ReDoS vulnerability.
+        Uses a pattern that causes catastrophic backtracking in regex module.
+        """
+        matcher = PatternMatcher()
+        # Evil regex - (a|a)+ causes exponential backtracking even in regex module
+        evil_pattern = Pattern(pattern=r"(a|a)+$", flags=[], timeout=0.1)
+        # Input that causes exponential backtracking
+        evil_text = "a" * 25 + "!"
+
+        with pytest.raises(ValueError, match="timed out"):
+            matcher.match_pattern(evil_text, evil_pattern, timeout_seconds=0.1)
+
+    def test_timeout_seconds_overrides_pattern_timeout(self) -> None:
+        """Test that explicit timeout_seconds overrides pattern.timeout."""
+        matcher = PatternMatcher()
+        # Use pattern that causes backtracking in regex module
+        pattern = Pattern(pattern=r"(a|a)+$", flags=[], timeout=10.0)
+        evil_text = "a" * 25 + "!"
+
+        # Should timeout at 0.1s despite pattern having 10s timeout
+        with pytest.raises(ValueError, match="timed out"):
+            matcher.match_pattern(evil_text, pattern, timeout_seconds=0.1)
+
+    def test_normal_patterns_complete_before_timeout(self) -> None:
+        """Test that normal patterns don't trigger timeout."""
+        matcher = PatternMatcher()
+        pattern = Pattern(pattern=r"test\d+", flags=[])
+        text = "test123 test456 test789"
+
+        # Should complete without timeout
+        matches = matcher.match_pattern(text, pattern, timeout_seconds=1.0)
+
+        assert len(matches) == 3
+        assert matches[0].matched_text == "test123"
+        assert matches[1].matched_text == "test456"
+        assert matches[2].matched_text == "test789"
+
+    def test_default_timeout_used_when_none_specified(self) -> None:
+        """Test that default timeout (5.0s) is used when not specified."""
+        matcher = PatternMatcher()
+        # Fast pattern should complete well within default timeout
+        pattern = Pattern(pattern=r"\d+", flags=[])
+        text = "abc123def"
+
+        matches = matcher.match_pattern(text, pattern)
+
+        assert len(matches) == 1
+        assert matches[0].matched_text == "123"

@@ -1241,11 +1241,11 @@ def create_prompt_hash(prompt: str) -> str:
         prompt: The prompt text to hash.
 
     Returns:
-        64-character hexadecimal SHA-256 hash string.
+        71-character prefixed SHA-256 hash string (sha256:<64_hex_chars>).
 
     Example:
         >>> create_prompt_hash("Hello, world!")
-        '315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3'
+        'sha256:315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3'
     """
     return hash_text(prompt, algorithm="sha256")
 

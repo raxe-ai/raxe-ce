@@ -687,7 +687,9 @@ class TestTrackScan:
         event = events[0]
         assert "sensitive prompt text" not in str(event)
         assert "prompt_hash" in event["payload"]
-        assert len(event["payload"]["prompt_hash"]) == 64  # SHA-256 hex
+        # SHA-256 with prefix: sha256: (7) + 64 hex = 71 chars
+        assert len(event["payload"]["prompt_hash"]) == 71
+        assert event["payload"]["prompt_hash"].startswith("sha256:")
 
     def test_track_scan_returns_none_when_disabled(
         self,

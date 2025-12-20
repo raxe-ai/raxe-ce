@@ -1965,7 +1965,7 @@ wheels = [
 
 [[package]]
 name = "raxe"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -1975,6 +1975,7 @@ dependencies = [
     { name = "onnxruntime" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "regex" },
     { name = "rich" },
     { name = "sentence-transformers" },
     { name = "sqlalchemy" },
@@ -2042,6 +2043,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1" },
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.0" },
     { name = "pyyaml", specifier = ">=6.0,<7.0" },
+    { name = "regex", specifier = ">=2024.0.0,<2026.0" },
     { name = "rich", specifier = ">=13.0,<14.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "sentence-transformers", specifier = ">=2.2.0,<3.0" },

@@ -1139,10 +1139,11 @@ class TestCreatePromptHash:
     """Test create_prompt_hash utility function."""
 
     def test_returns_sha256_hash(self) -> None:
-        """Should return a 64-character SHA-256 hash (legacy format)."""
+        """Should return a 71-character prefixed SHA-256 hash."""
         hash_value = create_prompt_hash("Hello, world!")
-        assert len(hash_value) == 64
-        assert re.match(r"^[a-f0-9]{64}$", hash_value)
+        assert len(hash_value) == 71
+        assert hash_value.startswith("sha256:")
+        assert re.match(r"^sha256:[a-f0-9]{64}$", hash_value)
 
     def test_is_deterministic(self) -> None:
         """Same input should always produce same hash."""
@@ -1158,16 +1159,17 @@ class TestCreatePromptHash:
         assert hash1 != hash2
 
     def test_empty_string_produces_valid_hash(self) -> None:
-        """Empty string should produce valid SHA-256 hash."""
+        """Empty string should produce valid prefixed SHA-256 hash."""
         hash_value = create_prompt_hash("")
-        assert len(hash_value) == 64
-        # SHA-256 of empty string is well-known
-        assert hash_value == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        assert len(hash_value) == 71
+        # SHA-256 of empty string with prefix
+        assert hash_value == "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
     def test_unicode_handling(self) -> None:
         """Should handle unicode strings correctly."""
         hash_value = create_prompt_hash("Hello, \u4e16\u754c!")
-        assert len(hash_value) == 64
+        assert len(hash_value) == 71
+        assert hash_value.startswith("sha256:")
 
 
 class TestEventToDict:

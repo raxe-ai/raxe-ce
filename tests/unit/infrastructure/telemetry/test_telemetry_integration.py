@@ -259,8 +259,9 @@ class TestEventCreation:
 
         # Deterministic
         assert hash1 == hash2
-        # SHA256 produces 64 char hex string
-        assert len(hash1) == 64
+        # SHA256 produces 71 char prefixed string (sha256: + 64 hex)
+        assert len(hash1) == 71
+        assert hash1.startswith("sha256:")
         # Cannot recover original text
         assert text not in hash1
 
@@ -307,8 +308,9 @@ class TestEventCreation:
         assert "sess_123" not in event_str
         assert "user_456" not in event_str
 
-        # Check hashes are present
-        assert len(event["scan_result"]["text_hash"]) == 64
+        # Check hashes are present (71 chars = sha256: prefix + 64 hex)
+        assert len(event["scan_result"]["text_hash"]) == 71
+        assert event["scan_result"]["text_hash"].startswith("sha256:")
         assert event["scan_result"]["threat_detected"] is True
         assert event["scan_result"]["highest_severity"] == "high"
 

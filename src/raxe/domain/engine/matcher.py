@@ -6,11 +6,11 @@ All functions are stateless and side-effect free.
 Performance targets:
 - <1ms per pattern match
 - Pattern compilation cached for reuse
-- Timeout protection per pattern
+- Timeout protection per pattern (enforced via regex module)
 """
-import re
+import regex
 from dataclasses import dataclass
-from re import Pattern as RePattern
+from regex import Pattern as RePattern
 
 from raxe.domain.rules.models import Pattern
 
@@ -84,26 +84,26 @@ class PatternMatcher:
         if cache_key in self._compiled_cache:
             return self._compiled_cache[cache_key]
 
-        # Convert string flags to re module flags
+        # Convert string flags to regex module flags
         flags = 0
         for flag in pattern.flags:
             flag_upper = flag.upper()
             if flag_upper == "IGNORECASE":
-                flags |= re.IGNORECASE
+                flags |= regex.IGNORECASE
             elif flag_upper == "MULTILINE":
-                flags |= re.MULTILINE
+                flags |= regex.MULTILINE
             elif flag_upper == "DOTALL":
-                flags |= re.DOTALL
+                flags |= regex.DOTALL
             elif flag_upper == "VERBOSE":
-                flags |= re.VERBOSE
+                flags |= regex.VERBOSE
             elif flag_upper == "ASCII":
-                flags |= re.ASCII
+                flags |= regex.ASCII
             else:
                 raise ValueError(f"Unknown regex flag: {flag}")
 
         try:
-            compiled = re.compile(pattern.pattern, flags)
-        except re.error as e:
+            compiled = regex.compile(pattern.pattern, flags)
+        except regex.error as e:
             raise ValueError(f"Invalid regex pattern '{pattern.pattern}': {e}") from e
 
         # Cache for future use
@@ -123,32 +123,23 @@ class PatternMatcher:
             text: Text to search
             pattern: Pattern to match
             pattern_index: Index of this pattern in rule (for Match objects)
-            timeout_seconds: Override pattern timeout (currently not enforced - see note)
+            timeout_seconds: Override pattern timeout (default: pattern.timeout or 5.0s)
 
         Returns:
             List of Match objects (empty if no matches)
 
         Raises:
-            ValueError: If pattern compilation fails
-
-        Note:
-            Timeout enforcement using signal.alarm() doesn't work reliably in
-            modern Python with C-optimized regex. For production, we would use
-            the regex module instead of re, which has built-in timeout support.
-            For now, we rely on patterns being pre-validated and not pathological.
+            ValueError: If pattern compilation fails or matching times out
         """
-        # Note: timeout parameter preserved for future implementation
-        # Currently not enforced - would need regex module instead of re
-        _ = timeout_seconds or pattern.timeout
+        # Use provided timeout, pattern timeout, or default of 5.0 seconds
+        timeout = timeout_seconds if timeout_seconds is not None else (pattern.timeout or 5.0)
         compiled = self.compile_pattern(pattern)
 
         matches: list[Match] = []
 
-        # Find all matches
-        # Note: In production, use regex module with timeout parameter
-        # import regex; regex.compile(pattern, timeout=timeout).finditer(text)
         try:
-            for match_obj in compiled.finditer(text):
+            # regex module provides native timeout support via timeout parameter
+            for match_obj in compiled.finditer(text, timeout=timeout):
                 start = match_obj.start()
                 end = match_obj.end()
 
@@ -165,8 +156,11 @@ class PatternMatcher:
                     context_before=context_before,
                     context_after=context_after,
                 ))
-        except Exception as e:
-            # Catch any regex engine errors (catastrophic backtracking, etc.)
+        except TimeoutError as e:
+            raise ValueError(
+                f"Pattern matching timed out after {timeout}s (possible ReDoS): {e}"
+            ) from e
+        except regex.error as e:
             raise ValueError(f"Pattern matching failed: {e}") from e
 
         return matches

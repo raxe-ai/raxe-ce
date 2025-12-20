@@ -471,9 +471,13 @@ class TestComprehensivePrivacyGuarantees:
         # Should have hashed identifiers
         assert "session_id" in event["context"]
         assert "user_id" in event["context"]
-        # Hashed values should be 64 chars (SHA256)
-        assert len(event["context"]["session_id"]) == 64
-        assert len(event["context"]["user_id"]) == 64
+        # Hashed values should be 71 chars (sha256: prefix + 64 hex chars)
+        session_hash = event["context"]["session_id"]
+        user_hash = event["context"]["user_id"]
+        assert session_hash.startswith("sha256:"), f"Expected sha256: prefix, got {session_hash[:10]}"
+        assert user_hash.startswith("sha256:"), f"Expected sha256: prefix, got {user_hash[:10]}"
+        assert len(session_hash) == 71, f"Expected 71 chars, got {len(session_hash)}"
+        assert len(user_hash) == 71, f"Expected 71 chars, got {len(user_hash)}"
 
     def test_only_detection_metadata_transmitted(self):
         """Only non-PII detection metadata transmitted."""

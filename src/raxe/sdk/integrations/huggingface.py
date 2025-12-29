@@ -80,7 +80,7 @@ class RaxePipeline:
         model: str | None = None,
         *,
         raxe: Raxe | None = None,
-        raxe_block_on_input_threats: bool = True,
+        raxe_block_on_input_threats: bool = False,  # Default: log-only (safe default)
         raxe_block_on_output_threats: bool = False,
         pipeline_kwargs: dict[str, Any] | None = None,
         **kwargs
@@ -91,7 +91,7 @@ class RaxePipeline:
             task: Pipeline task (text-generation, question-answering, etc.)
             model: Model name or path (optional, uses task default if None)
             raxe: Optional Raxe instance (creates default if None)
-            raxe_block_on_input_threats: Block on input threats (default: True)
+            raxe_block_on_input_threats: Block on input threats (default: False, log-only)
             raxe_block_on_output_threats: Block on output threats (default: False)
             pipeline_kwargs: Additional kwargs for pipeline creation
             **kwargs: Additional pipeline parameters

@@ -123,6 +123,70 @@ class ToolValidationResult(str, Enum):
     SUSPICIOUS = "suspicious"
 
 
+class ScanMode(str, Enum):
+    """Scan mode controlling threat response behavior.
+
+    Determines what action to take when threats are detected.
+
+    Attributes:
+        LOG_ONLY: Log threats but don't block (default, safe)
+        BLOCK_ON_THREAT: Block on any threat detection
+        BLOCK_ON_HIGH: Block only on HIGH or CRITICAL severity
+        BLOCK_ON_CRITICAL: Block only on CRITICAL severity
+    """
+
+    LOG_ONLY = "log_only"
+    BLOCK_ON_THREAT = "block_on_threat"
+    BLOCK_ON_HIGH = "block_on_high"
+    BLOCK_ON_CRITICAL = "block_on_critical"
+
+
+class MessageType(str, Enum):
+    """Type of message in multi-agent communication.
+
+    Used for context-aware scanning and telemetry.
+
+    Attributes:
+        HUMAN_INPUT: Direct input from human user
+        AGENT_TO_AGENT: Message between agents in a multi-agent system
+        AGENT_RESPONSE: Response from an agent to user/system
+        FUNCTION_CALL: Tool/function invocation
+        FUNCTION_RESULT: Result from tool/function execution
+        SYSTEM: System-level message (instructions, config)
+    """
+
+    HUMAN_INPUT = "human_input"
+    AGENT_TO_AGENT = "agent_to_agent"
+    AGENT_RESPONSE = "agent_response"
+    FUNCTION_CALL = "function_call"
+    FUNCTION_RESULT = "function_result"
+    SYSTEM = "system"
+
+
+@dataclass
+class ScanContext:
+    """Context for a scan operation in multi-agent systems.
+
+    Provides metadata about the message being scanned for
+    better threat detection and telemetry.
+
+    Attributes:
+        message_type: Type of message (human input, agent-to-agent, etc.)
+        sender_name: Name of the sending agent (if applicable)
+        receiver_name: Name of the receiving agent (if applicable)
+        conversation_id: Unique ID for the conversation thread
+        message_index: Position in the conversation (0-indexed)
+        metadata: Additional context metadata
+    """
+
+    message_type: MessageType
+    sender_name: str | None = None
+    receiver_name: str | None = None
+    conversation_id: str | None = None
+    message_index: int = 0
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
 @dataclass(frozen=True)
 class ToolPolicy:
     """Policy for tool validation.
@@ -1557,6 +1621,58 @@ class AgentScanner:
             None,
             lambda: self.scan_rag_context(documents, metadata=metadata),
         )
+
+    def scan_message(
+        self,
+        text: str,
+        *,
+        context: ScanContext | None = None,
+    ) -> AgentScanResult:
+        """Scan a message with context-aware routing.
+
+        This method provides a simplified interface for scanning messages
+        in multi-agent systems. It routes to the appropriate scan method
+        based on the message type in the context.
+
+        Args:
+            text: Message text to scan
+            context: Optional context with message type and metadata
+
+        Returns:
+            AgentScanResult with scan results
+
+        Example:
+            >>> result = scanner.scan_message(
+            ...     "User input here",
+            ...     context=ScanContext(
+            ...         message_type=MessageType.HUMAN_INPUT,
+            ...         sender_name="user",
+            ...     )
+            ... )
+        """
+        if context is None:
+            context = ScanContext(message_type=MessageType.AGENT_TO_AGENT)
+
+        metadata = {
+            "sender_name": context.sender_name,
+            "receiver_name": context.receiver_name,
+            "conversation_id": context.conversation_id,
+            "message_index": context.message_index,
+            **context.metadata,
+        }
+
+        # Route to appropriate method based on message type
+        if context.message_type == MessageType.HUMAN_INPUT:
+            return self.scan_prompt(text, metadata=metadata)
+        elif context.message_type == MessageType.AGENT_RESPONSE:
+            return self.scan_response(text, metadata=metadata)
+        elif context.message_type == MessageType.FUNCTION_CALL:
+            return self.scan_agent_action("function_call", text, metadata=metadata)
+        elif context.message_type == MessageType.FUNCTION_RESULT:
+            return self.scan_tool_result("unknown", text, metadata=metadata)
+        else:
+            # Default to prompt scanning for other message types
+            return self.scan_prompt(text, metadata=metadata)
 
     def get_stats(self) -> dict[str, Any]:
         """Get scanner statistics.

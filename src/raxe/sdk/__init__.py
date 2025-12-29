@@ -27,14 +27,29 @@ Usage patterns:
         with raxe.suppressed("pi-*", reason="Testing"):
             result = raxe.scan(text)
 
+    6. Agent/Tool scanning:
+        from raxe.sdk.agent_scanner import AgentScanner, ToolPolicy
+        scanner = AgentScanner(tool_policy=ToolPolicy.block_tools("shell"))
+        result = scanner.scan_tool_call("search", {"query": user_input})
+
 Public exports:
     - Raxe: Main client class
+    - AgentScanner: Scanner for agentic AI systems
+    - ToolPolicy: Policy for tool validation
     - RaxeException: Base exception
     - SecurityException: Threat detected exception
     - RaxeBlockedError: Request blocked exception
     - suppression_scope: Function for scoped suppression without client
 """
 
+from raxe.sdk.agent_scanner import (
+    AgentScanResult,
+    AgentScanner,
+    ScanConfig,
+    ScanType,
+    ToolPolicy,
+    ToolValidationMode,
+)
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import (
     RaxeBlockedError,
@@ -44,9 +59,19 @@ from raxe.sdk.exceptions import (
 from raxe.sdk.suppression_context import suppression_scope
 
 __all__ = [
+    # Core client
     "Raxe",
+    # Agent scanning
+    "AgentScanner",
+    "AgentScanResult",
+    "ScanConfig",
+    "ScanType",
+    "ToolPolicy",
+    "ToolValidationMode",
+    # Exceptions
     "RaxeBlockedError",
     "RaxeException",
     "SecurityException",
+    # Utilities
     "suppression_scope",
 ]

@@ -1,0 +1,232 @@
+name: Test Integrations
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/raxe/sdk/integrations/**'
+      - 'src/raxe/mcp/**'
+      - 'tests/integration/**'
+      - 'pyproject.toml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/raxe/sdk/integrations/**'
+      - 'src/raxe/mcp/**'
+      - 'tests/integration/**'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+jobs:
+  # Test core without optional dependencies (isolation check)
+  test-core-isolation:
+    name: Core Only (No Optional Deps)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install core only
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "."
+
+      - name: Verify optional imports fail gracefully
+        run: |
+          python -c "
+          from raxe.integrations.availability import (
+              MCP_AVAILABLE,
+              LANGCHAIN_AVAILABLE,
+              CREWAI_AVAILABLE,
+              AUTOGEN_AVAILABLE,
+              LLAMAINDEX_AVAILABLE,
+          )
+
+          # All should be False when only core is installed
+          assert not MCP_AVAILABLE, 'MCP should not be available'
+          assert not LANGCHAIN_AVAILABLE, 'LangChain should not be available'
+          assert not CREWAI_AVAILABLE, 'CrewAI should not be available'
+          assert not AUTOGEN_AVAILABLE, 'AutoGen should not be available'
+          assert not LLAMAINDEX_AVAILABLE, 'LlamaIndex should not be available'
+
+          print('Core isolation verified - optional deps correctly unavailable')
+          "
+
+      - name: Verify import error messages are helpful
+        run: |
+          python -c "
+          from raxe.integrations.availability import require_integration
+
+          try:
+              require_integration('mcp')
+              assert False, 'Should have raised ImportError'
+          except ImportError as e:
+              assert 'pip install raxe[mcp]' in str(e), f'Error should contain install hint: {e}'
+              print('Import error message is helpful')
+          "
+
+      - name: Test core functionality works
+        run: |
+          pip install pytest pytest-cov
+          pytest tests/unit -v --cov=raxe --cov-report=term -x
+
+  # Matrix testing for each integration
+  test-integrations:
+    name: Test ${{ matrix.integration }} (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        integration:
+          - mcp
+          - langchain
+          - crewai
+          - autogen
+          - llamaindex
+        include:
+          - integration: mcp
+            test_path: tests/integration/mcp
+            availability_check: MCP_AVAILABLE
+          - integration: langchain
+            test_path: tests/integration/langchain
+            availability_check: LANGCHAIN_AVAILABLE
+          - integration: crewai
+            test_path: tests/integration/crewai
+            availability_check: CREWAI_AVAILABLE
+          - integration: autogen
+            test_path: tests/integration/autogen
+            availability_check: AUTOGEN_AVAILABLE
+          - integration: llamaindex
+            test_path: tests/integration/llamaindex
+            availability_check: LLAMAINDEX_AVAILABLE
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.integration }}-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.integration }}-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-${{ matrix.integration }}-
+            ${{ runner.os }}-pip-
+
+      - name: Install with integration
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[${{ matrix.integration }},dev]"
+
+      - name: Verify integration is available
+        run: |
+          python -c "
+          from raxe.integrations.availability import ${{ matrix.availability_check }}
+          assert ${{ matrix.availability_check }}, '${{ matrix.integration }} should be available after install'
+          print('${{ matrix.integration }} integration available')
+          "
+
+      - name: Run integration tests
+        run: |
+          if [ -d "${{ matrix.test_path }}" ]; then
+            pytest ${{ matrix.test_path }} -v --cov=raxe --cov-report=xml
+          else
+            echo "No tests found at ${{ matrix.test_path }} - skipping"
+          fi
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./coverage.xml
+          flags: ${{ matrix.integration }}
+          fail_ci_if_error: false
+
+  # Test all integrations together
+  test-agentic-bundle:
+    name: Full Agentic Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install agentic bundle
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[agentic,dev]"
+
+      - name: Verify all integrations available
+        run: |
+          python -c "
+          from raxe.integrations.availability import get_available_integrations
+
+          available = get_available_integrations()
+          expected = ['mcp', 'langchain', 'crewai', 'autogen', 'llamaindex']
+
+          missing = set(expected) - set(available)
+          if missing:
+              print(f'Missing integrations: {missing}')
+              exit(1)
+
+          print(f'All {len(available)} integrations available: {available}')
+          "
+
+      - name: Run all integration tests
+        run: |
+          if [ -d "tests/integration" ]; then
+            pytest tests/integration -v --cov=raxe
+          else
+            echo "No integration tests directory - skipping"
+          fi
+
+  # Dependency conflict check
+  check-dependency-conflicts:
+    name: Dependency Conflict Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Check for conflicts in agentic bundle
+        run: |
+          python -m pip install --upgrade pip
+
+          # Try to install and check for conflicts
+          pip install -e ".[agentic]" 2>&1 | tee install-log.txt
+
+          # Check if installation succeeded
+          if [ $? -ne 0 ]; then
+            echo "Installation failed - check logs"
+            exit 1
+          fi
+
+          # Run pip check for dependency issues
+          pip check
+
+          echo "No dependency conflicts found"
+
+      - name: Check all extras can be installed together
+        run: |
+          pip install -e ".[all]"
+          pip check

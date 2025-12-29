@@ -1,0 +1,16 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "pi-001",
+      "severity": "HIGH",
+      "confidence": 0.95,
+      "category": "PI"
+    }
+  ],
+  "context": {
+    "tool_name": "search",
+    "direction": "input"
+  }
+}

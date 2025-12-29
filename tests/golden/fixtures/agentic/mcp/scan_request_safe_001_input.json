@@ -1,0 +1,11 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "raxe_scan",
+    "arguments": {
+      "text": "What is the weather like in San Francisco today?"
+    }
+  }
+}

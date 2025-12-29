@@ -1,0 +1,8 @@
+{
+  "total_messages": 5,
+  "threats_detected": 0,
+  "threat_positions": [],
+  "highest_severity": null,
+  "patterns_found": [],
+  "action_taken": "ALLOW"
+}

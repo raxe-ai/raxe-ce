@@ -1,0 +1,8 @@
+{
+  "total_messages": 5,
+  "threats_detected": 2,
+  "threat_positions": [2, 4],
+  "highest_severity": "HIGH",
+  "patterns_found": ["jailbreak", "prompt_injection"],
+  "action_taken": "LOG"
+}

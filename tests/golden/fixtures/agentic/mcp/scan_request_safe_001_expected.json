@@ -1,0 +1,15 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "expected_fields": {
+          "has_threats": false,
+          "detection_count": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "has_detections": false,
+  "detection_count": 0,
+  "detections": [],
+  "context": {
+    "tool_name": "search",
+    "direction": "input"
+  }
+}

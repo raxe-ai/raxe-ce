@@ -1,0 +1,16 @@
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "expected_fields": {
+          "has_threats": true,
+          "severity_in": ["HIGH", "CRITICAL"],
+          "detection_count_gte": 1
+        }
+      }
+    ]
+  }
+}

@@ -273,3 +273,11 @@ ML-Team-Input/
 big_test_data/
 coverage.json
 .venv*/
+.agent-workspace/
+
+# Internal planning/design docs (local only)
+docs/design/
+docs/roadmap/
+docs/testing/AGENTIC_TESTING_STRATEGY.md
+docs/MCP_SERVER_IMPLEMENTATION_PLAN.md
+docs/AGENTIC_PACKAGING_SPEC.md

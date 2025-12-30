@@ -112,6 +112,7 @@ class ScanTelemetryBuilder:
         wrapper_type: Literal["openai", "anthropic", "langchain", "none"] | None = None,
         action_taken: Literal["allow", "block", "warn", "redact"] = "allow",
         l2_enabled: bool = True,
+        integration_type: str | None = None,
     ) -> dict[str, Any]:
         """Build complete scan telemetry payload.
 
@@ -128,6 +129,7 @@ class ScanTelemetryBuilder:
             wrapper_type: SDK wrapper type if applicable
             action_taken: Policy action taken
             l2_enabled: Whether L2 was enabled for this scan
+            integration_type: Agentic framework if applicable (langchain, crewai, etc.)
 
         Returns:
             Complete telemetry payload dict matching schema v2.0
@@ -173,6 +175,10 @@ class ScanTelemetryBuilder:
         # Optional wrapper type
         if wrapper_type:
             payload["wrapper_type"] = wrapper_type
+
+        # Optional integration type (langchain, crewai, llamaindex, autogen, mcp)
+        if integration_type:
+            payload["integration_type"] = integration_type
 
         # Add L1 block if available
         if l1_block:

@@ -107,7 +107,7 @@ def tune_threshold(min_threshold: float, max_threshold: float, step: float, test
 
             for prompt in test_prompts:
                 try:
-                    result = raxe.scan(prompt, confidence_threshold=current)
+                    result = raxe.scan(prompt, confidence_threshold=current, entry_point="cli")
                     total_scans += 1
                     total_detections += result.total_detections
                 except Exception:
@@ -209,7 +209,7 @@ def benchmark_modes(iterations: int, text: str) -> None:
 
             for _ in range(iterations):
                 try:
-                    result = raxe.scan(text, mode=mode)
+                    result = raxe.scan(text, mode=mode, entry_point="cli")
                     latencies.append(result.duration_ms)
                     detection_counts.append(result.total_detections)
                 except Exception:

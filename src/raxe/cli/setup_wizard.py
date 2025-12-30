@@ -247,7 +247,7 @@ def run_test_scan(console: Console) -> bool:
 
         with console.status("[cyan]Scanning test prompt...[/cyan]"):
             raxe = Raxe()
-            result = raxe.scan(test_prompt)
+            result = raxe.scan(test_prompt, entry_point="cli")
 
         console.print()
 

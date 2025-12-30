@@ -612,8 +612,11 @@ class TestRaxeSpanHandler:
         """Test scanning response objects."""
         handler = RaxeSpanHandler(raxe_client=mock_raxe)
 
-        result = Mock()
-        result.response = "Response from LLM"
+        # Create a response object with only a 'text' attribute
+        # Using spec=[] prevents Mock from auto-creating attributes like 'content'
+        # which would cause infinite recursion in extract_texts_from_value
+        result = Mock(spec=["text"])
+        result.text = "Response from LLM"
 
         handler.span_exit(
             id_="span-1",

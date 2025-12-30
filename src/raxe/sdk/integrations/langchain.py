@@ -42,10 +42,12 @@ from typing import TYPE_CHECKING, Any
 
 from raxe.sdk.agent_scanner import (
     AgentScanner,
+    AgentScannerConfig,
     AgentScanResult,
     ScanConfig,
     ScanType,
     ToolPolicy,
+    create_agent_scanner,
 )
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import SecurityException
@@ -193,13 +195,17 @@ class _RaxeCallbackHandlerMixin:
         if scanner is not None:
             self._scanner = scanner
         else:
-            config = ScanConfig(
+            # Use AgentScannerConfig for proper initialization
+            config = AgentScannerConfig(
                 scan_prompts=True,
                 scan_responses=True,
                 scan_tool_calls=scan_tools,
-                tool_policy=tool_policy,
+                # Default to log-only mode for safety
+                on_threat="block" if block_on_prompt_threats else "log",
             )
-            self._scanner = AgentScanner(self._raxe, config=config)
+            self._scanner = create_agent_scanner(
+                self._raxe, config, integration_type="langchain"
+            )
 
         # Trace ID for correlation (set on each chain/agent run)
         self.trace_id: str | None = None
@@ -370,7 +376,7 @@ class _RaxeCallbackHandlerMixin:
         if not text:
             return
 
-        result = self._scanner.scan(text, scan_type=ScanType.TOOL_OUTPUT)
+        result = self._scanner.scan(text, scan_type=ScanType.TOOL_RESULT)
 
         if result.has_threats:
             self._handle_threat(result, "tool_output", text[:100])
@@ -610,6 +616,208 @@ class _RaxeCallbackHandlerMixin:
         """
         return extract_text_from_message(message)
 
+    # ========================================================================
+    # Async Callback Methods
+    # ========================================================================
+    # LangChain supports async callbacks. These methods use the scanner's
+    # async methods for non-blocking operation in async contexts.
+
+    async def aon_llm_start(
+        self,
+        serialized: dict[str, Any],
+        prompts: list[str],
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_llm_start - scan prompts before LLM."""
+        import asyncio
+
+        for prompt in prompts:
+            result = await asyncio.get_event_loop().run_in_executor(
+                None, lambda p=prompt: self._scanner.scan(p, scan_type=ScanType.PROMPT)
+            )
+
+            if result.has_threats:
+                self._handle_threat(result, "prompt", prompt[:100])
+
+                if self.block_on_prompt_threats:
+                    raise SecurityException(result.pipeline_result)
+
+    async def aon_llm_end(
+        self,
+        response: Any,
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_llm_end - scan LLM response."""
+        import asyncio
+
+        text = self._extract_llm_response_text(response)
+        if not text:
+            return
+
+        result = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: self._scanner.scan(text, scan_type=ScanType.RESPONSE)
+        )
+
+        if result.has_threats:
+            self._handle_threat(result, "response", text[:100])
+
+            if self.block_on_response_threats:
+                raise SecurityException(result.pipeline_result)
+
+    async def aon_chat_model_start(
+        self,
+        serialized: dict[str, Any],
+        messages: list[list[Any]],
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_chat_model_start - scan chat messages."""
+        import asyncio
+
+        for message_batch in messages:
+            for message in message_batch:
+                text = self._extract_message_text(message)
+                if text:
+                    result = await asyncio.get_event_loop().run_in_executor(
+                        None, lambda t=text: self._scanner.scan(t, scan_type=ScanType.PROMPT)
+                    )
+
+                    if result.has_threats:
+                        self._handle_threat(result, "chat_message", text[:100])
+
+                        if self.block_on_prompt_threats:
+                            raise SecurityException(result.pipeline_result)
+
+    async def aon_tool_start(
+        self,
+        serialized: dict[str, Any],
+        input_str: str,
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        inputs: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_tool_start - scan tool input."""
+        import asyncio
+
+        if not self.scan_tools:
+            return
+
+        tool_name = serialized.get("name", "unknown")
+
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: self._scanner.scan_tool_call(
+                tool_name=tool_name, tool_input=input_str
+            ),
+        )
+
+        if result.has_threats:
+            self._handle_threat(result, f"tool:{tool_name}", input_str[:100])
+
+            if self.block_on_prompt_threats:
+                raise SecurityException(result.pipeline_result)
+
+    async def aon_tool_end(
+        self,
+        output: Any,
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_tool_end - scan tool output."""
+        import asyncio
+
+        if not self.scan_tools:
+            return
+
+        text = str(output) if output else ""
+        if not text:
+            return
+
+        result = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: self._scanner.scan(text, scan_type=ScanType.TOOL_RESULT)
+        )
+
+        if result.has_threats:
+            self._handle_threat(result, "tool_output", text[:100])
+
+    async def aon_chain_start(
+        self,
+        serialized: dict[str, Any],
+        inputs: dict[str, Any],
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_chain_start - track chain start."""
+        self.trace_id = str(run_id) if run_id else str(uuid.uuid4())
+
+        logger.debug(
+            "Chain started (async)",
+            extra={
+                "chain_type": serialized.get("_type", "unknown"),
+                "trace_id": self.trace_id,
+            },
+        )
+
+    async def aon_chain_end(
+        self,
+        outputs: dict[str, Any],
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_chain_end - track chain completion."""
+        logger.debug(
+            "Chain completed (async)",
+            extra={"trace_id": self.trace_id},
+        )
+
+    async def aon_retriever_start(
+        self,
+        serialized: dict[str, Any],
+        query: str,
+        *,
+        run_id: uuid.UUID | None = None,
+        parent_run_id: uuid.UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Async version of on_retriever_start - scan retriever query."""
+        import asyncio
+
+        result = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: self._scanner.scan(query, scan_type=ScanType.PROMPT)
+        )
+
+        if result.has_threats:
+            self._handle_threat(result, "retriever_query", query[:100])
+
+            if self.block_on_prompt_threats:
+                raise SecurityException(result.pipeline_result)
+
 
 # ============================================================================
 # Factory Function for RaxeCallbackHandler
@@ -631,8 +839,9 @@ def _create_callback_handler_class() -> type:
     base_class = _get_base_callback_handler_class()
 
     # Create class dynamically with proper inheritance
+    # Put mixin FIRST to ensure its methods take precedence
     if base_class is not object:
-        bases = (base_class, _RaxeCallbackHandlerMixin)
+        bases = (_RaxeCallbackHandlerMixin, base_class)
     else:
         bases = (_RaxeCallbackHandlerMixin,)
 
@@ -659,6 +868,9 @@ class RaxeCallbackHandler:
         """Create instance of dynamically-generated handler class."""
         handler_class = _create_callback_handler_class()
         instance = object.__new__(handler_class)
+        # Initialize the instance here since __init__ won't be called
+        # on the returned instance (it's a different class)
+        _RaxeCallbackHandlerMixin.__init__(instance, *args, **kwargs)
         return instance
 
     def __init__(
@@ -673,7 +885,8 @@ class RaxeCallbackHandler:
         scan_agent_actions: bool = True,
         on_threat: Any | None = None,
     ) -> None:
-        # This is a placeholder - actual init is in mixin
+        # This __init__ is never called when __new__ returns a different class
+        # The initialization is done in __new__ above
         pass
 
 

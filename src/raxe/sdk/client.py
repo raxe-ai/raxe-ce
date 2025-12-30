@@ -413,6 +413,7 @@ class Raxe:
         entry_point: str = "sdk",
         event_id: str | None = None,
         wrapper_type: str | None = None,
+        integration_type: str | None = None,
     ) -> None:
         """Track scan telemetry using schema v2.0 (non-blocking, never raises).
 
@@ -425,9 +426,10 @@ class Raxe:
         Args:
             result: The scan result to track
             prompt: Original prompt text (used for hash and length calculation)
-            entry_point: How the scan was triggered (sdk, cli, wrapper)
+            entry_point: How the scan was triggered (sdk, cli, wrapper, integration)
             event_id: Pre-generated event ID for portal-CLI correlation
             wrapper_type: SDK wrapper type if applicable (openai, anthropic, etc.)
+            integration_type: Integration framework if applicable (langchain, crewai, etc.)
         """
         try:
             orchestrator = get_orchestrator()
@@ -457,6 +459,7 @@ class Raxe:
                 wrapper_type=wrapper_type,  # type: ignore[arg-type]
                 action_taken="block" if result.should_block else "allow",
                 l2_enabled=result.metadata.get("l2_enabled", True),
+                integration_type=integration_type,
             )
 
             # Track using v2 method
@@ -698,6 +701,8 @@ class Raxe:
         dry_run: bool = False,
         use_async: bool = True,
         suppress: list[str | dict[str, Any]] | None = None,
+        integration_type: str | None = None,
+        entry_point: str | None = None,
     ) -> ScanPipelineResult:
         """Scan text for security threats with layer control.
 
@@ -739,6 +744,12 @@ class Raxe:
                 - Dicts with action: [{"pattern": "jb-*", "action": "FLAG", "reason": "..."}]
                 Actions: SUPPRESS (remove), FLAG (keep with is_flagged=True), LOG (keep)
                 Inline suppressions take precedence over config file suppressions.
+            integration_type: Optional integration framework identifier for telemetry.
+                Valid values: "langchain", "crewai", "llamaindex", "autogen", "mcp", None.
+                Used to track which agentic framework is using RAXE.
+            entry_point: Optional entry point identifier for telemetry.
+                Valid values: "cli", "sdk", "wrapper", "integration", None.
+                If None, defaults to "integration" if integration_type is set, else "sdk".
 
         Returns:
             ScanPipelineResult with:
@@ -920,7 +931,20 @@ class Raxe:
                 # Track telemetry (non-blocking, privacy-preserving)
                 # Pass event_id to ensure telemetry uses the same ID as local storage
                 # Pass original prompt for accurate hash and length calculation
-                self._track_scan(result, prompt=text, entry_point="sdk", event_id=event_id)
+                # Determine entry_point: use provided value, or infer from integration_type
+                if entry_point:
+                    effective_entry_point = entry_point
+                elif integration_type:
+                    effective_entry_point = "integration"
+                else:
+                    effective_entry_point = "sdk"
+                self._track_scan(
+                    result,
+                    prompt=text,
+                    entry_point=effective_entry_point,
+                    event_id=event_id,
+                    integration_type=integration_type,
+                )
 
                 # Track usage (creates install.json on first scan)
                 self.usage_tracker.record_scan(found_threats=result.has_threats)

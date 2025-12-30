@@ -182,36 +182,46 @@ except ThreatDetectedException as e:
 AsyncRaxe includes built-in LRU caching to avoid re-scanning identical prompts:
 
 ```python
-from raxe.async_sdk.client import AsyncRaxe
+import asyncio
+from raxe import AsyncRaxe
 
-async with AsyncRaxe(
-    cache_enabled=True,       # Enable caching (default: True)
-    cache_ttl=300,           # Cache entries expire after 5 minutes
-    cache_max_size=1000      # Maximum 1000 cached results
-) as raxe:
-    # First scan - hits the engine
-    result1 = await raxe.scan("test prompt")
+async def cache_example():
+    async with AsyncRaxe(
+        cache_enabled=True,       # Enable caching (default: True)
+        cache_ttl=300,           # Cache entries expire after 5 minutes
+        cache_max_size=1000      # Maximum 1000 cached results
+    ) as raxe:
+        # First scan - hits the engine
+        result1 = await raxe.scan("test prompt")
 
-    # Second scan - cache hit (instant)
-    result2 = await raxe.scan("test prompt")
+        # Second scan - cache hit (instant)
+        result2 = await raxe.scan("test prompt")
 
-    # Check cache statistics
-    stats = raxe.cache_stats()
-    print(f"Cache hit rate: {stats['hit_rate']:.2%}")
-    print(f"Hits: {stats['hits']}, Misses: {stats['misses']}")
+        # Check cache statistics
+        stats = raxe.cache_stats()
+        print(f"Cache hit rate: {stats['hit_rate']:.2%}")
+        print(f"Hits: {stats['hits']}, Misses: {stats['misses']}")
+
+asyncio.run(cache_example())
 ```
 
 ### Cache Management
 
 ```python
-async with AsyncRaxe() as raxe:
-    # Clear all cached results
-    raxe.clear_cache()
+import asyncio
+from raxe import AsyncRaxe
 
-    # Disable caching temporarily
-    raxe.cache_enabled = False
-    result = await raxe.scan("always fresh")
-    raxe.cache_enabled = True
+async def cache_management():
+    async with AsyncRaxe() as raxe:
+        # Clear all cached results
+        raxe.clear_cache()
+
+        # Disable caching temporarily
+        raxe.cache_enabled = False
+        result = await raxe.scan("always fresh")
+        raxe.cache_enabled = True
+
+asyncio.run(cache_management())
 ```
 
 ## Performance Tuning
@@ -219,22 +229,28 @@ async with AsyncRaxe() as raxe:
 ### Concurrent Request Limiting
 
 ```python
-from raxe.async_sdk.client import AsyncRaxe
+import asyncio
+from raxe import AsyncRaxe
 
-async with AsyncRaxe() as raxe:
-    prompts = [...]  # 1000 prompts
+async def batch_processing():
+    async with AsyncRaxe() as raxe:
+        prompts = ["prompt 1", "prompt 2", "prompt 3"]  # Your prompts list
 
-    # Process in batches of 50 concurrent scans
-    results = await raxe.scan_batch(
-        prompts,
-        max_concurrency=50  # Prevents overwhelming system
-    )
+        # Process in batches of 50 concurrent scans
+        results = await raxe.scan_batch(
+            prompts,
+            max_concurrency=50  # Prevents overwhelming system
+        )
+        print(f"Processed {len(results)} prompts")
+
+asyncio.run(batch_processing())
 ```
 
 ### Connection Pooling
 
 ```python
-from raxe.async_sdk.client import AsyncRaxe
+import asyncio
+from raxe import AsyncRaxe
 
 # Reuse client across requests
 raxe = AsyncRaxe()
@@ -243,7 +259,15 @@ async def handle_request(prompt: str):
     result = await raxe.scan(prompt)
     return result
 
-# Call handle_request many times without recreating AsyncRaxe
+async def main():
+    # Call handle_request many times without recreating AsyncRaxe
+    results = await asyncio.gather(
+        handle_request("prompt 1"),
+        handle_request("prompt 2"),
+    )
+    print(f"Processed {len(results)} requests")
+
+asyncio.run(main())
 ```
 
 ## API Reference
@@ -297,36 +321,44 @@ result = raxe.scan("test")
 ### After (Async)
 
 ```python
-from raxe.async_sdk.client import AsyncRaxe
+import asyncio
+from raxe import AsyncRaxe
 
-async with AsyncRaxe() as raxe:
-    result = await raxe.scan("test")
+async def scan_async():
+    async with AsyncRaxe() as raxe:
+        result = await raxe.scan("test")
+        return result
+
+asyncio.run(scan_async())
 ```
 
 ### Common Pitfalls
 
 ❌ **Don't forget await**
-```python
-result = raxe.scan("test")  # Returns coroutine, not result!
+```text
+# WRONG - returns coroutine, not result!
+result = raxe.scan("test")
 ```
 
 ✅ **Always await async calls**
-```python
+```text
+# CORRECT
 result = await raxe.scan("test")
 ```
 
 ❌ **Don't forget to close client**
-```python
+```text
+# WRONG - missing close
 raxe = AsyncRaxe()
 result = await raxe.scan("test")
 # Missing: await raxe.close()
 ```
 
 ✅ **Use context manager**
-```python
+```text
+# CORRECT - automatically closes
 async with AsyncRaxe() as raxe:
     result = await raxe.scan("test")
-# Automatically closed
 ```
 
 ## Performance Benchmarks
@@ -343,16 +375,21 @@ Based on `tests/performance/test_async_throughput.py`:
 ## Error Handling
 
 ```python
-from raxe.async_sdk.client import AsyncRaxe
-from raxe.domain.exceptions import ThreatDetectedException
+import asyncio
+from raxe import AsyncRaxe, SecurityException
 
-async with AsyncRaxe() as raxe:
-    try:
-        result = await raxe.scan(user_input)
-    except ThreatDetectedException as e:
-        print(f"Threat: {e.severity}")
-    except Exception as e:
-        print(f"Error: {e}")
+async def safe_scan():
+    async with AsyncRaxe() as raxe:
+        try:
+            user_input = "test prompt"
+            result = await raxe.scan(user_input)
+            print(f"Safe: {bool(result)}")
+        except SecurityException as e:
+            print(f"Threat: {e.result.severity}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+asyncio.run(safe_scan())
 ```
 
 ## Complete Example: Production FastAPI App

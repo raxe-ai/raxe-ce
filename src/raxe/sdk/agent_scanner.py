@@ -646,6 +646,9 @@ class AgentScanner:
         default_block: bool = False,
         scan_configs: dict[ScanType, ScanConfig] | None = None,
         on_threat: Callable[[AgentScanResult], None] | None = None,
+        timeout_ms: float = 100.0,
+        fail_open: bool = True,
+        integration_type: str | None = None,
     ) -> None:
         """Initialize AgentScanner.
 
@@ -655,6 +658,10 @@ class AgentScanner:
             default_block: Default blocking behavior (default: False = log-only)
             scan_configs: Per-scan-type configuration overrides
             on_threat: Optional callback invoked when threat detected
+            timeout_ms: Scan timeout in milliseconds (default: 100.0)
+            fail_open: If scan fails/times out, allow request (default: True).
+                Set to False for fail-closed behavior.
+            integration_type: Framework identifier for telemetry (langchain, crewai, etc.)
 
         Example:
             # Basic usage with defaults
@@ -672,11 +679,20 @@ class AgentScanner:
                     ScanType.RESPONSE: ScanConfig(block_on_threat=False),
                 }
             )
+
+            # Fail-closed mode (block on timeout/error)
+            scanner = AgentScanner(
+                fail_open=False,
+                timeout_ms=50.0,
+            )
         """
         self.raxe = raxe_client or Raxe()
         self.tool_policy = tool_policy or ToolPolicy()
         self.default_block = default_block
         self.on_threat = on_threat
+        self.timeout_ms = timeout_ms
+        self.fail_open = fail_open
+        self.integration_type = integration_type
 
         # Initialize default scan configs
         self._scan_configs: dict[ScanType, ScanConfig] = {
@@ -805,6 +821,72 @@ class AgentScanner:
 
         return actual_severity >= min_severity
 
+    def _scan_with_timeout(
+        self,
+        text: str,
+        *,
+        block_on_threat: bool = False,
+    ) -> tuple[Any, bool, str | None]:
+        """Execute scan with timeout and fail-open/fail-closed handling.
+
+        This method wraps the actual scan call with:
+        - Configurable timeout (timeout_ms from AgentScannerConfig)
+        - Fail-open (default) or fail-closed behavior on errors/timeouts
+
+        Args:
+            text: Text to scan
+            block_on_threat: Whether to block on threat detection
+
+        Returns:
+            Tuple of (scan_result, timed_out, error_message)
+            - scan_result: ScanResult from Raxe.scan() or None if error/timeout
+            - timed_out: True if the scan timed out
+            - error_message: Error message if error occurred, None otherwise
+
+        Note:
+            When fail_open=True (default):
+                - Timeout/error → allow request (result=None, treated as clean)
+            When fail_open=False (fail-closed):
+                - Timeout/error → block request (raise or return blocking result)
+        """
+        import concurrent.futures
+
+        timeout_seconds = self.timeout_ms / 1000.0
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(
+                    self.raxe.scan,
+                    text,
+                    block_on_threat=block_on_threat,
+                    integration_type=self.integration_type,
+                )
+                try:
+                    result = future.result(timeout=timeout_seconds)
+                    return result, False, None
+                except concurrent.futures.TimeoutError:
+                    # Scan timed out
+                    logger.warning(
+                        "scan_timeout",
+                        extra={
+                            "timeout_ms": self.timeout_ms,
+                            "fail_open": self.fail_open,
+                        },
+                    )
+                    return None, True, f"Scan timed out after {self.timeout_ms}ms"
+
+        except Exception as e:
+            # Scan failed due to error
+            logger.error(
+                "scan_error",
+                extra={
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "fail_open": self.fail_open,
+                },
+            )
+            return None, False, f"Scan error: {e}"
+
     def scan_prompt(
         self,
         prompt: str,
@@ -821,7 +903,8 @@ class AgentScanner:
             AgentScanResult with scan results
 
         Raises:
-            SecurityException: If blocking enabled and threat detected
+            SecurityException: If blocking enabled and threat detected,
+                or if fail_open=False and scan times out/fails
         """
         if not prompt or not prompt.strip():
             return self._build_result(
@@ -838,37 +921,55 @@ class AgentScanner:
         start = time.perf_counter()
         config = self._scan_configs[ScanType.PROMPT]
 
-        try:
-            result = self.raxe.scan(
-                prompt,
-                block_on_threat=config.block_on_threat,
-            )
+        # Use timeout wrapper
+        result, timed_out, error_msg = self._scan_with_timeout(
+            prompt, block_on_threat=config.block_on_threat
+        )
+        duration_ms = (time.perf_counter() - start) * 1000
 
-            duration_ms = (time.perf_counter() - start) * 1000
-            should_block = self._should_block(ScanType.PROMPT, result.severity)
+        # Handle timeout or error
+        if result is None:
+            if self.fail_open:
+                # Fail-open: allow request when scan fails/times out
+                return self._build_result(
+                    scan_type=ScanType.PROMPT,
+                    has_threats=False,
+                    should_block=False,
+                    severity=None,
+                    detection_count=0,
+                    duration_ms=duration_ms,
+                    message=f"Scan failed (fail-open): {error_msg}",
+                    content=prompt,
+                )
+            else:
+                # Fail-closed: block request when scan fails/times out
+                from raxe.sdk.exceptions import ScanTimeoutError
 
-            agent_result = self._build_result(
-                scan_type=ScanType.PROMPT,
-                has_threats=result.has_threats,
-                should_block=should_block,
-                severity=result.severity,
-                detection_count=result.total_detections,
-                duration_ms=duration_ms,
-                message=f"Prompt scan: {result.severity or 'clean'}"
-                if result.has_threats
-                else "Prompt scan: clean",
-                details=metadata,
-                content=prompt,
-            )
+                raise ScanTimeoutError(
+                    f"Scan failed (fail-closed): {error_msg}",
+                    timeout_ms=self.timeout_ms,
+                )
 
-            if result.has_threats and self.on_threat:
-                self.on_threat(agent_result)
+        should_block = self._should_block(ScanType.PROMPT, result.severity)
 
-            return agent_result
+        agent_result = self._build_result(
+            scan_type=ScanType.PROMPT,
+            has_threats=result.has_threats,
+            should_block=should_block,
+            severity=result.severity,
+            detection_count=result.total_detections,
+            duration_ms=duration_ms,
+            message=f"Prompt scan: {result.severity or 'clean'}"
+            if result.has_threats
+            else "Prompt scan: clean",
+            details=metadata,
+            content=prompt,
+        )
 
-        except SecurityException:
-            duration_ms = (time.perf_counter() - start) * 1000
-            raise
+        if result.has_threats and self.on_threat:
+            self.on_threat(agent_result)
+
+        return agent_result
 
     def scan_response(
         self,
@@ -886,7 +987,8 @@ class AgentScanner:
             AgentScanResult with scan results
 
         Raises:
-            SecurityException: If blocking enabled and threat detected
+            SecurityException: If blocking enabled and threat detected,
+                or if fail_open=False and scan times out/fails
         """
         if not response or not response.strip():
             return self._build_result(
@@ -903,37 +1005,53 @@ class AgentScanner:
         start = time.perf_counter()
         config = self._scan_configs[ScanType.RESPONSE]
 
-        try:
-            result = self.raxe.scan(
-                response,
-                block_on_threat=config.block_on_threat,
-            )
+        # Use timeout wrapper
+        result, timed_out, error_msg = self._scan_with_timeout(
+            response, block_on_threat=config.block_on_threat
+        )
+        duration_ms = (time.perf_counter() - start) * 1000
 
-            duration_ms = (time.perf_counter() - start) * 1000
-            should_block = self._should_block(ScanType.RESPONSE, result.severity)
+        # Handle timeout or error
+        if result is None:
+            if self.fail_open:
+                return self._build_result(
+                    scan_type=ScanType.RESPONSE,
+                    has_threats=False,
+                    should_block=False,
+                    severity=None,
+                    detection_count=0,
+                    duration_ms=duration_ms,
+                    message=f"Scan failed (fail-open): {error_msg}",
+                    content=response,
+                )
+            else:
+                from raxe.sdk.exceptions import ScanTimeoutError
 
-            agent_result = self._build_result(
-                scan_type=ScanType.RESPONSE,
-                has_threats=result.has_threats,
-                should_block=should_block,
-                severity=result.severity,
-                detection_count=result.total_detections,
-                duration_ms=duration_ms,
-                message=f"Response scan: {result.severity or 'clean'}"
-                if result.has_threats
-                else "Response scan: clean",
-                details=metadata,
-                content=response,
-            )
+                raise ScanTimeoutError(
+                    f"Scan failed (fail-closed): {error_msg}",
+                    timeout_ms=self.timeout_ms,
+                )
 
-            if result.has_threats and self.on_threat:
-                self.on_threat(agent_result)
+        should_block = self._should_block(ScanType.RESPONSE, result.severity)
 
-            return agent_result
+        agent_result = self._build_result(
+            scan_type=ScanType.RESPONSE,
+            has_threats=result.has_threats,
+            should_block=should_block,
+            severity=result.severity,
+            detection_count=result.total_detections,
+            duration_ms=duration_ms,
+            message=f"Response scan: {result.severity or 'clean'}"
+            if result.has_threats
+            else "Response scan: clean",
+            details=metadata,
+            content=response,
+        )
 
-        except SecurityException:
-            duration_ms = (time.perf_counter() - start) * 1000
-            raise
+        if result.has_threats and self.on_threat:
+            self.on_threat(agent_result)
+
+        return agent_result
 
     def validate_tool(self, tool_name: str) -> tuple[bool, str]:
         """Validate a tool against the policy (without scanning arguments).
@@ -1705,6 +1823,8 @@ class AgentScanner:
 def create_agent_scanner(
     raxe: Raxe | None = None,
     config: AgentScannerConfig | None = None,
+    *,
+    integration_type: str | None = None,
 ) -> AgentScanner:
     """Factory function to create AgentScanner with AgentScannerConfig.
 
@@ -1714,6 +1834,8 @@ def create_agent_scanner(
     Args:
         raxe: Optional Raxe client (creates default if None)
         config: AgentScannerConfig (uses defaults if None)
+        integration_type: Framework identifier for telemetry (langchain, crewai,
+            llamaindex, autogen, mcp). Used to differentiate scan sources in BQ.
 
     Returns:
         Configured AgentScanner instance
@@ -1762,6 +1884,9 @@ def create_agent_scanner(
         default_block=config.on_threat == "block",
         scan_configs=scan_configs,
         on_threat=config.on_threat_callback,
+        timeout_ms=config.timeout_ms,
+        fail_open=config.fail_open,
+        integration_type=integration_type,
     )
 
 

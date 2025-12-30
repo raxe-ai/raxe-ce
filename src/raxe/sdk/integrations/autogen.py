@@ -248,7 +248,7 @@ class RaxeConversationGuard:
             config = AgentScannerConfig(on_threat="log")
 
         self._config = config  # Store for property access
-        self._scanner = create_agent_scanner(raxe, config)
+        self._scanner = create_agent_scanner(raxe, config, integration_type="autogen")
         self._registered_agents: set[str] = set()
 
         logger.info(

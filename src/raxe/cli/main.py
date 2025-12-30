@@ -484,6 +484,7 @@ def scan(
                     confidence_threshold=confidence if confidence else 0.5,
                     explain=explain,
                     dry_run=dry_run,
+                    entry_point="cli",
                 )
 
                 # Show scan result first
@@ -507,6 +508,7 @@ def scan(
                         confidence_threshold=confidence if confidence else 0.5,
                         explain=explain,
                         dry_run=dry_run,
+                        entry_point="cli",
                     )
             except ImportError:
                 console.print("[yellow]Warning: Profiling not available[/yellow]")
@@ -518,6 +520,7 @@ def scan(
                     confidence_threshold=confidence if confidence else 0.5,
                     explain=explain,
                     dry_run=dry_run,
+                    entry_point="cli",
                 )
         else:
             result = raxe.scan(
@@ -528,6 +531,7 @@ def scan(
                 confidence_threshold=confidence if confidence else 0.5,
                 explain=explain,
                 dry_run=dry_run,
+                entry_point="cli",
             )
     except Exception as e:
         display_error("Scan execution failed", str(e))

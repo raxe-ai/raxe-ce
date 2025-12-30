@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -195,10 +196,10 @@ class CrewGuardConfig:
 
 @dataclass
 class CrewScanStats:
-    """Statistics for scans performed during crew execution.
+    """Thread-safe statistics for scans performed during crew execution.
 
     Tracks scan counts, threats detected, and performance metrics
-    across a crew's lifecycle.
+    across a crew's lifecycle. All operations are thread-safe.
 
     Attributes:
         total_scans: Total number of scans performed
@@ -219,6 +220,7 @@ class CrewScanStats:
     threats_blocked: int = 0
     highest_severity: str | None = None
     scan_durations_ms: list[float] = field(default_factory=list)
+    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def record_scan(
         self,
@@ -226,34 +228,35 @@ class CrewScanStats:
         result: AgentScanResult,
         blocked: bool = False,
     ) -> None:
-        """Record a scan for statistics.
+        """Record a scan for statistics (thread-safe).
 
         Args:
             scan_type: Type of scan (step, task, tool)
             result: AgentScanResult from scanner
             blocked: Whether execution was blocked
         """
-        self.total_scans += 1
-        self.scan_durations_ms.append(result.duration_ms)
+        with self._lock:
+            self.total_scans += 1
+            self.scan_durations_ms.append(result.duration_ms)
 
-        if scan_type == "step":
-            self.step_scans += 1
-        elif scan_type == "task":
-            self.task_scans += 1
-        elif scan_type == "tool":
-            self.tool_scans += 1
+            if scan_type == "step":
+                self.step_scans += 1
+            elif scan_type == "task":
+                self.task_scans += 1
+            elif scan_type == "tool":
+                self.tool_scans += 1
 
-        if result.has_threats:
-            self.threats_detected += 1
-            severity = result.severity
-            if severity:
-                self._update_highest_severity(severity)
+            if result.has_threats:
+                self.threats_detected += 1
+                severity = result.severity
+                if severity:
+                    self._update_highest_severity(severity)
 
-        if blocked:
-            self.threats_blocked += 1
+            if blocked:
+                self.threats_blocked += 1
 
     def _update_highest_severity(self, severity: str) -> None:
-        """Update highest severity seen."""
+        """Update highest severity seen (must be called with lock held)."""
         severity_order = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
         current_level = severity_order.get(self.highest_severity or "", 0)
         new_level = severity_order.get(severity, 0)
@@ -262,23 +265,28 @@ class CrewScanStats:
 
     @property
     def average_scan_duration_ms(self) -> float:
-        """Calculate average scan duration."""
-        if not self.scan_durations_ms:
-            return 0.0
-        return sum(self.scan_durations_ms) / len(self.scan_durations_ms)
+        """Calculate average scan duration (thread-safe)."""
+        with self._lock:
+            if not self.scan_durations_ms:
+                return 0.0
+            return sum(self.scan_durations_ms) / len(self.scan_durations_ms)
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        return {
-            "total_scans": self.total_scans,
-            "step_scans": self.step_scans,
-            "task_scans": self.task_scans,
-            "tool_scans": self.tool_scans,
-            "threats_detected": self.threats_detected,
-            "threats_blocked": self.threats_blocked,
-            "highest_severity": self.highest_severity,
-            "average_scan_duration_ms": self.average_scan_duration_ms,
-        }
+        """Convert to dictionary for serialization (thread-safe)."""
+        with self._lock:
+            return {
+                "total_scans": self.total_scans,
+                "step_scans": self.step_scans,
+                "task_scans": self.task_scans,
+                "tool_scans": self.tool_scans,
+                "threats_detected": self.threats_detected,
+                "threats_blocked": self.threats_blocked,
+                "highest_severity": self.highest_severity,
+                "average_scan_duration_ms": (
+                    sum(self.scan_durations_ms) / len(self.scan_durations_ms)
+                    if self.scan_durations_ms else 0.0
+                ),
+            }
 
 
 class RaxeCrewGuard:
@@ -346,7 +354,7 @@ class RaxeCrewGuard:
         self._raxe = raxe
         self._config = config or CrewGuardConfig()
         self._scanner = create_agent_scanner(
-            raxe, self._config.to_agent_scanner_config()
+            raxe, self._config.to_agent_scanner_config(), integration_type="crewai"
         )
         self._stats = CrewScanStats()
 
@@ -1087,6 +1095,222 @@ class RaxeCrewGuard:
             },
             "stats": self._stats.to_dict(),
         }
+
+    # =========================================================================
+    # Async Callback Methods
+    # =========================================================================
+    # Async versions of callbacks for use in async contexts.
+
+    async def step_callback_async(self, step_output: Any) -> None:
+        """Async callback for CrewAI step events.
+
+        Async version of step_callback for use in async contexts.
+        Uses asyncio.get_event_loop().run_in_executor() for non-blocking scans.
+
+        Args:
+            step_output: Step output from CrewAI
+        """
+        import asyncio
+
+        if not self._config.scan_step_outputs:
+            return
+
+        try:
+            text = self._extract_step_text(step_output)
+            if not text:
+                return
+
+            agent_name = self._extract_agent_name(step_output)
+
+            context = ScanContext(
+                message_type=MessageType.AGENT_TO_AGENT,
+                sender_name=agent_name,
+                metadata={
+                    "source": "step_callback_async",
+                    "step_type": type(step_output).__name__,
+                },
+            )
+
+            result = await asyncio.get_event_loop().run_in_executor(
+                None, lambda: self._scanner.scan_message(text, context=context)
+            )
+
+            self._stats.record_scan("step", result, result.should_block)
+
+            if result.should_block:
+                logger.warning(
+                    "crew_step_blocked_async",
+                    extra={
+                        "agent": agent_name,
+                        "severity": result.severity,
+                        "prompt_hash": result.prompt_hash,
+                    },
+                )
+
+        except Exception as e:
+            logger.error(
+                "crew_step_scan_error_async",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
+
+    async def task_callback_async(self, task_output: Any) -> None:
+        """Async callback for CrewAI task completion events.
+
+        Async version of task_callback for use in async contexts.
+
+        Args:
+            task_output: TaskOutput from CrewAI
+        """
+        import asyncio
+
+        if not self._config.scan_task_outputs:
+            return
+
+        try:
+            text = self._extract_task_text(task_output)
+            if not text:
+                return
+
+            task_description = self._extract_task_description(task_output)
+            agent_name = self._extract_agent_from_task(task_output)
+
+            context = ScanContext(
+                message_type=MessageType.AGENT_RESPONSE,
+                sender_name=agent_name,
+                metadata={
+                    "source": "task_callback_async",
+                    "task_description": (
+                        task_description[:200] if task_description else None
+                    ),
+                },
+            )
+
+            result = await asyncio.get_event_loop().run_in_executor(
+                None, lambda: self._scanner.scan_message(text, context=context)
+            )
+
+            self._stats.record_scan("task", result, result.should_block)
+
+            if result.should_block:
+                logger.warning(
+                    "crew_task_blocked_async",
+                    extra={
+                        "agent": agent_name,
+                        "severity": result.severity,
+                        "task": task_description[:100] if task_description else None,
+                        "prompt_hash": result.prompt_hash,
+                    },
+                )
+
+        except Exception as e:
+            logger.error(
+                "crew_task_scan_error_async",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
+
+    async def before_kickoff_async(
+        self, inputs: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Async callback for before crew kickoff.
+
+        Async version of before_kickoff for use in async contexts.
+
+        Args:
+            inputs: Input dictionary to the crew
+
+        Returns:
+            Original inputs
+
+        Raises:
+            SecurityException: If blocking mode and threat detected
+        """
+        import asyncio
+
+        if not self._config.scan_crew_inputs:
+            return inputs
+
+        self.reset_stats()
+
+        try:
+            for key, value in inputs.items():
+                if isinstance(value, str) and value.strip():
+                    context = ScanContext(
+                        message_type=MessageType.HUMAN_INPUT,
+                        metadata={
+                            "source": "before_kickoff_async",
+                            "input_key": key,
+                        },
+                    )
+
+                    result = await asyncio.get_event_loop().run_in_executor(
+                        None, lambda v=value: self._scanner.scan_message(v, context=context)
+                    )
+
+                    if result.should_block:
+                        logger.warning(
+                            "crew_input_blocked_async",
+                            extra={
+                                "input_key": key,
+                                "severity": result.severity,
+                                "prompt_hash": result.prompt_hash,
+                            },
+                        )
+                        self._raise_security_exception(result)
+
+        except SecurityException:
+            raise
+        except Exception as e:
+            logger.error(
+                "crew_input_scan_error_async",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
+
+        return inputs
+
+    async def after_kickoff_async(self, output: Any) -> Any:
+        """Async callback for after crew kickoff completes.
+
+        Async version of after_kickoff for use in async contexts.
+
+        Args:
+            output: Final output from the crew
+
+        Returns:
+            Original output
+        """
+        import asyncio
+
+        if not self._config.scan_crew_outputs:
+            return output
+
+        try:
+            text = self._extract_crew_output_text(output)
+            if text:
+                context = ScanContext(
+                    message_type=MessageType.AGENT_RESPONSE,
+                    metadata={"source": "after_kickoff_async"},
+                )
+
+                result = await asyncio.get_event_loop().run_in_executor(
+                    None, lambda: self._scanner.scan_message(text, context=context)
+                )
+
+                if result.has_threats:
+                    logger.warning(
+                        "crew_output_threat_async",
+                        extra={
+                            "severity": result.severity,
+                            "prompt_hash": result.prompt_hash,
+                        },
+                    )
+
+        except Exception as e:
+            logger.error(
+                "crew_output_scan_error_async",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
+
+        return output
 
     def __repr__(self) -> str:
         """String representation."""

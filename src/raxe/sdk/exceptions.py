@@ -635,6 +635,44 @@ class RaxeBlockedError(SecurityException):
         )
 
 
+class ScanTimeoutError(InfrastructureError):
+    """Raised when a scan times out and fail_open=False (fail-closed mode).
+
+    This exception is raised when:
+    - A scan exceeds the configured timeout_ms
+    - The config has fail_open=False (fail-closed behavior)
+
+    When fail_open=True (default), timeouts result in allowing the request
+    rather than raising an exception.
+
+    Attributes:
+        timeout_ms: The configured timeout in milliseconds
+
+    Example:
+        >>> config = AgentScannerConfig(timeout_ms=100, fail_open=False)
+        >>> # If scan takes >100ms, raises ScanTimeoutError
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        timeout_ms: float = 100.0,
+    ) -> None:
+        """Initialize scan timeout error.
+
+        Args:
+            message: Error message describing the timeout
+            timeout_ms: The configured timeout value
+        """
+        self.timeout_ms = timeout_ms
+        error = infrastructure_timeout_error(
+            operation="security_scan",
+            timeout_seconds=timeout_ms / 1000.0,
+        )
+        super().__init__(message, error=error)
+
+
 # ============================================================================
 # Exception Mapping Utilities
 # ============================================================================
@@ -802,6 +840,7 @@ __all__ = [
     # Security exceptions (backwards compatible)
     "SecurityException",
     "RaxeBlockedError",
+    "ScanTimeoutError",
     # Error factories
     "config_not_found_error",
     "config_invalid_format_error",

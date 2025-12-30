@@ -196,7 +196,7 @@ def _handle_scan(raxe: Raxe, text: str) -> ScanPipelineResult | None:
         ScanPipelineResult if successful, None otherwise
     """
     try:
-        result = raxe.scan(text)
+        result = raxe.scan(text, entry_point="cli")
         display_scan_result(result)
         return result
     except Exception as e:

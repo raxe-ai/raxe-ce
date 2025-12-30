@@ -459,14 +459,14 @@ def _check_performance() -> list[HealthCheck]:
         test_prompt = "This is a test prompt for performance measurement"
 
         # Warmup
-        raxe.scan(test_prompt)
+        raxe.scan(test_prompt, entry_point="cli")
 
         # Measure
         iterations = 10
         durations = []
         for _ in range(iterations):
             start = time.perf_counter()
-            raxe.scan(test_prompt)
+            raxe.scan(test_prompt, entry_point="cli")
             duration = (time.perf_counter() - start) * 1000
             durations.append(duration)
 

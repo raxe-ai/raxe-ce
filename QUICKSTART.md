@@ -5,7 +5,7 @@
 
   <p><strong>AI Safety Research &amp; Threat Detection for LLMs</strong></p>
 
-  <p><em>Open Beta v0.0.1 | Community Edition | Free Forever</em></p>
+  <p><em>v0.4.0 Beta | Community Edition | Free Forever</em></p>
 </div>
 
 ---

@@ -172,31 +172,34 @@ from raxe.sdk.integrations import RaxeCallbackHandler
 llm = ChatOpenAI(model="gpt-4", callbacks=[RaxeCallbackHandler()])
 ```
 
-### CrewAI (4 lines)
+### CrewAI (5 lines)
 
 ```python
 from crewai import Crew
+from raxe import Raxe
 from raxe.sdk.integrations import RaxeCrewGuard
 
-guard = RaxeCrewGuard()
-crew = Crew(agents=[...], tasks=[...], step_callback=guard.step_callback)
+guard = RaxeCrewGuard(Raxe())
+crew = Crew(agents=my_agents, tasks=my_tasks, step_callback=guard.step_callback)
 ```
 
-### AutoGen (4 lines)
+### AutoGen
 
 ```python
 # AutoGen v0.2.x (pyautogen)
 from autogen import AssistantAgent
+from raxe import Raxe
 from raxe.sdk.integrations import RaxeConversationGuard
 
-guard = RaxeConversationGuard()
+guard = RaxeConversationGuard(Raxe())
 guard.register(AssistantAgent("assistant", llm_config={...}))
 
 # AutoGen v0.4+ (autogen-agentchat)
 from autogen_agentchat.agents import AssistantAgent
+from raxe import Raxe
 from raxe.sdk.integrations import RaxeConversationGuard
 
-guard = RaxeConversationGuard()
+guard = RaxeConversationGuard(Raxe())
 protected = guard.wrap_agent(AssistantAgent("assistant", model_client=client))
 ```
 
@@ -216,7 +219,8 @@ Settings.callback_manager = CallbackManager([RaxeLlamaIndexCallback()])
 from raxe.sdk.integrations import RaxePortkeyWebhook
 
 webhook = RaxePortkeyWebhook()  # Use as Portkey custom guardrail
-result = webhook.handle_request(portkey_data)
+# In your webhook handler:
+# result = webhook.handle_request(portkey_request_data)
 ```
 
 ### OpenAI (Drop-in)
@@ -305,6 +309,8 @@ RAXE is **community-driven**. The anonymized detection metadata helps improve de
 - Core detection (460+ rules, L1+L2)
 - Python SDK and CLI
 - OpenAI/Anthropic wrappers
+- Agentic framework integrations (LangChain, CrewAI, AutoGen, LlamaIndex)
+- Portkey AI Gateway integration
 - Policy system (ALLOW/FLAG/BLOCK/LOG)
 - Free Community API keys
 - Instant testing without signup

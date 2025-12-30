@@ -134,12 +134,12 @@ def wrap_client(raxe_client: Raxe, client: Any) -> Any:
         # Wrap OpenAI client - import directly from submodule to avoid lazy loading issues
         from raxe.sdk.wrappers.openai import RaxeOpenAI
 
-        # Create wrapped version with same config
-        wrapped = RaxeOpenAI(raxe=raxe_client)
-
         # Copy API key from original if available
-        if hasattr(client, "api_key"):
-            wrapped._openai_client.api_key = client.api_key
+        api_key = getattr(client, "api_key", None)
+
+        # Create wrapped version with same config
+        # RaxeOpenAI inherits from OpenAI, so api_key is passed to the constructor
+        wrapped = RaxeOpenAI(api_key=api_key, raxe=raxe_client)
 
         return wrapped
 

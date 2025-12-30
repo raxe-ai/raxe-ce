@@ -419,6 +419,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             result = self.raxe.scan(
                 text,
                 block_on_threat=block,
+                integration_type="llamaindex",
             )
 
             if result.has_threats:
@@ -507,6 +508,220 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             f"block_responses={self.block_on_response_threats}, "
             f"scan_agent_actions={self.scan_agent_actions})"
         )
+
+    # ========================================================================
+    # Async Event Handlers
+    # ========================================================================
+    # Async versions of event handlers for use in async contexts.
+
+    async def on_event_start_async(
+        self,
+        event_type: Any,
+        payload: dict[str, Any] | None = None,
+        event_id: str = "",
+        parent_id: str = "",
+        **kwargs: Any,
+    ) -> str:
+        """Async version of on_event_start - scan inputs before processing.
+
+        Args:
+            event_type: CBEventType enum value
+            payload: Event payload with context data
+            event_id: Unique event identifier
+            parent_id: Parent event identifier
+            **kwargs: Additional callback arguments
+
+        Returns:
+            Event ID for tracking
+
+        Raises:
+            SecurityException: If threat detected and blocking enabled
+        """
+        import asyncio
+
+        payload = payload or {}
+
+        self._active_events[event_id] = {
+            "event_type": event_type,
+            "parent_id": parent_id,
+        }
+
+        event_name = self._get_event_type_name(event_type)
+
+        if event_name == "QUERY":
+            query_str = payload.get("query_str") or payload.get("QUERY_STR", "")
+            if query_str:
+                await self._scan_text_async(
+                    text=query_str,
+                    context="query",
+                    block=self.block_on_query_threats,
+                )
+
+        elif event_name == "LLM":
+            messages = payload.get("messages", [])
+            for msg in messages:
+                content = self._extract_message_content(msg)
+                if content:
+                    await self._scan_text_async(
+                        text=content,
+                        context="llm_prompt",
+                        block=self.block_on_query_threats,
+                    )
+
+            template = payload.get("template", "")
+            if template and "{" not in template:
+                await self._scan_text_async(
+                    text=template,
+                    context="llm_template",
+                    block=self.block_on_query_threats,
+                )
+
+        elif event_name == "AGENT_STEP" and self.scan_agent_actions:
+            task_str = payload.get("task_str", "")
+            if task_str:
+                await self._scan_text_async(
+                    text=task_str,
+                    context="agent_input",
+                    block=self.block_on_query_threats,
+                )
+
+        elif event_name == "FUNCTION_CALL" and self.scan_agent_actions:
+            tool_input = payload.get("tool_input", "")
+            if isinstance(tool_input, str) and tool_input:
+                await self._scan_text_async(
+                    text=tool_input,
+                    context="tool_input",
+                    block=self.block_on_query_threats,
+                )
+
+        elif event_name == "RETRIEVE" and self.scan_retrieved_context:
+            query_str = payload.get("query_str", "")
+            if query_str:
+                await self._scan_text_async(
+                    text=query_str,
+                    context="retrieve_query",
+                    block=self.block_on_query_threats,
+                )
+
+        return event_id
+
+    async def on_event_end_async(
+        self,
+        event_type: Any,
+        payload: dict[str, Any] | None = None,
+        event_id: str = "",
+        **kwargs: Any,
+    ) -> None:
+        """Async version of on_event_end - scan outputs after processing.
+
+        Args:
+            event_type: CBEventType enum value
+            payload: Event payload with response data
+            event_id: Event identifier
+            **kwargs: Additional callback arguments
+
+        Raises:
+            SecurityException: If threat detected and blocking enabled
+        """
+        import asyncio
+
+        payload = payload or {}
+        event_name = self._get_event_type_name(event_type)
+
+        if event_name == "LLM":
+            response = payload.get("response", "")
+            if response:
+                response_text = self._extract_response_text(response)
+                if response_text:
+                    await self._scan_text_async(
+                        text=response_text,
+                        context="llm_response",
+                        block=self.block_on_response_threats,
+                    )
+
+        elif event_name == "SYNTHESIZE":
+            response = payload.get("response", "")
+            if response:
+                response_text = self._extract_response_text(response)
+                if response_text:
+                    await self._scan_text_async(
+                        text=response_text,
+                        context="synthesized_response",
+                        block=self.block_on_response_threats,
+                    )
+
+        elif event_name == "QUERY":
+            response = payload.get("response", "")
+            if response:
+                response_text = self._extract_response_text(response)
+                if response_text:
+                    await self._scan_text_async(
+                        text=response_text,
+                        context="query_response",
+                        block=self.block_on_response_threats,
+                    )
+
+        elif event_name == "RETRIEVE" and self.scan_retrieved_context:
+            nodes = payload.get("nodes", [])
+            for node in nodes:
+                if hasattr(node, "text"):
+                    await self._scan_text_async(
+                        text=node.text,
+                        context="retrieved_context",
+                        block=False,
+                    )
+
+        elif event_name == "FUNCTION_CALL" and self.scan_agent_actions:
+            output = payload.get("output", "")
+            if isinstance(output, str) and output:
+                await self._scan_text_async(
+                    text=output,
+                    context="tool_output",
+                    block=self.block_on_response_threats,
+                )
+
+        self._active_events.pop(event_id, None)
+
+    async def _scan_text_async(
+        self,
+        text: str,
+        context: str,
+        block: bool,
+    ) -> None:
+        """Async version of _scan_text - scan text for security threats.
+
+        Args:
+            text: Text to scan
+            context: Context description for logging
+            block: Whether to raise exception on threat
+
+        Raises:
+            SecurityException: If threat detected and block=True
+        """
+        import asyncio
+
+        if not text or not text.strip():
+            return
+
+        try:
+            result = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: self.raxe.scan(
+                    text, block_on_threat=block, integration_type="llamaindex"
+                ),
+            )
+
+            if result.has_threats:
+                logger.warning(
+                    f"Threat detected in LlamaIndex {context} (async): "
+                    f"{result.severity} severity (block={block})"
+                )
+
+        except SecurityException:
+            logger.error(
+                f"Blocked LlamaIndex {context} due to security threat (async)"
+            )
+            raise
 
 
 class RaxeSpanHandler:
@@ -646,6 +861,7 @@ class RaxeSpanHandler:
                     result = self.raxe.scan(
                         text,
                         block_on_threat=self.block_on_threats,
+                        integration_type="llamaindex",
                     )
 
                     if result.has_threats:
@@ -781,3 +997,15 @@ class RaxeAgentCallback(RaxeLlamaIndexCallback):
             scan_agent_actions=True,
         )
         self._scan_tool_outputs = scan_tool_outputs
+
+
+# ============================================================================
+# Exports
+# ============================================================================
+
+__all__ = [
+    "RaxeAgentCallback",
+    "RaxeLlamaIndexCallback",
+    "RaxeQueryEngineCallback",
+    "RaxeSpanHandler",
+]

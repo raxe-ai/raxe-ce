@@ -43,7 +43,8 @@ guard = RaxeCrewGuard(Raxe(), config=config)
 ## Configuration
 
 ```python
-from raxe.sdk.integrations.crewai import CrewGuardConfig, ScanMode
+from raxe.sdk.integrations.crewai import CrewGuardConfig
+from raxe.sdk.agent_scanner import ScanMode
 
 config = CrewGuardConfig(
     # Blocking mode
@@ -114,8 +115,8 @@ except SecurityException as e:
 print(guard.stats.to_dict())
 # {'total_scans': 50, 'threats_detected': 2, 'blocked': 1}
 
-# Reset stats
-guard.stats.reset()
+# Reset stats for new run
+guard.reset_stats()
 ```
 
 ## Files

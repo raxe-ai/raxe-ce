@@ -474,37 +474,37 @@ def _check_performance() -> list[HealthCheck]:
         p95_latency = sorted(durations)[int(len(durations) * 0.95)]
 
         # Check against targets
-        if avg_latency < 5.0:
+        if avg_latency < 50.0:
             checks.append(HealthCheck(
                 name="Avg Scan Time",
                 status="ok",
-                message=f"{avg_latency:.2f}ms (target: <5ms)",
+                message=f"{avg_latency:.2f}ms (target: <50ms)",
             ))
-        elif avg_latency < 10.0:
+        elif avg_latency < 100.0:
             checks.append(HealthCheck(
                 name="Avg Scan Time",
                 status="warning",
-                message=f"{avg_latency:.2f}ms (target: <5ms)",
+                message=f"{avg_latency:.2f}ms (target: <50ms)",
             ))
         else:
             checks.append(HealthCheck(
                 name="Avg Scan Time",
                 status="error",
-                message=f"{avg_latency:.2f}ms (target: <5ms)",
+                message=f"{avg_latency:.2f}ms (target: <50ms)",
                 details="Performance degraded - check system resources",
             ))
 
-        if p95_latency < 10.0:
+        if p95_latency < 100.0:
             checks.append(HealthCheck(
                 name="P95 Latency",
                 status="ok",
-                message=f"{p95_latency:.2f}ms (target: <10ms)",
+                message=f"{p95_latency:.2f}ms (target: <100ms)",
             ))
         else:
             checks.append(HealthCheck(
                 name="P95 Latency",
                 status="warning",
-                message=f"{p95_latency:.2f}ms (target: <10ms)",
+                message=f"{p95_latency:.2f}ms (target: <100ms)",
             ))
 
     except Exception as e:

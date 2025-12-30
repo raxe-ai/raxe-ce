@@ -185,11 +185,19 @@ crew = Crew(agents=[...], tasks=[...], step_callback=guard.step_callback)
 ### AutoGen (4 lines)
 
 ```python
+# AutoGen v0.2.x (pyautogen)
 from autogen import AssistantAgent
 from raxe.sdk.integrations import RaxeConversationGuard
 
 guard = RaxeConversationGuard()
 guard.register(AssistantAgent("assistant", llm_config={...}))
+
+# AutoGen v0.4+ (autogen-agentchat)
+from autogen_agentchat.agents import AssistantAgent
+from raxe.sdk.integrations import RaxeConversationGuard
+
+guard = RaxeConversationGuard()
+protected = guard.wrap_agent(AssistantAgent("assistant", model_client=client))
 ```
 
 ### LlamaIndex (4 lines)

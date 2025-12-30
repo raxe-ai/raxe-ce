@@ -68,7 +68,21 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-class RaxeLlamaIndexCallback:
+def _get_base_callback_handler():
+    """Get BaseCallbackHandler class from llama_index."""
+    try:
+        from llama_index.core.callbacks.base import BaseCallbackHandler
+        return BaseCallbackHandler
+    except ImportError:
+        # Return object as fallback if llama_index not installed
+        return object
+
+
+# Dynamically inherit from BaseCallbackHandler
+_LlamaIndexBaseHandler = _get_base_callback_handler()
+
+
+class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
     """LlamaIndex callback handler for automatic RAXE scanning.
 
     This callback handler integrates with LlamaIndex's CallbackManager system
@@ -140,6 +154,13 @@ class RaxeLlamaIndexCallback:
             raxe = Raxe(api_key="raxe_...", telemetry=True)
             callback = RaxeLlamaIndexCallback(raxe_client=raxe)
         """
+        # Initialize base class if it's a real LlamaIndex handler
+        if _LlamaIndexBaseHandler is not object:
+            # Pass empty ignore lists - we want to handle all events
+            super().__init__(
+                event_starts_to_ignore=[],
+                event_ends_to_ignore=[],
+            )
         self.raxe = raxe_client or Raxe()
         self.block_on_query_threats = block_on_query_threats
         self.block_on_response_threats = block_on_response_threats
@@ -451,7 +472,7 @@ class RaxeLlamaIndexCallback:
                 texts = [
                     item.get("text", "") if isinstance(item, dict) else str(item)
                     for item in content
-                    if isinstance(item, (dict, str))
+                    if isinstance(item, dict | str)
                 ]
                 return " ".join(texts)
 

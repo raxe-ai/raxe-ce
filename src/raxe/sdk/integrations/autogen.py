@@ -1,4 +1,4 @@
-"""AutoGen (pyautogen) integration for RAXE scanning.
+"""AutoGen integration for RAXE scanning.
 
 Provides RaxeConversationGuard for automatic security scanning of
 multi-agent conversations in AutoGen applications.
@@ -17,10 +17,12 @@ Key Features:
     - Function call scanning
     - Privacy-preserving logging
 
-Requirements:
-    - pyautogen >= 0.2.0 or autogen-agentchat ~= 0.2
+Supported Versions:
+    - pyautogen 0.2.x / autogen-agentchat 0.2.x (hook-based API)
+    - autogen-agentchat 0.4.x+ (async message-based API)
+    - AG2 (fork): Compatible with 0.2.x API
 
-Usage:
+Usage (v0.2.x - hook-based):
     from autogen import AssistantAgent, UserProxyAgent
     from raxe import Raxe
     from raxe.sdk.integrations import RaxeConversationGuard
@@ -40,12 +42,20 @@ Usage:
     # Conversations are now automatically scanned
     user.initiate_chat(assistant, message="Hello!")
 
-Notes on AutoGen Versions:
-    - AutoGen 0.2.x: Use `register_hook` for message interception
-    - AutoGen 0.4.x: Has different API, may need migration
-    - AG2 (fork): Compatible with 0.2.x API
+Usage (v0.4.x+ - wrapper-based):
+    from autogen_agentchat.agents import AssistantAgent
+    from raxe import Raxe
+    from raxe.sdk.integrations import RaxeConversationGuard
 
-    This integration targets pyautogen 0.2+ / autogen-agentchat ~= 0.2
+    # Create RAXE guard
+    raxe = Raxe()
+    guard = RaxeConversationGuard(raxe)
+
+    # Create agent with RAXE wrapper
+    assistant = AssistantAgent("assistant", model_client=client)
+    protected_assistant = guard.wrap_agent(assistant)
+
+    # Use protected agent in your workflow
 """
 from __future__ import annotations
 
@@ -57,7 +67,6 @@ from raxe.sdk.agent_scanner import (
     AgentScanResult,
     MessageType,
     ScanContext,
-    ScanType,
     create_agent_scanner,
 )
 from raxe.sdk.exceptions import SecurityException
@@ -70,6 +79,92 @@ logger = logging.getLogger(__name__)
 
 # Type alias for AutoGen message format
 AutoGenMessage = dict[str, Any]
+
+
+# ============================================================================
+# AutoGen Version Detection
+# ============================================================================
+
+def _detect_autogen_version() -> tuple[int, int, int]:
+    """Detect installed AutoGen version.
+
+    Checks for autogen-agentchat (new package) first, then pyautogen.
+
+    Returns:
+        Tuple of (major, minor, patch) version numbers.
+        Returns (0, 0, 0) if AutoGen is not installed.
+    """
+    # Try new package name first (v0.4+)
+    try:
+        import autogen_agentchat
+        version_str = getattr(autogen_agentchat, "__version__", "0.0.0")
+        parts = version_str.split(".")
+        major = int(parts[0]) if len(parts) > 0 else 0
+        minor = int(parts[1]) if len(parts) > 1 else 0
+        patch = int(parts[2].split("-")[0].split("a")[0].split("b")[0]) if len(parts) > 2 else 0
+        return (major, minor, patch)
+    except ImportError:
+        pass
+
+    # Try legacy package name (v0.2.x)
+    try:
+        import autogen
+        version_str = getattr(autogen, "__version__", "0.0.0")
+        parts = version_str.split(".")
+        major = int(parts[0]) if len(parts) > 0 else 0
+        minor = int(parts[1]) if len(parts) > 1 else 0
+        patch = int(parts[2].split("-")[0].split("a")[0].split("b")[0]) if len(parts) > 2 else 0
+        return (major, minor, patch)
+    except ImportError:
+        pass
+
+    # Try pyautogen (alternative package name)
+    try:
+        import pyautogen
+        version_str = getattr(pyautogen, "__version__", "0.0.0")
+        parts = version_str.split(".")
+        major = int(parts[0]) if len(parts) > 0 else 0
+        minor = int(parts[1]) if len(parts) > 1 else 0
+        patch = int(parts[2].split("-")[0].split("a")[0].split("b")[0]) if len(parts) > 2 else 0
+        return (major, minor, patch)
+    except ImportError:
+        pass
+
+    return (0, 0, 0)
+
+
+def _is_v04_or_later() -> bool:
+    """Check if AutoGen v0.4+ (new async API) is installed.
+
+    Returns:
+        True if using v0.4+ with async message API.
+    """
+    version = _detect_autogen_version()
+    return version >= (0, 4, 0)
+
+
+def _has_register_hook(agent: Any) -> bool:
+    """Check if agent has register_hook method (v0.2.x API).
+
+    Args:
+        agent: AutoGen agent to check
+
+    Returns:
+        True if agent supports hook-based registration
+    """
+    return hasattr(agent, "register_hook") and callable(agent.register_hook)
+
+
+def _is_async_agent(agent: Any) -> bool:
+    """Check if agent uses async message API (v0.4+ API).
+
+    Args:
+        agent: AutoGen agent to check
+
+    Returns:
+        True if agent supports async message API
+    """
+    return hasattr(agent, "on_messages") or hasattr(agent, "on_messages_stream")
 
 
 class RaxeConversationGuard:
@@ -122,7 +217,7 @@ class RaxeConversationGuard:
 
     def __init__(
         self,
-        raxe: "Raxe",
+        raxe: Raxe,
         config: AgentScannerConfig | None = None,
     ) -> None:
         """Initialize the conversation guard.
@@ -171,31 +266,41 @@ class RaxeConversationGuard:
         return self._registered_agents.copy()
 
     def register(self, agent: Any) -> None:
-        """Register RAXE scanning hooks with an AutoGen agent.
+        """Register RAXE scanning hooks with an AutoGen agent (v0.2.x).
 
         This method registers message processing hooks with the agent
         to enable automatic scanning of all messages.
+
+        For AutoGen v0.4+, use wrap_agent() instead.
 
         Hooks registered:
         - process_message_before_send: Scan outgoing messages
         - process_last_received_message: Scan incoming messages
 
         Args:
-            agent: AutoGen ConversableAgent or subclass
+            agent: AutoGen ConversableAgent or subclass (v0.2.x)
 
         Raises:
-            TypeError: If agent is not a ConversableAgent
+            TypeError: If agent is not a v0.2.x ConversableAgent
             ValueError: If agent has no name attribute
 
         Example:
             assistant = AssistantAgent("assistant", llm_config=config)
             guard.register(assistant)
         """
-        # Validate agent type
+        # Check if this is a v0.4+ async agent
+        if _is_async_agent(agent):
+            raise TypeError(
+                f"Agent {type(agent).__name__} uses AutoGen v0.4+ API. "
+                "Use guard.wrap_agent(agent) instead of guard.register(agent)."
+            )
+
+        # Validate agent type for v0.2.x
         if not self._is_conversable_agent(agent):
             raise TypeError(
-                f"Expected ConversableAgent, got {type(agent).__name__}. "
-                "Ensure you're using autogen.ConversableAgent or a subclass."
+                f"Expected ConversableAgent with register_hook method, got {type(agent).__name__}. "
+                "For v0.2.x: use autogen.ConversableAgent or subclass. "
+                "For v0.4+: use guard.wrap_agent(agent) instead."
             )
 
         # Get agent name
@@ -259,7 +364,7 @@ class RaxeConversationGuard:
             )
 
     def _is_conversable_agent(self, agent: Any) -> bool:
-        """Check if object is an AutoGen ConversableAgent.
+        """Check if object is an AutoGen ConversableAgent (v0.2.x).
 
         We check by duck typing to avoid hard dependency on autogen.
 
@@ -267,17 +372,10 @@ class RaxeConversationGuard:
             agent: Object to check
 
         Returns:
-            True if agent appears to be a ConversableAgent
+            True if agent appears to be a v0.2.x ConversableAgent
         """
-        # Check for required ConversableAgent methods
-        required_attrs = [
-            "register_hook",
-            "send",
-            "receive",
-            "generate_reply",
-        ]
-
-        return all(hasattr(agent, attr) for attr in required_attrs)
+        # Check for required v0.2.x ConversableAgent methods
+        return _has_register_hook(agent) and hasattr(agent, "name")
 
     def _register_hooks(self, agent: Any) -> None:
         """Register RAXE scanning hooks with an agent.
@@ -587,6 +685,66 @@ class RaxeConversationGuard:
 
         return self._scanner.scan_message(text, context=context)
 
+    # =========================================================================
+    # AutoGen v0.4+ Support (Wrapper-based)
+    # =========================================================================
+
+    def wrap_agent(self, agent: Any) -> Any:
+        """Wrap an AutoGen v0.4+ agent with RAXE scanning.
+
+        This method creates a wrapper around an AutoGen v0.4+ agent that
+        scans all messages before they are processed by the agent.
+
+        For AutoGen v0.2.x, use register() instead.
+
+        Args:
+            agent: AutoGen v0.4+ agent (must have on_messages method)
+
+        Returns:
+            Wrapped agent with RAXE scanning enabled
+
+        Raises:
+            TypeError: If agent doesn't support v0.4+ API
+
+        Example:
+            from autogen_agentchat.agents import AssistantAgent
+            from raxe import Raxe
+            from raxe.sdk.integrations import RaxeConversationGuard
+
+            guard = RaxeConversationGuard(Raxe())
+            assistant = AssistantAgent("assistant", model_client=client)
+            protected = guard.wrap_agent(assistant)
+
+            # Use protected agent - messages will be scanned
+        """
+        # Check if this is a v0.2.x agent
+        if self._is_conversable_agent(agent):
+            raise TypeError(
+                f"Agent {type(agent).__name__} uses AutoGen v0.2.x API. "
+                "Use guard.register(agent) instead of guard.wrap_agent(agent)."
+            )
+
+        # Check if agent has v0.4+ API
+        if not _is_async_agent(agent):
+            raise TypeError(
+                f"Agent {type(agent).__name__} doesn't have on_messages method. "
+                "Ensure you're using AutoGen v0.4+ agents."
+            )
+
+        # Get agent name for tracking
+        agent_name = getattr(agent, "name", type(agent).__name__)
+
+        # Track registration
+        self._registered_agents.add(agent_name)
+
+        logger.info(
+            "Agent wrapped with RAXE guard (v0.4+ API)",
+            extra={"agent": agent_name},
+        )
+
+        # Return a wrapper that scans messages
+        return _RaxeAgentWrapper(agent, self, agent_name)
+
     def __repr__(self) -> str:
         """String representation of guard."""
         return (
@@ -596,11 +754,174 @@ class RaxeConversationGuard:
         )
 
 
+# ============================================================================
+# AutoGen v0.4+ Agent Wrapper
+# ============================================================================
+
+class _RaxeAgentWrapper:
+    """Wrapper for AutoGen v0.4+ agents that adds RAXE scanning.
+
+    This wrapper intercepts the on_messages and on_messages_stream methods
+    to scan all incoming messages before they are processed by the agent.
+
+    The wrapper uses composition to delegate all other attributes and methods
+    to the wrapped agent.
+    """
+
+    def __init__(
+        self,
+        agent: Any,
+        guard: RaxeConversationGuard,
+        agent_name: str,
+    ) -> None:
+        """Initialize agent wrapper.
+
+        Args:
+            agent: The AutoGen v0.4+ agent to wrap
+            guard: The RaxeConversationGuard instance
+            agent_name: Name of the agent for logging
+        """
+        self._agent = agent
+        self._guard = guard
+        self._agent_name = agent_name
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate attribute access to wrapped agent."""
+        return getattr(self._agent, name)
+
+    async def on_messages(
+        self,
+        messages: list[Any],
+        cancellation_token: Any = None,
+    ) -> Any:
+        """Process messages with RAXE scanning (v0.4+ API).
+
+        Scans all messages before passing to the wrapped agent.
+
+        Args:
+            messages: List of ChatMessage objects
+            cancellation_token: Optional cancellation token
+
+        Returns:
+            Response from the wrapped agent
+        """
+        # Scan each message
+        for msg in messages:
+            self._scan_message(msg)
+
+        # Delegate to wrapped agent
+        return await self._agent.on_messages(messages, cancellation_token)
+
+    async def on_messages_stream(
+        self,
+        messages: list[Any],
+        cancellation_token: Any = None,
+    ) -> Any:
+        """Process messages with streaming and RAXE scanning (v0.4+ API).
+
+        Scans all messages before passing to the wrapped agent.
+
+        Args:
+            messages: List of ChatMessage objects
+            cancellation_token: Optional cancellation token
+
+        Yields:
+            Streaming responses from the wrapped agent
+        """
+        # Scan each message
+        for msg in messages:
+            self._scan_message(msg)
+
+        # Delegate to wrapped agent
+        async for response in self._agent.on_messages_stream(messages, cancellation_token):
+            yield response
+
+    def _scan_message(self, message: Any) -> None:
+        """Scan a single message for threats.
+
+        Args:
+            message: ChatMessage object or dict
+
+        Raises:
+            SecurityException: If threat detected and blocking is enabled
+        """
+        # Extract text from message
+        text = self._extract_message_text(message)
+        if not text:
+            return
+
+        # Determine message type
+        source = getattr(message, "source", None)
+        if source == "user":
+            message_type = MessageType.HUMAN_INPUT
+        else:
+            message_type = MessageType.AGENT_TO_AGENT
+
+        # Create context
+        context = ScanContext(
+            message_type=message_type,
+            sender_name=source,
+            receiver_name=self._agent_name,
+        )
+
+        # Perform scan
+        result = self._guard._scanner.scan_message(text, context=context)
+
+        # Handle blocking
+        if result.should_block:
+            logger.warning(
+                "Message blocked by RAXE guard (v0.4+)",
+                extra={
+                    "agent": self._agent_name,
+                    "severity": result.severity,
+                    "prompt_hash": result.prompt_hash,
+                },
+            )
+            self._guard._raise_security_exception(result)
+
+    def _extract_message_text(self, message: Any) -> str | None:
+        """Extract text from a v0.4+ ChatMessage.
+
+        Args:
+            message: ChatMessage object or dict
+
+        Returns:
+            Extracted text or None
+        """
+        if isinstance(message, str):
+            return message
+
+        if isinstance(message, dict):
+            return message.get("content", "")
+
+        # Handle ChatMessage objects
+        if hasattr(message, "content"):
+            content = message.content
+            if isinstance(content, str):
+                return content
+            if isinstance(content, list):
+                # Multi-modal message
+                texts = []
+                for item in content:
+                    if isinstance(item, str):
+                        texts.append(item)
+                    elif hasattr(item, "text"):
+                        texts.append(item.text)
+                    elif isinstance(item, dict) and "text" in item:
+                        texts.append(item["text"])
+                return " ".join(texts) if texts else None
+
+        return None
+
+    def __repr__(self) -> str:
+        """String representation."""
+        return f"RaxeAgentWrapper({self._agent_name})"
+
+
 # Re-export for convenience
 __all__ = [
-    "RaxeConversationGuard",
     "AgentScannerConfig",
-    "ScanMode",
     "MessageType",
+    "RaxeConversationGuard",
     "ScanContext",
 ]

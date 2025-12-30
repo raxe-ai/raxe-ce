@@ -40,6 +40,10 @@ def _get_console_keys_url() -> str:
     return f"{get_console_url()}/keys"
 
 
+# Exported constant for backward compatibility
+CONSOLE_KEYS_URL = "https://console.raxe.ai/keys"
+
+
 def get_expiry_warning() -> tuple[str | None, Literal["yellow", "red", ""]]:
     """Check API key expiry and return warning message if applicable.
 
@@ -258,7 +262,7 @@ def get_expiry_status() -> dict[str, int | str | bool | None]:
                 "is_temporary": True,
                 "days_remaining": days_remaining,
                 "status": "fail",
-                "message": f"Temporary key expires TODAY",
+                "message": "Temporary key expires TODAY",
             }
 
         if days_remaining <= 7:
@@ -282,16 +286,17 @@ def get_expiry_status() -> dict[str, int | str | bool | None]:
             "is_temporary": False,
             "days_remaining": None,
             "status": "warning",
-            "message": f"Could not check key status",
+            "message": "Could not check key status",
         }
 
 
 __all__ = [
-    "get_expiry_warning",
-    "display_expiry_warning",
-    "check_and_display_expiry_warning",
-    "get_expiry_status",
-    "WARNING_THRESHOLD_YELLOW",
+    "CONSOLE_KEYS_URL",
     "WARNING_THRESHOLD_RED",
+    "WARNING_THRESHOLD_YELLOW",
     "_get_console_keys_url",
+    "check_and_display_expiry_warning",
+    "display_expiry_warning",
+    "get_expiry_status",
+    "get_expiry_warning",
 ]

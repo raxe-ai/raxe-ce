@@ -28,9 +28,10 @@ This release adds first-class support for the most popular agentic AI frameworks
   - Agent thought and task output scanning
 
 - **AutoGen Integration** (`RaxeConversationGuard`)
-  - Hook-based interception for AutoGen conversations
+  - Support for both AutoGen v0.2.x and v0.4+ APIs
+  - v0.2.x: Hook-based interception with `guard.register(agent)`
+  - v0.4+: Async wrapper with `guard.wrap_agent(agent)`
   - Support for GroupChat and multi-agent scenarios
-  - Agent registration with `guard.register(agent)`
   - Configurable via `AgentScannerConfig`
 
 - **LlamaIndex Integration** (`RaxeLlamaIndexCallback`)

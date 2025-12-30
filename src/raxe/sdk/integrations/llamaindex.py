@@ -46,6 +46,11 @@ from typing import Any
 
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import SecurityException
+from raxe.sdk.integrations.extractors import (
+    extract_text_from_message,
+    extract_text_from_response,
+    extract_texts_from_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -451,35 +456,20 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
     def _extract_message_content(self, message: Any) -> str:
         """Extract text content from LlamaIndex message.
 
+        Uses unified extractor from raxe.sdk.integrations.extractors.
+
         Args:
             message: ChatMessage or dict with content
 
         Returns:
             Extracted text content
         """
-        if isinstance(message, str):
-            return message
-
-        if isinstance(message, dict):
-            return message.get("content", "")
-
-        if hasattr(message, "content"):
-            content = message.content
-            if isinstance(content, str):
-                return content
-            # Handle structured content (e.g., vision models)
-            if isinstance(content, list):
-                texts = [
-                    item.get("text", "") if isinstance(item, dict) else str(item)
-                    for item in content
-                    if isinstance(item, dict | str)
-                ]
-                return " ".join(texts)
-
-        return ""
+        return extract_text_from_message(message) or ""
 
     def _extract_response_text(self, response: Any) -> str:
         """Extract text from LlamaIndex response objects.
+
+        Uses unified extractor with LlamaIndex-specific fallbacks.
 
         Args:
             response: Response object (various formats)
@@ -490,21 +480,18 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
         if isinstance(response, str):
             return response
 
-        # Handle Response object with response attribute
+        # Handle LlamaIndex Response object with response attribute
         if hasattr(response, "response"):
             return str(response.response)
 
-        # Handle dict response
+        # Try unified extractor for other formats
+        text = extract_text_from_response(response)
+        if text:
+            return text
+
+        # Handle dict response (LlamaIndex-specific keys)
         if isinstance(response, dict):
             return response.get("response", "") or response.get("text", "")
-
-        # Handle CompletionResponse
-        if hasattr(response, "text"):
-            return str(response.text)
-
-        # Handle ChatResponse
-        if hasattr(response, "message"):
-            return self._extract_message_content(response.message)
 
         return ""
 
@@ -676,35 +663,15 @@ class RaxeSpanHandler:
     def _extract_texts(self, value: Any) -> list[str]:
         """Extract text strings from various value types.
 
+        Uses unified extractor from raxe.sdk.integrations.extractors.
+
         Args:
             value: Value to extract text from
 
         Returns:
             List of text strings
         """
-        if isinstance(value, str):
-            return [value]
-
-        if isinstance(value, list):
-            texts = []
-            for item in value:
-                texts.extend(self._extract_texts(item))
-            return texts
-
-        if isinstance(value, dict):
-            texts = []
-            for key in ("content", "text", "response", "query"):
-                if key in value:
-                    texts.extend(self._extract_texts(value[key]))
-            return texts
-
-        # Handle response objects
-        for attr in ("response", "text", "content"):
-            if hasattr(value, attr):
-                attr_value = getattr(value, attr)
-                return self._extract_texts(attr_value)
-
-        return []
+        return extract_texts_from_value(value)
 
     def __repr__(self) -> str:
         """String representation of span handler."""

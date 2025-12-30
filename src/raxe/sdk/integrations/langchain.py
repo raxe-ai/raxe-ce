@@ -49,6 +49,10 @@ from raxe.sdk.agent_scanner import (
 )
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import SecurityException
+from raxe.sdk.integrations.extractors import (
+    extract_text_from_message,
+    extract_text_from_response,
+)
 
 if TYPE_CHECKING:
     pass
@@ -593,43 +597,18 @@ class _RaxeCallbackHandlerMixin:
                 logger.error(f"Error in on_threat callback: {e}")
 
     def _extract_llm_response_text(self, response: Any) -> str | None:
-        """Extract text from LLM response object."""
-        # Handle different response formats
-        if hasattr(response, "generations"):
-            texts = []
-            for gen_list in response.generations:
-                for gen in gen_list:
-                    if hasattr(gen, "text"):
-                        texts.append(gen.text)
-                    elif hasattr(gen, "message"):
-                        texts.append(self._extract_message_text(gen.message) or "")
-            return " ".join(texts) if texts else None
+        """Extract text from LLM response object.
 
-        if hasattr(response, "text"):
-            return response.text
-
-        return str(response) if response else None
+        Uses unified extractor from raxe.sdk.integrations.extractors.
+        """
+        return extract_text_from_response(response)
 
     def _extract_message_text(self, message: Any) -> str | None:
-        """Extract text from a chat message."""
-        if isinstance(message, str):
-            return message
+        """Extract text from a chat message.
 
-        if hasattr(message, "content"):
-            content = message.content
-            if isinstance(content, str):
-                return content
-            if isinstance(content, list):
-                # Multi-modal message
-                texts = []
-                for block in content:
-                    if isinstance(block, str):
-                        texts.append(block)
-                    elif isinstance(block, dict) and "text" in block:
-                        texts.append(block["text"])
-                return " ".join(texts) if texts else None
-
-        return None
+        Uses unified extractor from raxe.sdk.integrations.extractors.
+        """
+        return extract_text_from_message(message)
 
 
 # ============================================================================
@@ -699,10 +678,58 @@ class RaxeCallbackHandler:
 
 
 # ============================================================================
+# Convenience Functions
+# ============================================================================
+
+
+def create_callback_handler(
+    raxe_client: Raxe | None = None,
+    *,
+    tool_policy: ToolPolicy | None = None,
+    block_on_prompt_threats: bool = False,
+    block_on_response_threats: bool = False,
+    **kwargs: Any,
+) -> RaxeCallbackHandler:
+    """Factory function to create RaxeCallbackHandler.
+
+    This is a convenience function that creates a RaxeCallbackHandler
+    with the specified configuration.
+
+    Args:
+        raxe_client: Optional Raxe instance
+        tool_policy: Policy for tool validation
+        block_on_prompt_threats: Block on prompt threats
+        block_on_response_threats: Block on response threats
+        **kwargs: Additional arguments passed to handler
+
+    Returns:
+        Configured RaxeCallbackHandler instance
+    """
+    return RaxeCallbackHandler(
+        raxe_client=raxe_client,
+        tool_policy=tool_policy,
+        block_on_prompt_threats=block_on_prompt_threats,
+        block_on_response_threats=block_on_response_threats,
+        **kwargs,
+    )
+
+
+def get_langchain_version() -> tuple[int, int, int]:
+    """Get the installed LangChain version.
+
+    Returns:
+        Tuple of (major, minor, patch) version numbers.
+    """
+    return _detect_langchain_version()
+
+
+# ============================================================================
 # Exports
 # ============================================================================
 
 __all__ = [
     "RaxeCallbackHandler",
     "ToolPolicy",
+    "create_callback_handler",
+    "get_langchain_version",
 ]

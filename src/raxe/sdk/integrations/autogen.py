@@ -70,6 +70,11 @@ from raxe.sdk.agent_scanner import (
     create_agent_scanner,
 )
 from raxe.sdk.exceptions import SecurityException
+from raxe.sdk.integrations.extractors import (
+    extract_function_call_text,
+    extract_text_from_message,
+    is_function_call,
+)
 
 if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
@@ -573,11 +578,8 @@ class RaxeConversationGuard:
     def _extract_message_text(self, message: AutoGenMessage | str) -> str | None:
         """Extract text content from an AutoGen message.
 
-        AutoGen messages can be:
-        - String: Direct text content
-        - Dict with "content": Standard message format
-        - Dict with "function_call": Function call message
-        - List of content blocks: Multi-modal message
+        Uses unified extractor from raxe.sdk.integrations.extractors.
+        Falls back to function call extraction if no content found.
 
         Args:
             message: AutoGen message in any format
@@ -585,54 +587,21 @@ class RaxeConversationGuard:
         Returns:
             Extracted text content, or None if no text found
         """
-        if message is None:
-            return None
+        # First try standard message extraction
+        text = extract_text_from_message(message)
+        if text:
+            return text
 
-        # String message
-        if isinstance(message, str):
-            return message
-
-        # Dict message
-        if isinstance(message, dict):
-            # Standard content field
-            content = message.get("content")
-            if isinstance(content, str):
-                return content
-
-            # List of content blocks (multi-modal)
-            if isinstance(content, list):
-                texts = []
-                for block in content:
-                    if isinstance(block, str):
-                        texts.append(block)
-                    elif isinstance(block, dict) and "text" in block:
-                        texts.append(block["text"])
-                return " ".join(texts) if texts else None
-
-            # Function call
-            function_call = message.get("function_call")
-            if function_call and isinstance(function_call, dict):
-                # Return function name and arguments
-                func_name = function_call.get("name", "")
-                func_args = function_call.get("arguments", "")
-                return f"{func_name}: {func_args}"
-
-            # Tool calls
-            tool_calls = message.get("tool_calls")
-            if tool_calls and isinstance(tool_calls, list):
-                texts = []
-                for call in tool_calls:
-                    if isinstance(call, dict):
-                        func = call.get("function", {})
-                        name = func.get("name", "")
-                        args = func.get("arguments", "")
-                        texts.append(f"{name}: {args}")
-                return " | ".join(texts) if texts else None
+        # For function calls, extract the call details
+        if is_function_call(message):
+            return extract_function_call_text(message)
 
         return None
 
     def _is_function_call(self, message: AutoGenMessage | str) -> bool:
         """Check if message is a function/tool call.
+
+        Uses unified extractor from raxe.sdk.integrations.extractors.
 
         Args:
             message: Message to check
@@ -640,10 +609,7 @@ class RaxeConversationGuard:
         Returns:
             True if message contains function/tool call
         """
-        if not isinstance(message, dict):
-            return False
-
-        return "function_call" in message or "tool_calls" in message
+        return is_function_call(message)
 
     def scan_manual(
         self,
@@ -882,36 +848,15 @@ class _RaxeAgentWrapper:
     def _extract_message_text(self, message: Any) -> str | None:
         """Extract text from a v0.4+ ChatMessage.
 
+        Uses unified extractor from raxe.sdk.integrations.extractors.
+
         Args:
             message: ChatMessage object or dict
 
         Returns:
             Extracted text or None
         """
-        if isinstance(message, str):
-            return message
-
-        if isinstance(message, dict):
-            return message.get("content", "")
-
-        # Handle ChatMessage objects
-        if hasattr(message, "content"):
-            content = message.content
-            if isinstance(content, str):
-                return content
-            if isinstance(content, list):
-                # Multi-modal message
-                texts = []
-                for item in content:
-                    if isinstance(item, str):
-                        texts.append(item)
-                    elif hasattr(item, "text"):
-                        texts.append(item.text)
-                    elif isinstance(item, dict) and "text" in item:
-                        texts.append(item["text"])
-                return " ".join(texts) if texts else None
-
-        return None
+        return extract_text_from_message(message)
 
     def __repr__(self) -> str:
         """String representation."""

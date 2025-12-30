@@ -36,8 +36,9 @@ from __future__ import annotations
 
 import functools
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from raxe.sdk.agent_scanner import (
     AgentScanner,
@@ -49,6 +50,9 @@ from raxe.sdk.agent_scanner import (
     create_agent_scanner,
 )
 from raxe.sdk.exceptions import SecurityException
+from raxe.sdk.integrations.extractors import (
+    extract_text_from_dict,
+)
 
 if TYPE_CHECKING:
     from raxe.application.scan_pipeline import ScanPipelineResult
@@ -115,8 +119,8 @@ class CrewGuardConfig:
     scan_crew_outputs: bool = True
 
     # Callbacks
-    on_threat: Callable[[str, "ScanPipelineResult"], None] | None = None
-    on_block: Callable[[str, "ScanPipelineResult"], None] | None = None
+    on_threat: Callable[[str, ScanPipelineResult], None] | None = None
+    on_block: Callable[[str, ScanPipelineResult], None] | None = None
 
     # Tool-specific options
     wrap_tools: bool = False  # Auto-wrap tools for scanning
@@ -166,14 +170,14 @@ class CrewGuardConfig:
         if self.on_threat is not None:
             original_threat = self.on_threat
 
-            def threat_callback(result: "AgentScanResult") -> None:
+            def threat_callback(result: AgentScanResult) -> None:
                 # Adapt to CrewAI callback signature
                 original_threat(result.message, result.pipeline_result)
 
         if self.on_block is not None:
             original_block = self.on_block
 
-            def block_callback(result: "AgentScanResult") -> None:
+            def block_callback(result: AgentScanResult) -> None:
                 original_block(result.message, result.pipeline_result)
 
         return AgentScannerConfig(
@@ -219,7 +223,7 @@ class CrewScanStats:
     def record_scan(
         self,
         scan_type: str,
-        result: "AgentScanResult",
+        result: AgentScanResult,
         blocked: bool = False,
     ) -> None:
         """Record a scan for statistics.
@@ -330,7 +334,7 @@ class RaxeCrewGuard:
 
     def __init__(
         self,
-        raxe: "Raxe",
+        raxe: Raxe,
         config: CrewGuardConfig | None = None,
     ) -> None:
         """Initialize CrewAI guard.
@@ -355,7 +359,7 @@ class RaxeCrewGuard:
         )
 
     @property
-    def raxe(self) -> "Raxe":
+    def raxe(self) -> Raxe:
         """Get the RAXE client instance."""
         return self._raxe
 
@@ -862,6 +866,8 @@ class RaxeCrewGuard:
     def _extract_step_text(self, step_output: Any) -> str | None:
         """Extract text from step output.
 
+        Uses unified extractors where applicable, with CrewAI-specific fallbacks.
+
         Args:
             step_output: Step output from CrewAI
 
@@ -879,14 +885,9 @@ class RaxeCrewGuard:
         if hasattr(step_output, "result"):
             return str(step_output.result)
 
-        # Handle dict
+        # Handle dict using unified extractor
         if isinstance(step_output, dict):
-            if "output" in step_output:
-                return str(step_output["output"])
-            if "text" in step_output:
-                return str(step_output["text"])
-            if "result" in step_output:
-                return str(step_output["result"])
+            return extract_text_from_dict(step_output, ("output", "text", "result"))
 
         # Handle thought attribute
         if hasattr(step_output, "thought"):
@@ -909,6 +910,8 @@ class RaxeCrewGuard:
     def _extract_task_text(self, task_output: Any) -> str | None:
         """Extract text from task output.
 
+        Uses unified extractors where applicable, with CrewAI-specific fallbacks.
+
         Args:
             task_output: TaskOutput from CrewAI
 
@@ -928,11 +931,11 @@ class RaxeCrewGuard:
         if hasattr(task_output, "result"):
             return str(task_output.result)
 
-        # Handle dict
+        # Handle dict using unified extractor
         if isinstance(task_output, dict):
-            for key in ["raw", "output", "result", "text"]:
-                if key in task_output:
-                    return str(task_output[key])
+            return extract_text_from_dict(
+                task_output, ("raw", "output", "result", "text")
+            )
 
         return None
 
@@ -1013,6 +1016,8 @@ class RaxeCrewGuard:
     def _extract_crew_output_text(self, output: Any) -> str | None:
         """Extract text from crew output.
 
+        Uses unified extractors where applicable, with CrewAI-specific fallbacks.
+
         Args:
             output: CrewOutput from CrewAI
 
@@ -1029,11 +1034,11 @@ class RaxeCrewGuard:
         if hasattr(output, "result"):
             return str(output.result)
 
-        # Handle dict
+        # Handle dict using unified extractor
         if isinstance(output, dict):
-            for key in ["raw", "result", "output", "text"]:
-                if key in output:
-                    return str(output[key])
+            return extract_text_from_dict(
+                output, ("raw", "result", "output", "text")
+            )
 
         return None
 
@@ -1095,7 +1100,7 @@ class RaxeCrewGuard:
 
 # Convenience function for quick setup
 def create_crew_guard(
-    raxe: "Raxe | None" = None,
+    raxe: Raxe | None = None,
     mode: ScanMode = ScanMode.LOG_ONLY,
     **kwargs: Any,
 ) -> RaxeCrewGuard:

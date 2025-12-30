@@ -531,6 +531,49 @@ class TestToolWrapping:
 
         assert result == tool  # Returns original tool
 
+    def test_wrap_tools_wraps_multiple_tools(self, guard, mock_raxe):
+        """Test wrap_tools wraps multiple tools at once."""
+        tool1 = MockTool()
+        tool2 = MockTool()
+        tool2.name = "another_tool"
+
+        wrapped = guard.wrap_tools([tool1, tool2])
+
+        assert len(wrapped) == 2
+        # Run both wrapped tools
+        wrapped[0]._run("query1")
+        wrapped[1]._run("query2")
+
+        # Both should trigger scans
+        assert mock_raxe.scan.call_count >= 2
+
+    def test_wrap_tools_returns_list(self, guard):
+        """Test wrap_tools returns a list."""
+        tools = [MockTool(), MockTool()]
+
+        wrapped = guard.wrap_tools(tools)
+
+        assert isinstance(wrapped, list)
+        assert len(wrapped) == len(tools)
+
+    def test_wrap_tools_empty_list(self, guard):
+        """Test wrap_tools handles empty list."""
+        wrapped = guard.wrap_tools([])
+
+        assert wrapped == []
+
+    def test_wrap_tools_preserves_tool_names(self, guard):
+        """Test wrap_tools preserves tool attributes."""
+        tool1 = MockTool()
+        tool1.name = "search_tool"
+        tool2 = MockTool()
+        tool2.name = "read_tool"
+
+        wrapped = guard.wrap_tools([tool1, tool2])
+
+        assert wrapped[0].name == "search_tool"
+        assert wrapped[1].name == "read_tool"
+
 
 # =============================================================================
 # Test: Crew Protection

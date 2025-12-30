@@ -7,6 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2025-12-30
+
+### Agentic Framework Integrations
+
+This release adds first-class support for the most popular agentic AI frameworks, enabling automatic security scanning for multi-agent systems, RAG pipelines, and AI gateways.
+
+#### Added
+
+- **LangChain Integration** (`RaxeCallbackHandler`)
+  - Automatic scanning of prompts and responses through LangChain callbacks
+  - Support for chains, agents, and RAG pipelines
+  - Tool policy enforcement with `ToolPolicy.block_tools()`
+  - Blocking mode with `block_on_prompt_threats=True`
+
+- **CrewAI Integration** (`RaxeCrewGuard`)
+  - Step and task callbacks for multi-agent workflows
+  - Automatic tool wrapping with `guard.wrap_tools()`
+  - Configurable scan modes: `LOG_ONLY`, `BLOCK_ON_THREAT`, `BLOCK_ON_HIGH`, `BLOCK_ON_CRITICAL`
+  - Agent thought and task output scanning
+
+- **AutoGen Integration** (`RaxeConversationGuard`)
+  - Hook-based interception for AutoGen conversations
+  - Support for GroupChat and multi-agent scenarios
+  - Agent registration with `guard.register(agent)`
+  - Configurable via `AgentScannerConfig`
+
+- **LlamaIndex Integration** (`RaxeLlamaIndexCallback`)
+  - Callback and instrumentation API support
+  - Specialized handlers: `RaxeQueryEngineCallback`, `RaxeAgentCallback`, `RaxeSpanHandler`
+  - RAG pipeline protection
+  - Support for LlamaIndex 0.10+ and 0.11+
+
+- **Portkey Integration** (`RaxePortkeyWebhook`, `RaxePortkeyGuard`)
+  - Webhook guardrail for Portkey AI Gateway
+  - Client-side wrapper with `guard.wrap_client()`
+  - Portkey-compatible verdict response format
+  - Factory functions: `create_portkey_guard()`, `create_portkey_webhook()`
+
+- **Core AgentScanner** (`raxe.sdk.agent_scanner`)
+  - Unified scanning engine for all integrations
+  - `ScanMode` enum: LOG_ONLY, BLOCK_ON_THREAT, BLOCK_ON_HIGH, BLOCK_ON_CRITICAL
+  - `MessageType` enum: HUMAN_INPUT, AGENT_TO_AGENT, FUNCTION_CALL, FUNCTION_RESULT
+  - `ScanContext` for rich context in scans
+  - `ToolPolicy` for dangerous tool blocking
+
+- **Convenience Imports**
+  - All integrations available from `raxe.sdk.integrations`
+  - Example: `from raxe.sdk.integrations import RaxeCallbackHandler, RaxeCrewGuard`
+
+#### Changed
+
+- Default behavior is now **log-only mode** (non-blocking) for all integrations
+- Blocking must be explicitly enabled for safety
+
+#### Documentation
+
+- Full documentation at [docs.raxe.ai/integrations](https://docs.raxe.ai/integrations)
+- LangChain: [docs.raxe.ai/integrations/langchain](https://docs.raxe.ai/integrations/langchain)
+- CrewAI: [docs.raxe.ai/integrations/crewai](https://docs.raxe.ai/integrations/crewai)
+- AutoGen: [docs.raxe.ai/integrations/autogen](https://docs.raxe.ai/integrations/autogen)
+- LlamaIndex: [docs.raxe.ai/integrations/llamaindex](https://docs.raxe.ai/integrations/llamaindex)
+- Portkey: [docs.raxe.ai/integrations/portkey](https://docs.raxe.ai/integrations/portkey)
+
+---
+
+## [0.3.1] - 2025-12-28
+
+### Security & Documentation
+
+#### Security
+
+- Fixed ReDoS vulnerability in pattern matching
+- Fixed tarball path traversal vulnerability
+
+#### Changed
+
+- Updated README with L1/L2 detection badges
+- Synced `__version__` with package version
+
+---
+
 ## [0.2.0] - 2025-12-20
 
 ### 🛡️ Suppression System v1.0

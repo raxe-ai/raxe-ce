@@ -3,7 +3,7 @@
 
   <h3>AI Safety Research & Threat Detection for LLMs</h3>
 
-  <p><em>v0.3.1 Beta | Community Edition | Free Forever</em></p>
+  <p><em>v0.4.0 Beta | Community Edition | Free Forever</em></p>
 
   <p>
     <a href="https://pypi.org/project/raxe/"><img src="https://img.shields.io/pypi/v/raxe?style=flat-square&color=0366d6" alt="PyPI"></a>
@@ -149,22 +149,74 @@ if result.has_threats:
 
 ---
 
-## Integration Options
+## Framework Integrations
+
+RAXE integrates with the most popular AI frameworks for automatic threat scanning:
+
+| Framework | Integration | Quick Start |
+|-----------|-------------|-------------|
+| [**LangChain**](https://langchain.com) | `RaxeCallbackHandler` | [Docs](https://docs.raxe.ai/integrations/langchain) |
+| [**CrewAI**](https://crewai.com) | `RaxeCrewGuard` | [Docs](https://docs.raxe.ai/integrations/crewai) |
+| [**AutoGen**](https://microsoft.github.io/autogen/) | `RaxeConversationGuard` | [Docs](https://docs.raxe.ai/integrations/autogen) |
+| [**LlamaIndex**](https://llamaindex.ai) | `RaxeLlamaIndexCallback` | [Docs](https://docs.raxe.ai/integrations/llamaindex) |
+| [**Portkey**](https://portkey.ai) | `RaxePortkeyWebhook` | [Docs](https://docs.raxe.ai/integrations/portkey) |
+| [**OpenAI**](https://openai.com) | `RaxeOpenAI` | [Docs](https://docs.raxe.ai/sdk/openai-wrapper) |
+| [**Anthropic**](https://anthropic.com) | `RaxeAnthropic` | [Docs](https://docs.raxe.ai/sdk/anthropic-wrapper) |
+
+### LangChain (3 lines)
 
 ```python
-# Drop-in OpenAI wrapper (Recommended)
+from langchain_openai import ChatOpenAI
+from raxe.sdk.integrations import RaxeCallbackHandler
+
+llm = ChatOpenAI(model="gpt-4", callbacks=[RaxeCallbackHandler()])
+```
+
+### CrewAI (4 lines)
+
+```python
+from crewai import Crew
+from raxe.sdk.integrations import RaxeCrewGuard
+
+guard = RaxeCrewGuard()
+crew = Crew(agents=[...], tasks=[...], step_callback=guard.step_callback)
+```
+
+### AutoGen (4 lines)
+
+```python
+from autogen import AssistantAgent
+from raxe.sdk.integrations import RaxeConversationGuard
+
+guard = RaxeConversationGuard()
+guard.register(AssistantAgent("assistant", llm_config={...}))
+```
+
+### LlamaIndex (4 lines)
+
+```python
+from llama_index.core import Settings
+from llama_index.core.callbacks import CallbackManager
+from raxe.sdk.integrations import RaxeLlamaIndexCallback
+
+Settings.callback_manager = CallbackManager([RaxeLlamaIndexCallback()])
+```
+
+### Portkey AI Gateway (3 lines)
+
+```python
+from raxe.sdk.integrations import RaxePortkeyWebhook
+
+webhook = RaxePortkeyWebhook()  # Use as Portkey custom guardrail
+result = webhook.handle_request(portkey_data)
+```
+
+### OpenAI (Drop-in)
+
+```python
 from raxe import RaxeOpenAI
+
 client = RaxeOpenAI(api_key="sk-...")  # Threats blocked automatically
-
-# Decorator pattern
-@raxe.protect
-def generate(prompt: str) -> str:
-    return llm.generate(prompt)
-
-# Manual control
-result = raxe.scan(user_input)
-if result.has_threats:
-    raise SecurityError(f"Blocked: {result.severity}")
 ```
 
 [See all integration examples in QUICKSTART.md](QUICKSTART.md)

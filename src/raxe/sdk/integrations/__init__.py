@@ -71,6 +71,13 @@ if TYPE_CHECKING:
         RaxeQueryEngineCallback,
         RaxeSpanHandler,
     )
+    from raxe.sdk.integrations.portkey import (
+        PortkeyGuardConfig,
+        RaxePortkeyGuard,
+        RaxePortkeyWebhook,
+        create_portkey_guard,
+        create_portkey_webhook,
+    )
 
 __all__ = [
     # LangChain
@@ -89,6 +96,12 @@ __all__ = [
     "CrewGuardConfig",
     "CrewScanStats",
     "create_crew_guard",
+    # Portkey
+    "RaxePortkeyWebhook",
+    "RaxePortkeyGuard",
+    "PortkeyGuardConfig",
+    "create_portkey_guard",
+    "create_portkey_webhook",
     # Base agent scanner classes
     "AgentScanner",
     "AgentScannerConfig",
@@ -186,6 +199,19 @@ def __getattr__(name: str):
         # The guard uses duck typing to work with Crew, Agent, Task
         from raxe.sdk.integrations import crewai
         return getattr(crewai, name)
+
+    # Portkey integration
+    elif name in (
+        "RaxePortkeyWebhook",
+        "RaxePortkeyGuard",
+        "PortkeyGuardConfig",
+        "create_portkey_guard",
+        "create_portkey_webhook",
+    ):
+        # Portkey integration - no hard dependency on portkey-ai
+        # Works with any OpenAI-compatible client
+        from raxe.sdk.integrations import portkey
+        return getattr(portkey, name)
 
     # Base agent scanner classes (no external dependencies)
     elif name in (

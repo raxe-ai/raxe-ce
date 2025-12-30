@@ -45,22 +45,25 @@ user.initiate_chat(assistant, message="Hello! How are you?")
 
 ## Configuration Options
 
-### Scan Modes
+### Blocking Modes
 
-The `ScanMode` enum controls how detected threats are handled:
+Control how detected threats are handled using `on_threat` and `block_severity_threshold`:
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `LOG_ONLY` | Log threats, allow all messages (default) | Development, monitoring |
-| `BLOCK_ON_THREAT` | Block any detected threat | High-security environments |
-| `BLOCK_ON_HIGH` | Block HIGH and CRITICAL severity | Balanced security |
-| `BLOCK_ON_CRITICAL` | Block only CRITICAL severity | Minimal intervention |
+| Configuration | Description | Use Case |
+|--------------|-------------|----------|
+| `on_threat="log"` | Log threats, allow all messages (default) | Development, monitoring |
+| `on_threat="block", block_severity_threshold="LOW"` | Block any detected threat | High-security environments |
+| `on_threat="block", block_severity_threshold="HIGH"` | Block HIGH and CRITICAL severity | Balanced security |
+| `on_threat="block", block_severity_threshold="CRITICAL"` | Block only CRITICAL severity | Minimal intervention |
 
 ```python
-from raxe.sdk.integrations import AgentScannerConfig, ScanMode
+from raxe.sdk.agent_scanner import AgentScannerConfig
 
 # Block on HIGH or CRITICAL threats
-config = AgentScannerConfig(mode=ScanMode.BLOCK_ON_HIGH)
+config = AgentScannerConfig(
+    on_threat="block",
+    block_severity_threshold="HIGH",
+)
 guard = RaxeConversationGuard(raxe, config=config)
 ```
 
@@ -70,12 +73,11 @@ Control which message types are scanned:
 
 ```python
 config = AgentScannerConfig(
-    scan_human_input=True,      # Messages from humans
-    scan_agent_messages=True,   # Agent-to-agent messages
-    scan_agent_responses=True,  # Final responses to humans
-    scan_function_calls=True,   # Function/tool calls
-    scan_function_results=True, # Function/tool results
-    scan_system_messages=False, # System prompts (disabled by default)
+    scan_prompts=True,         # Messages from humans (default: True)
+    scan_system_prompts=True,  # System prompts (default: True)
+    scan_tool_calls=True,      # Function/tool calls (default: True)
+    scan_tool_results=False,   # Function/tool results (default: False)
+    scan_responses=False,      # LLM responses (default: False)
 )
 ```
 
@@ -84,20 +86,21 @@ config = AgentScannerConfig(
 Define custom handlers for threats and blocks:
 
 ```python
-def on_threat_detected(message: str, result):
-    # Custom threat handling
+def on_threat_detected(result):
+    # Custom threat handling - receives AgentScanResult
     print(f"Threat detected: {result.severity}")
     # Send to monitoring system, etc.
 
-def on_message_blocked(message: str, result):
-    # Custom blocking handler
+def on_message_blocked(result):
+    # Custom blocking handler - receives AgentScanResult
     print(f"Message blocked: {result.severity}")
     # Alert admin, etc.
 
 config = AgentScannerConfig(
-    mode=ScanMode.BLOCK_ON_HIGH,
-    on_threat=on_threat_detected,
-    on_block=on_message_blocked,
+    on_threat="block",
+    block_severity_threshold="HIGH",
+    on_threat_callback=on_threat_detected,
+    on_block_callback=on_message_blocked,
 )
 ```
 
@@ -162,6 +165,8 @@ user.initiate_chat(manager, message="Research and write about AI safety")
 Scan text outside the hook flow:
 
 ```python
+from raxe.sdk.agent_scanner import MessageType
+
 # Validate user input before starting chat
 user_input = get_user_input()
 result = guard.scan_manual(
@@ -186,8 +191,7 @@ from raxe.sdk.exceptions import SecurityException
 try:
     user.initiate_chat(assistant, message="Malicious prompt here")
 except SecurityException as e:
-    print(f"Blocked: {e.result.severity}")
-    print(f"Detections: {e.result.total_detections}")
+    print(f"Blocked: {e}")
     # Handle blocked message appropriately
 ```
 
@@ -243,12 +247,16 @@ Response to User
 
 ### AgentScanner Composition
 
-`RaxeConversationGuard` uses the `AgentScanner` base class via composition:
+`RaxeConversationGuard` uses `AgentScanner` via composition:
 
 ```python
+from raxe.sdk.agent_scanner import create_agent_scanner, AgentScannerConfig
+
 class RaxeConversationGuard:
     def __init__(self, raxe: Raxe, config: AgentScannerConfig | None = None):
-        self._scanner = AgentScanner(raxe, config or AgentScannerConfig())
+        if config is None:
+            config = AgentScannerConfig(on_threat="log")
+        self._scanner = create_agent_scanner(raxe, config)
 
     def scan_manual(self, text: str, **kwargs) -> AgentScanResult:
         return self._scanner.scan_message(text, **kwargs)
@@ -261,13 +269,13 @@ This pattern allows:
 
 ## Best Practices
 
-### 1. Start with LOG_ONLY Mode
+### 1. Start with Log-Only Mode
 
 Begin with monitoring to understand threat patterns before enabling blocking:
 
 ```python
-# Development/initial deployment
-config = AgentScannerConfig(mode=ScanMode.LOG_ONLY)
+# Development/initial deployment (default)
+config = AgentScannerConfig(on_threat="log")
 guard = RaxeConversationGuard(raxe, config=config)
 ```
 
@@ -279,16 +287,16 @@ Set up callbacks to integrate with your monitoring:
 import logging
 logger = logging.getLogger(__name__)
 
-def on_threat(message, result):
+def on_threat(result):
     logger.warning(
         "agent_threat_detected",
         extra={
             "severity": result.severity,
-            "detection_count": result.total_detections,
+            "detection_count": result.detection_count,
         }
     )
 
-config = AgentScannerConfig(on_threat=on_threat)
+config = AgentScannerConfig(on_threat_callback=on_threat)
 ```
 
 ### 3. Register All Conversation Participants
@@ -329,8 +337,8 @@ For latency-sensitive applications:
 ```python
 config = AgentScannerConfig(
     # Disable scanning of less critical message types
-    scan_function_results=False,
-    scan_system_messages=False,
+    scan_tool_results=False,
+    scan_system_prompts=False,
     # Higher threshold = fewer scans flagged
     confidence_threshold=0.7,
 )
@@ -365,12 +373,15 @@ guard.register(AssistantAgent("my_agent", llm_config=config))
 
 **Problem**: Threats detected but not blocked.
 
-**Solution**: Check the scan mode:
+**Solution**: Check the configuration:
 ```python
-print(guard.config.mode)  # Should be BLOCK_ON_* not LOG_ONLY
+print(guard.config.on_threat)  # Should be "block" not "log"
 
 # Update mode if needed
-config = AgentScannerConfig(mode=ScanMode.BLOCK_ON_THREAT)
+config = AgentScannerConfig(
+    on_threat="block",
+    block_severity_threshold="HIGH",
+)
 guard = RaxeConversationGuard(raxe, config=config)
 ```
 
@@ -413,27 +424,16 @@ class RaxeConversationGuard:
 ```python
 @dataclass
 class AgentScannerConfig:
-    mode: ScanMode = ScanMode.LOG_ONLY
-    scan_human_input: bool = True
-    scan_agent_messages: bool = True
-    scan_agent_responses: bool = True
-    scan_function_calls: bool = True
-    scan_function_results: bool = True
-    scan_system_messages: bool = False
-    on_threat: Callable[[str, ScanPipelineResult], None] | None = None
-    on_block: Callable[[str, ScanPipelineResult], None] | None = None
-    severity_threshold: str = "LOW"
+    on_threat: str = "log"  # "log" or "block"
+    block_severity_threshold: str = "HIGH"  # "LOW", "MEDIUM", "HIGH", "CRITICAL"
+    scan_prompts: bool = True
+    scan_system_prompts: bool = True
+    scan_tool_calls: bool = True
+    scan_tool_results: bool = False
+    scan_responses: bool = False
+    on_threat_callback: Callable[[AgentScanResult], None] | None = None
+    on_block_callback: Callable[[AgentScanResult], None] | None = None
     confidence_threshold: float = 0.5
-```
-
-### ScanMode
-
-```python
-class ScanMode(str, Enum):
-    LOG_ONLY = "log_only"
-    BLOCK_ON_THREAT = "block_on_threat"
-    BLOCK_ON_HIGH = "block_on_high"
-    BLOCK_ON_CRITICAL = "block_on_critical"
 ```
 
 ### MessageType

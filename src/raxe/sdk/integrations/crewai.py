@@ -769,6 +769,25 @@ class RaxeCrewGuard:
 
         return tool
 
+    def wrap_tools(self, tools: list[T]) -> list[T]:
+        """Wrap multiple CrewAI tools with input/output scanning.
+
+        Convenience method to wrap multiple tools at once.
+
+        Args:
+            tools: List of CrewAI BaseTool instances
+
+        Returns:
+            List of wrapped tools with scanning enabled
+
+        Example:
+            >>> from crewai_tools import SerperDevTool, FileReadTool
+            >>> tools = [SerperDevTool(), FileReadTool()]
+            >>> wrapped_tools = guard.wrap_tools(tools)
+            >>> agent = Agent(tools=wrapped_tools)
+        """
+        return [self.wrap_tool(tool) for tool in tools]
+
     def _scan_tool_io(
         self,
         text: str,

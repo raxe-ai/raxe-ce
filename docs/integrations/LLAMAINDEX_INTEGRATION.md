@@ -272,7 +272,7 @@ callback = RaxeLlamaIndexCallback(
 ### Required
 
 - `llama-index-core>=0.10.0` - Core LlamaIndex functionality
-- `raxe>=0.4.0` - RAXE scanning SDK
+- `raxe>=0.3.0` - RAXE scanning SDK
 
 ### Optional
 
@@ -331,32 +331,22 @@ logging.getLogger("raxe").setLevel(logging.DEBUG)
 3. **Handle Exceptions**: Always catch `SecurityException` gracefully
 4. **Monitor Metrics**: Use RAXE telemetry to track threats
 
-## Priority Assessment
+## Current Status
 
-### Recommended Release: v0.5.0
-
-**Rationale:**
-- LlamaIndex integration is a stretch goal
-- Requires additional testing with real LlamaIndex applications
-- RAG-specific features need more design work
-- AutoGen and base AgentScanner already in v0.4.0
-
-### Minimum Viable Integration
+### Available Now (v0.3.x)
 
 1. `RaxeLlamaIndexCallback` - Basic callback handler
 2. `RaxeQueryEngineCallback` - Query engine convenience class
 3. `RaxeAgentCallback` - Agent convenience class
-4. Unit tests with mocked Raxe client
+4. `RaxeSpanHandler` - Instrumentation API handler (v0.10.20+)
+5. Unit tests with mocked Raxe client
 
-### Full Integration (v0.5.0+)
+### Future Enhancements
 
-1. All MVP components
-2. `RaxeSpanHandler` for instrumentation API
-3. Retrieved context validation
-4. Index-time scanning
-5. Integration tests with real LlamaIndex
-6. Performance benchmarks
-7. Documentation and examples
+1. Retrieved context validation (scan RAG context for threats)
+2. Index-time scanning (prevent malicious content in index)
+3. Integration tests with real LlamaIndex
+4. Performance benchmarks
 
 ## Related Documentation
 

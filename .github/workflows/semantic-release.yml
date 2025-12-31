@@ -74,7 +74,7 @@ jobs:
 
       - name: Trigger release workflow
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           gh workflow run release.yml \
             -R ${{ github.repository }} \

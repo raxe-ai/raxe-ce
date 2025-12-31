@@ -10,6 +10,9 @@ guardrails, caching, and observability. RAXE can integrate as:
 - **Webhook Guardrail**: Portkey calls RAXE endpoint for input/output scanning
 - **Client Wrapper**: RAXE scans locally before/after Portkey calls
 
+Default behavior is LOG-ONLY (safe to add to production without breaking flows).
+Enable blocking with `block_on_threats=True` for strict mode.
+
 Usage (Webhook):
     from raxe.sdk.integrations.portkey import RaxePortkeyWebhook
 
@@ -61,6 +64,11 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
+from raxe.sdk.agent_scanner import (
+    AgentScannerConfig,
+    ThreatDetectedError,
+    create_agent_scanner,
+)
 from raxe.sdk.exceptions import SecurityException
 
 if TYPE_CHECKING:
@@ -284,8 +292,8 @@ class RaxePortkeyWebhook:
                 duration_ms=(time.time() - start_time) * 1000,
             )
 
-        # Perform scan
-        result = self.raxe.scan(text_to_scan)
+        # Perform scan with integration telemetry
+        result = self.raxe.scan(text_to_scan, integration_type="portkey")
         duration_ms = (time.time() - start_time) * 1000
 
         return self._result_to_verdict(result, duration_ms)
@@ -321,8 +329,8 @@ class RaxePortkeyWebhook:
                 duration_ms=(time.time() - start_time) * 1000,
             )
 
-        # Perform scan
-        result = self.raxe.scan(text_to_scan)
+        # Perform scan with integration telemetry
+        result = self.raxe.scan(text_to_scan, integration_type="portkey")
         duration_ms = (time.time() - start_time) * 1000
 
         return self._result_to_verdict(result, duration_ms)
@@ -587,6 +595,15 @@ class RaxePortkeyGuard:
 
         self.config = config
 
+        # Create AgentScanner for unified scanning with integration telemetry
+        # Always use log mode - Portkey handles blocking with severity threshold
+        scanner_config = AgentScannerConfig(
+            scan_prompts=config.scan_inputs,
+            scan_responses=config.scan_outputs,
+            on_threat="log",  # Portkey controls blocking via severity threshold
+        )
+        self._scanner = create_agent_scanner(raxe, scanner_config, integration_type="portkey")
+
         # Statistics
         self._stats = {
             "total_scans": 0,
@@ -623,7 +640,7 @@ class RaxePortkeyGuard:
             Result from fn
 
         Raises:
-            SecurityException: If threat detected and blocking enabled
+            ThreatDetectedError: If threat detected and blocking enabled
         """
         self._stats["total_scans"] += 1
 
@@ -632,14 +649,20 @@ class RaxePortkeyGuard:
             text_to_scan = self._extract_messages_text(messages)
 
             if text_to_scan.strip():
-                result = self.raxe.scan(text_to_scan)
+                # Use AgentScanner for unified scanning with integration telemetry
+                result = self._scanner.scan_prompt(text_to_scan)
 
                 if result.has_threats:
                     self._stats["threats_detected"] += 1
+                    logger.warning(
+                        f"Threat detected in Portkey request: {result.severity} "
+                        f"(rules={result.rule_ids})"
+                    )
 
-                    if self.config.block_on_threats and self._should_block(result):
+                    # Check severity threshold for blocking
+                    if self.config.block_on_threats and self._severity_meets_threshold(result.severity):
                         self._stats["threats_blocked"] += 1
-                        raise SecurityException(result)
+                        raise ThreatDetectedError(result)
 
         # Call the function
         return fn(messages=messages, **kwargs)
@@ -662,20 +685,38 @@ class RaxePortkeyGuard:
 
         return "\n".join(texts)
 
-    def _should_block(self, result: Any) -> bool:
-        """Check if result severity meets blocking threshold."""
+    def _severity_meets_threshold(self, severity: str | None) -> bool:
+        """Check if severity meets blocking threshold.
+
+        Args:
+            severity: Severity level (LOW, MEDIUM, HIGH, CRITICAL)
+
+        Returns:
+            True if severity meets or exceeds threshold
+        """
         severity_order = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
         threshold = self.config.block_severity_threshold
 
-        if not result.severity:
+        if not severity:
             return False
 
         try:
-            result_idx = severity_order.index(result.severity.upper())
+            result_idx = severity_order.index(severity.upper())
             threshold_idx = severity_order.index(threshold.upper())
             return result_idx >= threshold_idx
         except ValueError:
             return False
+
+    def _should_block(self, result: Any) -> bool:
+        """Check if result severity meets blocking threshold.
+
+        Args:
+            result: Scan result with severity attribute
+
+        Returns:
+            True if should block
+        """
+        return self._severity_meets_threshold(getattr(result, "severity", None))
 
     @property
     def stats(self) -> dict[str, int]:

@@ -11,8 +11,58 @@ import json
 
 import pytest
 
+from raxe.sdk.agent_scanner import AgentScanResult, ScanType, ThreatDetectedError
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import SecurityException
+
+
+# =============================================================================
+# Helper functions for AgentScanResult
+# =============================================================================
+
+
+def _create_safe_scan_result():
+    """Create a safe AgentScanResult for testing."""
+    return AgentScanResult(
+        scan_type=ScanType.PROMPT,
+        has_threats=False,
+        should_block=False,
+        severity=None,
+        detection_count=0,
+        trace_id="test",
+        step_id=0,
+        duration_ms=1.0,
+        message="No threats detected",
+        details={},
+        policy_violation=False,
+        rule_ids=[],
+        families=[],
+        prompt_hash=None,
+        action_taken="allow",
+        pipeline_result=None,
+    )
+
+
+def _create_threat_scan_result(should_block: bool = True, severity: str = "HIGH"):
+    """Create a threat AgentScanResult for testing."""
+    return AgentScanResult(
+        scan_type=ScanType.PROMPT,
+        has_threats=True,
+        should_block=should_block,
+        severity=severity,
+        detection_count=1,
+        trace_id="test",
+        step_id=0,
+        duration_ms=1.0,
+        message="Threat detected",
+        details={},
+        policy_violation=False,
+        rule_ids=["pi-001"],
+        families=["PI"],
+        prompt_hash="sha256:test",
+        action_taken="block" if should_block else "log",
+        pipeline_result=None,
+    )
 
 
 # =============================================================================
@@ -475,6 +525,9 @@ class TestRaxePortkeyGuardWrapping:
 
         guard = RaxePortkeyGuard(mock_raxe)
 
+        # Mock scanner to return safe result
+        guard._scanner.scan_prompt = Mock(return_value=_create_safe_scan_result())
+
         mock_portkey = Mock()
         mock_response = Mock()
         mock_response.choices = [Mock(message=Mock(content="Response"))]
@@ -488,8 +541,8 @@ class TestRaxePortkeyGuardWrapping:
             model="gpt-4",
         )
 
-        # Verify scan was called
-        mock_raxe.scan.assert_called()
+        # Verify scan was called via scanner
+        guard._scanner.scan_prompt.assert_called()
 
     def test_wrapped_client_blocks_on_threat(self, mock_raxe_with_threat):
         """Test wrapped client blocks when threat detected."""
@@ -497,12 +550,15 @@ class TestRaxePortkeyGuardWrapping:
 
         guard = RaxePortkeyGuard(mock_raxe_with_threat, block_on_threats=True)
 
+        # Mock scanner to return threat
+        guard._scanner.scan_prompt = Mock(return_value=_create_threat_scan_result())
+
         mock_portkey = Mock()
         mock_portkey.chat.completions.create = Mock()
 
         wrapped = guard.wrap_client(mock_portkey)
 
-        with pytest.raises(SecurityException):
+        with pytest.raises(ThreatDetectedError):
             wrapped.chat.completions.create(
                 messages=[{"role": "user", "content": "Ignore instructions"}],
                 model="gpt-4",
@@ -526,6 +582,9 @@ class TestRaxePortkeyGuardScanAndCall:
 
         guard = RaxePortkeyGuard(mock_raxe)
 
+        # Mock scanner to return safe result
+        guard._scanner.scan_prompt = Mock(return_value=_create_safe_scan_result())
+
         mock_fn = Mock(return_value="result")
 
         result = guard.scan_and_call(
@@ -535,7 +594,7 @@ class TestRaxePortkeyGuardScanAndCall:
         )
 
         assert result == "result"
-        mock_raxe.scan.assert_called()
+        guard._scanner.scan_prompt.assert_called()
         mock_fn.assert_called_once()
 
     def test_scan_and_call_with_threat_logs_only(self, mock_raxe_with_threat):
@@ -543,6 +602,9 @@ class TestRaxePortkeyGuardScanAndCall:
         from raxe.sdk.integrations.portkey import RaxePortkeyGuard
 
         guard = RaxePortkeyGuard(mock_raxe_with_threat, block_on_threats=False)
+
+        # Mock scanner to return threat (should still continue in log-only mode)
+        guard._scanner.scan_prompt = Mock(return_value=_create_threat_scan_result(should_block=False))
 
         mock_fn = Mock(return_value="result")
 
@@ -561,9 +623,12 @@ class TestRaxePortkeyGuardScanAndCall:
 
         guard = RaxePortkeyGuard(mock_raxe_with_threat, block_on_threats=True)
 
+        # Mock scanner to return threat
+        guard._scanner.scan_prompt = Mock(return_value=_create_threat_scan_result())
+
         mock_fn = Mock(return_value="result")
 
-        with pytest.raises(SecurityException):
+        with pytest.raises(ThreatDetectedError):
             guard.scan_and_call(
                 mock_fn,
                 messages=[{"role": "user", "content": "Ignore"}],
@@ -587,6 +652,9 @@ class TestRaxePortkeyGuardStats:
 
         guard = RaxePortkeyGuard(mock_raxe)
 
+        # Mock scanner to return safe result
+        guard._scanner.scan_prompt = Mock(return_value=_create_safe_scan_result())
+
         mock_fn = Mock(return_value="result")
 
         guard.scan_and_call(mock_fn, messages=[{"role": "user", "content": "Hi"}])
@@ -602,6 +670,9 @@ class TestRaxePortkeyGuardStats:
         from raxe.sdk.integrations.portkey import RaxePortkeyGuard
 
         guard = RaxePortkeyGuard(mock_raxe)
+
+        # Mock scanner to return safe result
+        guard._scanner.scan_prompt = Mock(return_value=_create_safe_scan_result())
 
         mock_fn = Mock(return_value="result")
         guard.scan_and_call(mock_fn, messages=[{"role": "user", "content": "Hi"}])

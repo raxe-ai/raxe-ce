@@ -75,7 +75,7 @@ class RaxeVertexAI:
         location: str = "us-central1",
         *,
         raxe: Raxe | None = None,
-        raxe_block_on_threat: bool = True,
+        raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
         credentials: Any | None = None,
     ):
@@ -85,12 +85,12 @@ class RaxeVertexAI:
             project: Google Cloud project ID
             location: Google Cloud location (default: us-central1)
             raxe: Optional Raxe client (creates default if not provided)
-            raxe_block_on_threat: Block requests on threat detection
+            raxe_block_on_threat: Block requests on threat detection (default: False)
             raxe_scan_responses: Also scan model responses
             credentials: Optional Google Cloud credentials
 
         Example:
-            # With default settings
+            # With default settings (log-only mode)
             client = RaxeVertexAI(
                 project="my-project",
                 location="us-central1"
@@ -103,10 +103,10 @@ class RaxeVertexAI:
                 raxe=raxe
             )
 
-            # Monitoring mode only
+            # Enable blocking mode
             client = RaxeVertexAI(
                 project="my-project",
-                raxe_block_on_threat=False
+                raxe_block_on_threat=True
             )
 
         Raises:

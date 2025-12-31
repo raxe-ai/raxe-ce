@@ -48,6 +48,7 @@ from raxe.sdk.agent_scanner import (
     MessageType,
     ScanContext,
     ScanMode,
+    ThreatDetectedError,
     create_agent_scanner,
 )
 from raxe.sdk.exceptions import SecurityException
@@ -607,7 +608,7 @@ class RaxeCrewGuard:
                         )
                         self._raise_security_exception(result)
 
-        except SecurityException:
+        except (SecurityException, ThreatDetectedError):
             raise
         except Exception as e:
             logger.error(
@@ -1257,7 +1258,7 @@ class RaxeCrewGuard:
                         )
                         self._raise_security_exception(result)
 
-        except SecurityException:
+        except (SecurityException, ThreatDetectedError):
             raise
         except Exception as e:
             logger.error(

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raxe"
-version = "0.4.0"
+version = "0.4.1"
 description = "RAXE Community Edition - AI Security for Everyone. 460+ threat detection rules, L2 CPU-based ML, always free."
 authors = [{name = "RAXE Technologies, Inc.", email = "hello@raxe.ai"}]
 license = {text = "Proprietary - See LICENSE file"}
@@ -84,11 +84,23 @@ wrappers = [
     "langchain>=0.1",
 ]
 
+# LiteLLM integration
+litellm = [
+    "litellm>=1.0",
+]
+
+# DSPy integration
+dspy = [
+    "dspy>=2.0",
+]
+
 # All optional features (ML is now in core dependencies)
 all = [
     "openai>=1.0",
     "anthropic>=0.5",
     "langchain>=0.1",
+    "litellm>=1.0",
+    "dspy>=2.0",
     "prompt-toolkit>=3.0,<4.0",
     "tomli-w>=1.0,<2.0",
 ]

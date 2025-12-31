@@ -75,6 +75,20 @@ INTEGRATION_REGISTRY: dict[IntegrationName, IntegrationInfo] = {
         description="Tool use security for Claude",
         documentation_url="https://docs.raxe.ai/integrations/anthropic",
     ),
+    "litellm": IntegrationInfo(
+        name="litellm",
+        display_name="LiteLLM",
+        install_command="pip install raxe[litellm]",
+        description="Security scanning for LiteLLM's unified LLM API",
+        documentation_url="https://docs.raxe.ai/integrations/litellm",
+    ),
+    "dspy": IntegrationInfo(
+        name="dspy",
+        display_name="DSPy",
+        install_command="pip install raxe[dspy]",
+        description="Security callbacks and guards for DSPy modules",
+        documentation_url="https://docs.raxe.ai/integrations/dspy",
+    ),
 }
 
 

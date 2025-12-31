@@ -23,7 +23,8 @@ from typing import Literal
 
 # Type alias for integration names
 IntegrationName = Literal[
-    "mcp", "langchain", "crewai", "autogen", "llamaindex", "openai", "anthropic"
+    "mcp", "langchain", "crewai", "autogen", "llamaindex", "openai", "anthropic",
+    "litellm", "dspy"
 ]
 
 
@@ -56,6 +57,8 @@ AUTOGEN_AVAILABLE: bool = is_available("pyautogen")
 LLAMAINDEX_AVAILABLE: bool = is_available("llama_index")
 OPENAI_AVAILABLE: bool = is_available("openai")
 ANTHROPIC_AVAILABLE: bool = is_available("anthropic")
+LITELLM_AVAILABLE: bool = is_available("litellm")
+DSPY_AVAILABLE: bool = is_available("dspy")
 
 
 def get_available_integrations() -> list[IntegrationName]:
@@ -81,6 +84,10 @@ def get_available_integrations() -> list[IntegrationName]:
         available.append("openai")
     if ANTHROPIC_AVAILABLE:
         available.append("anthropic")
+    if LITELLM_AVAILABLE:
+        available.append("litellm")
+    if DSPY_AVAILABLE:
+        available.append("dspy")
 
     return available
 
@@ -103,6 +110,8 @@ def require_integration(name: IntegrationName) -> None:
         "llamaindex": ("llama_index", "raxe[llamaindex]"),
         "openai": ("openai", "raxe[openai-agents]"),
         "anthropic": ("anthropic", "raxe[anthropic]"),
+        "litellm": ("litellm", "raxe[litellm]"),
+        "dspy": ("dspy", "raxe[dspy]"),
     }
 
     package_name, install_extra = packages[name]
@@ -129,4 +138,6 @@ def check_all_integrations() -> dict[IntegrationName, bool]:
         "llamaindex": LLAMAINDEX_AVAILABLE,
         "openai": OPENAI_AVAILABLE,
         "anthropic": ANTHROPIC_AVAILABLE,
+        "litellm": LITELLM_AVAILABLE,
+        "dspy": DSPY_AVAILABLE,
     }

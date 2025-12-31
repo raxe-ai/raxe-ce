@@ -159,7 +159,9 @@ RAXE integrates with the most popular AI frameworks for automatic threat scannin
 | [**CrewAI**](https://crewai.com) | `RaxeCrewGuard` | [Docs](https://docs.raxe.ai/integrations/crewai) |
 | [**AutoGen**](https://microsoft.github.io/autogen/) | `RaxeConversationGuard` | [Docs](https://docs.raxe.ai/integrations/autogen) |
 | [**LlamaIndex**](https://llamaindex.ai) | `RaxeLlamaIndexCallback` | [Docs](https://docs.raxe.ai/integrations/llamaindex) |
-| [**Portkey**](https://portkey.ai) | `RaxePortkeyWebhook` | [Docs](https://docs.raxe.ai/integrations/portkey) |
+| [**LiteLLM**](https://litellm.ai) | `RaxeLiteLLMCallback` | [Docs](https://docs.raxe.ai/integrations/litellm) |
+| [**DSPy**](https://dspy-docs.vercel.app) | `RaxeDSPyCallback` | [Docs](https://docs.raxe.ai/integrations/dspy) |
+| [**Portkey**](https://portkey.ai) | `RaxePortkeyGuard` | [Docs](https://docs.raxe.ai/integrations/portkey) |
 | [**OpenAI**](https://openai.com) | `RaxeOpenAI` | [Docs](https://docs.raxe.ai/sdk/openai-wrapper) |
 | [**Anthropic**](https://anthropic.com) | `RaxeAnthropic` | [Docs](https://docs.raxe.ai/sdk/anthropic-wrapper) |
 
@@ -213,14 +215,33 @@ from raxe.sdk.integrations import RaxeLlamaIndexCallback
 Settings.callback_manager = CallbackManager([RaxeLlamaIndexCallback()])
 ```
 
-### Portkey AI Gateway (3 lines)
+### LiteLLM (3 lines)
 
 ```python
-from raxe.sdk.integrations import RaxePortkeyWebhook
+import litellm
+from raxe.sdk.integrations import RaxeLiteLLMCallback
 
-webhook = RaxePortkeyWebhook()  # Use as Portkey custom guardrail
-# In your webhook handler:
-# result = webhook.handle_request(portkey_request_data)
+litellm.callbacks = [RaxeLiteLLMCallback()]  # All providers scanned
+```
+
+### DSPy (4 lines)
+
+```python
+import dspy
+from raxe.sdk.integrations import RaxeDSPyCallback
+
+callback = RaxeDSPyCallback()
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"), callbacks=[callback])
+```
+
+### Portkey AI Gateway (4 lines)
+
+```python
+from openai import OpenAI
+from raxe.sdk.integrations import RaxePortkeyGuard
+
+guard = RaxePortkeyGuard()
+response = guard.scan_and_call(client.chat.completions.create, model="gpt-4o-mini", messages=[...])
 ```
 
 ### OpenAI (Drop-in)
@@ -309,7 +330,7 @@ RAXE is **community-driven**. The anonymized detection metadata helps improve de
 - Core detection (460+ rules, L1+L2)
 - Python SDK and CLI
 - OpenAI/Anthropic wrappers
-- Agentic framework integrations (LangChain, CrewAI, AutoGen, LlamaIndex)
+- Agentic framework integrations (LangChain, CrewAI, AutoGen, LlamaIndex, LiteLLM, DSPy)
 - Portkey AI Gateway integration
 - Policy system (ALLOW/FLAG/BLOCK/LOG)
 - Free Community API keys

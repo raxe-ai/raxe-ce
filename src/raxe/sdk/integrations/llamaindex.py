@@ -11,6 +11,9 @@ This integration works with:
     - RAG pipelines (retrieval, synthesis)
     - LLM calls and embeddings
 
+Default behavior is LOG-ONLY (safe to add to production without breaking flows).
+Enable blocking with `block_on_query_threats=True` for strict mode.
+
 Usage (Callback Handler - v0.10+):
     from llama_index.core import VectorStoreIndex, Settings
     from llama_index.core.callbacks import CallbackManager
@@ -44,6 +47,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from raxe.sdk.agent_scanner import (
+    AgentScannerConfig,
+    ThreatDetectedError,
+    create_agent_scanner,
+)
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import SecurityException
 from raxe.sdk.integrations.extractors import (
@@ -166,11 +174,24 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
                 event_starts_to_ignore=[],
                 event_ends_to_ignore=[],
             )
-        self.raxe = raxe_client or Raxe()
+
+        # Create or use provided Raxe client
+        raxe = raxe_client or Raxe()
+        self.raxe = raxe
         self.block_on_query_threats = block_on_query_threats
         self.block_on_response_threats = block_on_response_threats
         self.scan_retrieved_context = scan_retrieved_context
         self.scan_agent_actions = scan_agent_actions
+
+        # Create AgentScanner for unified scanning with integration telemetry
+        # Determine blocking behavior based on any blocking enabled
+        on_threat = "block" if (block_on_query_threats or block_on_response_threats) else "log"
+        config = AgentScannerConfig(
+            scan_prompts=True,
+            scan_responses=True,
+            on_threat=on_threat,
+        )
+        self._scanner = create_agent_scanner(raxe, config, integration_type="llamaindex")
 
         # Track active events for correlation
         self._active_events: dict[str, dict[str, Any]] = {}
@@ -410,25 +431,26 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             block: Whether to raise exception on threat
 
         Raises:
-            SecurityException: If threat detected and block=True
+            ThreatDetectedError: If threat detected and block=True
         """
         if not text or not text.strip():
             return
 
         try:
-            result = self.raxe.scan(
-                text,
-                block_on_threat=block,
-                integration_type="llamaindex",
-            )
+            # Determine scan type based on context
+            is_response = "response" in context or "output" in context
+            if is_response:
+                result = self._scanner.scan_response(text)
+            else:
+                result = self._scanner.scan_prompt(text)
 
             if result.has_threats:
                 logger.warning(
                     f"Threat detected in LlamaIndex {context}: "
-                    f"{result.severity} severity (block={block})"
+                    f"{result.severity} severity (action={result.action_taken})"
                 )
 
-        except SecurityException:
+        except ThreatDetectedError:
             logger.error(
                 f"Blocked LlamaIndex {context} due to security threat"
             )
@@ -696,7 +718,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             block: Whether to raise exception on threat
 
         Raises:
-            SecurityException: If threat detected and block=True
+            ThreatDetectedError: If threat detected and block=True
         """
         import asyncio
 
@@ -704,20 +726,26 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             return
 
         try:
-            result = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.raxe.scan(
-                    text, block_on_threat=block, integration_type="llamaindex"
-                ),
-            )
+            # Determine scan type based on context
+            is_response = "response" in context or "output" in context
+            if is_response:
+                result = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self._scanner.scan_response(text),
+                )
+            else:
+                result = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self._scanner.scan_prompt(text),
+                )
 
             if result.has_threats:
                 logger.warning(
                     f"Threat detected in LlamaIndex {context} (async): "
-                    f"{result.severity} severity (block={block})"
+                    f"{result.severity} severity (action={result.action_taken})"
                 )
 
-        except SecurityException:
+        except ThreatDetectedError:
             logger.error(
                 f"Blocked LlamaIndex {context} due to security threat (async)"
             )
@@ -766,10 +794,19 @@ class RaxeSpanHandler:
             scan_llm_inputs: Scan LLM inputs (default: True)
             scan_llm_outputs: Scan LLM outputs (default: True)
         """
-        self.raxe = raxe_client or Raxe()
+        raxe = raxe_client or Raxe()
+        self.raxe = raxe
         self.block_on_threats = block_on_threats
         self.scan_llm_inputs = scan_llm_inputs
         self.scan_llm_outputs = scan_llm_outputs
+
+        # Create AgentScanner for unified scanning with integration telemetry
+        config = AgentScannerConfig(
+            scan_prompts=scan_llm_inputs,
+            scan_responses=scan_llm_outputs,
+            on_threat="block" if block_on_threats else "log",
+        )
+        self._scanner = create_agent_scanner(raxe, config, integration_type="llamaindex")
 
         logger.debug(
             "RaxeSpanHandler initialized: "
@@ -858,19 +895,20 @@ class RaxeSpanHandler:
         for text in texts:
             if text and text.strip():
                 try:
-                    result = self.raxe.scan(
-                        text,
-                        block_on_threat=self.block_on_threats,
-                        integration_type="llamaindex",
-                    )
+                    # Determine scan type based on context
+                    is_output = "output" in context
+                    if is_output:
+                        result = self._scanner.scan_response(text)
+                    else:
+                        result = self._scanner.scan_prompt(text)
 
                     if result.has_threats:
                         logger.warning(
                             f"Threat detected in LlamaIndex {context}: "
-                            f"{result.severity} severity"
+                            f"{result.severity} severity (action={result.action_taken})"
                         )
 
-                except SecurityException:
+                except ThreatDetectedError:
                     logger.error(
                         f"Blocked LlamaIndex {context} due to security threat"
                     )

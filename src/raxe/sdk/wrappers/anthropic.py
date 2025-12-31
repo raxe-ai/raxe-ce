@@ -12,12 +12,20 @@ With:
 
 The wrapper intercepts messages.create calls, scans user messages
 before sending to Claude, and optionally scans responses.
+
+Default behavior is LOG-ONLY (safe to add to production without breaking flows).
+Enable blocking with `raxe_block_on_threat=True` for strict mode.
 """
 from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
+
+from raxe.sdk.agent_scanner import (
+    AgentScannerConfig,
+    create_agent_scanner,
+)
 
 if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
@@ -56,7 +64,7 @@ class RaxeAnthropic:
         self,
         *args,
         raxe: Raxe | None = None,
-        raxe_block_on_threat: bool = True,
+        raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
         **kwargs
     ):
@@ -65,22 +73,23 @@ class RaxeAnthropic:
         Args:
             *args: Passed to Anthropic.__init__
             raxe: Optional Raxe client (creates default if not provided)
-            raxe_block_on_threat: Block requests on threat detection
+            raxe_block_on_threat: Block requests on threat detection.
+                Default is False (log-only mode, safe for production).
             raxe_scan_responses: Also scan Claude responses
             **kwargs: Passed to Anthropic.__init__
 
         Example:
-            # With default Raxe client
+            # With default Raxe client (log-only mode)
             client = RaxeAnthropic(api_key="sk-ant-...")
 
             # With custom Raxe client
             raxe = Raxe(telemetry=False)
             client = RaxeAnthropic(api_key="sk-ant-...", raxe=raxe)
 
-            # Disable blocking (just monitor)
+            # Enable blocking (strict mode)
             client = RaxeAnthropic(
                 api_key="sk-ant-...",
-                raxe_block_on_threat=False
+                raxe_block_on_threat=True
             )
 
         Raises:
@@ -106,6 +115,14 @@ class RaxeAnthropic:
         self.raxe = raxe
         self.raxe_block_on_threat = raxe_block_on_threat
         self.raxe_scan_responses = raxe_scan_responses
+
+        # Create AgentScanner for unified scanning
+        config = AgentScannerConfig(
+            scan_prompts=True,
+            scan_responses=raxe_scan_responses,
+            on_threat="block" if raxe_block_on_threat else "log",
+        )
+        self._scanner = create_agent_scanner(raxe, config, integration_type="anthropic")
 
         # Wrap the messages resource
         self._wrap_messages()
@@ -164,7 +181,7 @@ class RaxeAnthropic:
             content: Message content to scan (str or list of content blocks)
 
         Raises:
-            RaxeBlockedError: If threat detected and blocking enabled
+            ThreatDetectedError: If threat detected and blocking enabled
         """
         # Extract text from content (may be string or list of blocks)
         text = self._extract_text_from_content(content)
@@ -172,19 +189,15 @@ class RaxeAnthropic:
         if not text:
             return
 
-        # Use Raxe.scan() - single entry point
-        result = self.raxe.scan(
-            text,
-            block_on_threat=self.raxe_block_on_threat
-        )
+        # Use AgentScanner for unified scanning with integration telemetry
+        result = self._scanner.scan_prompt(text)
 
-        # If we get here and blocking is enabled but not raised,
-        # it means no threat was detected or scan() didn't raise
-        # Just log for monitoring
+        # AgentScanner handles blocking if configured
+        # Log for monitoring
         if result.has_threats:
             logger.warning(
                 f"Threat detected in user message: {result.severity} "
-                f"(block={self.raxe_block_on_threat})"
+                f"(action={result.action_taken})"
             )
 
     def _scan_response(self, response: Any):
@@ -200,9 +213,8 @@ class RaxeAnthropic:
                     if hasattr(content_block, "text"):
                         text = content_block.text
                         if text:
-                            # Scan but don't block on responses
-                            # (just monitor for policy violations)
-                            result = self.raxe.scan(text, block_on_threat=False)
+                            # Scan response (AgentScanner handles blocking based on config)
+                            result = self._scanner.scan_response(text)
                             if result.has_threats:
                                 logger.info(
                                     f"Threat detected in Claude response: {result.severity}"
@@ -232,7 +244,7 @@ class RaxeAnthropic:
         # Scan accumulated text after stream completes
         if self.raxe_scan_responses and accumulated_text:
             try:
-                result = self.raxe.scan(accumulated_text, block_on_threat=False)
+                result = self._scanner.scan_response(accumulated_text)
                 if result.has_threats:
                     logger.info(
                         f"Threat detected in Claude streaming response: {result.severity}"

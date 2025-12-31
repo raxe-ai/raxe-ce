@@ -116,8 +116,11 @@ class TestRaxeOpenAI:
         assert client.raxe is not None
         assert isinstance(client.raxe, Raxe)
 
-        # Should have correct defaults
-        assert client.raxe_block_on_threat is True
+        # Should have AgentScanner
+        assert client._scanner is not None
+
+        # Should have correct defaults (log-only is safe default)
+        assert client.raxe_block_on_threat is False
         assert client.raxe_scan_responses is True
 
     def test_wrapper_uses_provided_raxe(self, patched_openai_module):
@@ -145,19 +148,20 @@ class TestRaxeOpenAI:
 
     def test_wrapper_scans_user_messages(self, patched_openai_module, mock_openai_response):
         """Test wrapper scans user messages before OpenAI call."""
+        from raxe.sdk.agent_scanner import AgentScanResult
         from raxe.sdk.wrappers.openai import RaxeOpenAI
 
         client = RaxeOpenAI(api_key="sk-test", raxe_block_on_threat=False)
 
-        # Track scan calls
+        # Track scan calls via scanner
         scan_calls = []
-        original_scan = client.raxe.scan
+        original_scan_prompt = client._scanner.scan_prompt
 
-        def track_scan(*args, **kwargs):
-            scan_calls.append(args[0])
-            return original_scan(*args, **kwargs)
+        def track_scan_prompt(text, *args, **kwargs):
+            scan_calls.append(text)
+            return original_scan_prompt(text, *args, **kwargs)
 
-        client.raxe.scan = track_scan
+        client._scanner.scan_prompt = track_scan_prompt
 
         # Make request with safe content
         response = client.chat.completions.create(
@@ -172,27 +176,37 @@ class TestRaxeOpenAI:
 
     def test_wrapper_blocks_threats(self, patched_openai_module):
         """Test wrapper blocks threats in user messages."""
+        from raxe.sdk.agent_scanner import AgentScanResult, ScanType, ThreatDetectedError
         from raxe.sdk.wrappers.openai import RaxeOpenAI
 
         client = RaxeOpenAI(api_key="sk-test", raxe_block_on_threat=True)
 
-        # Mock the scan to raise on threat (since block_on_threat=True is passed)
+        # Mock the scanner to raise ThreatDetectedError on threat
         def mock_scan_with_threat(*args, **kwargs):
-            # The real Raxe.scan() raises when block_on_threat=True
-            # and threat is detected
-            if kwargs.get('block_on_threat', False):
-                mock_result = Mock()
-                mock_result.has_threats = True
-                mock_result.should_block = True
-                mock_result.severity = "CRITICAL"
-                mock_result.total_detections = 1
-                raise SecurityException(mock_result)
-            return Mock(has_threats=False, should_block=False)
+            mock_result = AgentScanResult(
+                scan_type=ScanType.PROMPT,
+                has_threats=True,
+                should_block=True,
+                severity="CRITICAL",
+                detection_count=1,
+                trace_id="test",
+                step_id=0,
+                duration_ms=1.0,
+                message="Threat detected",
+                details={},
+                policy_violation=False,
+                rule_ids=["pi-001"],
+                families=["PI"],
+                prompt_hash="sha256:test",
+                action_taken="block",
+                pipeline_result=None,
+            )
+            raise ThreatDetectedError(mock_result)
 
-        client.raxe.scan = mock_scan_with_threat
+        client._scanner.scan_prompt = mock_scan_with_threat
 
         # Should raise on threat
-        with pytest.raises((RaxeBlockedError, SecurityException)):
+        with pytest.raises((RaxeBlockedError, SecurityException, ThreatDetectedError)):
             client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -222,15 +236,22 @@ class TestRaxeOpenAI:
 
         client = RaxeOpenAI(api_key="sk-test", raxe_scan_responses=True)
 
-        # Track scan calls
-        scan_calls = []
-        original_scan = client.raxe.scan
+        # Track scan calls via scanner
+        prompt_calls = []
+        response_calls = []
+        original_scan_prompt = client._scanner.scan_prompt
+        original_scan_response = client._scanner.scan_response
 
-        def track_scan(*args, **kwargs):
-            scan_calls.append(args[0])
-            return original_scan(*args, **kwargs)
+        def track_scan_prompt(text, *args, **kwargs):
+            prompt_calls.append(text)
+            return original_scan_prompt(text, *args, **kwargs)
 
-        client.raxe.scan = track_scan
+        def track_scan_response(text, *args, **kwargs):
+            response_calls.append(text)
+            return original_scan_response(text, *args, **kwargs)
+
+        client._scanner.scan_prompt = track_scan_prompt
+        client._scanner.scan_response = track_scan_response
 
         # Make request
         client.chat.completions.create(
@@ -239,9 +260,10 @@ class TestRaxeOpenAI:
         )
 
         # Should have scanned both prompt and response
-        assert len(scan_calls) >= 2
-        assert "Hello" in scan_calls  # User message
-        assert "Safe response from OpenAI" in scan_calls  # Response
+        assert len(prompt_calls) >= 1
+        assert "Hello" in prompt_calls  # User message
+        assert len(response_calls) >= 1
+        assert "Safe response from OpenAI" in response_calls  # Response
 
     def test_wrapper_skips_response_scanning_if_disabled(
         self, patched_openai_module, mock_openai_response
@@ -251,15 +273,22 @@ class TestRaxeOpenAI:
 
         client = RaxeOpenAI(api_key="sk-test", raxe_scan_responses=False)
 
-        # Track scan calls
-        scan_calls = []
-        original_scan = client.raxe.scan
+        # Track scan calls via scanner
+        prompt_calls = []
+        response_calls = []
+        original_scan_prompt = client._scanner.scan_prompt
+        original_scan_response = client._scanner.scan_response
 
-        def track_scan(*args, **kwargs):
-            scan_calls.append(args[0])
-            return original_scan(*args, **kwargs)
+        def track_scan_prompt(text, *args, **kwargs):
+            prompt_calls.append(text)
+            return original_scan_prompt(text, *args, **kwargs)
 
-        client.raxe.scan = track_scan
+        def track_scan_response(text, *args, **kwargs):
+            response_calls.append(text)
+            return original_scan_response(text, *args, **kwargs)
+
+        client._scanner.scan_prompt = track_scan_prompt
+        client._scanner.scan_response = track_scan_response
 
         # Make request
         client.chat.completions.create(
@@ -268,9 +297,9 @@ class TestRaxeOpenAI:
         )
 
         # Should only have scanned prompt, not response
-        assert len(scan_calls) == 1
-        assert "Hello" in scan_calls
-        assert "Safe response from OpenAI" not in scan_calls
+        assert len(prompt_calls) == 1
+        assert "Hello" in prompt_calls
+        assert len(response_calls) == 0  # Response scanning disabled
 
     def test_wrapper_with_multiple_messages(self, patched_openai_module, mock_openai_response):
         """Test wrapper handles multiple messages in conversation."""
@@ -278,15 +307,15 @@ class TestRaxeOpenAI:
 
         client = RaxeOpenAI(api_key="sk-test", raxe_block_on_threat=False)
 
-        # Track scan calls
+        # Track scan calls via scanner
         scan_calls = []
-        original_scan = client.raxe.scan
+        original_scan_prompt = client._scanner.scan_prompt
 
-        def track_scan(*args, **kwargs):
-            scan_calls.append(args[0])
-            return original_scan(*args, **kwargs)
+        def track_scan_prompt(text, *args, **kwargs):
+            scan_calls.append(text)
+            return original_scan_prompt(text, *args, **kwargs)
 
-        client.raxe.scan = track_scan
+        client._scanner.scan_prompt = track_scan_prompt
 
         # Should work with conversation
         response = client.chat.completions.create(
@@ -299,7 +328,7 @@ class TestRaxeOpenAI:
             ]
         )
 
-        # Should only scan user messages (and possibly response)
+        # Should only scan user messages (not system/assistant)
         assert len(scan_calls) >= 2
         assert "First question" in scan_calls
         assert "Second question" in scan_calls
@@ -315,15 +344,15 @@ class TestRaxeOpenAI:
 
         client = RaxeOpenAI(api_key="sk-test", raxe_scan_responses=False)
 
-        # Track scan calls
+        # Track scan calls via scanner
         scan_calls = []
-        original_scan = client.raxe.scan
+        original_scan_prompt = client._scanner.scan_prompt
 
-        def track_scan(*args, **kwargs):
-            scan_calls.append(args[0])
-            return original_scan(*args, **kwargs)
+        def track_scan_prompt(text, *args, **kwargs):
+            scan_calls.append(text)
+            return original_scan_prompt(text, *args, **kwargs)
 
-        client.raxe.scan = track_scan
+        client._scanner.scan_prompt = track_scan_prompt
 
         # Mix of roles
         client.chat.completions.create(
@@ -517,6 +546,7 @@ class TestIntegrationScenarios:
 
     def test_strict_mode_blocking(self, patched_openai_module, mock_openai_response):
         """Test strict mode (block on any threat)."""
+        from raxe.sdk.agent_scanner import AgentScanResult, ScanType, ThreatDetectedError
         from raxe.sdk.wrappers.openai import RaxeOpenAI
 
         client = RaxeOpenAI(
@@ -524,23 +554,32 @@ class TestIntegrationScenarios:
             raxe_block_on_threat=True  # Strict mode
         )
 
-        # Mock the scan to raise on threat (since block_on_threat=True is passed)
+        # Mock the scanner to raise ThreatDetectedError on threat
         def mock_scan_with_threat(*args, **kwargs):
-            # The real Raxe.scan() raises when block_on_threat=True
-            # and threat is detected
-            if kwargs.get('block_on_threat', False):
-                mock_result = Mock()
-                mock_result.has_threats = True
-                mock_result.should_block = True
-                mock_result.severity = "CRITICAL"
-                mock_result.total_detections = 1
-                raise SecurityException(mock_result)
-            return Mock(has_threats=False, should_block=False)
+            mock_result = AgentScanResult(
+                scan_type=ScanType.PROMPT,
+                has_threats=True,
+                should_block=True,
+                severity="CRITICAL",
+                detection_count=1,
+                trace_id="test",
+                step_id=0,
+                duration_ms=1.0,
+                message="Threat detected",
+                details={},
+                policy_violation=False,
+                rule_ids=["pi-001"],
+                families=["PI"],
+                prompt_hash="sha256:test",
+                action_taken="block",
+                pipeline_result=None,
+            )
+            raise ThreatDetectedError(mock_result)
 
-        client.raxe.scan = mock_scan_with_threat
+        client._scanner.scan_prompt = mock_scan_with_threat
 
         # Should raise on threat
-        with pytest.raises((RaxeBlockedError, SecurityException)):
+        with pytest.raises((RaxeBlockedError, SecurityException, ThreatDetectedError)):
             client.chat.completions.create(
                 model="gpt-4",
                 messages=[

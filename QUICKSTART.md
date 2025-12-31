@@ -139,13 +139,17 @@ raxe auth status
 ```python
 from raxe import RaxeOpenAI
 
+# Default: log-only mode (safe for production)
 client = RaxeOpenAI(api_key="sk-...")
 
-# Threats blocked automatically before reaching OpenAI
+# Threats logged automatically, requests pass through
 response = client.chat.completions.create(
     model="gpt-4",
     messages=[{"role": "user", "content": user_input}]
 )
+
+# Or enable blocking mode
+client = RaxeOpenAI(api_key="sk-...", raxe_block_on_threat=True)
 ```
 
 ### Option 2: Decorator Pattern
@@ -280,7 +284,7 @@ raxe auth                # Re-authenticate
 
 <div align="center">
 
-**RAXE Community Edition - Open Beta v0.0.1**
+**RAXE Community Edition - Open Beta v0.4.0**
 
 100% local. Under 10ms. Free forever.
 

@@ -12,11 +12,21 @@ With:
 
 The wrapper intercepts chat.completions.create calls, scans user messages
 before sending to OpenAI, and optionally scans responses.
+
+Default behavior is LOG-ONLY (safe to add to production without breaking flows).
+Enable blocking with `raxe_block_on_threat=True` for strict mode.
 """
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any
+
+from raxe.sdk.agent_scanner import (
+    AgentScanner,
+    AgentScannerConfig,
+    ScanType,
+    create_agent_scanner,
+)
 
 if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
@@ -67,7 +77,7 @@ class RaxeOpenAI(OpenAI):
         self,
         *args,
         raxe: Raxe | None = None,
-        raxe_block_on_threat: bool = True,
+        raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
         **kwargs
     ):
@@ -76,22 +86,23 @@ class RaxeOpenAI(OpenAI):
         Args:
             *args: Passed to OpenAI.__init__
             raxe: Optional Raxe client (creates default if not provided)
-            raxe_block_on_threat: Block requests on threat detection
+            raxe_block_on_threat: Block requests on threat detection.
+                Default is False (log-only mode, safe for production).
             raxe_scan_responses: Also scan OpenAI responses
             **kwargs: Passed to OpenAI.__init__
 
         Example:
-            # With default Raxe client
+            # With default Raxe client (log-only mode)
             client = RaxeOpenAI(api_key="sk-...")
 
             # With custom Raxe client
             raxe = Raxe(telemetry=False)
             client = RaxeOpenAI(api_key="sk-...", raxe=raxe)
 
-            # Disable blocking (just monitor)
+            # Enable blocking (strict mode)
             client = RaxeOpenAI(
                 api_key="sk-...",
-                raxe_block_on_threat=False
+                raxe_block_on_threat=True
             )
         """
         # Initialize parent OpenAI client
@@ -105,6 +116,14 @@ class RaxeOpenAI(OpenAI):
         self.raxe = raxe
         self.raxe_block_on_threat = raxe_block_on_threat
         self.raxe_scan_responses = raxe_scan_responses
+
+        # Create AgentScanner for unified scanning
+        config = AgentScannerConfig(
+            scan_prompts=True,
+            scan_responses=raxe_scan_responses,
+            on_threat="block" if raxe_block_on_threat else "log",
+        )
+        self._scanner = create_agent_scanner(raxe, config, integration_type="openai")
 
         # Wrap the chat completions resource
         self._wrap_chat_completions()
@@ -156,21 +175,17 @@ class RaxeOpenAI(OpenAI):
             content: Message content to scan
 
         Raises:
-            RaxeBlockedError: If threat detected and blocking enabled
+            ThreatDetectedError: If threat detected and blocking enabled
         """
-        # Use Raxe.scan() - single entry point
-        result = self.raxe.scan(
-            content,
-            block_on_threat=self.raxe_block_on_threat
-        )
+        # Use AgentScanner for unified scanning with integration telemetry
+        result = self._scanner.scan_prompt(content)
 
-        # If we get here and blocking is enabled but not raised,
-        # it means no threat was detected or scan() didn't raise
-        # Just log for monitoring
+        # AgentScanner handles blocking if configured
+        # Log for monitoring
         if result.has_threats:
             logger.warning(
                 f"Threat detected in user message: {result.severity} "
-                f"(block={self.raxe_block_on_threat})"
+                f"(action={result.action_taken})"
             )
 
     def _scan_response(self, response: Any):
@@ -184,9 +199,8 @@ class RaxeOpenAI(OpenAI):
                 if hasattr(choice, "message") and hasattr(choice.message, "content"):
                     content = choice.message.content
                     if content:
-                        # Scan but don't block on responses
-                        # (just monitor for policy violations)
-                        result = self.raxe.scan(content, block_on_threat=False)
+                        # Scan response (AgentScanner handles blocking based on config)
+                        result = self._scanner.scan_response(content)
                         if result.has_threats:
                             logger.info(
                                 f"Threat detected in OpenAI response: {result.severity}"

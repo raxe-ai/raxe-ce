@@ -9,6 +9,9 @@ Framework-specific integrations for RAXE scanning:
     - LlamaIndex span handler (RaxeSpanHandler)
     - AutoGen conversation guard (RaxeConversationGuard)
     - CrewAI crew guard (RaxeCrewGuard)
+    - LiteLLM callback handler (RaxeLiteLLMCallback)
+    - DSPy callback handler (RaxeDSPyCallback)
+    - DSPy module guard (RaxeModuleGuard)
     - Base AgentScanner for multi-agent frameworks
 
 These integrations provide framework-native ways to add RAXE scanning
@@ -78,6 +81,18 @@ if TYPE_CHECKING:
         create_portkey_guard,
         create_portkey_webhook,
     )
+    from raxe.sdk.integrations.litellm import (
+        LiteLLMConfig,
+        RaxeLiteLLMCallback,
+        create_litellm_handler,
+    )
+    from raxe.sdk.integrations.dspy import (
+        DSPyConfig,
+        RaxeDSPyCallback,
+        RaxeModuleGuard,
+        create_dspy_callback,
+        create_module_guard,
+    )
 
 __all__ = [
     # LangChain
@@ -102,6 +117,16 @@ __all__ = [
     "PortkeyGuardConfig",
     "create_portkey_guard",
     "create_portkey_webhook",
+    # LiteLLM
+    "RaxeLiteLLMCallback",
+    "LiteLLMConfig",
+    "create_litellm_handler",
+    # DSPy
+    "RaxeDSPyCallback",
+    "RaxeModuleGuard",
+    "DSPyConfig",
+    "create_dspy_callback",
+    "create_module_guard",
     # Base agent scanner classes
     "AgentScanner",
     "AgentScannerConfig",
@@ -212,6 +237,30 @@ def __getattr__(name: str):
         # Works with any OpenAI-compatible client
         from raxe.sdk.integrations import portkey
         return getattr(portkey, name)
+
+    # LiteLLM integration
+    elif name in (
+        "RaxeLiteLLMCallback",
+        "LiteLLMConfig",
+        "create_litellm_handler",
+    ):
+        # LiteLLM integration - no hard dependency on litellm
+        # The callback works with standard LiteLLM API
+        from raxe.sdk.integrations import litellm
+        return getattr(litellm, name)
+
+    # DSPy integration
+    elif name in (
+        "RaxeDSPyCallback",
+        "RaxeModuleGuard",
+        "DSPyConfig",
+        "create_dspy_callback",
+        "create_module_guard",
+    ):
+        # DSPy integration - no hard dependency on dspy
+        # Works with DSPy's callback system
+        from raxe.sdk.integrations import dspy
+        return getattr(dspy, name)
 
     # Base agent scanner classes (no external dependencies)
     elif name in (

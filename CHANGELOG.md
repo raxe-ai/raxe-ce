@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.1] - 2025-12-31
+
+### New Integrations & Improvements
+
+#### Added
+
+- **LiteLLM Integration** (`RaxeLiteLLMCallback`)
+  - Automatic scanning of LLM API calls across 200+ providers
+  - Implements LiteLLM CustomLogger interface
+  - Scans inputs before API calls and responses after
+  - Default log-only mode for safe production deployment
+  - Factory function: `create_litellm_handler()`
+
+- **DSPy Integration** (`RaxeDSPyCallback`, `RaxeModuleGuard`)
+  - Callback handler for DSPy's BaseCallback interface
+  - Module guard wrapper for direct module protection
+  - Scans module inputs/outputs, LM prompts/responses, and tool calls
+  - Factory functions: `create_dspy_callback()`, `create_module_guard()`
+
+#### Fixed
+
+- **OpenAI Wrapper Default**: Changed from blocking to log-only (safe defaults)
+- **Anthropic Wrapper Default**: Changed from blocking to log-only (safe defaults)
+- **VertexAI Wrapper Default**: Changed from blocking to log-only (safe defaults)
+
+#### Changed
+
+- **Unified AgentScanner Architecture**: All integrations now use the consolidated `AgentScanner` for consistent telemetry and scanning behavior
+  - LlamaIndex migrated to AgentScanner
+  - Portkey guard migrated to AgentScanner
+  - OpenAI wrapper migrated to AgentScanner
+  - Anthropic wrapper migrated to AgentScanner
+- All integrations pass `integration_type` for telemetry tracking
+
+---
+
 ## [0.4.0] - 2025-12-30
 
 ### Agentic Framework Integrations

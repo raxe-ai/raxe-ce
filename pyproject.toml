@@ -81,24 +81,59 @@ config-tools = [
 wrappers = [
     "openai>=1.0",
     "anthropic>=0.5",
-    "langchain>=0.1",
 ]
 
-# LiteLLM integration
+# Framework integrations
+langchain = [
+    "langchain>=0.1",
+    "langchain-core>=0.1",
+]
+
+crewai = [
+    "crewai>=0.30",
+]
+
+autogen = [
+    "pyautogen>=0.2",
+]
+
+llamaindex = [
+    "llama-index-core>=0.10",
+]
+
 litellm = [
     "litellm>=1.0",
 ]
 
-# DSPy integration
 dspy = [
     "dspy>=2.0",
 ]
 
-# All optional features (ML is now in core dependencies)
+# Portkey uses OpenAI client
+portkey = [
+    "openai>=1.0",
+]
+
+# All framework integrations
+agents = [
+    "langchain>=0.1",
+    "langchain-core>=0.1",
+    "crewai>=0.30",
+    "pyautogen>=0.2",
+    "llama-index-core>=0.10",
+    "litellm>=1.0",
+    "dspy>=2.0",
+]
+
+# All optional features
 all = [
     "openai>=1.0",
     "anthropic>=0.5",
     "langchain>=0.1",
+    "langchain-core>=0.1",
+    "crewai>=0.30",
+    "pyautogen>=0.2",
+    "llama-index-core>=0.10",
     "litellm>=1.0",
     "dspy>=2.0",
     "prompt-toolkit>=3.0,<4.0",

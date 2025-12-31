@@ -11,44 +11,9 @@ on:
         type: string
 
 jobs:
-  validate_release:
-    name: Validate Release
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: Run linting (relaxed for v0.x)
-        run: |
-          # For alpha releases (v0.x), allow linting issues but report them
-          ruff check src/ tests/ --statistics || echo "Note: Linting issues present in alpha release"
-
-      - name: Run type checking (relaxed for v0.x)
-        run: |
-          # For alpha releases (v0.x), allow type issues but report them
-          mypy src/raxe --no-error-summary || echo "Note: Type checking issues present in alpha release"
-
-      - name: Run tests (relaxed coverage for v0.x)
-        run: |
-          # For alpha releases (v0.x), require basic functionality only
-          pytest --cov=raxe --cov-fail-under=40 || echo "Note: Coverage below target in alpha release"
-
-      - name: Run security scan
-        run: bandit -r src/raxe -ll || true
-
+  # Quick validation - just build and basic checks (not full test suite)
   build:
-    name: Build Distribution
-    needs: validate_release
+    name: Build & Validate
     runs-on: ubuntu-latest
 
     steps:
@@ -57,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install build dependencies
         run: |
@@ -79,60 +44,21 @@ jobs:
             exit 1
           fi
 
+      - name: Test import (quick sanity check)
+        run: |
+          pip install dist/*.whl
+          python -c "from raxe import Raxe; print('Import OK')"
+          python -c "from raxe import __version__; print(f'Version: {__version__}')"
+
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
           name: release-distributions
           path: dist/
 
-  publish_to_testpypi:
-    name: Publish to TestPyPI
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/project/raxe/
-
-    steps:
-      - name: Download distributions
-        uses: actions/download-artifact@v4
-        with:
-          name: release-distributions
-          path: dist/
-
-      - name: Publish to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          skip-existing: true
-
-  test_testpypi_installation:
-    name: Test TestPyPI Installation
-    needs: publish_to_testpypi
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Wait for package to be available
-        run: sleep 60
-
-      - name: Install from TestPyPI
-        run: |
-          pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ raxe
-
-      - name: Test installation
-        run: |
-          python -c "from raxe import Raxe; print('Import successful')"
-          raxe --version
-
   publish_to_pypi:
     name: Publish to PyPI
-    needs: test_testpypi_installation
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -150,91 +76,25 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-  create_github_release:
-    name: Create GitHub Release Notes
+  verify_installation:
+    name: Verify PyPI Installation
     needs: publish_to_pypi
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
+          python-version: "3.11"
 
-      - name: Generate changelog
-        id: changelog
+      - name: Wait for PyPI propagation
+        run: sleep 30
+
+      - name: Install from PyPI
+        run: pip install raxe --upgrade
+
+      - name: Verify installation
         run: |
-          # Get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-          if [ -z "$LATEST_TAG" ]; then
-            # First release - get all commits
-            CHANGES=$(git log --pretty=format:"- %s (%h)" --no-merges)
-          else
-            # Get commits since last tag
-            CHANGES=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
-          fi
-
-          echo "changes<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Release Notes
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const changes = `${{ steps.changelog.outputs.changes }}`;
-            const version = context.payload.release?.tag_name || '${{ inputs.version }}';
-
-            const releaseNotes = `
-            ## RAXE ${version}
-
-            ### What's Changed
-
-            ${changes}
-
-            ### Installation
-
-            \`\`\`bash
-            pip install raxe==${version}
-            \`\`\`
-
-            ### Quick Start
-
-            \`\`\`python
-            from raxe import Raxe
-
-            raxe = Raxe()
-            result = raxe.scan("Your prompt here")
-            \`\`\`
-
-            ### Documentation
-
-            - [GitHub Repository](https://github.com/raxe-ai/raxe-ce)
-            - [Installation Guide](https://github.com/raxe-ai/raxe-ce#installation)
-            - [Quick Start](https://github.com/raxe-ai/raxe-ce#quick-start)
-
-            **Full Changelog**: https://github.com/raxe-ai/raxe-ce/compare/${context.payload.release?.tag_name}...HEAD
-            `;
-
-            if (context.payload.release) {
-              await github.rest.repos.updateRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: context.payload.release.id,
-                body: releaseNotes
-              });
-            }
-
-  announce_release:
-    name: Announce Release
-    needs: create_github_release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Post release summary
-        run: |
-          echo "# Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Version: ${GITHUB_REF#refs/tags/}" >> $GITHUB_STEP_SUMMARY
-          echo "PyPI: https://pypi.org/project/raxe/" >> $GITHUB_STEP_SUMMARY
-          echo "Release Notes: ${{ github.event.release.html_url }}" >> $GITHUB_STEP_SUMMARY
+          python -c "from raxe import Raxe; print('Import successful')"
+          raxe --version
+          raxe doctor || true

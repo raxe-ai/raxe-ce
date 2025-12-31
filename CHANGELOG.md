@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.4.6 (2025-12-31)
+
+### Bug Fixes
+
+- **ci**: Simplify release workflow - remove heavy test suite
+  ([`51cbb8f`](https://github.com/raxe-ai/raxe-ce/commit/51cbb8f58b8dc102eac6d1b4053945fdfbd64168))
+
+
 ## v0.4.5 (2025-12-31)
 
 ### Bug Fixes

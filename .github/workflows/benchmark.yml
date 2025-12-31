@@ -1,0 +1,111 @@
+# Performance Benchmark Workflow
+# Tracks performance over time and alerts on regressions
+# Dashboard: https://{owner}.github.io/{repo}/dev/bench
+
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/raxe/**'
+      - 'tests/performance/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/raxe/**'
+      - 'tests/performance/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pytest-benchmark
+
+      - name: Run performance benchmarks
+        run: |
+          pytest tests/performance \
+            --benchmark-only \
+            --benchmark-json=benchmark-results.json \
+            --benchmark-columns=min,max,mean,stddev,median,ops \
+            --benchmark-sort=mean \
+            -v || true  # Don't fail on benchmark errors
+
+      - name: Check benchmark results exist
+        id: check_results
+        run: |
+          if [ -f benchmark-results.json ]; then
+            echo "results_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "results_exist=false" >> $GITHUB_OUTPUT
+            echo "No benchmark results generated"
+          fi
+
+      - name: Store benchmark result
+        if: steps.check_results.outputs.results_exist == 'true' && github.ref == 'refs/heads/main'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Only auto-push on main branch
+          auto-push: true
+          # Alert if performance degrades by 20%
+          alert-threshold: '120%'
+          # Comment on commit if alert
+          comment-on-alert: true
+          # Don't fail the workflow on alert (just warn)
+          fail-on-alert: false
+          # Store on gh-pages branch
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          # Summary name
+          summary-always: true
+
+      - name: Compare PR benchmarks
+        if: steps.check_results.outputs.results_exist == 'true' && github.event_name == 'pull_request'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Don't push PR results
+          auto-push: false
+          # Alert threshold
+          alert-threshold: '120%'
+          # Comment on PR with comparison
+          comment-on-alert: true
+          fail-on-alert: false
+          # Compare against main branch data
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          summary-always: true
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+          retention-days: 30

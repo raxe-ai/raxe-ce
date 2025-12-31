@@ -78,3 +78,29 @@ jobs:
         run: |
           # Run bandit security scan with config (skips documented exceptions)
           bandit -r src/raxe -ll -c pyproject.toml || echo "⚠️ Security scan found issues - will be addressed"
+
+  docs-validation:
+    name: Validate Documentation Samples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "."
+
+      - name: Validate critical code samples
+        run: |
+          # Run critical tests to ensure docs work for new users
+          python scripts/validate_doc_samples.py --critical-only
+
+      - name: Validate all doc samples (informational)
+        run: |
+          # Run full validation but don't fail on external dep samples
+          python scripts/validate_doc_samples.py || echo "Some doc samples need attention"

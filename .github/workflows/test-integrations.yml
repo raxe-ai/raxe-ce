@@ -138,6 +138,10 @@ jobs:
           "
 
       - name: Run integration tests
+        env:
+          # API keys for real integration testing (optional - tests skip if not set)
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           if [ -d "${{ matrix.test_path }}" ]; then
             pytest ${{ matrix.test_path }} -v --cov=raxe --cov-report=xml
@@ -188,6 +192,10 @@ jobs:
           "
 
       - name: Run all integration tests
+        env:
+          # API keys for real integration testing (optional - tests skip if not set)
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           if [ -d "tests/integration" ]; then
             pytest tests/integration -v --cov=raxe

@@ -1,0 +1,54 @@
+# CodeQL Security Analysis
+# Performs SAST (Static Application Security Testing) on Python code
+# Free for public repositories
+
+name: CodeQL Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '*.py'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '*.py'
+  schedule:
+    # Run weekly on Monday at 6:00 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  security-events: write
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze Python Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          # Use extended security queries for more thorough analysis
+          queries: +security-extended,security-and-quality
+
+      # Autobuild attempts to build any compiled languages
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"
+          # Upload results to GitHub Security tab
+          upload: true

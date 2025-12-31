@@ -77,6 +77,7 @@ __all__.append("AsyncRaxe")
 # Wrappers (optional, require respective LLM packages)
 try:
     from raxe.sdk.wrappers.openai import RaxeOpenAI  # noqa: F401 - Conditionally exported
+
     __all__.append("RaxeOpenAI")
 except ImportError:
     # OpenAI not installed, skip wrapper
@@ -84,6 +85,7 @@ except ImportError:
 
 try:
     from raxe.sdk.wrappers.anthropic import RaxeAnthropic  # noqa: F401 - Conditionally exported
+
     __all__.append("RaxeAnthropic")
 except ImportError:
     # Anthropic not installed, skip wrapper
@@ -92,6 +94,8 @@ except ImportError:
 __all__.append("cli")
 
 # Telemetry (optional, for advanced users)
-from raxe.application.telemetry_orchestrator import get_orchestrator as get_telemetry  # noqa: E402
+from raxe.application.telemetry_orchestrator import (  # noqa: E402
+    get_orchestrator as get_telemetry,  # noqa: F401
+)
 
 __all__.append("get_telemetry")

@@ -1,0 +1,106 @@
+# Pre-commit hooks for RAXE
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Auto-update: pre-commit autoupdate
+
+repos:
+  # =============================================================================
+  # Ruff - Fast Python linting and formatting (written in Rust)
+  # =============================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      # Linter - runs first, can auto-fix issues
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      # Formatter - runs after linter fixes
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # =============================================================================
+  # Mypy - DISABLED: Pre-existing type errors in codebase need fixing first
+  # Mypy runs in CI as a non-blocking check instead
+  # =============================================================================
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.14.1
+  #   hooks:
+  #     - id: mypy
+  #       name: mypy (src/raxe)
+  #       additional_dependencies: [types-pyyaml, types-requests, pydantic>=2.0]
+  #       args: [--config-file=pyproject.toml, src/raxe]
+  #       files: ^src/raxe/
+  #       pass_filenames: false
+
+  # =============================================================================
+  # Standard pre-commit hooks
+  # =============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Whitespace and file formatting
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+      # File validation
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom YAML tags
+      - id: check-toml
+      - id: check-json
+      - id: check-xml
+
+      # Git safety
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']  # 1MB limit
+      - id: detect-private-key
+      - id: check-case-conflict
+
+      # Python specific
+      - id: check-ast  # Validate Python syntax
+      - id: debug-statements  # No breakpoint() or pdb
+      - id: check-docstring-first
+
+  # =============================================================================
+  # Validate pyproject.toml
+  # =============================================================================
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.23
+    hooks:
+      - id: validate-pyproject
+
+  # =============================================================================
+  # Security checks
+  # =============================================================================
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.2
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml, -ll]  # Low-low severity, use pyproject config
+        additional_dependencies: ["bandit[toml]"]
+        files: ^src/raxe/
+
+# =============================================================================
+# Configuration
+# =============================================================================
+default_language_version:
+  python: python3.11
+
+# Skip these files
+exclude: |
+  (?x)^(
+    \.git/|
+    \.venv.*/|
+    __pycache__/|
+    \.pytest_cache/|
+    \.mypy_cache/|
+    \.ruff_cache/|
+    dist/|
+    build/|
+    .*\.egg-info/|
+    tests/fixtures/|
+    tests/golden/fixtures/
+  )$

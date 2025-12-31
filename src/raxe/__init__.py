@@ -36,7 +36,7 @@ Architecture:
 For more information: https://docs.raxe.ai
 """
 
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 __author__ = "RAXE Team"
 __license__ = "Proprietary"
 

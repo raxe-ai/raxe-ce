@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.4.5 (2025-12-31)
+
+### Bug Fixes
+
+- **ci**: Use RELEASE_PAT for workflow dispatch permissions
+  ([`b1f482b`](https://github.com/raxe-ai/raxe-ce/commit/b1f482be11be45737e3c3719cd03bcdd0edbc4fb))
+
+
 ## v0.4.4 (2025-12-31)
 
 ### Bug Fixes

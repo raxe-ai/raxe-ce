@@ -34,6 +34,7 @@ Usage:
     # Blocking mode for prompts
     handler = RaxeCallbackHandler(block_on_prompt_threats=True)
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,7 +45,6 @@ from raxe.sdk.agent_scanner import (
     AgentScanner,
     AgentScannerConfig,
     AgentScanResult,
-    ScanConfig,
     ScanType,
     ToolPolicy,
     create_agent_scanner,
@@ -65,6 +65,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # LangChain Version Detection
 # ============================================================================
+
 
 def _detect_langchain_version() -> tuple[int, int, int]:
     """Detect installed LangChain version.
@@ -109,6 +110,7 @@ def _has_langchain_core() -> bool:
     """Check if langchain-core is available."""
     try:
         import langchain_core  # noqa: F401
+
         return True
     except ImportError:
         return False
@@ -118,6 +120,7 @@ def _has_run_manager() -> bool:
     """Check if RunManager is available (0.1+)."""
     try:
         from langchain_core.callbacks.manager import RunManager  # noqa: F401
+
         return True
     except ImportError:
         return False
@@ -134,10 +137,12 @@ def _get_base_callback_handler_class():
     """
     try:
         from langchain_core.callbacks import BaseCallbackHandler
+
         return BaseCallbackHandler
     except ImportError:
         try:
             from langchain.callbacks.base import BaseCallbackHandler
+
             return BaseCallbackHandler
         except ImportError:
             return object
@@ -146,6 +151,7 @@ def _get_base_callback_handler_class():
 # ============================================================================
 # Base Callback Handler Implementation
 # ============================================================================
+
 
 class _RaxeCallbackHandlerMixin:
     """Mixin containing RAXE callback handler logic.
@@ -203,9 +209,7 @@ class _RaxeCallbackHandlerMixin:
                 # Default to log-only mode for safety
                 on_threat="block" if block_on_prompt_threats else "log",
             )
-            self._scanner = create_agent_scanner(
-                self._raxe, config, integration_type="langchain"
-            )
+            self._scanner = create_agent_scanner(self._raxe, config, integration_type="langchain")
 
         # Trace ID for correlation (set on each chain/agent run)
         self.trace_id: str | None = None
@@ -351,7 +355,7 @@ class _RaxeCallbackHandlerMixin:
         # Scan tool input
         result = self._scanner.scan_tool_call(
             tool_name=tool_name,
-            tool_input=input_str,
+            tool_args=input_str,
         )
 
         if result.has_threats:
@@ -420,7 +424,7 @@ class _RaxeCallbackHandlerMixin:
 
         result = self._scanner.scan_tool_call(
             tool_name=tool_name,
-            tool_input=tool_input,
+            tool_args=tool_input,
         )
 
         if result.has_threats:
@@ -722,9 +726,7 @@ class _RaxeCallbackHandlerMixin:
 
         result = await asyncio.get_event_loop().run_in_executor(
             None,
-            lambda: self._scanner.scan_tool_call(
-                tool_name=tool_name, tool_input=input_str
-            ),
+            lambda: self._scanner.scan_tool_call(tool_name=tool_name, tool_args=input_str),
         )
 
         if result.has_threats:
@@ -851,7 +853,7 @@ def _create_callback_handler_class() -> type:
         {
             "__doc__": _RaxeCallbackHandlerMixin.__doc__,
             "__module__": __name__,
-        }
+        },
     )
 
     return _RaxeCallbackHandlerClass

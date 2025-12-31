@@ -19,7 +19,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from raxe.application.telemetry_manager import TelemetryManager
-from raxe.domain.telemetry import create_scan_event, hash_text, validate_event_privacy
+from raxe.domain.telemetry import create_scan_event_legacy as create_scan_event
+from raxe.domain.telemetry import hash_text, validate_event_privacy
 from raxe.infrastructure.telemetry.config import TelemetryConfig
 from raxe.infrastructure.telemetry.queue import EventPriority, EventQueue
 from raxe.infrastructure.telemetry.sender import (
@@ -68,21 +69,9 @@ class TestEventQueue:
         queue = EventQueue(db_path=temp_db)
 
         # Enqueue events with different priorities
-        queue.enqueue(
-            "scan_performed",
-            {"test": "data1"},
-            EventPriority.CRITICAL
-        )
-        queue.enqueue(
-            "scan_performed",
-            {"test": "data2"},
-            EventPriority.LOW
-        )
-        queue.enqueue(
-            "scan_performed",
-            {"test": "data3"},
-            EventPriority.HIGH
-        )
+        queue.enqueue("scan_performed", {"test": "data1"}, EventPriority.CRITICAL)
+        queue.enqueue("scan_performed", {"test": "data2"}, EventPriority.LOW)
+        queue.enqueue("scan_performed", {"test": "data3"}, EventPriority.HIGH)
 
         # Dequeue batch - should get in priority order
         _batch_id, events = queue.dequeue_batch(batch_size=10)
@@ -155,9 +144,7 @@ class TestCircuitBreaker:
     def test_circuit_breaker_states(self):
         """Test circuit breaker state transitions."""
         config = CircuitBreakerConfig(
-            failure_threshold=2,
-            reset_timeout_seconds=1,
-            success_threshold=1
+            failure_threshold=2, reset_timeout_seconds=1, success_threshold=1
         )
         breaker = CircuitBreaker(config)
 
@@ -171,11 +158,11 @@ class TestCircuitBreaker:
 
         # Two failures opens circuit
         with pytest.raises(Exception):
-            breaker.call(lambda: 1/0)
+            breaker.call(lambda: 1 / 0)
         assert breaker.get_state() == CircuitState.CLOSED
 
         with pytest.raises(Exception):
-            breaker.call(lambda: 1/0)
+            breaker.call(lambda: 1 / 0)
         assert breaker.get_state() == CircuitState.OPEN
 
         # Circuit is open, calls rejected
@@ -184,6 +171,7 @@ class TestCircuitBreaker:
 
         # Wait for reset timeout
         import time
+
         time.sleep(1.1)
 
         # Circuit transitions to half-open
@@ -195,7 +183,7 @@ class TestCircuitBreaker:
 class TestBatchSender:
     """Test batch sender with mocked HTTP."""
 
-    @patch('urllib.request.urlopen')
+    @patch("urllib.request.urlopen")
     def test_successful_send(self, mock_urlopen):
         """Test successful batch sending."""
         # Mock successful response
@@ -204,10 +192,7 @@ class TestBatchSender:
         mock_response.code = 200
         mock_urlopen.return_value.__enter__.return_value = mock_response
 
-        sender = BatchSender(
-            endpoint="https://test.com/events",
-            api_key="test_key"
-        )
+        sender = BatchSender(endpoint="https://test.com/events", api_key="test_key")
 
         events = [{"event": "test1"}, {"event": "test2"}]
         result = sender.send_batch(events)
@@ -215,7 +200,7 @@ class TestBatchSender:
         assert result["status"] == "ok"
         mock_urlopen.assert_called_once()
 
-    @patch('urllib.request.urlopen')
+    @patch("urllib.request.urlopen")
     def test_retry_on_failure(self, mock_urlopen):
         """Test retry logic on failures."""
         # Mock failures then success
@@ -226,20 +211,13 @@ class TestBatchSender:
                 read=MagicMock(return_value=b'{"status": "ok"}'),
                 code=200,
                 __enter__=lambda s: s,
-                __exit__=lambda s, *args: None
-            )
+                __exit__=lambda s, *args: None,
+            ),
         ]
 
-        retry_policy = RetryPolicy(
-            max_retries=2,
-            initial_delay_ms=10,
-            backoff_multiplier=1.5
-        )
+        retry_policy = RetryPolicy(max_retries=2, initial_delay_ms=10, backoff_multiplier=1.5)
 
-        sender = BatchSender(
-            endpoint="https://test.com/events",
-            retry_policy=retry_policy
-        )
+        sender = BatchSender(endpoint="https://test.com/events", retry_policy=retry_policy)
 
         events = [{"event": "test"}]
         result = sender.send_batch(events)
@@ -270,35 +248,16 @@ class TestEventCreation:
         scan_result = {
             "prompt": "Tell me about user@example.com",
             "l1_result": {
-                "detections": [
-                    {
-                        "rule_id": "pii_001",
-                        "severity": "HIGH",
-                        "confidence": 0.95
-                    }
-                ]
+                "detections": [{"rule_id": "pii_001", "severity": "HIGH", "confidence": 0.95}]
             },
-            "l2_result": {
-                "predictions": [
-                    {
-                        "threat_type": "pii_leak",
-                        "confidence": 0.88
-                    }
-                ]
-            },
-            "policy_result": {
-                "action": "BLOCK",
-                "matched_policies": ["no_pii"]
-            }
+            "l2_result": {"predictions": [{"threat_type": "pii_leak", "confidence": 0.88}]},
+            "policy_result": {"action": "BLOCK", "matched_policies": ["no_pii"]},
         }
 
         event = create_scan_event(
             scan_result=scan_result,
             customer_id="cust-12345678",
-            context={
-                "session_id": "sess_123",
-                "user_id": "user_456"
-            }
+            context={"session_id": "sess_123", "user_id": "user_456"},
         )
 
         # Check no PII in event
@@ -321,37 +280,19 @@ class TestEventCreation:
     def test_event_priority_calculation(self):
         """Test event priority is calculated correctly."""
         # Critical severity
-        event1 = {
-            "scan_result": {
-                "highest_severity": "critical"
-            }
-        }
+        event1 = {"scan_result": {"highest_severity": "critical"}}
         assert calculate_event_priority(event1) == "critical"
 
         # Policy block
-        event2 = {
-            "scan_result": {
-                "policy_decision": {
-                    "action": "BLOCK"
-                }
-            }
-        }
+        event2 = {"scan_result": {"policy_decision": {"action": "BLOCK"}}}
         assert calculate_event_priority(event2) == "critical"
 
         # High severity
-        event3 = {
-            "scan_result": {
-                "highest_severity": "high"
-            }
-        }
+        event3 = {"scan_result": {"highest_severity": "high"}}
         assert calculate_event_priority(event3) == "high"
 
         # Clean scan
-        event4 = {
-            "scan_result": {
-                "threat_detected": False
-            }
-        }
+        event4 = {"scan_result": {"threat_detected": False}}
         assert calculate_event_priority(event4) == "low"
 
 
@@ -370,12 +311,15 @@ class TestTelemetryConfig:
 
     def test_environment_overrides(self):
         """Test environment variable overrides."""
-        with patch.dict(os.environ, {
-            "RAXE_TELEMETRY_ENABLED": "false",
-            "RAXE_TELEMETRY_PRIVACY_MODE": "detailed",
-            "RAXE_TELEMETRY_BATCH_SIZE": "50",
-            "RAXE_TELEMETRY_SAMPLE_RATE": "0.5"
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "RAXE_TELEMETRY_ENABLED": "false",
+                "RAXE_TELEMETRY_PRIVACY_MODE": "detailed",
+                "RAXE_TELEMETRY_BATCH_SIZE": "50",
+                "RAXE_TELEMETRY_SAMPLE_RATE": "0.5",
+            },
+        ):
             config = TelemetryConfig.from_environment()
 
             assert config.enabled is False
@@ -387,7 +331,7 @@ class TestTelemetryConfig:
         """Test privacy settings are enforced."""
         config = TelemetryConfig(
             privacy_mode="strict",
-            include_full_prompts=True  # Should be overridden
+            include_full_prompts=True,  # Should be overridden
         )
         config._validate_privacy()
 
@@ -427,14 +371,10 @@ class TestTelemetryManager:
         """Test manager initializes correctly."""
         config = TelemetryConfig(
             enabled=True,
-            flush_interval_ms=0  # Disable auto-flush for testing
+            flush_interval_ms=0,  # Disable auto-flush for testing
         )
 
-        manager = TelemetryManager(
-            config=config,
-            db_path=temp_db,
-            api_key="test_key"
-        )
+        manager = TelemetryManager(config=config, db_path=temp_db, api_key="test_key")
 
         assert manager.config.enabled is True
         assert manager.queue is not None
@@ -455,10 +395,7 @@ class TestTelemetryManager:
         assert manager.sender is None
 
         # Should not crash when disabled
-        result = manager.track_scan(
-            scan_result={"test": "data"},
-            customer_id="cust-12345678"
-        )
+        result = manager.track_scan(scan_result={"test": "data"}, customer_id="cust-12345678")
         assert result is None
 
         stats = manager.get_stats()
@@ -466,40 +403,22 @@ class TestTelemetryManager:
 
     def test_track_scan_end_to_end(self, temp_db):
         """Test end-to-end scan tracking."""
-        config = TelemetryConfig(
-            enabled=True,
-            flush_interval_ms=0
-        )
+        config = TelemetryConfig(enabled=True, flush_interval_ms=0)
 
-        manager = TelemetryManager(
-            config=config,
-            db_path=temp_db
-        )
+        manager = TelemetryManager(config=config, db_path=temp_db)
 
         scan_result = {
             "prompt": "Test prompt with email@example.com",
             "l1_result": {
-                "detections": [{
-                    "rule_id": "test_001",
-                    "severity": "CRITICAL",
-                    "confidence": 1.0
-                }]
+                "detections": [{"rule_id": "test_001", "severity": "CRITICAL", "confidence": 1.0}]
             },
-            "performance": {
-                "total_ms": 10.5,
-                "l1_ms": 5.2,
-                "l2_ms": 3.1,
-                "policy_ms": 2.2
-            }
+            "performance": {"total_ms": 10.5, "l1_ms": 5.2, "l2_ms": 3.1, "policy_ms": 2.2},
         }
 
         event_id = manager.track_scan(
             scan_result=scan_result,
             customer_id="cust-12345678",
-            context={
-                "session_id": "sess_abc",
-                "app_name": "test_app"
-            }
+            context={"session_id": "sess_abc", "app_name": "test_app"},
         )
 
         assert event_id is not None

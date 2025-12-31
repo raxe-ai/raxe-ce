@@ -3,6 +3,7 @@ RAXE CLI - Command-line interface.
 
 Uses the unified Raxe client internally - no duplicate logic.
 """
+
 import json
 import sys
 from pathlib import Path
@@ -13,8 +14,8 @@ from raxe import __version__
 from raxe.cli.auth import auth, auth_link
 from raxe.cli.config import config
 from raxe.cli.doctor import doctor
-from raxe.cli.event import event
 from raxe.cli.error_handler import handle_cli_error
+from raxe.cli.event import event
 from raxe.cli.exit_codes import (
     EXIT_CONFIG_ERROR,
     EXIT_INVALID_INPUT,
@@ -37,7 +38,6 @@ from raxe.cli.test import test
 from raxe.cli.tune import tune
 from raxe.cli.validate import validate_rule_command
 from raxe.sdk.client import Raxe
-
 
 # Note: Telemetry flush is now handled by the unified helper:
 # from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
@@ -70,6 +70,7 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
     # This recovers events that were queued but not flushed due to crashes or improper exit
     try:
         from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
+
         flush_stale_telemetry_async()
     except Exception:
         pass  # Never block CLI startup
@@ -90,6 +91,7 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
                 display_first_run_message(console)
             else:
                 from raxe.cli.branding import print_help_menu
+
                 print_help_menu(console)
         ctx.exit()
 
@@ -97,6 +99,7 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
     if ctx.invoked_subcommand:
         try:
             from raxe.infrastructure.tracking.usage import UsageTracker
+
             tracker = UsageTracker()
             tracker.record_command(ctx.invoked_subcommand)
         except Exception:
@@ -106,10 +109,12 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
     # Enable console logging if verbose flag set
     if verbose:
         import os
+
         os.environ["RAXE_ENABLE_CONSOLE_LOGGING"] = "true"
 
         # Reconfigure logging to enable console output
         from raxe.utils.logging import setup_logging
+
         setup_logging(enable_console_logging=True)
 
 
@@ -161,9 +166,14 @@ def init(api_key: str | None, telemetry: bool, force: bool):
     summary.append("  📂 Location: ", style="white")
     summary.append(f"{config_file}\n", style="cyan")
     summary.append("  🔑 API Key: ", style="white")
-    summary.append(f"{api_key if api_key else 'Not configured (optional)'}\n", style="yellow" if not api_key else "green")
+    summary.append(
+        f"{api_key if api_key else 'Not configured (optional)'}\n",
+        style="yellow" if not api_key else "green",
+    )
     summary.append("  📊 Telemetry: ", style="white")
-    summary.append(f"{'Enabled' if telemetry else 'Disabled'}\n", style="green" if telemetry else "yellow")
+    summary.append(
+        f"{'Enabled' if telemetry else 'Disabled'}\n", style="green" if telemetry else "yellow"
+    )
     summary.append("  ⚡ Performance: ", style="white")
     summary.append("Balanced mode with L2 detection\n", style="cyan")
 
@@ -213,16 +223,23 @@ policies:
     next_steps.append('raxe scan "your text here"\n', style="cyan")
     next_steps.append("     Scan text for security threats\n\n", style="dim")
     next_steps.append("  2️⃣  ", style="white")
-    next_steps.append('raxe test\n', style="cyan")
+    next_steps.append("raxe test\n", style="cyan")
     next_steps.append("     Test your configuration\n\n", style="dim")
     next_steps.append("  3️⃣  ", style="white")
-    next_steps.append('raxe stats\n', style="cyan")
+    next_steps.append("raxe stats\n", style="cyan")
     next_steps.append("     View statistics & achievements\n\n", style="dim")
     next_steps.append("  📚  ", style="white")
-    next_steps.append('https://docs.raxe.ai\n', style="cyan underline")
+    next_steps.append("https://docs.raxe.ai\n", style="cyan underline")
     next_steps.append("     Read the documentation", style="dim")
 
-    console.print(Panel(next_steps, title="[bold cyan]Next Steps[/bold cyan]", border_style="cyan", padding=(1, 2)))
+    console.print(
+        Panel(
+            next_steps,
+            title="[bold cyan]Next Steps[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 2),
+        )
+    )
     console.print()
 
 
@@ -401,6 +418,7 @@ def scan(
 
     # Show compact logo (for visual consistency)
     from raxe.cli.branding import print_logo
+
     if format == "text" and not quiet:  # Only show for text output when not quiet
         print_logo(console, compact=True)
         console.print()
@@ -418,11 +436,7 @@ def scan(
     from raxe.cli.progress import create_progress_indicator
     from raxe.cli.progress_context import detect_progress_mode
 
-    progress_mode = detect_progress_mode(
-        quiet=quiet,
-        verbose=verbose,
-        no_color=no_color
-    )
+    progress_mode = detect_progress_mode(quiet=quiet, verbose=verbose, no_color=no_color)
 
     progress = create_progress_indicator(progress_mode)
 
@@ -437,7 +451,10 @@ def scan(
     # Add CLI-specified suppressions (temporary, for this scan only)
     cli_suppressions: list[tuple[str, str]] = []  # (pattern, action) tuples
     if suppress_patterns:
-        from raxe.domain.suppression import Suppression, SuppressionAction, SuppressionValidationError
+        from raxe.domain.suppression import (
+            SuppressionAction,
+            SuppressionValidationError,
+        )
 
         for pattern_str in suppress_patterns:
             try:
@@ -459,7 +476,7 @@ def scan(
                     f"{e}\n\nValid pattern examples:\n"
                     "  pi-001         - Suppress specific rule\n"
                     "  pi-*           - Suppress all prompt injection rules\n"
-                    "  jb-*:FLAG      - Flag jailbreak rules for review\n"
+                    "  jb-*:FLAG      - Flag jailbreak rules for review\n",
                 )
                 sys.exit(EXIT_INVALID_INPUT)
             except click.BadParameter as e:
@@ -639,13 +656,15 @@ def scan(
                     else:
                         severity = "low"
 
-                    l2_detections.append({
-                        "rule_id": f"L2-{p.threat_type.value}",
-                        "severity": severity,
-                        "confidence": p.confidence,
-                        "layer": "L2",
-                        "message": p.explanation or f"{p.threat_type.value} detected",
-                    })
+                    l2_detections.append(
+                        {
+                            "rule_id": f"L2-{p.threat_type.value}",
+                            "severity": severity,
+                            "confidence": p.confidence,
+                            "layer": "L2",
+                            "message": p.explanation or f"{p.threat_type.value} detected",
+                        }
+                    )
 
             output = {
                 "has_detections": result.scan_result.has_threats,
@@ -687,7 +706,8 @@ def scan(
 @cli.command("batch")
 @click.argument("file", type=click.Path(exists=True))
 @click.option(
-    "--format", "output_format",
+    "--format",
+    "output_format",
     type=click.Choice(["text", "json", "csv"]),
     default="text",
     help="Output format (default: text)",
@@ -782,22 +802,26 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
         for i, prompt in enumerate(prompts):
             try:
                 result = raxe.scan(prompt)
-                results.append({
-                    "line": i + 1,
-                    "prompt": prompt[:50] + "..." if len(prompt) > 50 else prompt,
-                    "has_threats": result.scan_result.has_threats,
-                    "detection_count": len(result.scan_result.l1_result.detections),
-                    "highest_severity": result.scan_result.combined_severity.value if result.scan_result.has_threats else "none",
-                    "duration_ms": result.duration_ms,
-                    "detections": [
-                        {
-                            "rule_id": d.rule_id,
-                            "severity": d.severity.value,
-                            "confidence": d.confidence,
-                        }
-                        for d in result.scan_result.l1_result.detections
-                    ],
-                })
+                results.append(
+                    {
+                        "line": i + 1,
+                        "prompt": prompt[:50] + "..." if len(prompt) > 50 else prompt,
+                        "has_threats": result.scan_result.has_threats,
+                        "detection_count": len(result.scan_result.l1_result.detections),
+                        "highest_severity": result.scan_result.combined_severity.value
+                        if result.scan_result.has_threats
+                        else "none",
+                        "duration_ms": result.duration_ms,
+                        "detections": [
+                            {
+                                "rule_id": d.rule_id,
+                                "severity": d.severity.value,
+                                "confidence": d.confidence,
+                            }
+                            for d in result.scan_result.l1_result.detections
+                        ],
+                    }
+                )
 
                 if result.scan_result.has_threats:
                     threats_found += 1
@@ -805,7 +829,9 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
                         critical_found = True
                         if fail_fast:
                             console.print()
-                            console.print(f"[red bold]Critical threat found at line {i+1}. Stopping.[/red bold]")
+                            console.print(
+                                f"[red bold]Critical threat found at line {i+1}. Stopping.[/red bold]"
+                            )
                             break
 
                 progress.update(task, completed=i + 1)
@@ -821,6 +847,7 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
     # Output results
     if output_format == "json":
         import json
+
         output_data = {
             "total_scanned": len(results),
             "threats_found": threats_found,
@@ -835,24 +862,35 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
 
     elif output_format == "csv":
         if not output:
-            display_error("CSV format requires --output option", "Specify output file with --output")
+            display_error(
+                "CSV format requires --output option", "Specify output file with --output"
+            )
             sys.exit(EXIT_INVALID_INPUT)
 
         with open(output, "w", newline="") as f:
             writer = csv_module.DictWriter(
                 f,
-                fieldnames=["line", "prompt", "has_threats", "detection_count", "highest_severity", "duration_ms"]
+                fieldnames=[
+                    "line",
+                    "prompt",
+                    "has_threats",
+                    "detection_count",
+                    "highest_severity",
+                    "duration_ms",
+                ],
             )
             writer.writeheader()
             for result in results:
-                writer.writerow({
-                    "line": result["line"],
-                    "prompt": result["prompt"],
-                    "has_threats": result["has_threats"],
-                    "detection_count": result["detection_count"],
-                    "highest_severity": result["highest_severity"],
-                    "duration_ms": result["duration_ms"],
-                })
+                writer.writerow(
+                    {
+                        "line": result["line"],
+                        "prompt": result["prompt"],
+                        "has_threats": result["has_threats"],
+                        "detection_count": result["detection_count"],
+                        "highest_severity": result["highest_severity"],
+                        "duration_ms": result["duration_ms"],
+                    }
+                )
 
         display_success(f"Results written to {output}")
 
@@ -984,11 +1022,7 @@ def plugins():
         else:
             status = "[yellow]○ Not Enabled[/yellow]"
 
-        table.add_row(
-            plugin_info.name,
-            str(plugin_info.path),
-            status
-        )
+        table.add_row(plugin_info.name, str(plugin_info.path), status)
 
     console.print(table)
     console.print()
@@ -1107,6 +1141,10 @@ Register-ArgumentCompleter -Native -CommandName raxe -ScriptBlock {
     }
 }
 """
+    else:
+        raise click.BadParameter(
+            f"Unsupported shell: {shell}. Supported: bash, zsh, fish, powershell"
+        )
     click.echo(script)
 
 

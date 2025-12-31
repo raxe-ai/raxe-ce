@@ -3,17 +3,16 @@
 Tests the RaxeCallbackHandler for automatic scanning of
 LangChain LLM interactions with AgentScanner composition.
 """
-from unittest.mock import Mock, patch
+
 import uuid
+from unittest.mock import Mock, patch
 
 import pytest
 
 from raxe.sdk.agent_scanner import (
     AgentScanner,
     AgentScanResult,
-    ScanConfig,
     ScanType,
-    ToolPolicy,
 )
 from raxe.sdk.client import Raxe
 from raxe.sdk.exceptions import SecurityException
@@ -21,7 +20,6 @@ from raxe.sdk.integrations.langchain import (
     RaxeCallbackHandler,
     create_callback_handler,
     get_langchain_version,
-    _RaxeCallbackHandlerMixin,
 )
 
 
@@ -270,7 +268,7 @@ class TestOnToolStart:
         mock_scanner.scan_tool_call.assert_called_once()
         call_args = mock_scanner.scan_tool_call.call_args
         assert call_args.kwargs["tool_name"] == "calculator"
-        assert call_args.kwargs["tool_input"] == "Calculate 2+2"
+        assert call_args.kwargs["tool_args"] == "Calculate 2+2"
 
     def test_tool_scanning_disabled(self, mock_scanner):
         """Test that tool scanning can be disabled."""

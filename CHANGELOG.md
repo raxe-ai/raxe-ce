@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.2] - 2025-12-31
+
+### Optional Dependencies
+
+Added `pip install raxe[framework]` support for all integrations:
+- `raxe[langchain]` - LangChain integration
+- `raxe[crewai]` - CrewAI integration
+- `raxe[autogen]` - AutoGen integration
+- `raxe[llamaindex]` - LlamaIndex integration
+- `raxe[litellm]` - LiteLLM integration
+- `raxe[dspy]` - DSPy integration
+- `raxe[portkey]` - Portkey integration
+- `raxe[agents]` - All framework integrations
+- `raxe[all]` - Everything
+
+---
+
 ## [0.4.1] - 2025-12-31
 
 ### New Integrations & Improvements

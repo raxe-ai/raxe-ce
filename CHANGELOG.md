@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.3] - 2025-12-31
+
+### Fixed
+
+- **LiteLLM Integration**: Fixed callback to inherit from `litellm.integrations.custom_logger.CustomLogger` base class
+  - Callbacks now properly integrate with LiteLLM's callback system
+  - Stats tracking and threat detection now work correctly
+  - Added graceful fallback when litellm is not installed
+
+---
+
 ## [0.4.2] - 2025-12-31
 
 ### Optional Dependencies

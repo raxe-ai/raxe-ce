@@ -49,6 +49,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+try:
+    from litellm.integrations.custom_logger import CustomLogger
+
+    LITELLM_AVAILABLE = True
+except ImportError:
+    # Define a stub if litellm not installed
+    class CustomLogger:  # type: ignore[no-redef]
+        """Stub CustomLogger for when litellm is not installed."""
+
+        pass
+
+    LITELLM_AVAILABLE = False
+
 from raxe.sdk.agent_scanner import (
     AgentScannerConfig,
     MessageType,
@@ -103,11 +116,11 @@ class LiteLLMConfig:
 # =============================================================================
 
 
-class RaxeLiteLLMCallback:
+class RaxeLiteLLMCallback(CustomLogger):
     """LiteLLM callback handler for RAXE security scanning.
 
-    This class implements the LiteLLM CustomLogger interface to provide
-    automatic security scanning of all LLM API calls.
+    This class extends the LiteLLM CustomLogger to provide automatic
+    security scanning of all LLM API calls.
 
     Attributes:
         raxe: Raxe client for scanning
@@ -140,6 +153,8 @@ class RaxeLiteLLMCallback:
             raxe: Raxe client for scanning. Created if not provided.
             config: Integration configuration. Uses defaults if not provided.
         """
+        super().__init__()
+
         if raxe is None:
             from raxe.sdk.client import Raxe
 

@@ -1,466 +1,317 @@
-# Changelog
+# CHANGELOG
 
-All notable changes to RAXE Community Edition will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## v0.4.4 (2025-12-31)
 
----
+### Bug Fixes
 
-## [0.4.3] - 2025-12-31
+- **ci**: Update pre-commit config header for clarity
+  ([`90e0719`](https://github.com/raxe-ai/raxe-ce/commit/90e071911780a177506435c2571907e638f6f9a4))
 
-### Fixed
+### Chores
 
-- **LiteLLM Integration**: Fixed callback to inherit from `litellm.integrations.custom_logger.CustomLogger` base class
-  - Callbacks now properly integrate with LiteLLM's callback system
+- Revert version to 0.4.3 and fix semantic-release workflow
+  ([`2a1f707`](https://github.com/raxe-ai/raxe-ce/commit/2a1f7076a7c5a679571065110bed058a82783ef6))
+
+- Revert accidental 1.0.0 version bump - Use official python-semantic-release GitHub Action - This
+  prevents the shell script parsing issues that caused the error
+
+### Continuous Integration
+
+- **automation**: Add pre-commit hooks, security scanning, and semantic release
+  ([`6a055ae`](https://github.com/raxe-ai/raxe-ce/commit/6a055ae271f848a43edf406f853e48de74e568dd))
+
+- Add .pre-commit-config.yaml with ruff, bandit, yaml validation - Add CodeQL security scanning
+  workflow (weekly + on push/PR) - Add benchmark workflow with performance regression alerts - Add
+  semantic-release workflow for automatic versioning - Update test-integrations.yml with API key
+  secrets - Add docs-validation job to test.yml - Add semantic-release config to pyproject.toml -
+  Add missing pytest markers (infrastructure, real_api)
+
+Note: Mypy disabled in pre-commit (pre-existing type errors need fixing)
+
+### Documentation
+
+- Add improved CLAUDE.md with development workflow
+  ([`7fa296a`](https://github.com/raxe-ai/raxe-ce/commit/7fa296acbdd71ceab7c49e4dd295696ca1c374a7))
+
+- Lean main file (153 lines) with universal guidelines - PREPARE → PLAN → EXECUTE → VERIFY →
+  DOCUMENT workflow - TDD-first development approach - Common mistakes section to prevent repeat
+  bugs - Key patterns documented (AgentScanner, telemetry, integrations) - Thinking triggers for
+  complexity levels - Detailed rules in .claude/rules/ (local only, gitignored)
+
+
+## v0.4.3 (2025-12-31)
+
+### Bug Fixes
+
+- **litellm**: Inherit from CustomLogger for proper callback integration
+  ([`b945d76`](https://github.com/raxe-ai/raxe-ce/commit/b945d76e1265960751ae6ccfd60cca95c014658a))
+
+- RaxeLiteLLMCallback now extends litellm.integrations.custom_logger.CustomLogger - Fixes callback
+  hooks not being triggered by LiteLLM - Added graceful fallback stub when litellm is not installed
   - Stats tracking and threat detection now work correctly
-  - Added graceful fallback when litellm is not installed
-
----
 
-## [0.4.2] - 2025-12-31
-
-### Optional Dependencies
+Tested with real API calls against GPT-4o-mini.
 
-Added `pip install raxe[framework]` support for all integrations:
-- `raxe[langchain]` - LangChain integration
-- `raxe[crewai]` - CrewAI integration
-- `raxe[autogen]` - AutoGen integration
-- `raxe[llamaindex]` - LlamaIndex integration
-- `raxe[litellm]` - LiteLLM integration
-- `raxe[dspy]` - DSPy integration
-- `raxe[portkey]` - Portkey integration
-- `raxe[agents]` - All framework integrations
-- `raxe[all]` - Everything
 
----
+## v0.4.2 (2025-12-31)
 
-## [0.4.1] - 2025-12-31
+### Chores
 
-### New Integrations & Improvements
+- Bump version to 0.4.2 for optional dependencies release
+  ([`7bc1716`](https://github.com/raxe-ai/raxe-ce/commit/7bc1716106532b330ab446f57952c7953c74ccad))
 
-#### Added
+### Features
 
-- **LiteLLM Integration** (`RaxeLiteLLMCallback`)
-  - Automatic scanning of LLM API calls across 200+ providers
-  - Implements LiteLLM CustomLogger interface
-  - Scans inputs before API calls and responses after
-  - Default log-only mode for safe production deployment
-  - Factory function: `create_litellm_handler()`
+- **deps**: Add optional dependencies for all framework integrations
+  ([`81236bb`](https://github.com/raxe-ai/raxe-ce/commit/81236bbb15e9530a5c4ac1288ca69b9a204c8a38))
 
-- **DSPy Integration** (`RaxeDSPyCallback`, `RaxeModuleGuard`)
-  - Callback handler for DSPy's BaseCallback interface
-  - Module guard wrapper for direct module protection
-  - Scans module inputs/outputs, LM prompts/responses, and tool calls
-  - Factory functions: `create_dspy_callback()`, `create_module_guard()`
+Added optional extras for pip install raxe[framework]: - langchain, crewai, autogen, llamaindex,
+  litellm, dspy, portkey - agents: all framework integrations combined
 
-#### Fixed
 
-- **OpenAI Wrapper Default**: Changed from blocking to log-only (safe defaults)
-- **Anthropic Wrapper Default**: Changed from blocking to log-only (safe defaults)
-- **VertexAI Wrapper Default**: Changed from blocking to log-only (safe defaults)
+## v0.4.1 (2025-12-31)
 
-#### Changed
+### Features
 
-- **Unified AgentScanner Architecture**: All integrations now use the consolidated `AgentScanner` for consistent telemetry and scanning behavior
-  - LlamaIndex migrated to AgentScanner
-  - Portkey guard migrated to AgentScanner
-  - OpenAI wrapper migrated to AgentScanner
-  - Anthropic wrapper migrated to AgentScanner
-- All integrations pass `integration_type` for telemetry tracking
+- **integrations**: Add LiteLLM and DSPy integrations v0.4.1
+  ([`3368645`](https://github.com/raxe-ai/raxe-ce/commit/336864581e7fb3f235b972cbd88daad79b3f0212))
 
----
+New integrations: - LiteLLM: RaxeLiteLLMCallback for 200+ LLM providers - DSPy: RaxeDSPyCallback and
+  RaxeModuleGuard for declarative pipelines
 
-## [0.4.0] - 2025-12-30
+Fixed defaults (all now passive/log-only): - OpenAI wrapper: raxe_block_on_threat=False - Anthropic
+  wrapper: raxe_block_on_threat=False - VertexAI wrapper: raxe_block_on_threat=False
 
-### Agentic Framework Integrations
+Updated documentation: - README.md: Added LiteLLM and DSPy to integration table - QUICKSTART.md:
+  Fixed wrapper examples to show log-only default - CHANGELOG.md: Added v0.4.1 release notes
 
-This release adds first-class support for the most popular agentic AI frameworks, enabling automatic security scanning for multi-agent systems, RAG pipelines, and AI gateways.
 
-#### Added
+## v0.4.0 (2025-12-31)
 
-- **LangChain Integration** (`RaxeCallbackHandler`)
-  - Automatic scanning of prompts and responses through LangChain callbacks
-  - Support for chains, agents, and RAG pipelines
-  - Tool policy enforcement with `ToolPolicy.block_tools()`
-  - Blocking mode with `block_on_prompt_threats=True`
+### Bug Fixes
 
-- **CrewAI Integration** (`RaxeCrewGuard`)
-  - Step and task callbacks for multi-agent workflows
-  - Automatic tool wrapping with `guard.wrap_tools()`
-  - Configurable scan modes: `LOG_ONLY`, `BLOCK_ON_THREAT`, `BLOCK_ON_HIGH`, `BLOCK_ON_CRITICAL`
-  - Agent thought and task output scanning
+- Sync __version__ with package version (0.3.1)
+  ([`ae0bf63`](https://github.com/raxe-ai/raxe-ce/commit/ae0bf63b8b163351081cf6a5d6b99d9eceb54e2a))
 
-- **AutoGen Integration** (`RaxeConversationGuard`)
-  - Support for both AutoGen v0.2.x and v0.4+ APIs
-  - v0.2.x: Hook-based interception with `guard.register(agent)`
-  - v0.4+: Async wrapper with `guard.wrap_agent(agent)`
-  - Support for GroupChat and multi-agent scenarios
-  - Configurable via `AgentScannerConfig`
+- **integrations**: Add AutoGen v0.4+ support and fix callback handlers
+  ([`1628408`](https://github.com/raxe-ai/raxe-ce/commit/1628408ed8bad9f70e54a34e1d5ae50ec4f63ca6))
 
-- **LlamaIndex Integration** (`RaxeLlamaIndexCallback`)
-  - Callback and instrumentation API support
-  - Specialized handlers: `RaxeQueryEngineCallback`, `RaxeAgentCallback`, `RaxeSpanHandler`
-  - RAG pipeline protection
-  - Support for LlamaIndex 0.10+ and 0.11+
+AutoGen: - Add support for AutoGen v0.4+ (autogen-agentchat) async API - New wrap_agent() method for
+  v0.4+ agents - Keep register() for v0.2.x (pyautogen) backward compatibility - Add version
+  detection functions - Add _RaxeAgentWrapper class for async message interception
 
-- **Portkey Integration** (`RaxePortkeyWebhook`, `RaxePortkeyGuard`)
-  - Webhook guardrail for Portkey AI Gateway
-  - Client-side wrapper with `guard.wrap_client()`
-  - Portkey-compatible verdict response format
-  - Factory functions: `create_portkey_guard()`, `create_portkey_webhook()`
+LangChain: - Rewrite with factory pattern for proper BaseCallbackHandler inheritance - Fix pydantic
+  ValidationError when used with strict type checking - Use _RaxeCallbackHandlerMixin + dynamic
+  type() class creation
 
-- **Core AgentScanner** (`raxe.sdk.agent_scanner`)
-  - Unified scanning engine for all integrations
-  - `ScanMode` enum: LOG_ONLY, BLOCK_ON_THREAT, BLOCK_ON_HIGH, BLOCK_ON_CRITICAL
-  - `MessageType` enum: HUMAN_INPUT, AGENT_TO_AGENT, FUNCTION_CALL, FUNCTION_RESULT
-  - `ScanContext` for rich context in scans
-  - `ToolPolicy` for dangerous tool blocking
+LlamaIndex: - Fix base class initialization with required event_starts_to_ignore and
+  event_ends_to_ignore parameters - Change import path to llama_index.core.callbacks.base
 
-- **Convenience Imports**
-  - All integrations available from `raxe.sdk.integrations`
-  - Example: `from raxe.sdk.integrations import RaxeCallbackHandler, RaxeCrewGuard`
+CLI: - Change doctor performance targets: 5ms→50ms avg, 10ms→100ms P95 - Add CONSOLE_KEYS_URL export
+  to expiry_warning.py
 
-#### Changed
+Docs: - Update README with AutoGen v0.2.x and v0.4+ examples - Update CHANGELOG with dual API
+  support note
 
-- Default behavior is now **log-only mode** (non-blocking) for all integrations
-- Blocking must be explicitly enabled for safety
+- **tests**: Resolve integration test failures for v0.4.0 release
+  ([`f21e2b4`](https://github.com/raxe-ai/raxe-ce/commit/f21e2b433575f5c569b9bd60d1143ac0eaf6ebc4))
 
-#### Documentation
+Key fixes:
 
-- Full documentation at [docs.raxe.ai/integrations](https://docs.raxe.ai/integrations)
-- LangChain: [docs.raxe.ai/integrations/langchain](https://docs.raxe.ai/integrations/langchain)
-- CrewAI: [docs.raxe.ai/integrations/crewai](https://docs.raxe.ai/integrations/crewai)
-- AutoGen: [docs.raxe.ai/integrations/autogen](https://docs.raxe.ai/integrations/autogen)
-- LlamaIndex: [docs.raxe.ai/integrations/llamaindex](https://docs.raxe.ai/integrations/llamaindex)
-- Portkey: [docs.raxe.ai/integrations/portkey](https://docs.raxe.ai/integrations/portkey)
+LangChain Integration: - Fix RaxeCallbackHandler.__new__ to call mixin __init__ directly - Change
+  MRO to put mixin first for proper method precedence - Fix ScanType.TOOL_OUTPUT → TOOL_RESULT
+  (actual enum value) - Rewrite tests to work with AgentScanner composition
 
----
+LlamaIndex Integration: - Fix RecursionError in extract_texts_from_value by using
+  Mock(spec=["text"]) - Bare Mock() caused infinite loop due to hasattr() always returning True
 
-## [0.3.1] - 2025-12-28
+OpenAI Wrapper: - Create proper inheritable mock class with @cached_property for chat - Fix
+  wrap_client to pass api_key to constructor - Update tests for inheritance-based RaxeOpenAI pattern
 
-### Security & Documentation
+Documentation: - Make all code samples in docs self-contained and runnable - Add missing imports
+  (asyncio, typing) to examples - Fix placeholder comments to complete code blocks - Add
+  RELEASE_MESSAGE.md for v0.4.0 announcement
 
-#### Security
+Test Results: - LangChain: 33/33 tests pass - LlamaIndex: 51/51 tests pass - OpenAI: 20/20 tests
+  pass (1 expected skip)
 
-- Fixed ReDoS vulnerability in pattern matching
-- Fixed tarball path traversal vulnerability
+### Chores
 
-#### Changed
+- Phase 0 - Git cleanup for agentic integrations
+  ([`67ffa1a`](https://github.com/raxe-ai/raxe-ce/commit/67ffa1a2cf4c02c220293c8f540758127ae777c3))
 
-- Updated README with L1/L2 detection badges
-- Synced `__version__` with package version
+- Add CI workflow for integration testing (test-integrations.yml) - Fixed paths:
+  src/raxe/sdk/integrations/** (not src/raxe/integrations/**) - Removed non-existent integrations
+  (openai-agents, anthropic) - Matrix testing for Python 3.10/3.11/3.12 - Tests: mcp, langchain,
+  crewai, autogen, llamaindex - Update todo.md with master implementation plan - Phase 0-5 task
+  breakdown - P0/P1/P2 priority classification - Success criteria and metrics - Design decisions
+  documented
 
----
+- Remove todo.md from tracking and add to .gitignore
+  ([`dd09783`](https://github.com/raxe-ai/raxe-ce/commit/dd09783fb9224cf3b084bf53727d0bd520463611))
 
-## [0.2.0] - 2025-12-20
+### Documentation
 
-### 🛡️ Suppression System v1.0
+- Add agentic integration documentation and tests
+  ([`2fd5998`](https://github.com/raxe-ai/raxe-ce/commit/2fd59989647751a83ed1202a24b17abd68e059b5))
 
-This release introduces a comprehensive suppression system for managing false positives in your AI security workflow.
+- Add AutoGen integration guide (docs/integrations/AUTOGEN.md) - Add LlamaIndex integration guide
+  (docs/integrations/LLAMAINDEX_INTEGRATION.md) - Add canonical agent_scanner unit tests - Update
+  .gitignore to exclude internal planning docs
 
-#### Added
+- Add architecture diagram showing L1/L2 detection flow
+  ([`cbd1080`](https://github.com/raxe-ai/raxe-ce/commit/cbd108096dbcffc104c9c7a4e4f2cf9ef5bfb76f))
 
-- **YAML-based suppression configuration** (`.raxe/suppressions.yaml`)
-  - Structured schema with version control
-  - Required reason field for audit compliance
-  - Expiration date support for time-limited suppressions
-  - Wildcard patterns with family prefix validation
+- Update badges to show L1/L2 detection + Gemma ML + local execution
+  ([`9d04418`](https://github.com/raxe-ai/raxe-ce/commit/9d04418cc690ce2ea0211756497250f8a6c81de8))
 
-- **Policy action overrides**
-  - `SUPPRESS` - Remove detection from results (default)
-  - `FLAG` - Keep detection but mark for human review
-  - `LOG` - Keep detection for metrics/logging only
+- Update README with badges, accurate output, v0.3.1 beta
+  ([`c7166ae`](https://github.com/raxe-ai/raxe-ce/commit/c7166aed9a46d3666bccff759ccc87c7b896f51a))
 
-- **Inline SDK suppression**
-  - `raxe.scan(text, suppress=["pi-001", "jb-*"])` parameter
-  - `with raxe.suppressed("pi-*", reason="Testing")` context manager
-  - Thread-safe scoped suppressions
+- Add PyPI version, downloads, Python 3.10+, and license badges - Update version from v0.0.1 to
+  v0.3.1 Beta - Fix output example to match actual Rich-formatted CLI output - Standardize all
+  Twitter links to x.com - Change 'Get Started in 60 Seconds' to '2 Minutes' (honest timing) - Move
+  'Snort for LLMs' analogy to top of Why RAXE section - Add Python 3.10+ requirement prominently -
+  Make auth optional (Step 3) - instant testing works without signup - Collapse alternative auth
+  methods into details tag - Fix 'toxic content' to 'harmful content' in threat families - Improve
+  What You Get section with table format - Update footer tagline
 
-- **CLI suppression commands**
-  - `raxe scan --suppress pi-001` flag
-  - `raxe suppress list/add/remove/audit/stats` subcommands
-  - JSON/YAML export formats
+### Features
 
-- **Security hardening**
-  - Pattern length limit (256 chars)
-  - Reason length limit (500 chars)
-  - Maximum suppressions limit (1000)
-  - Fail-closed expiration handling
+- Add integration availability registry
+  ([`bc370d6`](https://github.com/raxe-ai/raxe-ce/commit/bc370d671ec3f4587b901a7ef32357a4462313be))
 
-- **Detection flagging**
-  - `Detection.is_flagged` field for FLAG action
-  - `Detection.suppression_reason` field
-  - Visual `[FLAG]` indicator in CLI output
+- Add src/raxe/integrations/ module for checking framework availability - availability.py: Check if
+  optional dependencies are installed - registry.py: Integration info registry - utils.py: Shared
+  utilities for integrations - Update uv.lock with dependency changes
 
-#### Changed
+- **integrations**: Add agentic framework integrations v0.4.0
+  ([`b545f7f`](https://github.com/raxe-ai/raxe-ce/commit/b545f7fd52ed92a03ab3e026f864cc12af79835a))
 
-- Configuration location moved to `.raxe/` directory
-- Bare wildcard `*` patterns are now rejected (must use family prefix like `pi-*`)
+Add first-class support for the most popular agentic AI frameworks:
 
-#### Deprecated
+- LangChain: RaxeCallbackHandler for chains, agents, RAG pipelines - CrewAI: RaxeCrewGuard with
+  step/task callbacks, tool wrapping - AutoGen: RaxeConversationGuard for multi-agent conversations
+  - LlamaIndex: RaxeLlamaIndexCallback with instrumentation API - Portkey: RaxePortkeyWebhook for AI
+  Gateway guardrails
 
-- `.raxeignore` file format (still works, will be removed in v1.0.0)
+Features: - All integrations default to log-only mode (safe default) - Configurable blocking with
+  ScanMode enum - Tool policy enforcement for dangerous tools - Convenience imports from
+  raxe.sdk.integrations - Full async support
 
-#### Security
+Testing: - 243 unit tests passing - 117 real framework integration tests passing - Tested with
+  LangChain 1.2.0, CrewAI 1.7.2, AutoGen, LlamaIndex 0.14.12
 
-- No bare wildcards allowed (prevents accidental full suppression)
-- Pattern validation requires valid family prefix
-- Audit trail for all suppression operations
+Documentation: - docs.raxe.ai/integrations updated for all frameworks - Quick start code in
+  README.md - Full API reference in CHANGELOG.md
 
----
+### Refactoring
 
-## [0.0.1] - 2025-12-04
+- Phase 2 - AgentScanner consolidation
+  ([`e34a5c2`](https://github.com/raxe-ai/raxe-ce/commit/e34a5c2193c981e7a80eee34aaa5221fc40dcc3b))
 
-**Open Beta Release**
+P1-1: Add ScanMode, MessageType, ScanContext to canonical agent_scanner.py
 
-RAXE Community Edition - Production-ready, privacy-first threat detection for LLM applications. Built on transparency, not hype.
+P1-2: Create deprecation adapter at integrations/agent_scanner.py
 
-### 🛡️ Core Features
+P1-3: Update AutoGen to use canonical imports with factory pattern
 
-#### Advanced Policy System
-- **4 Policy Actions:** ALLOW (monitor), FLAG (warn), BLOCK (enforce), LOG (silent)
-- **Flexible Targeting:** Rule IDs, families, severities, confidence thresholds
-- **L2 Virtual Rules:** Policy targeting for ML detections (`l2-context-manipulation`, etc.)
-- **Priority-Based Resolution:** Handle complex policy conflicts (0-1000 priority scale)
-- **Security Limits:** Max 100 policies per customer, priority caps enforced
-- **YAML Configuration:** Clean, readable policy definitions in `.raxe/policies.yaml`
+P1-4: Update CrewAI to use canonical imports with factory pattern
 
-#### Detection Engine
-- **460+ curated detection rules** across 7 threat families:
-  - **CMD (65 rules)** - Command injection, system commands, code execution
-  - **ENC (70 rules)** - Encoding/obfuscation attacks, evasion techniques
-  - **HC (65 rules)** - Harmful content, toxic output, policy violations
-  - **JB (77 rules)** - Jailbreak attempts, persona manipulation, DAN attacks
-  - **PI (59 rules)** - Prompt injection, instruction override, system prompt extraction
-  - **PII (112 rules)** - PII detection, sensitive data leakage, credential exposure
-  - **RAG (12 rules)** - RAG-specific attacks, context poisoning
-
-- **Dual-layer detection system:**
-  - **L1 (Rule-based):** Pattern matching with 95%+ precision on known threats
-  - **L2 (ML-based):** CPU-friendly classifier for obfuscated and novel attacks
-  - Combined detection rate: **95.15%** with <0.1% false positive rate
+P1-5: Add LlamaIndex integration using canonical API
 
-#### Privacy-First Telemetry
-- **Privacy-preserving architecture** - All scanning happens locally
-- **Rich L2 metadata sharing:**
-  - ✅ Model metrics (confidence, scores, processing time, version)
-  - ✅ Feature names (signal quality, classification)
-  - ✅ Threat classifications (SAFE, ATTACK_LIKELY, FP_LIKELY)
-  - ✅ API key, prompt hash (SHA-256), performance metrics
-  - ❌ NEVER raw prompts, responses, matched text, or end-user identifiers
-- **Telemetry enabled by default** - Opt-out available via config
-- **Zero PII transmission** - Verifiable through open source code
-- **Works 100% offline** - No cloud dependency required
+Key changes: - All integrations now use raxe.sdk.agent_scanner (canonical) - Factory pattern:
+  create_agent_scanner(raxe, config) - API migration: mode=ScanMode.X -> on_threat="log/block" -
+  AgentScanResult replaces direct ScanPipelineResult access - Helper method
+  _raise_security_exception for None pipeline_result
 
-#### Command-Line Interface
-- `raxe init` - Initialize configuration with interactive setup
-- `raxe scan` - Scan text for threats with detailed explanations
-- `raxe batch` - Batch scan multiple prompts from files
-- `raxe repl` - Interactive scanning mode
-- `raxe stats` - Usage statistics and detection trends
-- `raxe rules` - Browse and search detection rules
-- `raxe doctor` - System health check and diagnostics
-- `raxe export` - Export scan history (JSON/CSV)
+Tests: 202 passing (44 LangChain + 32 AutoGen + 48 CrewAI + 51 LlamaIndex + 27 AgentScanner)
 
-#### Python SDK
-- **Simple integration:** One-line wrapper for OpenAI, Anthropic, LangChain
-- **Decorator pattern:** `@raxe.protect()` for function-level protection
-- **Direct scanning:** `raxe.scan(text)` for custom integrations
-- **Async support:** Non-blocking telemetry with async/await patterns
+- **integrations**: Add unified extractors module for text extraction
+  ([`fed8c38`](https://github.com/raxe-ai/raxe-ce/commit/fed8c386e316d81f25bbbd18aca8f64fcb2ff6b7))
 
-#### Configuration System
-- **YAML-based configuration** (`~/.raxe/config.yaml`)
-- Clean, readable format aligned with detection rules
-- Environment variable overrides for all settings
-- Validation with helpful error messages
-- Default configuration for zero-config quick start
-
-### 📊 Performance
+- Create extractors.py with common text extraction functions: - extract_text_from_message: Universal
+  message extraction - extract_text_from_content: Content field extraction -
+  extract_text_from_content_list: Multi-modal content handling - extract_text_from_dict: Dict
+  extraction with fallback keys - extract_text_from_response: LLM response extraction -
+  extract_texts_from_value: Recursive value extraction - is_function_call: Function call detection -
+  extract_function_call_text: Function call text extraction - extract_agent_name: Agent name
+  extraction
 
-Production-ready performance metrics:
+- Update LangChain to use unified extractors - Update AutoGen to use unified extractors for both
+  v0.2.x and v0.4+ APIs - Update CrewAI to use extract_text_from_dict for dict cases - Update
+  LlamaIndex to use unified extractors - Add convenience functions: create_callback_handler,
+  get_langchain_version
 
-- **P50 latency:** 0.37ms (13x better than 5ms target)
-- **P95 latency:** 0.49ms (20x better than 10ms target)
-- **P99 latency:** 1.34ms (15x better than 20ms target)
-- **Throughput:** ~1,200 scans/second
-- **Memory usage:** ~60MB peak
-- **False positive rate:** <0.1%
+This improves maintainability by centralizing extraction logic.
 
-Optimized for production workloads with:
-- Circuit breaker for reliability
-- Graceful degradation under load
-- Configurable performance modes (fast/balanced/thorough)
-- No catastrophic backtracking (all rules REDOS-safe)
-
-### 🔒 Security Features
-
-- **REDOS protection:** All 460+ regex patterns validated and optimized
-- **Input validation:** Comprehensive sanitization and boundary checks
-- **No code execution:** Pure pattern matching, no eval/exec
-- **Sandboxed ML inference:** Isolated model execution
-- **Secure defaults:** Fail-safe configuration out of the box
-
-### 🧪 Testing & Quality
+### Security
 
-Comprehensive test suite ensuring reliability:
-
-- **5,255+ tests** with comprehensive coverage:
-  - Unit tests (4,800+)
-  - Integration tests (400+)
-  - Golden file tests (300+) for regression prevention
-- **Test coverage:** 60%+ overall, >95% on core domain layer
-- **Test data:** 1,000+ benign samples + 412 threat samples
-- **CI/CD:** Automated testing on every commit
+- Fix ReDoS and tarball path traversal vulnerabilities (v0.3.0)
+  ([`7b3aead`](https://github.com/raxe-ai/raxe-ce/commit/7b3aeadc73e704170d5974fce0048f1950f56549))
 
-### 📚 Documentation
+- T-001: Fix hash length test assertions (64 -> 71 chars for sha256: prefix) - S-001: Replace re
+  module with regex for enforced timeout in pattern matching - S-002: Add secure tarball extraction
+  with path traversal protection (CVE-2007-4559)
 
-Extensive documentation for transparency and education:
+Security improvements: - Pattern matching now enforces timeout via regex module (prevents ReDoS) -
+  Tarball extraction validates paths, blocks traversal, skips symlinks - Python 3.12+ uses built-in
+  data_filter, 3.10-3.11 uses manual validation
 
-- **README.md** - Mission, vision, and quick start (streamlined)
-- **FAQ.md** - Comprehensive Q&A for all user questions
-- **QUICKSTART.md** - 60-second getting started guide
-- **CONTRIBUTING.md** - Contribution guidelines with community values
-- **docs/CUSTOM_RULES.md** - Rule contribution guide with examples
-- **docs/POLICIES.md** - Complete policy system documentation
-- **docs/architecture.md** - System architecture and design
-- **docs/examples/** - Integration examples for popular frameworks
-- **SECURITY.md** - Security policy and responsible disclosure
+Test coverage: - 4 new timeout tests for ReDoS protection - 9 new security tests for tarball
+  extraction - Hash length assertions updated across 4 test files
 
-### 🎯 Supported Integrations
+- Phase 1 - P0 security blockers
+  ([`aa12ba4`](https://github.com/raxe-ai/raxe-ce/commit/aa12ba467a1807cfc27294e5792042e20d634f8a))
 
-- **OpenAI** - Drop-in replacement client (`RaxeOpenAI`)
-- **Anthropic** - Claude wrapper (`RaxeAnthropic`)
-- **LangChain** - Callback handler for chains
-- **FastAPI** - Middleware examples
-- **Streamlit** - Input validation examples
-- **Direct SDK** - Universal integration via `raxe.scan()`
+P0-1: MCP input validation
 
-### 🔧 Developer Experience
+- Add RateLimiter class (60 req/min per client) - Add MAX_TEXT_LENGTH (100KB) and MAX_CONTEXT_LENGTH
+  (1KB) limits - Add input validation before scanning to prevent memory exhaustion
 
-- **Type hints:** Full type coverage with mypy strict mode
-- **Clean architecture:** Domain/Application/Infrastructure separation
-- **Plugin system:** Extensible detector plugins
-- **Educational focus:** Every rule includes "why" and "how to defend"
-- **Transparent telemetry:** `raxe doctor` shows exactly what's sent
+P0-2: HuggingFace safe default
 
-### 🌟 Transparency Commitments
+- Change raxe_block_on_input_threats default from True to False - Follows "log-only by default,
+  blocking opt-in" principle
 
-What makes RAXE different:
+P0-3: Callback PII prevention
 
-- ✅ **100% open source** - MIT License, full code audit available
-- ✅ **Privacy by architecture** - Provably local-first design
-- ✅ **Educational documentation** - Learn how attacks work, not just block them
-- ✅ **Community-driven rules** - Security researchers contribute detection logic
-- ✅ **Explainable detection** - Understand exactly why something was flagged
-- ✅ **No vendor lock-in** - Works 100% offline, cloud is optional
-- ✅ **Honest metrics** - Real detection rates, transparent about limitations
-- ✅ **No marketing hype** - Transparent capabilities and limitations
+- Update _build_result to compute SHA256 hash of content - All scan methods now pass content param
+  for hashing - AgentScanResult.prompt_hash contains hash, not raw text - Prevents PII leakage
+  through callbacks
 
-### 🎓 Example Usage
+Files: - src/raxe/mcp/server.py (P0-1) - src/raxe/sdk/integrations/huggingface.py (P0-2) -
+  src/raxe/sdk/agent_scanner.py (P0-3)
 
-**CLI:**
-```bash
-# Scan for threats
-raxe scan "Ignore all previous instructions"
-# 🔴 THREAT DETECTED - Prompt Injection (CRITICAL)
+### Testing
 
-# View statistics
-raxe stats
+- Add agentic test infrastructure scaffolding
+  ([`f2d426e`](https://github.com/raxe-ai/raxe-ce/commit/f2d426e6d7c832f23a128e88b16bb54a1629083d))
 
-# Browse rules
-raxe rules list
-```
+- Add conftest.py with shared fixtures for agentic tests - Set up directory structure for: - Unit
+  tests (unit/agentic/) - Integration tests (integration/agentic/) - Performance tests
+  (performance/agentic/) - Security tests (security/agentic/) - Golden fixtures
+  (golden/fixtures/agentic/)
 
-**Python SDK:**
-```python
-from raxe import Raxe
 
-raxe = Raxe()
-result = raxe.scan("Ignore all previous instructions")
+## v0.2.0 (2025-12-20)
 
-if result.scan_result.has_threats:
-    print(f"⚠️  {result.scan_result.combined_severity} threat detected!")
-```
+### Features
 
-**OpenAI Wrapper:**
-```python
-from raxe import RaxeOpenAI
+- **suppression**: Add suppression system v1.0
+  ([`5d61d85`](https://github.com/raxe-ai/raxe-ce/commit/5d61d8587ca210213abe6360d0cc1fcd217d811a))
 
-# Drop-in replacement - automatically scans all prompts
-client = RaxeOpenAI(api_key="sk-...")
-response = client.chat.completions.create(
-    model="gpt-4",
-    messages=[{"role": "user", "content": "your prompt"}]
-)
-# Threats are automatically blocked before reaching OpenAI
-```
+BREAKING CHANGE: .raxeignore deprecated, use .raxe/suppressions.yaml
 
-### 📦 Installation
+Features: - YAML-based suppression configuration (.raxe/suppressions.yaml) - Policy action overrides
+  (SUPPRESS, FLAG, LOG) - Inline SDK suppression with context manager - CLI --suppress flag and
+  management commands - Security hardening (pattern/reason length limits, max count) - Required
+  reason field for audit compliance - Wildcard pattern validation (no bare wildcards) -
+  Detection.is_flagged field for FLAG action - Full audit trail for all suppression operations
 
-```bash
-# Using pip
-pip install raxe
+Documentation: - docs/SUPPRESSIONS.md - User guide - CHANGELOG.md - v0.2.0 release notes
 
-# Using uv (faster)
-uv pip install raxe
+### BREAKING CHANGES
 
-# Initialize
-raxe init
-
-# Start scanning
-raxe scan "your text here"
-```
-
-### 🎯 What's Next
-
-See our [roadmap](README.md#-roadmap) for upcoming features:
-
-- **v0.3** - Response scanning, chain-of-thought analysis, expanded PII detection
-- **v1.0** - Enterprise features, custom model fine-tuning, multi-language SDKs
-- **v2.0** - Auto-generated rules, adversarial testing, model drift detection
-
-### 🙏 Acknowledgments
-
-RAXE stands on the shoulders of giants:
-
-- **Snort** - Inspiration for community-driven threat detection
-- **OWASP** - LLM security best practices and research
-- **Research Community** - Prompt injection and jailbreak research
-- **Open Source Contributors** - Everyone who helped make this possible
-
-### 📄 License
-
-RAXE Community Edition is released under the **MIT License**.
-
-See [LICENSE](LICENSE) for full details.
-
----
-
-## Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-For detection rules, see [docs/CUSTOM_RULES.md](docs/CUSTOM_RULES.md).
-
-## Security
-
-Please report security vulnerabilities to security@raxe.ai
-
-See [SECURITY.md](SECURITY.md) for our responsible disclosure policy.
-
-## Links
-
-- 🌐 **Website:** [raxe.ai](https://raxe.ai)
-- 📖 **Documentation:** [docs.raxe.ai](https://docs.raxe.ai)
-- 💬 **Slack:** [Join RAXE Slack](https://join.slack.com/t/raxeai/shared_invite/zt-3kch8c9zp-A8CMJYWQjBBpzV4KNnAQcQ)
-- 🐛 **Issues:** [github.com/raxe-ai/raxe-ce/issues](https://github.com/raxe-ai/raxe-ce/issues)
-
----
-
-**🛡️ Transparency over hype. Education over fear. Community over vendors.**
-
-**RAXE: The open-source instrument panel for AI safety.**
-
-[0.2.0]: https://github.com/raxe-ai/raxe-ce/compare/v0.0.1...v0.2.0
-[0.0.1]: https://github.com/raxe-ai/raxe-ce/releases/tag/v0.0.1
+- **suppression**: .raxeignore deprecated, use .raxe/suppressions.yaml

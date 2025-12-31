@@ -9,7 +9,10 @@ __pycache__/
 # ============================================================================
 # RAXE-SPECIFIC - Development Files (Internal Only)
 # ============================================================================
-# Claude Code configuration and history (local only)
+# Claude Code guidance (internal development only)
+CLAUDE.md
+
+# Claude Code configuration and history
 .claude/
 
 # Internal exclusion list and notes

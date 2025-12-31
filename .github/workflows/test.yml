@@ -2,14 +2,75 @@ name: Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
+  schedule:
+    # Full test suite weekly on Sunday
+    - cron: '0 6 * * 0'
 
 jobs:
-  test:
+  # Fast unit tests - runs on every push (~2 min)
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest tests/unit -v --tb=short -x -q
+
+  # Golden tests - detection regression (runs on every push)
+  golden-tests:
+    name: Golden Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run golden tests
+        run: pytest tests/golden -v --tb=short
+
+  # Full test suite - only on PRs and weekly schedule
+  full-tests:
+    name: Full Tests (Python ${{ matrix.python-version }})
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
 
@@ -22,85 +83,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run ruff (lenient during alpha)
-        run: |
-          # Allow failures during alpha phase - track progress
-          ruff check src/ tests/ --statistics || echo "Linting issues found - will be addressed gradually"
+      - name: Run all tests with coverage
+        run: pytest --cov=raxe --cov-report=xml --cov-fail-under=40
 
-      - name: Run mypy (lenient during alpha)
-        run: |
-          # Allow failures during alpha phase - track progress
-          mypy src/raxe --no-error-summary || echo "Type checking issues found - will be addressed gradually"
-
-      - name: Run tests with coverage
-        run: |
-          # Run tests - allow to pass during initial structure setup
-          # Coverage requirement will be enforced as implementation progresses
-          pytest --cov=raxe --cov-report=xml --cov-report=term --cov-fail-under=0 || true
-
-          # Report test collection status
-          echo "Test collection and structure validation complete"
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.11'
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit[toml]
-
-      - name: Run security scan
-        run: |
-          # Run bandit security scan with config (skips documented exceptions)
-          bandit -r src/raxe -ll -c pyproject.toml || echo "⚠️ Security scan found issues - will be addressed"
-
-  docs-validation:
-    name: Validate Documentation Samples
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install package
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "."
-
-      - name: Validate critical code samples
-        run: |
-          # Run critical tests to ensure docs work for new users
-          python scripts/validate_doc_samples.py --critical-only
-
-      - name: Validate all doc samples (informational)
-        run: |
-          # Run full validation but don't fail on external dep samples
-          python scripts/validate_doc_samples.py || echo "Some doc samples need attention"

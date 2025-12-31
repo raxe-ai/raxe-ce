@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.4.7 (2025-12-31)
+
+### Bug Fixes
+
+- **tests**: Skip deprecated FP tests until API updated
+  ([`5304b1f`](https://github.com/raxe-ai/raxe-ce/commit/5304b1faba51cdd41d3d69ea36aefa9c171c4c63))
+
+### Continuous Integration
+
+- **tests**: Run only unit+golden tests on push, full suite on PRs
+  ([`5a21e2f`](https://github.com/raxe-ai/raxe-ce/commit/5a21e2f53da99b337296a047f2a450dc91d1034d))
+
+
 ## v0.4.6 (2025-12-31)
 
 ### Bug Fixes

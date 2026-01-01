@@ -15,13 +15,11 @@ This module tests the BatchSender class which handles:
 from __future__ import annotations
 
 import gzip
-import io
 import json
-import time
 import urllib.error
-from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock, Mock, call, patch
+from datetime import datetime
+from typing import TYPE_CHECKING
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -36,7 +34,7 @@ from raxe.infrastructure.telemetry.sender import (
 from .conftest import create_http_error, create_mock_urlopen_response
 
 if TYPE_CHECKING:
-    from raxe.domain.telemetry.events import TelemetryEvent
+    pass
 
 
 # =============================================================================
@@ -51,9 +49,7 @@ class TestCircuitBreaker:
         """Circuit breaker starts in CLOSED state."""
         assert circuit_breaker.get_state() == CircuitState.CLOSED
 
-    def test_successful_calls_keep_circuit_closed(
-        self, circuit_breaker: CircuitBreaker
-    ) -> None:
+    def test_successful_calls_keep_circuit_closed(self, circuit_breaker: CircuitBreaker) -> None:
         """Successful calls keep the circuit in CLOSED state."""
         for _ in range(10):
             result = circuit_breaker.call(lambda: "success")
@@ -62,9 +58,7 @@ class TestCircuitBreaker:
         assert circuit_breaker.get_state() == CircuitState.CLOSED
         assert circuit_breaker.failure_count == 0
 
-    def test_failures_below_threshold_stay_closed(
-        self, circuit_breaker: CircuitBreaker
-    ) -> None:
+    def test_failures_below_threshold_stay_closed(self, circuit_breaker: CircuitBreaker) -> None:
         """Failures below threshold keep circuit CLOSED."""
         # Config has failure_threshold=3
         for _ in range(2):  # Less than threshold
@@ -76,9 +70,7 @@ class TestCircuitBreaker:
         assert circuit_breaker.get_state() == CircuitState.CLOSED
         assert circuit_breaker.failure_count == 2
 
-    def test_failures_at_threshold_open_circuit(
-        self, circuit_breaker: CircuitBreaker
-    ) -> None:
+    def test_failures_at_threshold_open_circuit(self, circuit_breaker: CircuitBreaker) -> None:
         """Reaching failure threshold opens the circuit."""
         # Config has failure_threshold=3
         for _ in range(3):
@@ -89,9 +81,7 @@ class TestCircuitBreaker:
 
         assert circuit_breaker.get_state() == CircuitState.OPEN
 
-    def test_open_circuit_rejects_calls(
-        self, open_circuit_breaker: CircuitBreaker
-    ) -> None:
+    def test_open_circuit_rejects_calls(self, open_circuit_breaker: CircuitBreaker) -> None:
         """OPEN circuit rejects calls immediately."""
         with pytest.raises(Exception) as exc_info:
             open_circuit_breaker.call(lambda: "should not run")
@@ -197,9 +187,7 @@ class TestCircuitBreaker:
         assert open_circuit_breaker.failure_count == 0
         assert open_circuit_breaker.success_count == 0
 
-    def test_success_resets_failure_count_in_closed(
-        self, circuit_breaker: CircuitBreaker
-    ) -> None:
+    def test_success_resets_failure_count_in_closed(self, circuit_breaker: CircuitBreaker) -> None:
         """Successful call resets failure count when CLOSED."""
         # Build up some failures
         try:
@@ -224,9 +212,9 @@ class TestRetryPolicy:
     def test_default_retry_policy(self) -> None:
         """Default retry policy has expected values."""
         policy = RetryPolicy()
-        assert policy.max_retries == 10  # Updated per specification
-        assert policy.initial_delay_ms == 1000
-        assert policy.max_delay_ms == 512000  # 512s max per specification
+        assert policy.max_retries == 2  # Reduced for fast CLI failures
+        assert policy.initial_delay_ms == 500
+        assert policy.max_delay_ms == 5000  # Max 5s wait between retries
         assert policy.backoff_multiplier == 2.0
         assert 429 in policy.retry_on_status
         assert 500 in policy.retry_on_status
@@ -296,10 +284,7 @@ class TestBatchSender:
             200, {"status": "ok", "accepted": 5}
         )
 
-        events = [
-            {"event_id": f"evt_{i}", "event_type": "scan", "payload": {}}
-            for i in range(5)
-        ]
+        events = [{"event_id": f"evt_{i}", "event_type": "scan", "payload": {}} for i in range(5)]
 
         result = production_shipper.send_batch(events)
 
@@ -432,9 +417,7 @@ class TestBatchSenderRetry:
     ) -> None:
         """All retries exhausted raises exception."""
         # All calls fail
-        mock_urlopen.side_effect = create_http_error(
-            503, {"error": "Service unavailable"}
-        )
+        mock_urlopen.side_effect = create_http_error(503, {"error": "Service unavailable"})
 
         sender = BatchSender(
             endpoint="https://test.local/v1/telemetry",
@@ -452,9 +435,7 @@ class TestBatchSenderRetry:
 
     @patch("time.sleep")
     @patch("urllib.request.urlopen")
-    def test_exponential_backoff_delays(
-        self, mock_urlopen: Mock, mock_sleep: Mock
-    ) -> None:
+    def test_exponential_backoff_delays(self, mock_urlopen: Mock, mock_sleep: Mock) -> None:
         """Retry delays follow exponential backoff pattern."""
         policy = RetryPolicy(
             max_retries=3,
@@ -489,9 +470,7 @@ class TestBatchSenderRetry:
 
     @patch("time.sleep")
     @patch("urllib.request.urlopen")
-    def test_delay_capped_at_max(
-        self, mock_urlopen: Mock, mock_sleep: Mock
-    ) -> None:
+    def test_delay_capped_at_max(self, mock_urlopen: Mock, mock_sleep: Mock) -> None:
         """Retry delay is capped at max_delay_ms."""
         policy = RetryPolicy(
             max_retries=3,
@@ -555,9 +534,7 @@ class TestBatchSenderErrorHandling:
             assert mock_urlopen.call_count == 2
 
     @patch("urllib.request.urlopen")
-    def test_401_auth_error_no_retry(
-        self, mock_urlopen: Mock, retry_policy: RetryPolicy
-    ) -> None:
+    def test_401_auth_error_no_retry(self, mock_urlopen: Mock, retry_policy: RetryPolicy) -> None:
         """401 authentication error does not trigger retry."""
         mock_urlopen.side_effect = create_http_error(401, {"error": "Unauthorized"})
 
@@ -577,9 +554,7 @@ class TestBatchSenderErrorHandling:
         assert mock_urlopen.call_count == 1
 
     @patch("urllib.request.urlopen")
-    def test_403_forbidden_no_retry(
-        self, mock_urlopen: Mock, retry_policy: RetryPolicy
-    ) -> None:
+    def test_403_forbidden_no_retry(self, mock_urlopen: Mock, retry_policy: RetryPolicy) -> None:
         """403 forbidden error does not trigger retry."""
         mock_urlopen.side_effect = create_http_error(403, {"error": "Forbidden"})
 
@@ -696,13 +671,10 @@ class TestBatchBuilding:
     def test_batch_includes_metadata(
         self, mock_urlopen: Mock, production_shipper: BatchSender
     ) -> None:
-        """Batch payload includes timestamp and batch_size metadata."""
+        """Batch payload includes sent_at and event_count metadata."""
         mock_urlopen.return_value = create_mock_urlopen_response(200, {"status": "ok"})
 
-        events = [
-            {"event_id": f"evt_{i}", "event_type": "scan", "payload": {}}
-            for i in range(3)
-        ]
+        events = [{"event_id": f"evt_{i}", "event_type": "scan", "payload": {}} for i in range(3)]
         production_shipper.send_batch(events)
 
         request_obj = mock_urlopen.call_args[0][0]
@@ -710,16 +682,16 @@ class TestBatchBuilding:
         payload = json.loads(body)
 
         assert "events" in payload
-        assert "timestamp" in payload
-        assert "batch_size" in payload
-        assert payload["batch_size"] == 3
+        assert "sent_at" in payload
+        assert "event_count" in payload
+        assert payload["event_count"] == 3
         assert len(payload["events"]) == 3
 
     @patch("urllib.request.urlopen")
-    def test_batch_timestamp_is_iso8601(
+    def test_batch_sent_at_is_iso8601(
         self, mock_urlopen: Mock, production_shipper: BatchSender
     ) -> None:
-        """Batch timestamp is valid ISO 8601 format."""
+        """Batch sent_at is valid ISO 8601 format."""
         mock_urlopen.return_value = create_mock_urlopen_response(200, {"status": "ok"})
 
         events = [{"event_id": "evt_1", "event_type": "scan", "payload": {}}]
@@ -730,8 +702,8 @@ class TestBatchBuilding:
         payload = json.loads(body)
 
         # Should be parseable as ISO 8601
-        timestamp = datetime.fromisoformat(payload["timestamp"].replace("Z", "+00:00"))
-        assert isinstance(timestamp, datetime)
+        sent_at = datetime.fromisoformat(payload["sent_at"].replace("Z", "+00:00"))
+        assert isinstance(sent_at, datetime)
 
     @patch("urllib.request.urlopen")
     def test_events_preserved_in_batch(
@@ -820,13 +792,9 @@ class TestCircuitBreakerIntegration:
     """Tests for circuit breaker integration with BatchSender."""
 
     @patch("urllib.request.urlopen")
-    def test_circuit_breaker_state_updates(
-        self, mock_urlopen: Mock
-    ) -> None:
+    def test_circuit_breaker_state_updates(self, mock_urlopen: Mock) -> None:
         """Circuit breaker state updates based on request success/failure."""
-        cb = CircuitBreaker(
-            CircuitBreakerConfig(failure_threshold=2, reset_timeout_seconds=60)
-        )
+        cb = CircuitBreaker(CircuitBreakerConfig(failure_threshold=2, reset_timeout_seconds=60))
         sender = BatchSender(
             endpoint="https://test.local/v1/telemetry",
             api_key="raxe_test_xxx",

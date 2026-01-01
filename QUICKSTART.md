@@ -10,6 +10,11 @@
 
 ---
 
+> **📦 Consolidation Notice:** This guide is being merged into [docs/getting-started.md](docs/getting-started.md).
+> This file will be removed in v0.5.0. The getting-started guide provides a more complete onboarding experience.
+
+---
+
 > ⚠️ **Beta Notice:** This is an early beta release. All data will be wiped before going into production.
 
 ---

@@ -17,7 +17,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -27,21 +27,11 @@ from raxe.cli.telemetry import (
     _get_tier_name,
     _mask_api_key,
     _parse_duration,
-    dlq,
-    dlq_clear,
-    dlq_list,
-    dlq_retry,
-    dlq_show,
-    disable,
-    enable,
-    flush,
-    status,
     telemetry,
 )
-from raxe.infrastructure.telemetry.dual_queue import DualQueue
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    pass
 
 
 # =============================================================================

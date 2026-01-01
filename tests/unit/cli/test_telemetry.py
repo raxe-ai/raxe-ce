@@ -225,9 +225,7 @@ class TestTelemetryDLQCommands:
         assert "List events in the Dead Letter Queue" in result.output
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_dlq_list_empty(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_dlq_list_empty(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test DLQ list with empty queue."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.get_dlq_events.return_value = []
@@ -239,9 +237,7 @@ class TestTelemetryDLQCommands:
         assert "empty" in result.output.lower()
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_dlq_list_with_events(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_dlq_list_with_events(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test DLQ list with events."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.get_dlq_events.return_value = [
@@ -267,9 +263,7 @@ class TestTelemetryDLQCommands:
         assert "Show details of a specific DLQ event" in result.output
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_dlq_show_not_found(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_dlq_show_not_found(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test DLQ show with nonexistent event."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.get_dlq_events.return_value = []
@@ -289,9 +283,7 @@ class TestTelemetryDLQCommands:
         assert "--force" in result.output
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_dlq_clear_empty(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_dlq_clear_empty(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test DLQ clear with empty queue."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.get_stats.return_value = {"dlq_count": 0}
@@ -303,9 +295,7 @@ class TestTelemetryDLQCommands:
         assert "empty" in result.output.lower()
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_dlq_clear_with_force(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_dlq_clear_with_force(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test DLQ clear with --force flag."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.get_stats.return_value = {"dlq_count": 5}
@@ -324,9 +314,7 @@ class TestTelemetryDLQCommands:
         assert "Retry failed events" in result.output
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_dlq_retry_all(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_dlq_retry_all(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test DLQ retry all events."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.retry_dlq_events.return_value = 3
@@ -353,9 +341,7 @@ class TestTelemetryFlushCommand:
         assert "Flush telemetry queues" in result.output
 
     @patch("raxe.cli.telemetry._get_queue_instance")
-    def test_flush_empty_queues(
-        self, mock_queue: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_flush_empty_queues(self, mock_queue: MagicMock, runner: CliRunner) -> None:
         """Test flush with empty queues."""
         mock_queue_instance = MagicMock()
         mock_queue_instance.get_stats.return_value = {
@@ -391,9 +377,7 @@ class TestTelemetryEnableDisableCommands:
         assert "Disable telemetry collection" in result.output
 
     @patch("raxe.cli.telemetry._get_config")
-    def test_disable_free_tier(
-        self, mock_config: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_disable_free_tier(self, mock_config: MagicMock, runner: CliRunner) -> None:
         """Test disable command on free tier shows error."""
         mock_config.return_value.core.api_key = None
 
@@ -440,9 +424,7 @@ class TestTelemetryConfigCommand:
         assert "Set telemetry configuration" in result.output
 
     @patch("raxe.cli.telemetry._get_config")
-    def test_config_invalid_key(
-        self, mock_config: MagicMock, runner: CliRunner
-    ) -> None:
+    def test_config_invalid_key(self, mock_config: MagicMock, runner: CliRunner) -> None:
         """Test config command with invalid key."""
         mock_config.return_value = MagicMock()
 
@@ -472,7 +454,11 @@ class TestTelemetryCommandGroup:
         assert "config" in result.output
 
     def test_telemetry_in_main_help(self, runner: CliRunner) -> None:
-        """Test that telemetry appears in main CLI help."""
-        result = runner.invoke(cli, ["--help"])
+        """Test that telemetry appears in full CLI help (--help-all).
+
+        Note: telemetry is an 'advanced' command and only appears in
+        the full help output, not minimal help.
+        """
+        result = runner.invoke(cli, ["--help-all"])
         assert result.exit_code == 0
         assert "telemetry" in result.output

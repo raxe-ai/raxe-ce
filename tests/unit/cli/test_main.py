@@ -1,4 +1,5 @@
 """Tests for CLI commands."""
+
 import json
 
 from click.testing import CliRunner
@@ -15,7 +16,7 @@ class TestCLI:
         result = runner.invoke(cli, ["--help"])
 
         assert result.exit_code == 0
-        assert "RAXE - AI Security for LLMs" in result.output
+        assert "AI Security for LLMs" in result.output
 
     def test_cli_version(self):
         """Test version command."""
@@ -24,7 +25,114 @@ class TestCLI:
 
         assert result.exit_code == 0
         # Check that version is displayed (actual version is 0.0.2)
-        assert ("0.0.2" in result.output or "RAXE CLI" in result.output)
+        assert "0.0.2" in result.output or "RAXE CLI" in result.output
+
+
+class TestProgressiveDisclosureHelp:
+    """Test progressive disclosure help system (P3-2)."""
+
+    def test_minimal_help_shows_essential_commands(self):
+        """Test --help shows only essential commands (scan, init, auth)."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help"])
+
+        assert result.exit_code == 0
+        # Should show essential commands section
+        assert "ESSENTIAL COMMANDS" in result.output
+        # Should show the 3 essential commands
+        assert "scan" in result.output
+        assert "init" in result.output
+        assert "auth" in result.output
+        # Should NOT show power/advanced commands
+        assert "POWER USER" not in result.output
+        assert "ADVANCED" not in result.output
+
+    def test_minimal_help_short_flag(self):
+        """Test -h short flag shows minimal help."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["-h"])
+
+        assert result.exit_code == 0
+        assert "ESSENTIAL COMMANDS" in result.output
+        assert "scan" in result.output
+
+    def test_minimal_help_shows_discovery_hint(self):
+        """Test minimal help shows how to see all commands."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help"])
+
+        assert result.exit_code == 0
+        assert "--help-all" in result.output
+        # Should mention total command count
+        assert "commands" in result.output.lower()
+
+    def test_full_help_shows_all_categories(self):
+        """Test --help-all shows all command categories."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help-all"])
+
+        assert result.exit_code == 0
+        # Should show all category headers
+        assert "ESSENTIAL" in result.output
+        assert "COMMON" in result.output
+        assert "POWER USER" in result.output
+        assert "ADVANCED" in result.output
+        assert "REFERENCE" in result.output
+
+    def test_full_help_shows_all_commands(self):
+        """Test --help-all shows commands from each category."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help-all"])
+
+        assert result.exit_code == 0
+        # Essential
+        assert "scan" in result.output
+        assert "init" in result.output
+        assert "auth" in result.output
+        # Common
+        assert "test" in result.output
+        assert "stats" in result.output
+        assert "doctor" in result.output
+        # Power
+        assert "rules" in result.output
+        assert "suppress" in result.output
+        # Advanced
+        assert "telemetry" in result.output
+        assert "validate-rule" in result.output
+        # Reference
+        assert "privacy" in result.output
+        assert "completion" in result.output
+
+    def test_full_help_shows_global_flags(self):
+        """Test --help-all shows global flags section."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help-all"])
+
+        assert result.exit_code == 0
+        assert "GLOBAL FLAGS" in result.output
+        assert "--verbose" in result.output
+        assert "--quiet" in result.output
+        assert "--no-color" in result.output
+
+    def test_full_help_shows_examples(self):
+        """Test --help-all shows examples section."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help-all"])
+
+        assert result.exit_code == 0
+        assert "EXAMPLES" in result.output
+        assert "raxe scan" in result.output
+
+    def test_subcommand_help_still_works(self):
+        """Test that subcommand help (raxe scan --help) still works."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["scan", "--help"])
+
+        assert result.exit_code == 0
+        # Should show Click's standard help for scan command
+        assert "scan" in result.output.lower()
+        assert "--stdin" in result.output
+        assert "--format" in result.output
 
 
 class TestInitCommand:
@@ -102,6 +210,80 @@ class TestInitCommand:
         assert "new_key" in content
         assert "old_key" not in content
 
+    def test_init_with_l2_disabled(self, tmp_path, monkeypatch):
+        """Test init with L2 detection disabled."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init", "--no-l2"])
+
+        assert result.exit_code == 0
+        assert "L2 Detection" in result.output
+        assert "Disabled" in result.output
+
+        config_file = tmp_path / ".raxe" / "config.yaml"
+        content = config_file.read_text()
+        assert "l2_enabled: false" in content
+
+    def test_init_with_l2_enabled(self, tmp_path, monkeypatch):
+        """Test init with L2 detection explicitly enabled."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init", "--l2"])
+
+        assert result.exit_code == 0
+        assert "L2 Detection" in result.output
+
+        config_file = tmp_path / ".raxe" / "config.yaml"
+        content = config_file.read_text()
+        assert "l2_enabled: true" in content
+
+    def test_init_quick_mode(self, tmp_path, monkeypatch):
+        """Test init with --quick flag."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init", "--quick"])
+
+        assert result.exit_code == 0
+        assert "Quick Initialization" in result.output
+        assert "initialized successfully" in result.output
+
+        config_file = tmp_path / ".raxe" / "config.yaml"
+        assert config_file.exists()
+
+    def test_init_help_shows_new_flags(self):
+        """Test init --help shows all new flags."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init", "--help"])
+
+        assert result.exit_code == 0
+        # Check for new flags in help
+        assert "--l2" in result.output
+        assert "--no-l2" in result.output
+        assert "--skip-completions" in result.output
+        assert "--skip-test-scan" in result.output
+        assert "--quick" in result.output
+
+
+class TestSetupCommand:
+    """Test deprecated raxe setup command."""
+
+    def test_setup_shows_deprecation_warning(self, tmp_path, monkeypatch):
+        """Test setup command shows deprecation warning panel."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        runner = CliRunner()
+        # Need to provide input to avoid waiting for interactive prompts
+        result = runner.invoke(cli, ["setup"], input="\n\n\n\n")
+
+        # Check for deprecation warning elements
+        assert "DEPRECATION WARNING" in result.output
+        assert "raxe setup" in result.output
+        assert "raxe init" in result.output
+        assert "will be removed" in result.output or "future release" in result.output
+
 
 class TestScanCommand:
     """Test raxe scan command."""
@@ -171,7 +353,7 @@ class TestScanCommand:
 
         assert result.exit_code == EXIT_INVALID_INPUT  # Exit code 2 for invalid input
         # Check for error message (actual output uses uppercase "ERROR")
-        assert ("ERROR" in result.output or "No text provided" in result.output)
+        assert "ERROR" in result.output or "No text provided" in result.output
 
     def test_scan_multiline_text(self):
         """Test scanning multiline text."""

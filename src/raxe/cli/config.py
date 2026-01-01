@@ -64,8 +64,8 @@ def _send_key_upgrade_event(old_api_key: str | None, new_api_key: str) -> None:
                 old_key_type = validate_key_format(old_api_key)
                 previous_key_id = compute_key_id(old_api_key)
                 previous_tier = key_type_to_tier.get(old_key_type, "temp")
-            except Exception:
-                pass
+            except Exception:  # noqa: S110
+                pass  # Key validation may fail
         else:
             # Check credential store for existing credentials
             store = CredentialStore()
@@ -81,8 +81,8 @@ def _send_key_upgrade_event(old_api_key: str | None, new_api_key: str) -> None:
                     )
                     now = datetime.now(timezone.utc)
                     days_on_previous = (now - created).days
-                except Exception:
-                    pass
+                except Exception:  # noqa: S110
+                    pass  # Date parsing may fail
 
         # Only send if this looks like an actual upgrade (not just setting same tier)
         if previous_tier and previous_tier == new_tier and previous_tier != "temp":
@@ -324,7 +324,7 @@ def edit(path: Path | None) -> None:
         editor = os.environ.get("EDITOR", "vi")
 
         # Open in editor
-        subprocess.run([editor, str(path)])
+        subprocess.run([editor, str(path)])  # noqa: S603
 
         logger.info("config_edit_completed")
 

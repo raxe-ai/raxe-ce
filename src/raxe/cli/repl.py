@@ -7,7 +7,9 @@ from pathlib import Path
 import click
 from rich.table import Table
 
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR
 from raxe.cli.output import console, display_error, display_scan_result, display_stats
+from raxe.cli.terminal_context import get_terminal_context
 from raxe.sdk.client import Raxe, ScanPipelineResult
 
 # Optional dependencies for REPL functionality
@@ -15,6 +17,7 @@ try:
     from prompt_toolkit import PromptSession
     from prompt_toolkit.completion import WordCompleter
     from prompt_toolkit.history import FileHistory
+
     PROMPT_TOOLKIT_AVAILABLE = True
 except ImportError:
     PROMPT_TOOLKIT_AVAILABLE = False
@@ -54,6 +57,27 @@ def repl() -> None:
             "Install it with: [cyan]pip install raxe[repl][/cyan]"
         )
         raise click.Abort()
+
+    # Check for non-interactive environment (CI/CD, pipes, scripts)
+    context = get_terminal_context()
+    if not context.is_interactive:
+        if context.is_ci:
+            ci_name = context.detected_ci or "CI/CD"
+            console.print(
+                f"[red]Error:[/red] REPL mode requires an interactive terminal.\n"
+                f"Detected non-interactive environment: [yellow]{ci_name}[/yellow]"
+            )
+        else:
+            console.print(
+                "[red]Error:[/red] REPL mode requires an interactive terminal.\n"
+                "This command cannot run in pipes or scripts."
+            )
+        console.print()
+        console.print("[bold]Alternatives for non-interactive use:[/bold]")
+        console.print('  • [cyan]raxe scan "your prompt"[/cyan]  - Single scan command')
+        console.print("  • [cyan]raxe scan --file input.txt[/cyan]  - Scan from file")
+        console.print('  • [cyan]echo "prompt" | raxe scan -[/cyan]  - Pipe input')
+        raise SystemExit(EXIT_CONFIG_ERROR)
 
     from raxe.cli.branding import print_logo
 
@@ -319,7 +343,9 @@ def _handle_rules(raxe: Raxe, args: str) -> None:
 
         console.print(table)
         console.print()
-        console.print(f"[dim]Showing 20/{len(all_rules)} rules. Use 'rules <rule_id>' for details.[/dim]")
+        console.print(
+            f"[dim]Showing 20/{len(all_rules)} rules. Use 'rules <rule_id>' for details.[/dim]"
+        )
 
     else:
         # Show specific rule

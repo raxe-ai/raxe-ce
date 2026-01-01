@@ -47,6 +47,7 @@ def _get_api_credentials() -> tuple[str | None, str | None, str | None]:
         where the API key came from ("environment", "credentials", "config", or None).
     """
     import os
+
     from raxe.infrastructure.telemetry.credential_store import CredentialStore
 
     api_key: str | None = None
@@ -1152,7 +1153,7 @@ def endpoint_show(output_format: str) -> None:
         raxe telemetry endpoint show
         raxe telemetry endpoint show --format json
     """
-    from raxe.infrastructure.config.endpoints import get_endpoint_info, Endpoint
+    from raxe.infrastructure.config.endpoints import get_endpoint_info
 
     info = get_endpoint_info()
 
@@ -1207,7 +1208,7 @@ def endpoint_set(url: str) -> None:
     Examples:
         raxe telemetry endpoint set https://custom.example.com/v1/telemetry
     """
-    from raxe.infrastructure.config.endpoints import set_endpoint, Endpoint
+    from raxe.infrastructure.config.endpoints import Endpoint, set_endpoint
 
     try:
         set_endpoint(Endpoint.TELEMETRY, url)
@@ -1231,7 +1232,11 @@ def endpoint_reset() -> None:
     Examples:
         raxe telemetry endpoint reset
     """
-    from raxe.infrastructure.config.endpoints import reset_endpoint, get_telemetry_endpoint, Endpoint
+    from raxe.infrastructure.config.endpoints import (
+        Endpoint,
+        get_telemetry_endpoint,
+        reset_endpoint,
+    )
 
     reset_endpoint(Endpoint.TELEMETRY)
     current = get_telemetry_endpoint()
@@ -1263,7 +1268,7 @@ def endpoint_test(timeout: float, output_format: str) -> None:
         raxe telemetry endpoint test
         raxe telemetry endpoint test --timeout 5
     """
-    from raxe.infrastructure.config.endpoints import test_all_endpoints, Endpoint
+    from raxe.infrastructure.config.endpoints import test_all_endpoints
 
     results = test_all_endpoints(timeout_seconds=timeout)
 
@@ -1354,9 +1359,9 @@ def endpoint_use(environment: str) -> None:
         raxe telemetry endpoint use production
     """
     from raxe.infrastructure.config.endpoints import (
-        save_environment,
         Environment,
         get_endpoint_info,
+        save_environment,
     )
 
     env_map = {

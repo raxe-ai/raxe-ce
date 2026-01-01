@@ -23,7 +23,6 @@ from typing import ClassVar
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.text import Text
 
 from raxe.domain.ml.protocol import L2Prediction, L2Result

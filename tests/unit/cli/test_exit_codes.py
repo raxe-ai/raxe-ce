@@ -1,5 +1,4 @@
 """Tests for CLI exit codes."""
-import pytest
 from click.testing import CliRunner
 
 from raxe.cli.exit_codes import (

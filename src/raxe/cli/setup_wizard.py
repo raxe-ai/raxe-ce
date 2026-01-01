@@ -19,23 +19,27 @@ import re
 import subprocess
 import sys
 import webbrowser
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.text import Text
 
-from raxe.cli.branding import print_logo, print_success, print_warning, print_info
+from raxe.cli.branding import print_logo, print_warning
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR
+from raxe.cli.terminal_context import get_terminal_context
 from raxe.infrastructure.config.yaml_config import RaxeConfig
+
 
 # Console URL for API key management - resolved from centralized endpoints
 def _get_console_keys_url() -> str:
     """Get console keys URL from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import get_console_url
+
     return f"{get_console_url()}/keys"
+
 
 # API key format pattern: raxe_{type}_{random32}
 API_KEY_PATTERN = re.compile(r"^raxe_(live|test|temp)_[a-zA-Z0-9]{20,}$")
@@ -52,11 +56,29 @@ class WizardConfig:
         install_completions: Whether to install shell completions
         detected_shell: The detected shell type
     """
+
     api_key: str | None = None
     l2_enabled: bool = True
     telemetry_enabled: bool = True
     install_completions: bool = False
     detected_shell: str | None = None
+
+
+@dataclass
+class TestScanResult:
+    """Result from the test scan verification.
+
+    Attributes:
+        success: Whether the test scan completed successfully
+        duration_ms: Duration of the scan in milliseconds
+        threat_count: Number of threats detected
+        error_message: Error message if scan failed
+    """
+
+    success: bool = False
+    duration_ms: float = 0.0
+    threat_count: int = 0
+    error_message: str | None = None
 
 
 def validate_api_key_format(api_key: str) -> bool:
@@ -94,6 +116,7 @@ def detect_shell() -> str | None:
     # Try to detect from process
     try:
         import psutil
+
         parent = psutil.Process().parent()
         if parent:
             name = parent.name().lower()
@@ -159,8 +182,8 @@ def install_shell_completion(shell: str, console: Console) -> bool:
     Returns:
         True if installation succeeded, False otherwise
     """
+
     from raxe.cli.main import cli
-    from click.shell_completion import get_completion_class
 
     try:
         completion_path = get_completion_path(shell)
@@ -181,7 +204,7 @@ def install_shell_completion(shell: str, console: Console) -> bool:
         completion_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Generate completion script using raxe CLI
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             [sys.executable, "-m", "raxe.cli.main", "completion", shell],
             capture_output=True,
             text=True,
@@ -190,13 +213,15 @@ def install_shell_completion(shell: str, console: Console) -> bool:
         if result.returncode != 0:
             # Fallback: invoke directly
             from click.testing import CliRunner
+
             runner = CliRunner()
             from raxe.cli.main import cli
+
             invoke_result = runner.invoke(cli, ["completion", shell])
             if invoke_result.exit_code == 0:
                 completion_script = invoke_result.output
             else:
-                console.print(f"[yellow]Could not generate completion script[/yellow]")
+                console.print("[yellow]Could not generate completion script[/yellow]")
                 return False
         else:
             completion_script = result.stdout
@@ -227,14 +252,14 @@ def install_shell_completion(shell: str, console: Console) -> bool:
         return False
 
 
-def run_test_scan(console: Console) -> bool:
+def run_test_scan(console: Console) -> TestScanResult:
     """Run a quick test scan to verify the setup.
 
     Args:
         console: Rich console for output
 
     Returns:
-        True if the test scan succeeded, False otherwise
+        TestScanResult with scan details (success, duration, threat count)
     """
     try:
         from raxe.sdk.client import Raxe
@@ -251,23 +276,34 @@ def run_test_scan(console: Console) -> bool:
 
         console.print()
 
+        threat_count = len(result.scan_result.l1_result.detections)
+        # Add L2 predictions to count if available
+        if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
+            threat_count += len(result.scan_result.l2_result.predictions)
+
         if result.scan_result.has_threats:
             console.print("[green]Test scan completed successfully![/green]")
             console.print(
-                f"  [dim]Detected {len(result.scan_result.l1_result.detections)} threat(s) "
-                f"in {result.duration_ms:.2f}ms[/dim]"
+                f"  [dim]Detected {threat_count} threat(s) " f"in {result.duration_ms:.2f}ms[/dim]"
             )
-            return True
         else:
             # Still successful, just no detection (might be using different rules)
             console.print("[green]Test scan completed successfully![/green]")
             console.print(f"  [dim]Scan completed in {result.duration_ms:.2f}ms[/dim]")
-            return True
+
+        return TestScanResult(
+            success=True,
+            duration_ms=result.duration_ms,
+            threat_count=threat_count,
+        )
 
     except Exception as e:
         console.print(f"[yellow]Test scan skipped: {e}[/yellow]")
-        console.print("[dim]You can test manually with: raxe scan \"test prompt\"[/dim]")
-        return False
+        console.print('[dim]You can test manually with: raxe scan "test prompt"[/dim]')
+        return TestScanResult(
+            success=False,
+            error_message=str(e),
+        )
 
 
 def display_welcome(console: Console) -> None:
@@ -284,13 +320,9 @@ def display_welcome(console: Console) -> None:
     welcome_text.append("Welcome to RAXE!", style="bold cyan")
     welcome_text.append("\n\n", style="")
     welcome_text.append(
-        "This wizard will help you set up RAXE for the first time.\n",
-        style="white"
+        "This wizard will help you set up RAXE for the first time.\n", style="white"
     )
-    welcome_text.append(
-        "You can skip this at any time by pressing Ctrl+C.\n",
-        style="dim"
-    )
+    welcome_text.append("You can skip this at any time by pressing Ctrl+C.\n", style="dim")
 
     console.print(Panel(welcome_text, border_style="cyan", padding=(1, 2)))
     console.print()
@@ -329,7 +361,9 @@ def ask_api_key(console: Console) -> str | None:
                 return api_key
             else:
                 console.print("[red]Invalid API key format.[/red]")
-                console.print("[dim]Expected format: raxe_live_xxx, raxe_test_xxx, or raxe_temp_xxx[/dim]")
+                console.print(
+                    "[dim]Expected format: raxe_live_xxx, raxe_test_xxx, or raxe_temp_xxx[/dim]"
+                )
 
                 retry = Confirm.ask("Try again?", default=True)
                 if not retry:
@@ -345,7 +379,9 @@ def ask_api_key(console: Console) -> str | None:
         privacy_text.append("Temporary keys:\n", style="bold")
         privacy_text.append("  - Expire after 14 days\n", style="white")
         privacy_text.append("  - Require privacy-preserving telemetry\n", style="white")
-        privacy_text.append(f"  - Can be upgraded anytime at {_get_console_keys_url()}\n", style="white")
+        privacy_text.append(
+            f"  - Can be upgraded anytime at {_get_console_keys_url()}\n", style="white"
+        )
 
         console.print(Panel(privacy_text, border_style="dim", padding=(0, 1)))
         console.print()
@@ -361,7 +397,9 @@ def ask_api_key(console: Console) -> str | None:
                 webbrowser.open(console_keys_url)
                 console.print(f"[green]Opened {console_keys_url}[/green]")
             except Exception:
-                console.print(f"[yellow]Could not open browser. Visit: {_get_console_keys_url()}[/yellow]")
+                console.print(
+                    f"[yellow]Could not open browser. Visit: {_get_console_keys_url()}[/yellow]"
+                )
 
         return None
 
@@ -496,13 +534,12 @@ def _send_key_upgrade_event_from_setup(new_api_key: str) -> None:
             # Calculate days on previous
             try:
                 from datetime import datetime, timezone
-                created = datetime.fromisoformat(
-                    existing.created_at.replace("Z", "+00:00")
-                )
+
+                created = datetime.fromisoformat(existing.created_at.replace("Z", "+00:00"))
                 now = datetime.now(timezone.utc)
                 days_on_previous = (now - created).days
-            except Exception:
-                pass
+            except Exception:  # noqa: S110
+                pass  # Date parsing may fail
 
         # Create and send the event
         event = create_key_upgrade_event(
@@ -517,14 +554,14 @@ def _send_key_upgrade_event_from_setup(new_api_key: str) -> None:
         # Try to send via telemetry sender
         try:
             from raxe.infrastructure.telemetry.sender import TelemetrySender
+
             sender = TelemetrySender()
             sender.send(event)
-        except Exception:
+        except Exception:  # noqa: S110
             pass  # Don't fail setup if telemetry fails
 
-    except Exception:
-        # Don't fail the setup if telemetry fails
-        pass
+    except Exception:  # noqa: S110
+        pass  # Don't fail the setup if telemetry fails
 
 
 def create_config_file(
@@ -573,45 +610,288 @@ def create_config_file(
     return config_file
 
 
-def display_next_steps(console: Console) -> None:
-    """Display next steps after successful setup.
+def _get_api_key_display(config: WizardConfig) -> tuple[str, str]:
+    """Get display text and style for API key status.
+
+    Args:
+        config: Wizard configuration
+
+    Returns:
+        Tuple of (display text, style)
+    """
+    if config.api_key:
+        if config.api_key.startswith("raxe_live_"):
+            masked = f"raxe_live_{'*' * 6}"
+            return f"{masked} (permanent)", "green"
+        elif config.api_key.startswith("raxe_test_"):
+            masked = f"raxe_test_{'*' * 6}"
+            return f"{masked} (test mode)", "yellow"
+        elif config.api_key.startswith("raxe_temp_"):
+            masked = f"raxe_temp_{'*' * 6}"
+            return f"{masked} (temporary, 14 days)", "yellow"
+        else:
+            return "Configured", "green"
+    else:
+        return "Temporary key (14-day expiry)", "yellow"
+
+
+def _is_temp_key(config: WizardConfig) -> bool:
+    """Check if the configured key is a temporary key.
+
+    Args:
+        config: Wizard configuration
+
+    Returns:
+        True if using a temp key or no key (auto-generated temp)
+    """
+    if config.api_key is None:
+        return True
+    return config.api_key.startswith("raxe_temp_")
+
+
+def display_next_steps(
+    console: Console,
+    config: WizardConfig | None = None,
+    test_result: TestScanResult | None = None,
+) -> None:
+    """Display personalized next steps after successful setup.
+
+    Provides a comprehensive completion screen with:
+    - Success banner
+    - Configuration summary
+    - Test result status
+    - Personalized next steps
+    - Quick commands reference
+    - Resource links
 
     Args:
         console: Rich console for output
+        config: Wizard config for personalized guidance
+        test_result: Optional test scan result for verification display
     """
     console.print()
 
-    next_steps = Text()
-    next_steps.append("Setup complete! Here's what to do next:\n\n", style="bold green")
+    # ============================================================
+    # SUCCESS BANNER
+    # ============================================================
+    banner = Text()
+    banner.append("SETUP COMPLETE\n\n", style="bold green")
+    banner.append("RAXE is ready to protect your LLM applications.", style="white")
 
-    next_steps.append("  1. ", style="bold cyan")
-    next_steps.append("Scan your first prompt:\n", style="white")
-    next_steps.append('     raxe scan "your text here"\n\n', style="cyan")
-
-    next_steps.append("  2. ", style="bold cyan")
-    next_steps.append("Try the interactive mode:\n", style="white")
-    next_steps.append("     raxe repl\n\n", style="cyan")
-
-    next_steps.append("  3. ", style="bold cyan")
-    next_steps.append("View statistics:\n", style="white")
-    next_steps.append("     raxe stats\n\n", style="cyan")
-
-    next_steps.append("  4. ", style="bold cyan")
-    next_steps.append("Read the documentation:\n", style="white")
-    next_steps.append("     https://docs.raxe.ai\n", style="blue underline")
-
-    console.print(Panel(
-        next_steps,
-        title="[bold cyan]Next Steps[/bold cyan]",
-        border_style="green",
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            banner,
+            border_style="green",
+            padding=(1, 2),
+        )
+    )
     console.print()
+
+    # ============================================================
+    # CONFIGURATION SUMMARY
+    # ============================================================
+    if config:
+        summary = Text()
+
+        # API Key status
+        key_text, key_style = _get_api_key_display(config)
+        summary.append("  API Key        ", style="dim")
+        summary.append(f"{key_text}\n", style=key_style)
+
+        # L2 Detection
+        summary.append("  L2 Detection   ", style="dim")
+        if config.l2_enabled:
+            summary.append("Enabled", style="green")
+            summary.append("  - ML-powered threat detection\n", style="dim")
+        else:
+            summary.append("Disabled", style="yellow")
+            summary.append(" - Pattern matching only (faster)\n", style="dim")
+
+        # Telemetry
+        summary.append("  Telemetry      ", style="dim")
+        if config.telemetry_enabled:
+            summary.append("Enabled", style="green")
+            summary.append("  - Privacy-preserving usage data\n", style="dim")
+        else:
+            summary.append("Disabled", style="yellow")
+            summary.append(" - No data collection\n", style="dim")
+
+        # Shell completions
+        if config.install_completions and config.detected_shell:
+            summary.append("  Shell          ", style="dim")
+            summary.append(f"{config.detected_shell} completions installed\n", style="green")
+
+        console.print(
+            Panel(
+                summary,
+                title="[bold cyan]Configuration Summary[/bold cyan]",
+                border_style="cyan",
+                padding=(0, 2),
+            )
+        )
+        console.print()
+
+    # ============================================================
+    # TEST RESULT STATUS
+    # ============================================================
+    if test_result:
+        test_text = Text()
+        if test_result.success:
+            if test_result.threat_count > 0:
+                test_text.append(
+                    f"  Detected {test_result.threat_count} threat(s) "
+                    f"in {test_result.duration_ms:.1f}ms\n",
+                    style="white",
+                )
+                test_text.append("  Detection engine is working correctly.", style="dim")
+            else:
+                test_text.append(
+                    f"  Scan completed in {test_result.duration_ms:.1f}ms\n",
+                    style="white",
+                )
+                test_text.append("  Detection engine ready.", style="dim")
+            border_style = "green"
+            title_style = "bold green"
+        else:
+            test_text.append("  Test scan could not complete.\n", style="yellow")
+            test_text.append(
+                "  Run 'raxe doctor' to diagnose issues.",
+                style="dim",
+            )
+            border_style = "yellow"
+            title_style = "bold yellow"
+
+        console.print(
+            Panel(
+                test_text,
+                title=f"[{title_style}]Test Scan Verified[/{title_style}]",
+                border_style=border_style,
+                padding=(0, 2),
+            )
+        )
+        console.print()
+
+    # ============================================================
+    # PRIMARY NEXT STEP
+    # ============================================================
+    next_step = Text()
+    next_step.append("  Add RAXE to your Python project:\n\n", style="white")
+    next_step.append("    from raxe import Raxe\n", style="cyan")
+    next_step.append("    raxe = Raxe()\n", style="cyan")
+    next_step.append("    result = raxe.scan(user_input)\n\n", style="cyan")
+    next_step.append("  Or scan from the command line:\n\n", style="white")
+    next_step.append('    raxe scan "your text here"', style="cyan")
+
+    console.print(
+        Panel(
+            next_step,
+            title="[bold cyan]Your Next Step[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 2),
+        )
+    )
+    console.print()
+
+    # ============================================================
+    # TEMP KEY WARNING (if applicable)
+    # ============================================================
+    if config and _is_temp_key(config):
+        warning = Text()
+        warning.append("  Your temporary key expires in 14 days.\n", style="yellow")
+        warning.append("  Upgrade for unlimited: ", style="white")
+        warning.append(_get_console_keys_url(), style="blue underline")
+
+        console.print(
+            Panel(
+                warning,
+                title="[bold yellow]Notice[/bold yellow]",
+                border_style="yellow",
+                padding=(0, 2),
+            )
+        )
+        console.print()
+
+    # ============================================================
+    # QUICK COMMANDS
+    # ============================================================
+    commands = Text()
+    commands.append("  raxe scan <text>     ", style="cyan")
+    commands.append("Scan text for threats\n", style="dim")
+    commands.append("  raxe repl            ", style="cyan")
+    commands.append("Interactive scanning mode\n", style="dim")
+    commands.append("  raxe doctor          ", style="cyan")
+    commands.append("Check configuration health", style="dim")
+
+    console.print(
+        Panel(
+            commands,
+            title="[bold cyan]Quick Commands[/bold cyan]",
+            border_style="dim",
+            padding=(0, 2),
+        )
+    )
+    console.print()
+
+    # ============================================================
+    # FOOTER RESOURCES
+    # ============================================================
+    footer = Text()
+    footer.append("Docs: ", style="dim")
+    footer.append("https://docs.raxe.ai", style="blue underline")
+    footer.append("  |  ", style="dim")
+    footer.append("Issues: ", style="dim")
+    footer.append("github.com/raxe-ai/raxe-ce", style="blue underline")
+
+    console.print(footer)
+    console.print()
+
+
+def _handle_non_interactive_setup(console: Console) -> bool:
+    """Handle setup in non-interactive environment.
+
+    Displays guidance for CI/CD or headless environments and exits
+    with EXIT_CONFIG_ERROR to indicate setup was not completed.
+
+    Args:
+        console: Rich console for output
+
+    Returns:
+        False (setup not completed)
+    """
+    context = get_terminal_context()
+
+    if context.is_ci:
+        ci_name = context.detected_ci or "CI/CD"
+        console.print(f"[yellow]Non-interactive environment detected ({ci_name})[/yellow]")
+    else:
+        console.print("[yellow]Non-interactive terminal detected[/yellow]")
+
+    console.print()
+    console.print("[bold]The setup wizard requires an interactive terminal.[/bold]")
+    console.print()
+    console.print("[cyan]For non-interactive environments, use one of these alternatives:[/cyan]")
+    console.print()
+    console.print("  1. [green]Quick initialization (no prompts):[/green]")
+    console.print("     raxe init --telemetry")
+    console.print()
+    console.print("  2. [green]Set API key via environment:[/green]")
+    console.print("     export RAXE_API_KEY=raxe_live_xxx")
+    console.print('     raxe scan "test prompt"')
+    console.print()
+    console.print("  3. [green]Pre-configure with config file:[/green]")
+    console.print("     # Copy .raxe/config.yaml from dev environment")
+    console.print()
+    console.print("[dim]See: https://docs.raxe.ai/guides/ci-cd[/dim]")
+    console.print()
+
+    # Exit with config error code to indicate setup not completed
+    sys.exit(EXIT_CONFIG_ERROR)
 
 
 def run_setup_wizard(
     console: Console | None = None,
     *,
+    skip_completions: bool = False,
     skip_test_scan: bool = False,
 ) -> bool:
     """Run the interactive setup wizard for first-time users.
@@ -620,13 +900,14 @@ def run_setup_wizard(
     1. Welcome message with RAXE branding
     2. API key configuration (or temp key auto-generation)
     3. Detection settings (L2, telemetry)
-    4. Shell completion installation
+    4. Shell completion installation (unless skip_completions=True)
     5. Configuration file creation
-    6. Test scan verification
+    6. Test scan verification (unless skip_test_scan=True)
     7. Next steps display
 
     Args:
         console: Optional Rich console (creates new one if None)
+        skip_completions: Skip the shell completions step
         skip_test_scan: Skip the test scan step (useful for testing)
 
     Returns:
@@ -634,6 +915,11 @@ def run_setup_wizard(
     """
     if console is None:
         console = Console()
+
+    # Check for non-interactive environment (CI/CD, pipes, etc.)
+    context = get_terminal_context()
+    if not context.is_interactive:
+        return _handle_non_interactive_setup(console)
 
     wizard_config = WizardConfig()
 
@@ -647,24 +933,32 @@ def run_setup_wizard(
         # Step 2: Detection settings
         wizard_config.l2_enabled, wizard_config.telemetry_enabled = ask_detection_settings(console)
 
-        # Step 3: Shell completions
-        wizard_config.install_completions, wizard_config.detected_shell = ask_shell_completions(console)
+        # Step 3: Shell completions (unless skipped)
+        if not skip_completions:
+            wizard_config.install_completions, wizard_config.detected_shell = ask_shell_completions(
+                console
+            )
 
         # Create config file
-        config_file = create_config_file(wizard_config, console)
+        create_config_file(wizard_config, console)
 
-        # Install shell completions if requested
-        if wizard_config.install_completions and wizard_config.detected_shell:
+        # Install shell completions if requested (and not skipped)
+        if (
+            not skip_completions
+            and wizard_config.install_completions
+            and wizard_config.detected_shell
+        ):
             console.print()
             console.print("[bold cyan]Installing shell completions...[/bold cyan]")
             install_shell_completion(wizard_config.detected_shell, console)
 
-        # Run test scan
+        # Run test scan and capture result
+        test_result: TestScanResult | None = None
         if not skip_test_scan:
-            run_test_scan(console)
+            test_result = run_test_scan(console)
 
-        # Display next steps
-        display_next_steps(console)
+        # Display personalized next steps with test result
+        display_next_steps(console, wizard_config, test_result)
 
         return True
 
@@ -673,8 +967,8 @@ def run_setup_wizard(
         console.print()
         print_warning(console, "Setup cancelled.")
         console.print()
-        console.print("[dim]You can run 'raxe setup' anytime to try again.[/dim]")
-        console.print("[dim]Or use 'raxe init' for quick initialization.[/dim]")
+        console.print("[dim]You can run 'raxe init' anytime to try again.[/dim]")
+        console.print("[dim]Or use 'raxe init --quick' for quick initialization.[/dim]")
         console.print()
         return False
 
@@ -713,9 +1007,191 @@ def display_first_run_message(console: Console) -> None:
     message.append("raxe --help", style="cyan")
     message.append("   See all commands\n", style="dim")
 
-    console.print(Panel(
-        message,
-        border_style="cyan",
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            message,
+            border_style="cyan",
+            padding=(1, 2),
+        )
+    )
+    console.print()
+
+
+def _read_key_with_timeout(timeout_seconds: float) -> str | None:
+    """Read a single key with timeout.
+
+    Cross-platform key reading that works on macOS, Linux, and Windows.
+
+    Args:
+        timeout_seconds: Maximum time to wait for input
+
+    Returns:
+        The key pressed (lowercase), or None if timeout
+    """
+    import select
+    import sys
+
+    if not sys.stdin.isatty():
+        return None
+
+    try:
+        # Unix-like systems (macOS, Linux)
+        import termios
+        import tty
+
+        old_settings = termios.tcgetattr(sys.stdin)
+        try:
+            tty.setcbreak(sys.stdin.fileno())
+            # Check if input is available
+            ready, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
+            if ready:
+                char = sys.stdin.read(1)
+                return char.lower() if char else None
+            return None
+        finally:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+    except (ImportError, termios.error):
+        # Windows or fallback
+        try:
+            import msvcrt
+            import time
+
+            start = time.time()
+            while (time.time() - start) < timeout_seconds:
+                if msvcrt.kbhit():
+                    char = msvcrt.getch().decode("utf-8", errors="ignore")
+                    return char.lower() if char else None
+                time.sleep(0.05)
+            return None
+        except ImportError:
+            # No keyboard input available
+            return None
+
+
+def auto_launch_first_run(console: Console) -> None:
+    """Auto-launch setup wizard with countdown and escape hatches.
+
+    Shows a countdown timer with options to:
+    - [S] Start setup now (skip countdown)
+    - [Q] Quick init (non-interactive, creates default config)
+    - [X] Skip setup (show help menu)
+
+    For non-interactive environments, falls back to the static message.
+
+    Args:
+        console: Rich console for output
+    """
+    from raxe.cli.branding import print_help_menu, print_logo
+
+    context = get_terminal_context()
+
+    # Non-interactive environments get static message
+    if not context.is_interactive:
+        display_first_run_message(console)
+        return
+
+    # Show welcome banner
+    print_logo(console, compact=True)
+    console.print()
+    console.print("[bold cyan]Welcome to RAXE![/bold cyan]")
+    console.print()
+    console.print("[dim]It looks like this is your first time using RAXE.[/dim]")
+    console.print()
+
+    # Show options
+    console.print("  [green][S][/green] Start setup now")
+    console.print("  [yellow][Q][/yellow] Quick init (no prompts)")
+    console.print("  [dim][X][/dim] Skip for now")
+    console.print()
+
+    # Countdown with key detection
+    countdown_seconds = 5
+
+    for remaining in range(countdown_seconds, 0, -1):
+        # Update countdown display (use carriage return for in-place update)
+        console.print(
+            f"\r[cyan]Starting setup wizard in {remaining}...[/cyan]  ",
+            end="",
+        )
+
+        # Check for keypress with 1 second timeout
+        key = _read_key_with_timeout(1.0)
+
+        if key:
+            console.print()  # New line after countdown
+            console.print()
+
+            if key == "s" or key == "\r" or key == "\n":  # S or Enter
+                console.print("[green]Starting setup...[/green]")
+                console.print()
+                run_setup_wizard(console)
+                return
+
+            elif key == "q":  # Quick init
+                console.print("[yellow]Running quick initialization...[/yellow]")
+                console.print()
+                _quick_init(console)
+                return
+
+            elif key == "x" or key == "\x1b":  # X or Escape
+                console.print("[dim]Skipping setup. Run 'raxe setup' anytime to configure.[/dim]")
+                console.print()
+                print_help_menu(console)
+                return
+
+            elif key == "\x03":  # Ctrl+C
+                console.print("[dim]Cancelled. Run 'raxe setup' anytime to configure.[/dim]")
+                console.print()
+                return
+
+    # Countdown completed - auto-launch setup
+    console.print()  # New line after countdown
+    console.print()
+    console.print("[green]Starting setup wizard...[/green]")
+    console.print()
+    run_setup_wizard(console)
+
+
+def _quick_init(console: Console) -> None:
+    """Run quick initialization without prompts.
+
+    Creates a basic config with:
+    - No API key (temp key auto-generated on first scan)
+    - L2 detection enabled
+    - Telemetry enabled
+
+    Args:
+        console: Rich console for output
+    """
+    from rich.panel import Panel
+    from rich.text import Text
+
+    # Create config with defaults
+    wizard_config = WizardConfig(
+        api_key=None,
+        l2_enabled=True,
+        telemetry_enabled=True,
+        install_completions=False,
+    )
+
+    # Create config file
+    create_config_file(wizard_config, console)
+
+    # Show confirmation
+    console.print()
+    message = Text()
+    message.append("✓ RAXE initialized!\n\n", style="bold green")
+    message.append("Try your first scan:\n", style="white")
+    message.append('  raxe scan "your text here"\n\n', style="cyan")
+    message.append("Or run ", style="dim")
+    message.append("raxe setup", style="cyan")
+    message.append(" anytime for full configuration.", style="dim")
+
+    console.print(
+        Panel(
+            message,
+            border_style="green",
+            padding=(1, 2),
+        )
+    )
     console.print()

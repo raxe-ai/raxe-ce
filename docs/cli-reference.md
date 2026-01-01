@@ -61,66 +61,19 @@ raxe --verbose doctor
 
 ## Commands
 
-### raxe setup
+### raxe setup (deprecated)
 
-Interactive setup wizard for first-time users. Guides through initial configuration.
+> **Deprecated:** This command has been merged into `raxe init`. Use `raxe init` instead.
 
-**Usage:**
+The `raxe setup` command still works but displays a deprecation warning and redirects to the setup wizard.
+
+**Migration:**
 ```bash
-raxe setup [OPTIONS]
-```
-
-**Options:**
-
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--skip-telemetry` | | Skip telemetry configuration prompts |
-| `--skip-verify` | | Skip verification scan at the end |
-
-**What it configures:**
-
-1. **API Key Setup** - Enter an existing key or generate a temporary one
-2. **Telemetry Preferences** - Explains what data is collected, confirms consent
-3. **Verification** - Runs a test scan to confirm everything works
-
-**Examples:**
-
-```bash
-# Interactive setup (recommended for first-time users)
+# Old (deprecated)
 raxe setup
-# Output:
-# Welcome to RAXE Setup
-# ====================
-#
-# Step 1: API Key Configuration
-# -----------------------------
-# Do you have a RAXE API key? [y/N]: n
-#
-# Generating temporary API key...
-# Created: raxe_temp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# Expires: 14 days from now
-#
-# Step 2: Telemetry Configuration
-# -------------------------------
-# RAXE sends privacy-safe metadata to improve detection:
-#   - Prompt hashes (SHA-256, not reversible)
-#   - Detection metadata (rule IDs, severity)
-#   - Performance metrics (scan duration)
-#
-# We NEVER send: raw prompts, matched text, or PII.
-#
-# Enable telemetry? [Y/n]: y
-# Telemetry enabled.
-#
-# Step 3: Verification
-# --------------------
-# Running test scan...
-# Success! RAXE detected 1 threat in test prompt.
-#
-# Setup complete! Try: raxe scan "your prompt here"
 
-# Skip interactive prompts for automation
-raxe setup --skip-telemetry --skip-verify
+# New (recommended)
+raxe init
 ```
 
 ---
@@ -844,42 +797,49 @@ raxe doctor
 
 ### raxe init
 
-Initialize RAXE configuration.
+Initialize RAXE configuration. This is the unified entry point for both interactive setup and quick initialization.
 
 **Usage:**
 ```bash
 raxe init [OPTIONS]
 ```
 
+**Behavior:**
+- **Without options** (interactive terminal): Launches the interactive setup wizard
+- **With options** or non-interactive: Runs quick non-interactive initialization
+
 **Options:**
 
 | Option | Description |
 |--------|-------------|
+| `--api-key KEY` | Set RAXE API key (or use `RAXE_API_KEY` env var) |
+| `--telemetry/--no-telemetry` | Enable/disable privacy-preserving telemetry |
+| `--quick` | Quick init without interactive prompts |
 | `--force` | Overwrite existing configuration |
-| `--minimal` | Create minimal configuration (fewer options) |
 
 **Examples:**
 
 ```bash
-# Initialize with defaults
+# Interactive setup wizard (recommended for first-time users)
 raxe init
-# Output:
-# Created ~/.raxe/config.yaml
-# RAXE is ready to use.
-#
-# Quick start:
-#   raxe scan "test prompt"
-#   raxe doctor
+# Launches guided setup with:
+# - API key configuration (or temp key generation)
+# - Detection settings (L2, telemetry)
+# - Shell completion installation
+# - Test scan verification
 
-# Overwrite existing config
+# Quick init with defaults (CI/CD environments)
+raxe init --quick
+# Creates config with telemetry enabled, no API key
+
+# Quick init with API key (CI/CD with auth)
+raxe init --api-key raxe_live_xxx --telemetry
+
+# Overwrite existing config with wizard
 raxe init --force
-# Warning: This will overwrite your existing configuration.
-# Continue? [y/N]: y
-# Configuration reset.
 
-# Minimal config
-raxe init --minimal
-# Creates config with only essential settings
+# Quick init with telemetry disabled
+raxe init --quick --no-telemetry
 ```
 
 ---

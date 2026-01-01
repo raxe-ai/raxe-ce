@@ -16,7 +16,6 @@ from click.testing import CliRunner
 
 from raxe.cli.main import cli
 
-
 # Correct path for patching RaxeConfig (imported inside auth_status function)
 RAXE_CONFIG_PATH = "raxe.infrastructure.config.yaml_config.RaxeConfig"
 # Path for patching check_health (imported inside _display_remote_status)
@@ -35,17 +34,16 @@ class TestAuthLogin:
         """Test auth login help displays correctly."""
         result = runner.invoke(cli, ["auth", "login", "--help"])
         assert result.exit_code == 0
-        assert "Open RAXE Console" in result.output
+        assert "authentication URL" in result.output.lower() or "headless" in result.output.lower()
 
-    @patch("webbrowser.open")
-    def test_auth_login_opens_browser(self, mock_webbrowser, runner):
-        """Test auth login attempts to open browser."""
-        mock_webbrowser.return_value = True
+    def test_auth_login_prints_url(self, runner):
+        """Test auth login prints URL for manual setup (no browser)."""
         result = runner.invoke(cli, ["auth", "login"])
 
         assert result.exit_code == 0
-        mock_webbrowser.assert_called_once()
-        assert "console.raxe.ai" in mock_webbrowser.call_args[0][0]
+        # URL may be console.raxe.ai or console.beta.raxe.ai depending on env
+        assert "console" in result.output and "raxe.ai" in result.output
+        assert "raxe config set api_key" in result.output
 
 
 class TestAuthStatus:
@@ -63,12 +61,19 @@ class TestAuthStatus:
         assert "authentication status" in result.output.lower()
         assert "--remote" in result.output
 
+    @patch("raxe.infrastructure.telemetry.credential_store.CredentialStore")
     @patch(RAXE_CONFIG_PATH)
-    def test_auth_status_no_key(self, mock_config_class, runner):
+    def test_auth_status_no_key(self, mock_config_class, mock_cred_store_class, runner):
         """Test auth status when no API key is configured."""
+        # Mock config with no API key
         mock_config = MagicMock()
         mock_config.core.api_key = ""
         mock_config_class.load.return_value = mock_config
+
+        # Mock credential store with no credentials
+        mock_store = MagicMock()
+        mock_store.load.return_value = None
+        mock_cred_store_class.return_value = mock_store
 
         result = runner.invoke(cli, ["auth", "status"])
 
@@ -100,7 +105,11 @@ class TestAuthStatus:
         assert result.exit_code == 0
         assert "Temporary" in result.output
         # Either shows "14-day expiry" in type string or days remaining/expiry message
-        assert "14-day" in result.output.lower() or "days" in result.output.lower() or "expiry" in result.output.lower()
+        assert (
+            "14-day" in result.output.lower()
+            or "days" in result.output.lower()
+            or "expiry" in result.output.lower()
+        )
 
     @patch(RAXE_CONFIG_PATH)
     def test_auth_status_test_key(self, mock_config_class, runner):
@@ -238,7 +247,8 @@ class TestAuthStatusRemote:
 
         assert result.exit_code == 0  # Should not crash
         assert "Invalid" in result.output or "expired" in result.output.lower()
-        assert "console.raxe.ai" in result.output
+        # URL may be console.raxe.ai or console.beta.raxe.ai depending on env
+        assert "console" in result.output and "raxe.ai" in result.output
 
     @patch(CHECK_HEALTH_PATH)
     @patch(RAXE_CONFIG_PATH)
@@ -264,14 +274,16 @@ class TestAuthStatusRemote:
     @patch(RAXE_CONFIG_PATH)
     def test_auth_status_remote_timeout(self, mock_config_class, mock_check_health, runner):
         """Test remote status with timeout falls back to local."""
-        from raxe.infrastructure.telemetry.health_client import TimeoutError
+        from raxe.infrastructure.telemetry.health_client import (
+            TimeoutError as HealthTimeoutError,
+        )
 
         mock_config = MagicMock()
         mock_config.core.api_key = "raxe_live_abc123def456ghi789jkl012mno345"
         mock_config.telemetry.endpoint = None
         mock_config_class.load.return_value = mock_config
 
-        mock_check_health.side_effect = TimeoutError("Request timed out")
+        mock_check_health.side_effect = HealthTimeoutError("Request timed out")
 
         result = runner.invoke(cli, ["auth", "status", "--remote"])
 
@@ -280,12 +292,19 @@ class TestAuthStatusRemote:
         # Should fall back to local status
         assert "local status" in result.output.lower()
 
+    @patch("raxe.infrastructure.telemetry.credential_store.CredentialStore")
     @patch(RAXE_CONFIG_PATH)
-    def test_auth_status_remote_no_key(self, mock_config_class, runner):
+    def test_auth_status_remote_no_key(self, mock_config_class, mock_cred_store_class, runner):
         """Test remote status when no API key is configured."""
+        # Mock config with no API key
         mock_config = MagicMock()
         mock_config.core.api_key = ""
         mock_config_class.load.return_value = mock_config
+
+        # Mock credential store with no credentials
+        mock_store = MagicMock()
+        mock_store.load.return_value = None
+        mock_cred_store_class.return_value = mock_store
 
         result = runner.invoke(cli, ["auth", "status", "--remote"])
 
@@ -294,7 +313,9 @@ class TestAuthStatusRemote:
 
     @patch(CHECK_HEALTH_PATH)
     @patch(RAXE_CONFIG_PATH)
-    def test_auth_status_remote_trial_expiring_soon(self, mock_config_class, mock_check_health, runner):
+    def test_auth_status_remote_trial_expiring_soon(
+        self, mock_config_class, mock_check_health, runner
+    ):
         """Test remote status shows warning for keys expiring soon."""
         from raxe.infrastructure.telemetry.health_client import HealthResponse, TrialStatus
 
@@ -449,7 +470,8 @@ class TestAuthConnect:
         assert result.exit_code == 0  # Should not crash
         assert "Failed to create session" in result.output
         assert "manual authentication" in result.output.lower()
-        assert "console.raxe.ai" in result.output
+        # URL may be console.raxe.ai or console.beta.raxe.ai depending on env
+        assert "console" in result.output and "raxe.ai" in result.output
 
     @patch("raxe.cli.auth._create_cli_session")
     @patch("raxe.cli.auth.webbrowser.open")
@@ -485,12 +507,14 @@ class TestAuthConnect:
     @patch("raxe.cli.auth.webbrowser.open")
     @patch("raxe.cli.auth._poll_cli_session")
     @patch("raxe.cli.auth._save_new_credentials")
+    @patch("raxe.cli.auth._get_current_key_id_from_telemetry")
     @patch(COMPUTE_KEY_ID_PATH)
     @patch(CREDENTIAL_STORE_PATH)
     def test_auth_connect_with_existing_temp_key(
         self,
         mock_cred_store_class,
         mock_compute_key_id,
+        mock_get_key_id,
         mock_save_creds,
         mock_poll,
         mock_webbrowser,
@@ -505,6 +529,8 @@ class TestAuthConnect:
         mock_store = MagicMock()
         mock_store.load.return_value = mock_credentials
         mock_cred_store_class.return_value = mock_store
+        # Make telemetry return None so it falls through to compute_key_id
+        mock_get_key_id.return_value = None
         mock_compute_key_id.return_value = "key_abc123def456"
 
         mock_create_session.return_value = {
@@ -516,15 +542,15 @@ class TestAuthConnect:
         mock_poll.return_value = {
             "status": "completed",
             "api_key": "raxe_live_abc123def456ghi789jkl012mno345",
-            "linked_events": 150,
+            "linked_scans": 150,
             "user_email": "test@example.com",
         }
 
         result = runner.invoke(cli, ["auth", "connect"])
 
         assert result.exit_code == 0
-        assert "150" in result.output  # Events count shown
-        assert "Events Linked" in result.output
+        assert "150" in result.output  # Scans count shown
+        assert "Scans Linked" in result.output
         # Verify temp_key_id was passed to session creation
         mock_create_session.assert_called_once_with("key_abc123def456", "inst_abc123def456789")
 

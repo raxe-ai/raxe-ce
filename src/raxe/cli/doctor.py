@@ -137,10 +137,11 @@ def _check_installation() -> list[HealthCheck]:
             message=f"{py_version.major}.{py_version.minor}.{py_version.micro} (supported)",
         ))
     else:
+        version_str = f"{py_version.major}.{py_version.minor}.{py_version.micro}"
         checks.append(HealthCheck(
             name="Python Version",
             status="error",
-            message=f"{py_version.major}.{py_version.minor}.{py_version.micro} (requires >= {required_major}.{required_minor})",
+            message=f"{version_str} (requires >= {required_major}.{required_minor})",
             details="Upgrade Python to 3.10 or higher",
         ))
 
@@ -559,9 +560,13 @@ def _display_summary(checks: list[HealthCheck]) -> None:
     if error_count == 0 and warning_count == 0:
         console.print("[bold green]✓ All checks passed! RAXE is healthy.[/bold green]")
     elif error_count > 0:
-        console.print("[bold red]✗ Critical issues found. Run with --fix to attempt repairs.[/bold red]")
+        console.print(
+            "[bold red]✗ Critical issues found. Run with --fix to attempt repairs.[/bold red]"
+        )
     else:
-        console.print("[bold yellow]⚠ Warnings found. System functional but not optimal.[/bold yellow]")
+        console.print(
+            "[bold yellow]⚠ Warnings found. System functional but not optimal.[/bold yellow]"
+        )
 
     console.print()
 

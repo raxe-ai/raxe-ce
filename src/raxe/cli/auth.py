@@ -20,44 +20,48 @@ import os
 import time
 import webbrowser
 from datetime import datetime, timezone
-from typing import Optional
 
 import click
 import httpx
 from rich.table import Table
 
 from raxe.cli.error_handler import handle_cli_error
-from raxe.cli.output import console, display_error, display_success
+from raxe.cli.output import console, display_error
 
 
 # Console URLs - resolved via centralized endpoints module
 def _get_console_url() -> str:
     """Get console URL from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import get_console_url
+
     return get_console_url()
 
 
 def _get_api_base_url() -> str:
     """Get API base URL from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import get_api_base
+
     return get_api_base()
 
 
 def _get_cli_session_endpoint() -> str:
     """Get CLI session endpoint from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import get_cli_session_endpoint
+
     return get_cli_session_endpoint()
 
 
 def _get_cli_link_endpoint() -> str:
     """Get CLI link endpoint from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import Endpoint, get_endpoint
+
     return get_endpoint(Endpoint.CLI_LINK)
 
 
 def _get_console_keys_url() -> str:
     """Get console keys URL."""
     return f"{_get_console_url()}/keys"
+
 
 # Polling configuration
 POLL_INTERVAL_SECONDS = 2
@@ -73,16 +77,30 @@ POLL_TIMEOUT_SECONDS = 300  # 5 minutes
 )
 @click.pass_context
 def auth(ctx, no_link_history: bool) -> None:
-    """Manage authentication and API keys.
+    """Authenticate your CLI with RAXE.
 
-    Run without subcommand for interactive device flow authentication.
+    \b
+    WHICH METHOD TO USE:
+      raxe auth         Browser opens automatically (recommended)
+      raxe auth login   Get URL to open manually (headless/SSH)
+      raxe link CODE    Link to existing key from Console
+
+    \b
+    For CI/CD, set the RAXE_API_KEY environment variable instead.
+
+    \b
+    EXAMPLES:
+      raxe auth                    New user: creates account + links CLI
+      raxe auth login              SSH: get URL to open elsewhere
+      raxe link ABC123             Link to existing Console key
+      raxe auth status --remote    Check key validity with server
     """
     if ctx.invoked_subcommand is None:
         # Default to connect flow when no subcommand
         ctx.invoke(auth_connect, no_link_history=no_link_history)
 
 
-def _get_current_key_id_from_telemetry() -> Optional[str]:
+def _get_current_key_id_from_telemetry() -> str | None:
     """Get the current api_key_id from telemetry state.
 
     This ensures the temp_key_id sent during authentication matches
@@ -94,6 +112,7 @@ def _get_current_key_id_from_telemetry() -> Optional[str]:
     """
     try:
         from raxe.application.telemetry_orchestrator import get_orchestrator
+
         orchestrator = get_orchestrator()
         return orchestrator.get_current_api_key_id()
     except Exception:
@@ -110,19 +129,21 @@ def _get_current_key_id_from_telemetry() -> Optional[str]:
 )
 @handle_cli_error
 def auth_connect(no_link_history: bool) -> None:
-    """Connect CLI to your RAXE account (recommended).
+    """Connect CLI to your RAXE account via browser (recommended).
 
-    Opens your browser for one-click authentication.
-    Your CLI will be automatically configured.
+    Opens your browser for one-click authentication. Your CLI will be
+    automatically configured with a permanent API key.
 
-    By default, any existing CLI history from a temporary key will be
-    automatically linked to your account. Use --no-link-history to
-    skip this and start fresh.
+    Your existing scan history is preserved by default.
 
-    Examples:
-        raxe auth
-        raxe auth connect
-        raxe auth --no-link-history
+    \b
+    NO BROWSER? Use 'raxe auth login' instead to get a URL you can
+    open on another device (for SSH, Docker, or headless servers).
+
+    \b
+    EXAMPLES:
+        raxe auth                    Default - opens browser
+        raxe auth --no-link-history  Start fresh, don't preserve history
     """
     from rich.prompt import Confirm
 
@@ -140,8 +161,8 @@ def auth_connect(no_link_history: bool) -> None:
     # Get current credentials
     store = CredentialStore()
     credentials = store.load()
-    temp_key_id: Optional[str] = None
-    installation_id: Optional[str] = None
+    temp_key_id: str | None = None
+    installation_id: str | None = None
 
     # Only detect temp_key_id if we want to link history (default behavior)
     if not no_link_history:
@@ -158,13 +179,15 @@ def auth_connect(no_link_history: bool) -> None:
         # Check if already authenticated with a permanent key
         if credentials.api_key and credentials.api_key.startswith("raxe_live_"):
             masked_key = f"{credentials.api_key[:15]}...{credentials.api_key[-4:]}"
-            console.print(f"[green]Already authenticated![/green]")
+            console.print("[green]Already authenticated![/green]")
             console.print(f"  API Key: [cyan]{masked_key}[/cyan]")
+            console.print()
+            console.print("[dim]OTHER OPTIONS:[/dim]")
+            console.print("[dim]  raxe auth status      View key details and usage[/dim]")
+            console.print("[dim]  raxe link CODE        Switch to different Console key[/dim]")
             console.print()
 
             if not Confirm.ask("Re-authenticate with a different account?", default=False):
-                console.print()
-                console.print("[dim]Run [cyan]raxe auth status[/cyan] to see details[/dim]")
                 return
 
             console.print()
@@ -209,88 +232,127 @@ def auth_connect(no_link_history: bool) -> None:
         console.print("[dim]If browser doesn't open, visit:[/dim]")
         console.print(f"[blue underline]{connect_url}[/blue underline]")
     except Exception:
-        console.print("[yellow]Could not open browser. Please visit:[/yellow]")
-        console.print(f"[blue underline]{connect_url}[/blue underline]")
+        console.print("[yellow]Could not open browser automatically.[/yellow]")
+        console.print()
+        console.print("[bold]OPTIONS:[/bold]")
+        console.print("  1. Copy this URL and open in any browser:")
+        console.print(f"     [blue underline]{connect_url}[/blue underline]")
+        console.print()
+        console.print("  2. Or use the headless flow:")
+        console.print("     [cyan]raxe auth login[/cyan]")
+        console.print("     [dim](Gives you a URL to open on another device)[/dim]")
 
     console.print()
 
-    # Poll for completion
-    with console.status("[cyan]Waiting for authentication...[/cyan]") as status:
-        start_time = time.time()
+    # Poll for completion with visual progress
+    from rich.live import Live
 
-        while time.time() - start_time < POLL_TIMEOUT_SECONDS:
-            try:
-                result = _poll_cli_session(session_id)
+    from raxe.cli.auth_progress import (
+        AuthProgress,
+        render_auth_progress,
+        render_cancelled_message,
+        render_timeout_message,
+    )
 
-                if result["status"] == "completed":
-                    # Success! Save the new key
-                    api_key = result["api_key"]
-                    linked_scans = result.get("linked_scans", 0)
-                    user_email = result.get("user_email", "")
+    progress = AuthProgress(
+        connect_url=connect_url,
+        total_seconds=POLL_TIMEOUT_SECONDS,
+    )
 
-                    # Save to credentials
-                    _save_new_credentials(store, api_key, credentials)
+    try:
+        with Live(
+            render_auth_progress(progress),
+            console=console,
+            refresh_per_second=4,
+            transient=True,
+        ) as live:
+            start_time = time.time()
 
-                    # Show success
+            while time.time() - start_time < POLL_TIMEOUT_SECONDS:
+                try:
+                    result = _poll_cli_session(session_id)
+
+                    # Clear any network issue state on successful poll
+                    progress.clear_network_issue()
+
+                    if result["status"] == "completed":
+                        # Success! Save the new key
+                        api_key = result["api_key"]
+                        linked_scans = result.get("linked_scans", 0)
+                        user_email = result.get("user_email", "")
+
+                        # Save to credentials
+                        _save_new_credentials(store, api_key, credentials)
+
+                        # Show success
+                        console.print()
+                        console.print("[bold green]CLI Connected Successfully![/bold green]")
+                        console.print()
+
+                        # Display info table
+                        table = Table(show_header=False, box=None, padding=(0, 2))
+                        table.add_column("Label", style="dim")
+                        table.add_column("Value")
+
+                        masked_key = f"{api_key[:15]}...{api_key[-4:]}"
+                        table.add_row("API Key:", f"[green]{masked_key}[/green]")
+                        if user_email:
+                            table.add_row("Account:", user_email)
+                        if linked_scans > 0:
+                            table.add_row("Scans Linked:", f"[green]{linked_scans:,}[/green]")
+
+                        console.print(table)
+                        console.print()
+                        url = f"{_get_console_url()}/portal"
+                        console.print(f"[dim]View dashboard:[/dim] [link={url}]{url}[/link]")
+                        console.print()
+                        return
+
+                    elif result["status"] == "expired":
+                        display_error(
+                            "Session expired",
+                            details="Please run `raxe auth` again.",
+                        )
+                        return
+
+                    # Still pending, update progress and continue polling
+                    elapsed = time.time() - start_time
+                    progress.update_elapsed(elapsed)
+                    live.update(render_auth_progress(progress))
+                    time.sleep(POLL_INTERVAL_SECONDS)
+
+                except httpx.HTTPError:
+                    # Network error - show in progress display and retry
+                    progress.set_network_issue()
+                    elapsed = time.time() - start_time
+                    progress.update_elapsed(elapsed)
+                    live.update(render_auth_progress(progress))
+                    time.sleep(POLL_INTERVAL_SECONDS)
+                except Exception as e:
+                    # Processing error - don't retry, show actual error
                     console.print()
-                    console.print("[bold green]CLI Connected Successfully![/bold green]")
-                    console.print()
-
-                    # Display info table
-                    table = Table(show_header=False, box=None, padding=(0, 2))
-                    table.add_column("Label", style="dim")
-                    table.add_column("Value")
-
-                    masked_key = f"{api_key[:15]}...{api_key[-4:]}"
-                    table.add_row("API Key:", f"[green]{masked_key}[/green]")
-                    if user_email:
-                        table.add_row("Account:", user_email)
-                    if linked_scans > 0:
-                        table.add_row("Scans Linked:", f"[green]{linked_scans:,}[/green]")
-
-                    console.print(table)
-                    console.print()
-                    console.print(f"[dim]View your dashboard:[/dim] [blue underline]{_get_console_url()}/portal[/blue underline]")
-                    console.print()
-                    return
-
-                elif result["status"] == "expired":
                     display_error(
-                        "Session expired",
-                        details="Please run `raxe auth` again.",
+                        "Authentication failed",
+                        details=str(e),
                     )
                     return
 
-                # Still pending, continue polling
-                time.sleep(POLL_INTERVAL_SECONDS)
+            # Timeout
+            console.print()
+            display_error(
+                "Authentication timed out",
+                details="The 5-minute window expired before authentication completed.",
+            )
+            console.print(render_timeout_message())
 
-            except httpx.HTTPError:
-                # Network error, retry
-                status.update("[yellow]Connection issue, retrying...[/yellow]")
-                time.sleep(POLL_INTERVAL_SECONDS)
-            except Exception as e:
-                # Processing error - don't retry, show actual error
-                console.print()
-                display_error(
-                    "Authentication failed",
-                    details=str(e),
-                )
-                return
-
-        # Timeout
-        console.print()
-        display_error(
-            "Authentication timed out",
-            details="Please complete the authentication in your browser within 5 minutes.",
-        )
-        console.print()
-        console.print("[dim]You can also set your API key manually:[/dim]")
-        console.print("[cyan]  raxe config set api_key YOUR_API_KEY[/cyan]")
+    except KeyboardInterrupt:
+        # User cancelled with Ctrl+C
+        console.print(render_cancelled_message())
 
 
 def _create_cli_session(
-    temp_key_id: Optional[str],
-    installation_id: Optional[str],
+    temp_key_id: str | None,
+    installation_id: str | None,
 ) -> dict:
     """Create a CLI auth session on the server.
 
@@ -360,9 +422,9 @@ def _save_new_credentials(
     from raxe.infrastructure.telemetry.credential_store import compute_key_id
 
     # Compute key IDs for upgrade event
-    old_key_id: Optional[str] = None
+    old_key_id: str | None = None
     old_key_type = "temp"
-    days_on_previous: Optional[int] = None
+    days_on_previous: int | None = None
 
     if old_credentials and old_credentials.api_key:
         old_key_id = compute_key_id(old_credentials.api_key)
@@ -374,9 +436,7 @@ def _save_new_credentials(
             old_key_type = "temp"
         # Calculate days on previous key
         try:
-            created = datetime.fromisoformat(
-                old_credentials.created_at.replace("Z", "+00:00")
-            )
+            created = datetime.fromisoformat(old_credentials.created_at.replace("Z", "+00:00"))
             now = datetime.now(timezone.utc)
             days_on_previous = (now - created).days
         except (ValueError, TypeError, AttributeError):
@@ -402,6 +462,7 @@ def _save_new_credentials(
         # Get config for endpoint
         try:
             from raxe.infrastructure.config.yaml_config import RaxeConfig
+
             config = RaxeConfig.load()
             endpoint = getattr(config.telemetry, "endpoint", None)
         except Exception:
@@ -435,41 +496,45 @@ def _save_new_credentials(
 
         # Convert event to dict for sending
         from raxe.domain.telemetry.events import event_to_dict
+
         sender.send_batch([event_to_dict(event)])
 
-    except Exception:
+    except Exception:  # noqa: S110
         pass  # Don't fail auth on telemetry error
 
 
 @auth.command("login")
 @handle_cli_error
 def auth_login() -> None:
-    """Open RAXE Console to manage API keys (manual).
+    """Get authentication URL for manual setup (headless/SSH).
 
-    For automatic CLI connection, use: raxe auth
+    Use this when you cannot open a browser on this machine.
+    Prints a URL that you can open on your laptop or phone.
 
-    Examples:
-        raxe auth login
+    After creating your key in the Console, configure it with:
+        raxe config set api_key YOUR_KEY
+
+    \b
+    HAVE A BROWSER? Use 'raxe auth' instead for automatic setup.
+
+    \b
+    EXAMPLE:
+        raxe auth login              Prints URL to visit
+        # Open URL on another device, create key in Console
+        raxe config set api_key raxe_live_xxxxx
     """
     console.print()
-    console.print("[cyan]Opening RAXE Console in your browser...[/cyan]")
+    console.print("[cyan]Manual Authentication[/cyan]")
+    console.print("[dim](For headless/SSH environments where browser cannot open)[/dim]")
     console.print()
-
-    # Open the console URL in default browser
-    try:
-        webbrowser.open(_get_console_keys_url())
-        display_success(f"Opened {_get_console_keys_url()}")
-    except Exception as e:
-        console.print(f"[yellow]Could not open browser automatically: {e}[/yellow]")
-        console.print()
-        console.print(f"Please visit: [blue underline]{_get_console_keys_url()}[/blue underline]")
-
+    console.print("Open this URL on any device with a browser:")
+    console.print(f"  [blue underline]{_get_console_keys_url()}[/blue underline]")
     console.print()
-    console.print("[dim]After creating your API key, configure it with:[/dim]")
-    console.print("[cyan]  raxe config set api_key YOUR_API_KEY[/cyan]")
+    console.print("[dim]After creating your API key in the Console, configure it:[/dim]")
+    console.print("  [cyan]raxe config set api_key YOUR_KEY[/cyan]")
     console.print()
     console.print("[dim]Or set the environment variable:[/dim]")
-    console.print("[cyan]  export RAXE_API_KEY=YOUR_API_KEY[/cyan]")
+    console.print("  [cyan]export RAXE_API_KEY=YOUR_KEY[/cyan]")
     console.print()
 
 
@@ -477,20 +542,25 @@ def auth_login() -> None:
 @click.argument("code")
 @handle_cli_error
 def auth_link(code: str) -> None:
-    """Link CLI to an existing API key using a link code.
+    """Link CLI to an existing API key using a 6-character code.
 
-    Get a link code from the RAXE Console by clicking "Link CLI" on any
-    API key card. Then run this command with the code.
+    \b
+    Get a link code from RAXE Console:
+      1. Go to API Keys page
+      2. Click ... on any key
+      3. Select "Link CLI"
+      4. Copy the 6-character code
 
-    This preserves your CLI's historical telemetry data and links it
-    to the selected API key.
+    This preserves your CLI scan history and links it to that key.
 
-    NOTE: This command requires existing CLI history (from prior usage).
-    For first-time setup, use 'raxe auth' instead.
+    \b
+    FIRST TIME USER? Use 'raxe auth' instead - it creates an account
+    and key in one step.
 
-    Examples:
-        raxe auth link ABC123
-        raxe link ABC123
+    \b
+    EXAMPLES:
+        raxe link ABC123             Link to key using code
+        raxe auth link ABC123        Same command, alternative syntax
     """
     from rich.prompt import Confirm
 
@@ -517,7 +587,7 @@ def auth_link(code: str) -> None:
     # Get current credentials
     store = CredentialStore()
     credentials = store.load()
-    temp_key_id: Optional[str] = None
+    temp_key_id: str | None = None
 
     # Priority 1: Get key_id from telemetry state (ensures consistency with events)
     temp_key_id = _get_current_key_id_from_telemetry()
@@ -530,7 +600,7 @@ def auth_link(code: str) -> None:
         # Check if already authenticated with a permanent key
         if credentials.api_key.startswith("raxe_live_"):
             masked_key = f"{credentials.api_key[:15]}...{credentials.api_key[-4:]}"
-            console.print(f"[green]Already authenticated![/green]")
+            console.print("[green]Already authenticated![/green]")
             console.print(f"  API Key: [cyan]{masked_key}[/cyan]")
             console.print()
 
@@ -546,11 +616,14 @@ def auth_link(code: str) -> None:
         # No credentials at all - link code requires existing CLI history
         console.print("[yellow]No CLI history found.[/yellow]")
         console.print()
-        console.print("The [cyan]raxe link[/cyan] command is used to link existing CLI history")
-        console.print("to an API key you've already created in the Console.")
+        console.print("The [cyan]raxe link[/cyan] command preserves existing scan history when")
+        console.print("linking to a Console key. You don't have any history yet.")
         console.print()
-        console.print("[bold]For first-time setup, use:[/bold]")
-        console.print("  [cyan]raxe auth[/cyan]  - Connect your CLI to your RAXE account")
+        console.print("[bold]INSTEAD, USE:[/bold]")
+        console.print("  [cyan]raxe auth[/cyan]               Creates account + key automatically")
+        console.print()
+        console.print("  Or if you have a key already:")
+        console.print("  [cyan]raxe config set api_key YOUR_KEY[/cyan]")
         console.print()
         return
 
@@ -590,7 +663,10 @@ def auth_link(code: str) -> None:
             if message:
                 console.print(f"[dim]{message}[/dim]")
                 console.print()
-            console.print(f"[dim]View your dashboard:[/dim] [blue underline]{_get_console_url()}/portal[/blue underline]")
+            portal_url = f"{_get_console_url()}/portal"
+            console.print(
+                f"[dim]View your dashboard:[/dim] [blue underline]{portal_url}[/blue underline]"
+            )
             console.print()
         else:
             display_error(
@@ -609,7 +685,7 @@ def auth_link(code: str) -> None:
         console.print(f"[blue underline]{_get_console_url()}/api-keys[/blue underline]")
 
 
-def _link_cli_to_key(code: str, temp_key_id: Optional[str]) -> dict:
+def _link_cli_to_key(code: str, temp_key_id: str | None) -> dict:
     """Call the CLI link API to link temp key data to an existing key.
 
     Args:
@@ -679,7 +755,6 @@ def auth_status(remote: bool) -> None:
         raxe auth status --remote
         raxe auth status -r
     """
-    import os
 
     from raxe.cli.branding import print_logo
     from raxe.infrastructure.config.yaml_config import RaxeConfig
@@ -708,8 +783,8 @@ def auth_status(remote: bool) -> None:
             if config.core.api_key:
                 api_key = config.core.api_key
                 api_key_source = "config"
-        except Exception:
-            pass
+        except Exception:  # noqa: S110
+            pass  # Config may not exist
 
     # Priority 3: credentials.json
     if not api_key:
@@ -719,8 +794,8 @@ def auth_status(remote: bool) -> None:
             if credentials:
                 api_key = credentials.api_key
                 api_key_source = "credentials"
-        except Exception:
-            pass
+        except Exception:  # noqa: S110
+            pass  # Credentials may not exist
 
     if not api_key:
         console.print("[bold cyan]Authentication Status[/bold cyan]")
@@ -792,7 +867,9 @@ def _display_local_status(api_key: str, source: str | None = None) -> None:
     if api_key.startswith("raxe_temp_"):
         _display_temp_key_expiry()
         console.print()
-        console.print(f"Get a permanent key at: [blue underline]{_get_console_keys_url()}[/blue underline]")
+        console.print(
+            f"Get a permanent key at: [blue underline]{_get_console_keys_url()}[/blue underline]"
+        )
         console.print("Or run: [cyan]raxe auth[/cyan]")
 
     console.print()
@@ -857,9 +934,9 @@ def _display_remote_status(api_key: str, config) -> None:
         AuthenticationError,
         HealthCheckError,
         NetworkError,
-        TimeoutError,
         check_health,
     )
+    from raxe.infrastructure.telemetry.health_client import TimeoutError as HealthTimeoutError
 
     console.print("[bold cyan]Authentication Status (Remote)[/bold cyan]")
     console.print()
@@ -895,7 +972,9 @@ def _display_remote_status(api_key: str, config) -> None:
             details=str(e),
         )
         console.print()
-        console.print(f"Get a new key at: [blue underline]{_get_console_keys_url()}[/blue underline]")
+        console.print(
+            f"Get a new key at: [blue underline]{_get_console_keys_url()}[/blue underline]"
+        )
         console.print("Or run: [cyan]raxe auth[/cyan]")
         console.print()
 
@@ -909,7 +988,7 @@ def _display_remote_status(api_key: str, config) -> None:
         console.print()
         _display_local_status(api_key)
 
-    except TimeoutError:
+    except HealthTimeoutError:
         display_error(
             "Server timeout",
             details="The server took too long to respond. Please try again.",
@@ -1025,7 +1104,9 @@ def _display_key_info_table(masked_key: str, response) -> None:
     features_table.add_column("Label", style="dim")
     features_table.add_column("Value")
 
-    telemetry_status = "[green]Yes[/green]" if response.can_disable_telemetry else "[yellow]No[/yellow]"
+    telemetry_status = (
+        "[green]Yes[/green]" if response.can_disable_telemetry else "[yellow]No[/yellow]"
+    )
     offline_status = "[green]Yes[/green]" if response.offline_mode else "[yellow]No[/yellow]"
 
     features_table.add_row("Can Disable Telemetry:", telemetry_status)

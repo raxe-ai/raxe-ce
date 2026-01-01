@@ -22,8 +22,12 @@ from raxe.cli.exit_codes import (
     EXIT_SCAN_ERROR,
     EXIT_THREAT_DETECTED,
 )
-from raxe.cli.expiry_warning import check_and_display_expiry_warning
+from raxe.cli.expiry_warning import (
+    check_and_display_expiry_warning,
+    check_and_display_first_run_notice,
+)
 from raxe.cli.export import export
+from raxe.cli.help import help_command
 from raxe.cli.history import history
 from raxe.cli.models import models
 from raxe.cli.output import console, display_error, display_scan_result, display_success
@@ -43,7 +47,29 @@ from raxe.sdk.client import Raxe
 # from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
 
 
-@click.group(invoke_without_command=True)
+def _show_minimal_help(ctx, param, value):
+    """Callback for --help flag to show minimal help and exit."""
+    if not value or ctx.resilient_parsing:
+        return
+    from raxe.cli.branding import print_minimal_help
+    from raxe.cli.output import console
+
+    print_minimal_help(console)
+    ctx.exit()
+
+
+def _show_full_help(ctx, param, value):
+    """Callback for --help-all flag to show full help and exit."""
+    if not value or ctx.resilient_parsing:
+        return
+    from raxe.cli.branding import print_full_help
+    from raxe.cli.output import console
+
+    print_full_help(console)
+    ctx.exit()
+
+
+@click.group(invoke_without_command=True, add_help_option=False)
 @click.version_option(version=__version__, prog_name="RAXE CLI", message="%(prog)s %(version)s")
 @click.option(
     "--no-color",
@@ -63,8 +89,31 @@ from raxe.sdk.client import Raxe
     help="Suppress all visual output (for CI/CD)",
     envvar="RAXE_QUIET",
 )
+@click.option(
+    "--no-wizard",
+    is_flag=True,
+    help="Skip auto-launch setup wizard on first run",
+    envvar="RAXE_NO_WIZARD",
+)
+@click.option(
+    "-h",
+    "--help",
+    is_flag=True,
+    is_eager=True,
+    expose_value=False,
+    callback=_show_minimal_help,
+    help="Show essential commands",
+)
+@click.option(
+    "--help-all",
+    is_flag=True,
+    is_eager=True,
+    expose_value=False,
+    callback=_show_full_help,
+    help="Show all commands",
+)
 @click.pass_context
-def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
+def cli(ctx, no_color: bool, verbose: bool, quiet: bool, no_wizard: bool):
     """RAXE - AI Security for LLMs • Privacy-First Threat Detection"""
     # Flush any stale telemetry from previous sessions (non-blocking background thread)
     # This recovers events that were queued but not flushed due to crashes or improper exit
@@ -72,7 +121,7 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
         from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
 
         flush_stale_telemetry_async()
-    except Exception:
+    except Exception:  # noqa: S110
         pass  # Never block CLI startup
 
     # Ensure ctx.obj exists for sub-commands
@@ -85,10 +134,19 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
     if ctx.invoked_subcommand is None:
         if not quiet:
             # Check if this is a first run
-            from raxe.cli.setup_wizard import check_first_run, display_first_run_message
+            from raxe.cli.setup_wizard import (
+                auto_launch_first_run,
+                check_first_run,
+                display_first_run_message,
+            )
 
             if check_first_run():
-                display_first_run_message(console)
+                if no_wizard:
+                    # Power user escape hatch - show static message
+                    display_first_run_message(console)
+                else:
+                    # Auto-launch wizard with countdown and escape hatches
+                    auto_launch_first_run(console)
             else:
                 from raxe.cli.branding import print_help_menu
 
@@ -102,9 +160,8 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
 
             tracker = UsageTracker()
             tracker.record_command(ctx.invoked_subcommand)
-        except Exception:
-            # Don't fail if tracking fails
-            pass
+        except Exception:  # noqa: S110
+            pass  # Don't fail if tracking fails
 
     # Enable console logging if verbose flag set
     if verbose:
@@ -126,29 +183,97 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool):
 )
 @click.option(
     "--telemetry/--no-telemetry",
-    default=True,
-    help="Enable privacy-preserving telemetry (default: enabled)",
+    default=None,
+    help="Enable/disable privacy-preserving telemetry",
+)
+@click.option(
+    "--l2/--no-l2",
+    "l2_enabled",
+    default=None,
+    help="Enable/disable L2 ML detection (default: enabled)",
 )
 @click.option(
     "--force",
     is_flag=True,
     help="Overwrite existing configuration",
 )
+@click.option(
+    "--quick",
+    is_flag=True,
+    help="Quick init without interactive prompts",
+)
+@click.option(
+    "--skip-completions",
+    is_flag=True,
+    help="Skip shell completion setup in wizard mode",
+)
+@click.option(
+    "--skip-test-scan",
+    is_flag=True,
+    help="Skip verification scan in wizard mode",
+)
 @handle_cli_error
-def init(api_key: str | None, telemetry: bool, force: bool):
-    """Initialize RAXE configuration with interactive setup."""
+def init(
+    api_key: str | None,
+    telemetry: bool | None,
+    l2_enabled: bool | None,
+    force: bool,
+    quick: bool,
+    skip_completions: bool,
+    skip_test_scan: bool,
+):
+    """Initialize RAXE configuration.
+
+    Without options: launches the interactive setup wizard.
+    With options (--api-key, --telemetry, --quick): runs quick non-interactive init.
+
+    \b
+    Examples:
+      raxe init                        # Interactive setup wizard
+      raxe init --quick                # Quick init with defaults
+      raxe init --quick --no-l2        # Quick init without ML detection
+      raxe init --skip-completions     # Wizard without shell completion step
+      raxe init --api-key raxe_live_xxx --no-telemetry
+    """
     from rich.panel import Panel
     from rich.text import Text
 
     from raxe.cli.branding import print_info, print_logo, print_success
+    from raxe.cli.setup_wizard import run_setup_wizard
+    from raxe.cli.terminal_context import get_terminal_context
 
     config_dir = Path.home() / ".raxe"
     config_file = config_dir / "config.yaml"
 
+    # Determine if we should run interactive setup or quick init
+    # Interactive if: no explicit quick-mode options AND interactive terminal AND not configured
+    has_quick_options = (
+        api_key is not None or telemetry is not None or l2_enabled is not None or quick
+    )
+    context = get_terminal_context()
+
+    if not has_quick_options and context.is_interactive and (not config_file.exists() or force):
+        # Launch interactive setup wizard with skip flags
+        success = run_setup_wizard(
+            console,
+            skip_completions=skip_completions,
+            skip_test_scan=skip_test_scan,
+        )
+        if not success:
+            sys.exit(1)
+        return
+
+    # Quick non-interactive init
+    # Default telemetry and L2 to True if not specified
+    if telemetry is None:
+        telemetry = True
+    if l2_enabled is None:
+        l2_enabled = True
+
     # Show compact logo
     print_logo(console, compact=True)
     console.print()
-    console.print("🔧 [bold cyan]RAXE Initialization[/bold cyan]")
+    console.print("[bold cyan]RAXE Quick Initialization[/bold cyan]")
     console.print()
 
     # Check if already initialized
@@ -163,19 +288,23 @@ def init(api_key: str | None, telemetry: bool, force: bool):
     # Show configuration summary
     summary = Text()
     summary.append("Configuration Summary:\n\n", style="bold cyan")
-    summary.append("  📂 Location: ", style="white")
+    summary.append("  Location: ", style="white")
     summary.append(f"{config_file}\n", style="cyan")
-    summary.append("  🔑 API Key: ", style="white")
+    summary.append("  API Key: ", style="white")
     summary.append(
-        f"{api_key if api_key else 'Not configured (optional)'}\n",
+        f"{api_key if api_key else 'Not configured (auto-generated on first scan)'}\n",
         style="yellow" if not api_key else "green",
     )
-    summary.append("  📊 Telemetry: ", style="white")
+    summary.append("  Telemetry: ", style="white")
     summary.append(
         f"{'Enabled' if telemetry else 'Disabled'}\n", style="green" if telemetry else "yellow"
     )
-    summary.append("  ⚡ Performance: ", style="white")
-    summary.append("Balanced mode with L2 detection\n", style="cyan")
+    summary.append("  L2 Detection: ", style="white")
+    summary.append(
+        f"{'Enabled' if l2_enabled else 'Disabled'}\n", style="green" if l2_enabled else "yellow"
+    )
+    summary.append("  Performance: ", style="white")
+    summary.append("Balanced mode\n", style="cyan")
 
     console.print(Panel(summary, border_style="cyan", padding=(1, 2)))
     console.print()
@@ -195,7 +324,7 @@ telemetry:
 # Performance
 performance:
   mode: balanced  # fast, balanced, accurate
-  l2_enabled: true
+  l2_enabled: {str(l2_enabled).lower()}
   max_latency_ms: 10
 
 # Pack precedence (custom > community > core)
@@ -219,18 +348,17 @@ policies:
     # Next steps panel
     next_steps = Text()
     next_steps.append("Quick Start:\n\n", style="bold cyan")
-    next_steps.append("  1️⃣  ", style="white")
+    next_steps.append("  1. ", style="white")
     next_steps.append('raxe scan "your text here"\n', style="cyan")
     next_steps.append("     Scan text for security threats\n\n", style="dim")
-    next_steps.append("  2️⃣  ", style="white")
+    next_steps.append("  2. ", style="white")
     next_steps.append("raxe test\n", style="cyan")
     next_steps.append("     Test your configuration\n\n", style="dim")
-    next_steps.append("  3️⃣  ", style="white")
+    next_steps.append("  3. ", style="white")
     next_steps.append("raxe stats\n", style="cyan")
     next_steps.append("     View statistics & achievements\n\n", style="dim")
-    next_steps.append("  📚  ", style="white")
+    next_steps.append("  Docs: ", style="white")
     next_steps.append("https://docs.raxe.ai\n", style="cyan underline")
-    next_steps.append("     Read the documentation", style="dim")
 
     console.print(
         Panel(
@@ -243,23 +371,45 @@ policies:
     console.print()
 
 
-@cli.command()
+@cli.command(hidden=True)
 @handle_cli_error
 def setup():
-    """Interactive setup wizard for first-time users.
+    """Interactive setup wizard (deprecated, use 'raxe init').
 
-    Provides a friendly, guided setup experience that walks you through:
-      - API key configuration (or temp key auto-generation)
-      - Detection settings (L2 ML detection, telemetry)
-      - Shell completion installation
-      - Configuration file creation
-      - Test scan verification
+    \b
+    DEPRECATED: This command has been merged into 'raxe init'.
+    Use 'raxe init' instead for both interactive and quick initialization.
 
     \b
     Examples:
-      raxe setup
+      raxe init              # Interactive setup wizard
+      raxe init --quick      # Quick init with defaults
     """
+    from rich.panel import Panel
+    from rich.text import Text
+
     from raxe.cli.setup_wizard import run_setup_wizard
+
+    # Show prominent deprecation notice
+    console.print()
+    deprecation_msg = Text()
+    deprecation_msg.append("DEPRECATION WARNING\n\n", style="yellow bold")
+    deprecation_msg.append("The ", style="white")
+    deprecation_msg.append("raxe setup", style="cyan")
+    deprecation_msg.append(" command is deprecated.\n", style="white")
+    deprecation_msg.append("Please use ", style="white")
+    deprecation_msg.append("raxe init", style="cyan bold")
+    deprecation_msg.append(" instead:\n\n", style="white")
+    deprecation_msg.append("  raxe init           ", style="cyan")
+    deprecation_msg.append("# Interactive wizard\n", style="dim")
+    deprecation_msg.append("  raxe init --quick   ", style="cyan")
+    deprecation_msg.append("# Non-interactive\n\n", style="dim")
+    deprecation_msg.append("This command will be removed in a future release.", style="dim")
+
+    console.print(Panel(deprecation_msg, border_style="yellow", padding=(1, 2)))
+    console.print()
+    console.print("[dim]Running setup wizard...[/dim]")
+    console.print()
 
     success = run_setup_wizard(console)
 
@@ -422,6 +572,8 @@ def scan(
     if format == "text" and not quiet:  # Only show for text output when not quiet
         print_logo(console, compact=True)
         console.print()
+        # Check and display first-run temp key notice (once per installation)
+        check_and_display_first_run_notice(console)
         # Check and display API key expiry warning if applicable
         check_and_display_expiry_warning(console)
 
@@ -515,6 +667,10 @@ def scan(
                     click.secho("Performance Profile", fg="cyan", bold=True)
                     click.secho("=" * 60, fg="cyan")
                     click.echo(prof_result.stats_report)
+
+                    # Show expiry warning for temp keys (non-quiet mode only)
+                    if not quiet:
+                        check_and_display_expiry_warning(console)
                 else:
                     # For JSON/YAML, just show result (profile would clutter output)
                     result = raxe.scan(
@@ -683,6 +839,10 @@ def scan(
         no_color = ctx.obj.get("no_color", False)
         display_scan_result(result, no_color=no_color, explain=explain)
 
+        # Show expiry warning for temp keys (non-quiet mode only)
+        if not quiet:
+            check_and_display_expiry_warning(console)
+
     # Show dry-run feedback after displaying result (unless quiet)
     if dry_run and not quiet:
         console.print()
@@ -695,7 +855,7 @@ def scan(
         from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
 
         ensure_telemetry_flushed(timeout_seconds=2.0, end_session=True)
-    except Exception:
+    except Exception:  # noqa: S110
         pass  # Never let telemetry affect scan completion
 
     # Exit with appropriate code for CI/CD (quiet mode)
@@ -951,7 +1111,7 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
             max_batches=max_batches,
             end_session=True,
         )
-    except Exception:
+    except Exception:  # noqa: S110
         pass  # Never let telemetry affect batch completion
 
 
@@ -1166,6 +1326,7 @@ cli.add_command(config)
 cli.add_command(event)
 cli.add_command(history)
 cli.add_command(telemetry)
+cli.add_command(help_command)
 
 # Top-level alias for 'raxe link ABC123' (same as 'raxe auth link ABC123')
 cli.add_command(auth_link, name="link")

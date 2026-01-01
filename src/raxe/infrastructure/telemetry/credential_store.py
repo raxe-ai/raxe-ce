@@ -88,6 +88,7 @@ class CredentialError(Exception):
 def _get_default_console_keys_url() -> str:
     """Get default console keys URL from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import get_console_url
+
     return f"{get_console_url()}/keys"
 
 
@@ -154,7 +155,7 @@ class KeyUpgradeInfo:
     previous_key_type: str | None
     new_key_type: str
     days_on_previous: int | None
-    new_credentials: "Credentials"
+    new_credentials: Credentials
 
 
 @dataclass
@@ -188,6 +189,9 @@ class Credentials:
     offline_mode: bool = False
     tier: str = "temporary"
     last_health_check: str | None = None  # ISO 8601 timestamp
+
+    # Tracking for first-run temp key notice (P0-2)
+    temp_key_notice_shown: bool = False
 
     def is_expired(self) -> bool:
         """Check if the credential has expired.
@@ -273,9 +277,7 @@ class Credentials:
         try:
             from datetime import timedelta
 
-            last_check = datetime.fromisoformat(
-                self.last_health_check.replace("Z", "+00:00")
-            )
+            last_check = datetime.fromisoformat(self.last_health_check.replace("Z", "+00:00"))
             now = datetime.now(timezone.utc)
             age = now - last_check
 
@@ -321,6 +323,8 @@ class Credentials:
             offline_mode=data.get("offline_mode", False),  # type: ignore[arg-type]
             tier=data.get("tier", "temporary"),  # type: ignore[arg-type]
             last_health_check=data.get("last_health_check"),
+            # First-run notice tracking (P0-2)
+            temp_key_notice_shown=data.get("temp_key_notice_shown", False),  # type: ignore[arg-type]
         )
 
 
@@ -694,9 +698,7 @@ class CredentialStore:
             previous_key_type = existing.key_type
             # Calculate days on previous key
             try:
-                created = datetime.fromisoformat(
-                    existing.created_at.replace("Z", "+00:00")
-                )
+                created = datetime.fromisoformat(existing.created_at.replace("Z", "+00:00"))
                 now = datetime.now(timezone.utc)
                 days_on_previous = (now - created).days
             except (ValueError, TypeError):
@@ -775,9 +777,7 @@ class CredentialStore:
                     first_seen_at=None,
                 )
             except InvalidKeyFormatError:
-                logger.warning(
-                    "Invalid RAXE_API_KEY format in environment, falling back to file"
-                )
+                logger.warning("Invalid RAXE_API_KEY format in environment, falling back to file")
 
         # Priority 2: Try to load from credentials.json file
         try:

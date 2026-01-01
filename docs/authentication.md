@@ -1,7 +1,6 @@
-# CLI Authentication Guide
+# Authentication Guide
 
-> **⚠️ Deprecated:** This document has moved to [authentication.md](authentication.md).
-> This file will be removed in v0.5.0. Please update your bookmarks.
+Complete guide to RAXE CLI authentication methods, API key management, and CI/CD configuration.
 
 This guide covers authentication commands for linking your RAXE CLI with your RAXE account, enabling access to permanent API keys and preserving your scan history.
 

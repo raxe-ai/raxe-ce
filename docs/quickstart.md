@@ -21,13 +21,19 @@ uv pip install raxe
 Run the interactive setup wizard:
 
 ```bash
-raxe setup
+raxe init
 ```
 
 This guides you through:
 1. **API Key Configuration** - Enter an existing key or generate a temporary one
-2. **Telemetry Preferences** - Explains what data is collected
-3. **Verification** - Runs a test scan to confirm everything works
+2. **Detection Settings** - Configure L2 (ML) detection and telemetry
+3. **Shell Completions** - Optional tab completion installation
+4. **Verification** - Runs a test scan to confirm everything works
+
+For CI/CD environments, use quick initialization:
+```bash
+raxe init --quick  # Non-interactive with defaults
+```
 
 **Note:** Temporary keys expire after 14 days. You'll see warnings starting on day 11. Get a permanent key at [console.raxe.ai](https://console.raxe.ai).
 
@@ -130,18 +136,17 @@ print(response.choices[0].message.content)
 
 RAXE includes a powerful CLI for configuration and testing.
 
-### Interactive Setup (Recommended)
+### Initialize Configuration
 
 ```bash
-raxe setup
-```
-
-This guides you through initial configuration interactively.
-
-### Initialize Configuration (Non-Interactive)
-
-```bash
+# Interactive setup wizard (recommended for first-time users)
 raxe init
+
+# Quick initialization (non-interactive, for CI/CD)
+raxe init --quick
+
+# With options
+raxe init --api-key raxe_live_xxx --telemetry
 ```
 
 This creates a configuration file at `~/.raxe/config.yaml`.

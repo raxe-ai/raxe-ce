@@ -12,7 +12,7 @@ Tests the interactive setup wizard functionality including:
 import os
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
@@ -20,14 +20,26 @@ from rich.console import Console
 
 from raxe.cli.setup_wizard import (
     API_KEY_PATTERN,
+    TestScanResult,
     WizardConfig,
+    _get_api_key_display,
+    _is_temp_key,
+    _quick_init,
+    _read_key_with_timeout,
+    auto_launch_first_run,
     check_first_run,
     create_config_file,
     detect_shell,
     display_first_run_message,
+    display_next_steps,
     get_completion_path,
     run_setup_wizard,
     validate_api_key_format,
+)
+from raxe.cli.terminal_context import (
+    TerminalContext,
+    TerminalMode,
+    clear_context_cache,
 )
 
 
@@ -239,17 +251,14 @@ class TestCreateConfigFile:
         home_dir = tmp_path / "home"
         monkeypatch.setattr(Path, "home", lambda: home_dir)
 
-        config = WizardConfig(
-            api_key="raxe_live_test123456789012345678901"
-        )
+        config = WizardConfig(api_key="raxe_live_test123456789012345678901")
         console = Console()
 
         config_path = create_config_file(config, console)
 
-        # Read and verify config
-        content = config_path.read_text()
-        # API key is saved in the config
+        # Verify config file was created and is readable
         assert config_path.exists()
+        assert config_path.read_text()  # Verify file has content
 
     def test_saves_l2_setting(self, tmp_path, monkeypatch):
         """Test that L2 setting is saved correctly."""
@@ -320,6 +329,27 @@ class TestSetupWizardCLI:
 
 class TestSetupWizardFlow:
     """Test suite for setup wizard flow."""
+
+    @pytest.fixture(autouse=True)
+    def mock_interactive_terminal(self):
+        """Mock terminal context as interactive for setup wizard tests.
+
+        The setup wizard checks for interactive terminal context before
+        running. In pytest, stdin is not a TTY, so we need to mock it.
+        """
+        interactive_context = TerminalContext(
+            mode=TerminalMode.INTERACTIVE,
+            is_interactive=True,
+            detected_ci=None,
+            has_tty=True,
+        )
+        with patch(
+            "raxe.cli.setup_wizard.get_terminal_context",
+            return_value=interactive_context,
+        ):
+            clear_context_cache()
+            yield
+            clear_context_cache()
 
     def test_wizard_cancellation_with_keyboard_interrupt(self, tmp_path, monkeypatch):
         """Test that wizard handles Ctrl+C gracefully."""
@@ -437,3 +467,564 @@ class TestCompletionInCLI:
 
         assert result.exit_code == 0
         assert "setup" in result.output
+
+
+class TestAutoLaunchFirstRun:
+    """Test suite for auto-launch first-run wizard (P0-1)."""
+
+    def test_auto_launch_shows_welcome_message(self, capsys):
+        """Test that auto_launch shows welcome message."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        # Mock terminal context to be non-interactive to avoid countdown
+        with patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context:
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.CI,
+                is_interactive=False,
+                detected_ci="GitHub Actions",
+                has_tty=False,
+            )
+            auto_launch_first_run(console)
+
+        output_text = output.getvalue()
+        # In non-interactive mode, should show static message
+        assert "Welcome to RAXE" in output_text or "raxe" in output_text.lower()
+
+    def test_auto_launch_non_interactive_shows_static_message(self, capsys):
+        """Test that non-interactive mode shows static message."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context:
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.CI,
+                is_interactive=False,
+                detected_ci="GitHub Actions",
+                has_tty=False,
+            )
+            auto_launch_first_run(console)
+
+        output_text = output.getvalue()
+        # Should contain welcome but NOT the countdown options (since non-interactive)
+        assert "Welcome" in output_text
+        # Non-interactive mode shows display_first_run_message which has different content
+
+    def test_read_key_with_timeout_returns_none_for_non_tty(self):
+        """Test that _read_key_with_timeout returns None for non-TTY."""
+        with patch("sys.stdin") as mock_stdin:
+            mock_stdin.isatty.return_value = False
+
+            result = _read_key_with_timeout(0.1)
+
+            assert result is None
+
+    def test_quick_init_creates_config(self, tmp_path, monkeypatch):
+        """Test that _quick_init creates config with defaults."""
+        from io import StringIO
+
+        home_dir = tmp_path / "home"
+        home_dir.mkdir(parents=True)
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        _quick_init(console)
+
+        config_path = home_dir / ".raxe" / "config.yaml"
+        assert config_path.exists()
+
+        output_text = output.getvalue()
+        assert "initialized" in output_text.lower() or "success" in output_text.lower()
+
+    def test_quick_init_enables_l2_detection(self, tmp_path, monkeypatch):
+        """Test that _quick_init enables L2 detection by default."""
+        from io import StringIO
+
+        import yaml
+
+        home_dir = tmp_path / "home"
+        home_dir.mkdir(parents=True)
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        _quick_init(console)
+
+        config_path = home_dir / ".raxe" / "config.yaml"
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+
+        # L2 should be enabled by default
+        assert config.get("detection", {}).get("l2_enabled", True) is True
+
+    def test_quick_init_enables_telemetry(self, tmp_path, monkeypatch):
+        """Test that _quick_init enables telemetry by default."""
+        from io import StringIO
+
+        import yaml
+
+        home_dir = tmp_path / "home"
+        home_dir.mkdir(parents=True)
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        _quick_init(console)
+
+        config_path = home_dir / ".raxe" / "config.yaml"
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+
+        # Telemetry should be enabled by default
+        assert config.get("telemetry", {}).get("enabled", True) is True
+
+
+class TestAutoLaunchKeyHandling:
+    """Test suite for auto-launch key handling (P0-1)."""
+
+    def test_auto_launch_key_s_starts_setup(self):
+        """Test that pressing 'S' starts the setup wizard."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+            patch("raxe.cli.setup_wizard.run_setup_wizard") as mock_wizard,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # Simulate pressing 's' on first countdown tick
+            mock_key.return_value = "s"
+            mock_wizard.return_value = True
+
+            auto_launch_first_run(console)
+
+            # Should have called run_setup_wizard
+            mock_wizard.assert_called_once()
+
+    def test_auto_launch_key_q_runs_quick_init(self, tmp_path, monkeypatch):
+        """Test that pressing 'Q' runs quick init."""
+        from io import StringIO
+
+        home_dir = tmp_path / "home"
+        home_dir.mkdir(parents=True)
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # Simulate pressing 'q' on first countdown tick
+            mock_key.return_value = "q"
+
+            auto_launch_first_run(console)
+
+            # Should have created config file
+            config_path = home_dir / ".raxe" / "config.yaml"
+            assert config_path.exists()
+
+    def test_auto_launch_key_x_skips_setup(self):
+        """Test that pressing 'X' skips setup and shows help."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+            patch("raxe.cli.branding.print_help_menu") as mock_help,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # Simulate pressing 'x' on first countdown tick
+            mock_key.return_value = "x"
+
+            auto_launch_first_run(console)
+
+            # Should have called print_help_menu
+            mock_help.assert_called_once()
+
+    def test_auto_launch_enter_starts_setup(self):
+        """Test that pressing Enter starts the setup wizard."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+            patch("raxe.cli.setup_wizard.run_setup_wizard") as mock_wizard,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # Simulate pressing Enter
+            mock_key.return_value = "\r"
+            mock_wizard.return_value = True
+
+            auto_launch_first_run(console)
+
+            # Should have called run_setup_wizard
+            mock_wizard.assert_called_once()
+
+    def test_auto_launch_escape_skips_setup(self):
+        """Test that pressing Escape skips setup and shows help."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+            patch("raxe.cli.branding.print_help_menu") as mock_help,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # Simulate pressing Escape
+            mock_key.return_value = "\x1b"
+
+            auto_launch_first_run(console)
+
+            # Should have called print_help_menu
+            mock_help.assert_called_once()
+
+    def test_auto_launch_ctrl_c_cancels(self):
+        """Test that Ctrl+C cancels setup."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+            patch("raxe.cli.setup_wizard.run_setup_wizard") as mock_wizard,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # Simulate Ctrl+C
+            mock_key.return_value = "\x03"
+
+            auto_launch_first_run(console)
+
+            # Should NOT have called run_setup_wizard
+            mock_wizard.assert_not_called()
+
+            output_text = output.getvalue()
+            assert "Cancelled" in output_text
+
+    def test_auto_launch_timeout_starts_wizard(self):
+        """Test that countdown timeout auto-starts wizard."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        with (
+            patch("raxe.cli.setup_wizard.get_terminal_context") as mock_context,
+            patch("raxe.cli.setup_wizard._read_key_with_timeout") as mock_key,
+            patch("raxe.cli.setup_wizard.run_setup_wizard") as mock_wizard,
+        ):
+            mock_context.return_value = TerminalContext(
+                mode=TerminalMode.INTERACTIVE,
+                is_interactive=True,
+                detected_ci=None,
+                has_tty=True,
+            )
+            # No key pressed - returns None each time (5 countdown iterations)
+            mock_key.return_value = None
+            mock_wizard.return_value = True
+
+            auto_launch_first_run(console)
+
+            # Should have called run_setup_wizard after timeout
+            mock_wizard.assert_called_once()
+
+
+class TestNoWizardFlag:
+    """Test suite for --no-wizard flag (P0-1)."""
+
+    @pytest.fixture
+    def runner(self):
+        """Create CLI test runner."""
+        return CliRunner()
+
+    def test_no_wizard_flag_shows_static_message(self, runner, tmp_path, monkeypatch):
+        """Test that --no-wizard flag shows static message instead of countdown."""
+        from raxe.cli.main import cli
+
+        # Use isolated filesystem to simulate first run
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            # Patch home directory
+            fake_home = Path(tmp_path) / "fake_home"
+            fake_home.mkdir(parents=True)
+            monkeypatch.setenv("HOME", str(fake_home))
+
+            result = runner.invoke(cli, ["--no-wizard"])
+
+            # Should show static welcome message
+            assert result.exit_code == 0
+            assert "Welcome" in result.output or "raxe" in result.output.lower()
+
+
+class TestTestScanResult:
+    """Test suite for TestScanResult dataclass (P2-1)."""
+
+    def test_default_values(self):
+        """Test default TestScanResult values."""
+        result = TestScanResult()
+
+        assert result.success is False
+        assert result.duration_ms == 0.0
+        assert result.threat_count == 0
+        assert result.error_message is None
+
+    def test_custom_values(self):
+        """Test TestScanResult with custom values."""
+        result = TestScanResult(
+            success=True,
+            duration_ms=5.2,
+            threat_count=3,
+            error_message=None,
+        )
+
+        assert result.success is True
+        assert result.duration_ms == 5.2
+        assert result.threat_count == 3
+        assert result.error_message is None
+
+    def test_error_result(self):
+        """Test TestScanResult with error."""
+        result = TestScanResult(
+            success=False,
+            duration_ms=0.0,
+            threat_count=0,
+            error_message="Connection failed",
+        )
+
+        assert result.success is False
+        assert result.error_message == "Connection failed"
+
+
+class TestApiKeyDisplayHelper:
+    """Test suite for _get_api_key_display helper (P2-1)."""
+
+    def test_temp_key_display(self):
+        """Test display text for temporary key."""
+        config = WizardConfig(api_key="raxe_temp_abc123def456ghi789jkl012mno345")
+
+        text, style = _get_api_key_display(config)
+
+        assert "temporary" in text.lower()
+        assert style == "yellow"
+
+    def test_live_key_display(self):
+        """Test display text for live key."""
+        config = WizardConfig(api_key="raxe_live_abc123def456ghi789jkl012mno345")
+
+        text, style = _get_api_key_display(config)
+
+        assert "permanent" in text.lower() or "raxe_live" in text
+        assert style == "green"
+
+    def test_test_key_display(self):
+        """Test display text for test key."""
+        config = WizardConfig(api_key="raxe_test_abc123def456ghi789jkl012mno345")
+
+        text, style = _get_api_key_display(config)
+
+        assert "test" in text.lower() or "raxe_test" in text
+        assert style == "yellow"  # Test keys are yellow (not production)
+
+    def test_no_key_display(self):
+        """Test display text when no key configured (uses temp key)."""
+        config = WizardConfig(api_key=None)
+
+        text, style = _get_api_key_display(config)
+
+        # No key means a temp key will be auto-generated
+        assert "temporary" in text.lower() or "expiry" in text.lower()
+        assert style == "yellow"
+
+
+class TestIsTempKeyHelper:
+    """Test suite for _is_temp_key helper (P2-1)."""
+
+    def test_temp_key_returns_true(self):
+        """Test that temp key is detected."""
+        config = WizardConfig(api_key="raxe_temp_abc123def456ghi789jkl012mno345")
+
+        assert _is_temp_key(config) is True
+
+    def test_live_key_returns_false(self):
+        """Test that live key is not detected as temp."""
+        config = WizardConfig(api_key="raxe_live_abc123def456ghi789jkl012mno345")
+
+        assert _is_temp_key(config) is False
+
+    def test_test_key_returns_false(self):
+        """Test that test key is not detected as temp."""
+        config = WizardConfig(api_key="raxe_test_abc123def456ghi789jkl012mno345")
+
+        assert _is_temp_key(config) is False
+
+    def test_no_key_returns_true(self):
+        """Test that no key is treated as temp (auto-generated temp key)."""
+        config = WizardConfig(api_key=None)
+
+        # When no key is provided, RAXE will auto-generate a temp key
+        assert _is_temp_key(config) is True
+
+
+class TestDisplayNextSteps:
+    """Test suite for display_next_steps function (P2-1)."""
+
+    def test_displays_success_banner(self):
+        """Test that success banner is displayed."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        display_next_steps(console)
+
+        output_text = output.getvalue()
+        assert "SETUP COMPLETE" in output_text or "ready" in output_text.lower()
+
+    def test_displays_with_config(self):
+        """Test display with WizardConfig."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        config = WizardConfig(
+            api_key="raxe_live_abc123def456ghi789jkl012mno345",
+            l2_enabled=True,
+            telemetry_enabled=True,
+        )
+        display_next_steps(console, config)
+
+        output_text = output.getvalue()
+        # Should show configuration summary
+        assert "L2" in output_text or "Detection" in output_text
+
+    def test_displays_test_result_success(self):
+        """Test display with successful test scan result."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        config = WizardConfig(l2_enabled=True)
+        test_result = TestScanResult(success=True, duration_ms=5.2, threat_count=2)
+
+        display_next_steps(console, config, test_result)
+
+        output_text = output.getvalue()
+        # Should show test result status
+        assert "5.2" in output_text or "ms" in output_text or "2" in output_text
+
+    def test_displays_test_result_failure(self):
+        """Test display with failed test scan result."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        config = WizardConfig(l2_enabled=True)
+        test_result = TestScanResult(
+            success=False,
+            error_message="Connection timeout",
+        )
+
+        display_next_steps(console, config, test_result)
+
+        output_text = output.getvalue()
+        # Should still display (graceful handling of failure)
+        assert len(output_text) > 0
+
+    def test_displays_temp_key_warning(self):
+        """Test that temp key warning is displayed."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        config = WizardConfig(api_key="raxe_temp_abc123def456ghi789jkl012mno345")
+
+        display_next_steps(console, config)
+
+        output_text = output.getvalue()
+        # Should show warning about temp key
+        assert "expire" in output_text.lower() or "temporary" in output_text.lower()
+
+    def test_displays_quick_commands(self):
+        """Test that quick commands section is displayed."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        display_next_steps(console)
+
+        output_text = output.getvalue()
+        # Should show common commands
+        assert "raxe scan" in output_text or "scan" in output_text.lower()
+
+    def test_displays_footer_resources(self):
+        """Test that footer resources are displayed."""
+        from io import StringIO
+
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=80)
+
+        display_next_steps(console)
+
+        output_text = output.getvalue()
+        # Should show documentation link or help reference
+        has_docs = "raxe.ai" in output_text or "docs" in output_text.lower()
+        has_help = "help" in output_text.lower()
+        assert has_docs or has_help

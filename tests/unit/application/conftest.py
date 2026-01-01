@@ -92,11 +92,11 @@ def mock_credential_store(mock_credentials: Credentials, tmp_path: Path) -> Cred
 def telemetry_config() -> TelemetryConfig:
     """Provide a test telemetry configuration.
 
-    Uses a test URL to avoid coupling tests to production endpoints.
+    Uses localhost URL which is allowed for HTTP (security exception for testing).
     """
     return TelemetryConfig(
         enabled=True,
-        endpoint="http://test.local/v1/telemetry",  # Test-specific endpoint
+        endpoint="http://localhost:9999/v1/telemetry",  # localhost allowed for HTTP
         privacy_mode="strict",
         batch_size=100,
         flush_interval_ms=5000,
@@ -120,7 +120,7 @@ def disabled_telemetry_config() -> TelemetryConfig:
     """Provide a disabled telemetry configuration."""
     return TelemetryConfig(
         enabled=False,
-        endpoint="http://test.local/v1/telemetry",  # Test-specific endpoint
+        endpoint="http://localhost:9999/v1/telemetry",  # localhost allowed for HTTP
         privacy_mode="strict",
     )
 
@@ -254,11 +254,11 @@ def production_shipper(
 ) -> BatchSender:
     """Provide a BatchSender configured with production-like settings.
 
-    Note: Uses test endpoint to avoid real API calls during testing.
+    Note: Uses localhost endpoint to avoid real API calls during testing.
     For testing actual production endpoint resolution, use the endpoints module tests.
     """
     return BatchSender(
-        endpoint="http://test.local/v1/telemetry",  # Test endpoint, not production
+        endpoint="http://localhost:9999/v1/telemetry",  # localhost allowed for HTTP
         api_key="raxe_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
         circuit_breaker=circuit_breaker,
         retry_policy=retry_policy,
@@ -617,7 +617,7 @@ def create_mock_urlopen_response(
 def create_http_error(
     status_code: int,
     body: dict[str, Any] | str,
-    url: str = "http://test.local/v1/telemetry",
+    url: str = "http://localhost:9999/v1/telemetry",
 ) -> Exception:
     """Create an HTTPError for testing error handling.
 

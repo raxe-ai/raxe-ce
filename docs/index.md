@@ -51,7 +51,7 @@ response = client.chat.completions.create(
 )
 ```
 
-[Get Started in 60 Seconds](../QUICKSTART.md) | [Full README](../README.md)
+[Get Started in 60 Seconds](getting-started.md) | [Full README](../README.md)
 
 ---
 
@@ -103,8 +103,8 @@ Lightweight CPU-friendly classifier that catches:
 ## Documentation
 
 ### Getting Started
-- [Quick Start Guide](../QUICKSTART.md) - Get up and running in 60 seconds
-- [Installation](getting-started.md#installation) - Install RAXE via pip or uv
+- [Getting Started Guide](getting-started.md) - Complete onboarding in 5 minutes
+- [Authentication Guide](authentication.md) - API keys, CLI auth, CI/CD setup
 - [Configuration](configuration.md) - Configure RAXE for your use case
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
 

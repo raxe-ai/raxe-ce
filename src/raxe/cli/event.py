@@ -72,7 +72,7 @@ class EventData:
     prompt_text: str | None = None
 
     @classmethod
-    def from_api_response(cls, data: dict[str, Any]) -> "EventData":
+    def from_api_response(cls, data: dict[str, Any]) -> EventData:
         """Create EventData from API response.
 
         Args:
@@ -382,9 +382,9 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
             if family:
                 l2_content.append(f" ({family})", style="dim")
             l2_content.append("\n")
-            l2_content.append(f"  Risk Score: ", style="white")
+            l2_content.append("  Risk Score: ", style="white")
             l2_content.append(f"{confidence_pct}", style=det_color)
-            l2_content.append(f"  •  Severity: ", style="white")
+            l2_content.append("  •  Severity: ", style="white")
             l2_content.append(f"{det_severity.upper()}", style=det_color)
 
             console.print(Panel(

@@ -22,14 +22,15 @@ class TestCLICommands:
         """Test that help command works."""
         result = runner.invoke(cli, ["--help"])
         assert result.exit_code == 0
-        assert "RAXE - AI Security for LLMs" in result.output
+        # Minimal help shows tagline without "RAXE -" prefix
+        assert "AI Security for LLMs" in result.output
 
     def test_version_command(self, runner):
         """Test that version command works."""
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
         # Check that version is displayed (actual version is 0.0.2)
-        assert ("0.0.2" in result.output or "RAXE CLI" in result.output)
+        assert "0.0.2" in result.output or "RAXE CLI" in result.output
 
     def test_init_command(self, runner):
         """Test init command creates config."""
@@ -95,7 +96,7 @@ class TestCLICommands:
         result = runner.invoke(cli, ["repl", "--help"])
         assert result.exit_code == 0
         # Check for REPL-related content (actual text is "Launch interactive REPL mode")
-        assert ("interactive" in result.output.lower() or "REPL" in result.output)
+        assert "interactive" in result.output.lower() or "REPL" in result.output
 
     def test_completion_bash(self, runner):
         """Test bash completion generation."""
@@ -227,4 +228,3 @@ class TestDoctorCommand:
         # Should have some health check output
         if result.exit_code == 0:
             assert "Health Check" in result.output or "Installation" in result.output
-

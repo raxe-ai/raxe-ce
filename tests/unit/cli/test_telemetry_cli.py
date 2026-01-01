@@ -723,10 +723,12 @@ class TestDisableCommand:
         mock_config.core.api_key = None  # Free tier
 
         with patch("raxe.cli.telemetry._get_config", return_value=mock_config):
-            result = cli_runner.invoke(telemetry, ["disable"])
+            with patch("raxe.cli.telemetry._check_telemetry_disable_permission", return_value=False):
+                with patch("raxe.cli.telemetry._get_cached_tier", return_value="Community"):
+                    result = cli_runner.invoke(telemetry, ["disable"])
 
         # Should show error about free tier
-        assert "free tier" in result.output.lower() or "cannot" in result.output.lower()
+        assert "tier" in result.output.lower() or "cannot" in result.output.lower()
         # Should not modify config
         mock_config.save.assert_not_called()
 

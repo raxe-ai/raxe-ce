@@ -377,9 +377,19 @@ class TestTelemetryEnableDisableCommands:
         assert "Disable telemetry collection" in result.output
 
     @patch("raxe.cli.telemetry._get_config")
-    def test_disable_free_tier(self, mock_config: MagicMock, runner: CliRunner) -> None:
+    @patch("raxe.cli.telemetry._check_telemetry_disable_permission")
+    @patch("raxe.cli.telemetry._get_cached_tier")
+    def test_disable_free_tier(
+        self,
+        mock_get_tier: MagicMock,
+        mock_check_permission: MagicMock,
+        mock_config: MagicMock,
+        runner: CliRunner,
+    ) -> None:
         """Test disable command on free tier shows error."""
         mock_config.return_value.core.api_key = None
+        mock_check_permission.return_value = False  # Free tier cannot disable
+        mock_get_tier.return_value = "Community"
 
         result = runner.invoke(cli, ["telemetry", "disable"])
 

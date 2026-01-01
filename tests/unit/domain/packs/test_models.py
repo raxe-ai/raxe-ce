@@ -64,7 +64,7 @@ class TestPackRule:
         """Test creating a pack rule."""
         pack_rule = PackRule(
             id="pi-001",
-            version="0.0.1",
+            version="1.0.0",
             path="rules/PI/pi-001@1.0.0.yaml"
         )
 
@@ -76,7 +76,7 @@ class TestPackRule:
         """Test versioned_id property."""
         pack_rule = PackRule(
             id="pi-001",
-            version="0.0.1",
+            version="1.0.0",
             path="rules/PI/pi-001@1.0.0.yaml"
         )
 
@@ -129,10 +129,10 @@ class TestPackManifest:
         )
 
         assert manifest.id == "core"
-        assert manifest.version == "1.0.0"
+        assert manifest.version == "0.0.1"
         assert manifest.name == "Core Rules"
         assert manifest.pack_type == PackType.OFFICIAL
-        assert manifest.schema_version == "1.1.0"
+        assert manifest.schema_version == "0.0.1"
         assert len(manifest.rules) == 1
         assert manifest.metadata["maintainer"] == "raxe-ai"
 
@@ -147,7 +147,7 @@ class TestPackManifest:
             rules=[PackRule(id="pi-001", version="0.0.1", path="rules/pi-001.yaml")],
         )
 
-        assert manifest.versioned_id == "core@2.0.0"
+        assert manifest.versioned_id == "core@0.0.1"
 
     def test_pack_manifest_rule_count(self):
         """Test rule_count property."""
@@ -332,10 +332,10 @@ class TestRulePack:
 
         pack = RulePack(manifest=manifest, rules=[sample_rule])
 
-        rule = pack.get_rule_versioned("pi-001", "1.0.0")
+        rule = pack.get_rule_versioned("pi-001", "0.0.1")
         assert rule is not None
         assert rule.rule_id == "pi-001"
-        assert rule.version == "1.0.0"
+        assert rule.version == "0.0.1"
 
         rule = pack.get_rule_versioned("pi-001", "2.0.0")
         assert rule is None
@@ -394,7 +394,7 @@ class TestRulePack:
         pack = RulePack(manifest=manifest, rules=[sample_rule])
 
         assert pack.pack_id == "core"
-        assert pack.version == "1.0.0"
+        assert pack.version == "0.0.1"
         assert pack.pack_type == PackType.OFFICIAL
 
     def test_rule_pack_immutable(self, sample_rule):

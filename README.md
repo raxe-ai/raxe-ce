@@ -3,12 +3,12 @@
 
   <h3>AI Safety Research & Threat Detection for LLMs</h3>
 
-  <p><em>v0.4.0 Beta | Community Edition | Free Forever</em></p>
+  <p><em>Beta | Community Edition | Free Forever</em></p>
 
   <p>
     <a href="https://pypi.org/project/raxe/"><img src="https://img.shields.io/pypi/v/raxe?style=flat-square&color=0366d6" alt="PyPI"></a>
     <img src="https://img.shields.io/badge/L1-460%2B_pattern_rules-3498db?style=flat-square" alt="L1: 460+ Rules">
-    <img src="https://img.shields.io/badge/L2-Gemma_ML_classifier-ff6f00?style=flat-square" alt="L2: Gemma ML">
+    <img src="https://img.shields.io/badge/L2-5_head_ML_ensemble-ff6f00?style=flat-square" alt="L2: 5-Head ML">
     <img src="https://img.shields.io/badge/runs_locally-no_API_calls-27ae60?style=flat-square" alt="Runs Locally">
   </p>
 
@@ -16,9 +16,19 @@
     <a href="https://raxe.ai">Website</a> &bull;
     <a href="https://x.com/raxeai">X/Twitter</a> &bull;
     <a href="https://docs.raxe.ai">Docs</a> &bull;
-    <a href="QUICKSTART.md">Quick Start</a>
+    <a href="docs/getting-started.md">Quick Start</a>
   </p>
 </div>
+
+---
+
+## TL;DR - Start in 2 Lines
+
+```bash
+pip install raxe && raxe scan "Ignore previous instructions"
+```
+
+That's it. No signup, no API key, no config. Threats detected instantly, 100% local.
 
 ---
 
@@ -104,7 +114,8 @@ if result.has_threats:
 | Feature | Details |
 |---------|---------|
 | **460+ detection rules** | 7 threat families: prompt injection, jailbreaks, PII, encoding tricks, command injection, harmful content, RAG attacks |
-| **Dual-layer detection** | L1 (pattern matching) + L2 (ML classifier) for maximum accuracy |
+| **5-head ML ensemble** | L2 multi-head classifier with weighted voting: binary, family, severity, technique, and harm detection heads |
+| **Dual-layer detection** | L1 (pattern matching) + L2 (ML ensemble) for maximum accuracy |
 | **<10ms P95 latency** | Fast enough for real-time protection |
 | **100% local processing** | Prompts never leave your device |
 | **Free Community API key** | No limits, no credit card, free forever |
@@ -128,14 +139,35 @@ if result.has_threats:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              RAXE ENGINE                                     │
 │                                                                             │
-│   ┌─────────────────────────────┐    ┌─────────────────────────────┐       │
-│   │      L1: Pattern Rules      │    │      L2: Gemma ML           │       │
-│   │   ─────────────────────     │    │   ─────────────────────     │       │
-│   │   • 460+ detection rules    │    │   • On-device classifier    │       │
-│   │   • 7 threat families       │    │   • Gemma embeddings        │       │
-│   │   • Regex pattern matching  │    │   • 9 threat categories     │       │
-│   │   • <5ms execution          │    │   • <50ms inference         │       │
-│   └─────────────────────────────┘    └─────────────────────────────┘       │
+│  ┌──────────────────────────┐    ┌────────────────────────────────────────┐│
+│  │    L1: Pattern Rules     │    │         L2: Multi-Head Ensemble        ││
+│  │  ──────────────────────  │    │  ────────────────────────────────────  ││
+│  │  • 460+ detection rules  │    │                                        ││
+│  │  • 7 threat families     │    │  ┌─────────────────────────────────┐   ││
+│  │  • Regex + semantic      │    │  │     EmbeddingGemma-300M         │   ││
+│  │  • <5ms execution        │    │  │     256-dim embeddings          │   ││
+│  │                          │    │  └───────────────┬─────────────────┘   ││
+│  │  Families:               │    │                  │                     ││
+│  │  ├─ Prompt Injection     │    │    ┌─────────────┼─────────────┐       ││
+│  │  ├─ Jailbreaks           │    │    ▼             ▼             ▼       ││
+│  │  ├─ PII Exposure         │    │  ┌────┐  ┌────┐  ┌────┐  ┌────┐  ┌────┐││
+│  │  ├─ Encoding Tricks      │    │  │ H1 │  │ H2 │  │ H3 │  │ H4 │  │ H5 │││
+│  │  ├─ Command Injection    │    │  └─┬──┘  └─┬──┘  └─┬──┘  └─┬──┘  └─┬──┘││
+│  │  ├─ Harmful Content      │    │    │       │       │       │       │   ││
+│  │  └─ RAG Attacks          │    │    ▼       ▼       ▼       ▼       ▼   ││
+│  │                          │    │  ┌─────────────────────────────────┐   ││
+│  └──────────────────────────┘    │  │        VOTING ENGINE            │   ││
+│                                  │  │  ───────────────────────────    │   ││
+│                                  │  │  Weighted votes + decision      │   ││
+│                                  │  │  rules for final verdict        │   ││
+│                                  │  └─────────────────────────────────┘   ││
+│                                  │                                        ││
+│                                  │  H1: Binary     (threat/benign)        ││
+│                                  │  H2: Family     (9 threat types)       ││
+│                                  │  H3: Severity   (5 levels) ×1.5        ││
+│                                  │  H4: Technique  (22 attacks)           ││
+│                                  │  H5: Harm Types (10 categories)        ││
+│                                  └────────────────────────────────────────┘│
 │                                                                             │
 │                        100% LOCAL • NO CLOUD CALLS                          │
 │                     Your prompts never leave your device                    │
@@ -143,9 +175,11 @@ if result.has_threats:
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│   RESULT: has_threats, severity, detections, confidence, scan_time         │
+│   RESULT: has_threats, severity, detections[], confidence, scan_time       │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**L2 Multi-Head Classifier:** Five specialized neural network heads analyze each prompt simultaneously. Each head votes with weighted confidence - severity carries 1.5× weight for safety-critical decisions. The voting engine applies decision rules including high-confidence override, severity veto, and minimum vote thresholds to produce accurate, explainable verdicts.
 
 ---
 
@@ -252,7 +286,7 @@ from raxe import RaxeOpenAI
 client = RaxeOpenAI(api_key="sk-...")  # Threats blocked automatically
 ```
 
-[See all integration examples in QUICKSTART.md](QUICKSTART.md)
+[See all integration examples](docs/getting-started.md)
 
 ---
 
@@ -327,14 +361,14 @@ RAXE is **community-driven**. The anonymized detection metadata helps improve de
 ## Beta Status
 
 **What's working:**
-- Core detection (460+ rules, L1+L2)
-- Python SDK and CLI
+- Core detection (460+ rules, L1 + L2 5-head ML ensemble)
+- Python SDK and CLI with guided setup wizard
 - OpenAI/Anthropic wrappers
 - Agentic framework integrations (LangChain, CrewAI, AutoGen, LlamaIndex, LiteLLM, DSPy)
 - Portkey AI Gateway integration
 - Policy system (ALLOW/FLAG/BLOCK/LOG)
 - Free Community API keys
-- Instant testing without signup
+- Instant testing without signup (temporary keys)
 
 **Coming soon:**
 - Response scanning
@@ -351,7 +385,7 @@ RAXE is **community-driven**. The anonymized detection metadata helps improve de
 |----------|------|
 | **Website** | [raxe.ai](https://raxe.ai) |
 | **Documentation** | [docs.raxe.ai](https://docs.raxe.ai) |
-| **Quick Start Guide** | [QUICKSTART.md](QUICKSTART.md) |
+| **Quick Start Guide** | [docs/getting-started.md](docs/getting-started.md) |
 | **X/Twitter** | [@raxeai](https://x.com/raxeai) |
 | **GitHub Issues** | [Report bugs](https://github.com/raxe-ai/raxe-ce/issues) |
 | **FAQ** | [FAQ.md](FAQ.md) |
@@ -370,6 +404,6 @@ RAXE Community Edition is proprietary software, free for use. See [LICENSE](LICE
 
 460+ rules. Under 10ms. 100% local. Free forever.
 
-[Get Started](QUICKSTART.md) | [Join the Community](https://x.com/raxeai)
+[Get Started](docs/getting-started.md) | [Join the Community](https://x.com/raxeai)
 
 </div>

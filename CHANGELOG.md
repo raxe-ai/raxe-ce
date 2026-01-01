@@ -1,6 +1,33 @@
 # CHANGELOG
 
 
+## v0.5.0 (2026-01-01)
+
+### Bug Fixes
+
+- Resolve CodeQL security alerts
+  ([`76c82ae`](https://github.com/raxe-ai/raxe-ce/commit/76c82ae989898b95d489cb4a169cce8351bcca11))
+
+- Fix wrong parameter name in langchain.py (tool_input → tool_args) - Add defensive else clause in
+  CLI completion for unsupported shells - Fix test import to use legacy create_scan_event function
+  signature - Update test assertion to match corrected parameter name
+
+Resolves 3 real bugs identified by CodeQL code scanning.
+
+### Features
+
+- **cli**: Add comprehensive CLI UX improvements
+  ([`6e3c97c`](https://github.com/raxe-ai/raxe-ce/commit/6e3c97cf048e79364eae5d0c29386082784a4c48))
+
+- Add `raxe help` command with 42 documented error codes - Implement progressive disclosure:
+  `--help` vs `--help-all` - Add terminal context detection for CI/non-interactive environments -
+  Add auth flow visual feedback with progress indicators - Consolidate init/setup commands with
+  deprecation warnings - Add post-setup guidance and auth decision helper - Unify documentation with
+  new authentication.md and STYLE_GUIDE.md - Add expiry warnings for temporary API keys
+
+Includes full test coverage (130+ tests) for all new features.
+
+
 ## v0.4.7 (2025-12-31)
 
 ### Bug Fixes

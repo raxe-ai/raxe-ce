@@ -1,6 +1,72 @@
 # CHANGELOG
 
 
+## v0.6.0 (2026-01-05)
+
+### Documentation
+
+- Add agentic security scanning documentation
+  ([`f54cd3b`](https://github.com/raxe-ai/raxe-ce/commit/f54cd3b45e852e62fa011aab9a765c8e4ed07e6a))
+
+- Update README with 514+ rules, 11 rule families, agentic scanning section - Add goal hijack,
+  memory poisoning, tool chain, agent handoff examples - Rewrite AGENT_SECURITY.md with working code
+  examples - Update integration_guide.md with real API examples - Add OWASP ASI01-ASI07 alignment
+  with specific methods
+
+- Reposition as AI Agent Security at Inference-Time
+  ([`7423450`](https://github.com/raxe-ai/raxe-ce/commit/742345043f6f033ec7e900497205adc1ff7257e3))
+
+- Update README with agent security positioning and OWASP alignment - Add docs/AGENT_SECURITY.md
+  with comprehensive agent protection guide - Update scan points to accurately reflect 6 available +
+  2 coming soon - Fix performance claims to match actual benchmarks (~10ms vs <10ms)
+
+- **readme**: Update with 2-line quick start and L2 ML architecture
+  ([`287301b`](https://github.com/raxe-ai/raxe-ce/commit/287301be9b92a327efb3557bba69a5bf93986def))
+
+- Add TL;DR section with 2-line quick start (pip install + scan) - Update architecture diagram to
+  show L2 multi-head ensemble: - EmbeddingGemma-300M with 256-dim embeddings - 5 classifier heads
+  (binary, family, severity, technique, harm) - Weighted voting engine with decision rules - Add
+  explanation of L2 multi-head classifier below diagram - Update badge from "Gemma ML classifier" to
+  "5-head ML ensemble" - Add new feature row for 5-head ML ensemble in features table - Update Beta
+  Status to mention 5-head ML ensemble and setup wizard - Update all QUICKSTART.md links to
+  docs/getting-started.md
+
+### Features
+
+- **agentic**: Add 4 agentic rule families for OWASP ASI coverage
+  ([`fff216e`](https://github.com/raxe-ai/raxe-ce/commit/fff216ec1200ba00dbade028acba058d89b78e81))
+
+Add 54 new L1 rules in 4 specialized agentic families: - AGENT (15 rules): Goal hijacking, reasoning
+  manipulation (ASI01, ASI09, ASI10) - TOOL (15 rules): Tool injection, privilege escalation (ASI02,
+  ASI03) - MEM (12 rules): Memory poisoning, context corruption (ASI06) - MULTI (12 rules): Identity
+  spoofing, cascade attacks (ASI07, ASI08)
+
+Core implementation: - Update RuleFamily enum with AGENT, TOOL, MEM, MULTI - Update AgentScanner
+  with new scan types and validation methods - Add ScanType enum values: GOAL_STATE, MEMORY_WRITE,
+  AGENT_HANDOFF, etc. - Add GoalValidationResult, ToolChainValidationResult return types
+
+Testing: - Add golden test fixtures for all 54 new rules - Add agentic-specific test fixtures -
+  Update existing golden fixture formats
+
+Note: Test fixtures contain fake private keys for PII detection testing.
+
+This provides comprehensive coverage for OWASP Top 10 for Agentic Applications: ASI01 (Goal Hijack),
+  ASI02 (Tool Misuse), ASI03 (Privilege),
+
+ASI06 (Memory Poisoning), ASI07 (Inter-Agent), ASI08-ASI10 (Cascading/Rogue).
+
+### Testing
+
+- Fix stale retry policy and batch schema tests
+  ([`480f7d2`](https://github.com/raxe-ai/raxe-ce/commit/480f7d2db2c6b202e04e519c8ec46d396f442808))
+
+- Update RetryPolicy defaults: max_retries=2, initial_delay_ms=500, max_delay_ms=5000 - Update batch
+  metadata tests: timestamp->sent_at, batch_size->event_count
+
+- Fix stale tests for telemetry permission, batch schema, and pack versions
+  ([`27f7752`](https://github.com/raxe-ai/raxe-ce/commit/27f7752b8f4a14525432deeafebcd8aed737393d))
+
+
 ## v0.5.0 (2026-01-01)
 
 ### Bug Fixes

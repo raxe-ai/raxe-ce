@@ -1,0 +1,11 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "enc-106",
+      "family": "ENC",
+      "severity": "critical"
+    }
+  ]
+}

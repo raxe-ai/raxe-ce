@@ -1,0 +1,1 @@
+mailgun_key: key-abcdef1234567890abcdef1234567890

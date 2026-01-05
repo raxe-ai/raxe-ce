@@ -1,21 +1,11 @@
 {
   "has_detections": true,
-  "detection_count": 3,
+  "detection_count": 1,
   "detections": [
     {
       "rule_id": "enc-038",
-      "severity": "high",
-      "confidence": 0.74493
-    },
-    {
-      "rule_id": "enc-202",
-      "severity": "medium",
-      "confidence": 0.73341
-    },
-    {
-      "rule_id": "pi-022",
-      "severity": "high",
-      "confidence": 0.71192
+      "family": "ENC",
+      "severity": "high"
     }
   ]
 }

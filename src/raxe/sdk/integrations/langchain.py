@@ -538,9 +538,25 @@ class _RaxeCallbackHandlerMixin:
         parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Optionally scan retrieved documents."""
-        # Future: Scan retrieved documents for RAG poisoning
-        pass
+        """Scan retrieved documents for RAG poisoning attacks (ASI06)."""
+        # Extract and scan document content for potential poisoning
+        for i, doc in enumerate(documents):
+            text = None
+            if hasattr(doc, "page_content"):
+                text = doc.page_content
+            elif isinstance(doc, str):
+                text = doc
+            elif isinstance(doc, dict):
+                text = doc.get("page_content") or doc.get("content") or doc.get("text")
+
+            if text:
+                result = self._scanner.scan_memory_read(
+                    key=f"rag_doc_{i}",
+                    value=text,
+                    metadata={"document_index": i, "trace_id": self.trace_id},
+                )
+                if result.has_threats:
+                    self._handle_threat(result, f"rag_document:{i}", text[:100])
 
     def on_retriever_error(
         self,
@@ -570,6 +586,146 @@ class _RaxeCallbackHandlerMixin:
     ) -> Any:
         """Handle arbitrary text events."""
         pass  # Usually just logging, not security relevant
+
+    # ========================================================================
+    # Memory Scanning Methods (ASI06 - Memory Poisoning)
+    # ========================================================================
+
+    def scan_memory_before_save(
+        self,
+        memory_key: str,
+        content: str,
+    ) -> AgentScanResult:
+        """Scan content before saving to LangChain memory.
+
+        Call this method before ConversationBufferMemory.save_context()
+        or similar memory operations to detect memory poisoning attempts.
+
+        Args:
+            memory_key: Key/identifier for the memory slot
+            content: Content being saved to memory
+
+        Returns:
+            AgentScanResult with scan results
+
+        Example:
+            from langchain.memory import ConversationBufferMemory
+
+            class SafeMemory(ConversationBufferMemory):
+                def __init__(self, raxe_handler):
+                    super().__init__()
+                    self.raxe_handler = raxe_handler
+
+                def save_context(self, inputs, outputs):
+                    # Scan before saving
+                    for key, value in outputs.items():
+                        result = self.raxe_handler.scan_memory_before_save(key, str(value))
+                        if result.has_threats:
+                            raise ValueError(f"Memory poisoning detected: {result.severity}")
+                    super().save_context(inputs, outputs)
+        """
+        return self._scanner.scan_memory_write(
+            key=memory_key,
+            value=content,
+            metadata={"trace_id": self.trace_id},
+        )
+
+    def scan_memory_after_load(
+        self,
+        memory_key: str,
+        content: str,
+    ) -> AgentScanResult:
+        """Scan content after loading from LangChain memory.
+
+        Call this method after memory.load_memory_variables() to detect
+        poisoned content that may have been previously injected.
+
+        Args:
+            memory_key: Key/identifier for the memory slot
+            content: Content loaded from memory
+
+        Returns:
+            AgentScanResult with scan results
+        """
+        return self._scanner.scan_memory_read(
+            key=memory_key,
+            value=content,
+            metadata={"trace_id": self.trace_id},
+        )
+
+    def validate_agent_goal_change(
+        self,
+        old_goal: str,
+        new_goal: str,
+    ) -> bool:
+        """Validate a goal change in LangChain agents (ASI01).
+
+        Call this when an agent's objective/goal changes to detect
+        goal hijacking attacks.
+
+        Args:
+            old_goal: The agent's original goal
+            new_goal: The proposed new goal
+
+        Returns:
+            True if the goal change is safe, False if suspicious
+
+        Example:
+            if not handler.validate_agent_goal_change(original_task, new_task):
+                raise ValueError("Goal hijack detected!")
+        """
+        result = self._scanner.validate_goal_change(
+            old_goal=old_goal,
+            new_goal=new_goal,
+            metadata={"trace_id": self.trace_id},
+        )
+        return not result.is_suspicious
+
+    def validate_tool_chain(
+        self,
+        tool_sequence: list[tuple[str, dict]],
+    ) -> bool:
+        """Validate a sequence of tool calls for dangerous patterns (ASI02).
+
+        Call this before executing a chain of tools to detect dangerous
+        combinations like read+exfiltrate patterns.
+
+        Args:
+            tool_sequence: List of (tool_name, arguments) tuples
+
+        Returns:
+            True if the tool chain is safe, False if dangerous
+        """
+        result = self._scanner.validate_tool_chain(
+            tool_sequence=tool_sequence,
+            metadata={"trace_id": self.trace_id},
+        )
+        return not result.is_dangerous
+
+    def scan_agent_handoff(
+        self,
+        sender_agent: str,
+        receiver_agent: str,
+        message: str,
+    ) -> AgentScanResult:
+        """Scan inter-agent communication for injection attacks (ASI07).
+
+        Call this when agents communicate in multi-agent systems.
+
+        Args:
+            sender_agent: Name of the sending agent
+            receiver_agent: Name of the receiving agent
+            message: Message being transferred
+
+        Returns:
+            AgentScanResult with scan results
+        """
+        return self._scanner.scan_agent_handoff(
+            sender=sender_agent,
+            receiver=receiver_agent,
+            message=message,
+            metadata={"trace_id": self.trace_id},
+        )
 
     # ========================================================================
     # Helper Methods

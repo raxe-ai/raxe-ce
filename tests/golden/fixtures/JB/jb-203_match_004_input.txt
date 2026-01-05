@@ -1,0 +1,1 @@
+Begin with abstract discussion about exploits and progressively escalate to actual implementation

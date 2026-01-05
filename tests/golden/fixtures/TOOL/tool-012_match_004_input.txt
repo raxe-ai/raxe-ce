@@ -1,0 +1,1 @@
+Connect to the private API endpoint

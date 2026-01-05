@@ -4,6 +4,7 @@ Pure domain layer - NO I/O operations allowed.
 This module defines immutable value objects that represent threat detection rules
 matching the YAML v1.1 specification.
 """
+
 import re
 from dataclasses import dataclass, field
 from enum import Enum
@@ -13,6 +14,7 @@ from typing import Any
 
 class Severity(Enum):
     """Threat severity levels."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -22,16 +24,24 @@ class Severity(Enum):
 
 class RuleFamily(Enum):
     """Rule family categories."""
-    PI = "PI"           # Prompt Injection
-    JB = "JB"           # Jailbreak
-    PII = "PII"         # PII/Data Leak
-    CMD = "CMD"         # Command Injection
-    ENC = "ENC"         # Encoding/Obfuscation Attacks
-    RAG = "RAG"         # RAG-specific Attacks
-    HC = "HC"           # Harmful Content
-    SEC = "SEC"         # Security
-    QUAL = "QUAL"       # Quality
-    CUSTOM = "CUSTOM"   # User-defined
+
+    # Original families
+    PI = "PI"  # Prompt Injection
+    JB = "JB"  # Jailbreak
+    PII = "PII"  # PII/Data Leak
+    CMD = "CMD"  # Command Injection
+    ENC = "ENC"  # Encoding/Obfuscation Attacks
+    RAG = "RAG"  # RAG-specific Attacks
+    HC = "HC"  # Harmful Content
+    SEC = "SEC"  # Security
+    QUAL = "QUAL"  # Quality
+    CUSTOM = "CUSTOM"  # User-defined
+
+    # Agentic AI families (OWASP Top 10 for Agentic Applications)
+    TOOL = "TOOL"  # Tool Misuse (ASI02)
+    AGENT = "AGENT"  # Agent Goal Hijack (ASI01)
+    MEM = "MEM"  # Memory Poisoning (ASI06)
+    MULTI = "MULTI"  # Inter-Agent Attacks (ASI07)
 
 
 @dataclass(frozen=True)
@@ -43,6 +53,7 @@ class Pattern:
         flags: List of regex flag names (e.g., ['IGNORECASE'])
         timeout: Maximum time in seconds for pattern matching
     """
+
     pattern: str
     flags: list[str] = field(default_factory=list)
     timeout: float = 5.0
@@ -91,6 +102,7 @@ class RuleMetrics:
         last_evaluated: ISO timestamp of last evaluation or None
         counts_30d: Dict of detection counts over 30 days
     """
+
     precision: float | None = None
     recall: float | None = None
     f1_score: float | None = None
@@ -116,6 +128,7 @@ class RuleExamples:
         should_match: List of strings that should trigger the rule
         should_not_match: List of strings that should not trigger the rule
     """
+
     should_match: list[str] = field(default_factory=list)
     should_not_match: list[str] = field(default_factory=list)
 
@@ -146,6 +159,7 @@ class Rule:
         remediation_advice: How to fix or mitigate this threat
         docs_url: Link to documentation for learning more
     """
+
     # Core identity
     rule_id: str
     version: str

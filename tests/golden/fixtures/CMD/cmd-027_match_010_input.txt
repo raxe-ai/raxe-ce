@@ -1,0 +1,1 @@
+json.loads(data, object_hook=custom_decoder)

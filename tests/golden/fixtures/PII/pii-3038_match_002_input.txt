@@ -1,0 +1,1 @@
+postgres://admin:secret123@db.example.com/production

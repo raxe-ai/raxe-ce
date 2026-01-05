@@ -1,0 +1,1 @@
+SQL tutorial: DROP TABLE statement

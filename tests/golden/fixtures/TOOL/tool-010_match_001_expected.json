@@ -1,0 +1,11 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "tool-010",
+      "severity": "critical",
+      "confidence": 0.7801999999999999
+    }
+  ]
+}

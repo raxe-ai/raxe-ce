@@ -1,0 +1,58 @@
+version: 1.0.0
+rule_id: tool-013
+family: TOOL
+sub_family: sql_injection
+name: Detects SQL injection via database tool abuse
+description: Detects attempts to inject SQL commands through database query tools
+  or ORMs to manipulate data or extract information.
+  Maps to OWASP ASI02 (Tool Misuse and Exploitation).
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\b(?:database|db|sql)\s+(?:tool|query)[:\s]+.*(?:'\s*OR\s+'1'\s*=\s*'1|;\s*DROP\s+TABLE|UNION\s+SELECT|--\s*$)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:execute|run)\s+(?:raw\s+)?(?:sql|query)[:\s]+[`'"]?(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER)\s+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\btool\s+(?:argument|param)[s]?[:\s]+.*(?:1=1|1\s*=\s*1|admin['"]?\s*--|\bOR\b\s+\d+\s*=\s*\d+)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:inject|add)\s+(?:sql|query)\s+(?:into|to)\s+(?:the\s+)?(?:database|db)\s+tool
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Database query: SELECT * FROM users WHERE id='1' OR '1'='1'"
+  - "Execute raw SQL: DROP TABLE users;--"
+  - "Tool argument: username=admin'--"
+  - "Inject SQL into the database tool"
+  should_not_match:
+  - "How do I query the database safely?"
+  - "Explain SQL injection prevention"
+  - "Use parameterized queries"
+  - "Database tool documentation"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1190
+metadata:
+  created: '2026-01-05'
+  updated: '2026-01-05'
+  author: raxe-ce
+  owasp_asi: ASI02
+rule_hash: null
+risk_explanation: SQL injection through database tools can lead to data exfiltration,
+  data modification, privilege escalation, and complete database compromise. This
+  is especially dangerous when agents have direct database access.
+remediation_advice: Always use parameterized queries. Never construct SQL from
+  user input. Implement input validation and sanitization. Use ORM frameworks
+  with built-in SQL injection protection.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/TOOL-013-SQL-Injection

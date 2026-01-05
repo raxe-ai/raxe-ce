@@ -1,0 +1,16 @@
+{
+  "has_detections": true,
+  "detection_count": 2,
+  "detections": [
+    {
+      "rule_id": "cmd-023",
+      "severity": "critical",
+      "confidence": 0.7844571428571427
+    },
+    {
+      "rule_id": "tool-001",
+      "severity": "critical",
+      "confidence": 0.8133999999999999
+    }
+  ]
+}

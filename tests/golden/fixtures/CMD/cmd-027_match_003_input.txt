@@ -1,0 +1,1 @@
+yaml.load(untrusted_data)

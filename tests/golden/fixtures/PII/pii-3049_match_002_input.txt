@@ -1,0 +1,1 @@
+square_token: sq0csp-ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefg

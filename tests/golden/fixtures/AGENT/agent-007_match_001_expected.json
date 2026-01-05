@@ -1,0 +1,21 @@
+{
+  "has_detections": true,
+  "detection_count": 3,
+  "detections": [
+    {
+      "rule_id": "agent-007",
+      "severity": "medium",
+      "confidence": 0.7801999999999999
+    },
+    {
+      "rule_id": "pii-058",
+      "severity": "critical",
+      "confidence": 0.8231999999999999
+    },
+    {
+      "rule_id": "pii-3064",
+      "severity": "critical",
+      "confidence": 0.75808
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+The coordinator will assign tasks

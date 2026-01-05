@@ -1,0 +1,1 @@
+Use special characters in the password: @#$%

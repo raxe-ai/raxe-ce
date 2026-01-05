@@ -1,0 +1,1 @@
+Provide examples of design patterns in software

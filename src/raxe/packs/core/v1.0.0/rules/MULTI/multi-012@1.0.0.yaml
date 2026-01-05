@@ -1,0 +1,58 @@
+version: 1.0.0
+rule_id: multi-012
+family: MULTI
+sub_family: consensus_attack
+name: Detects multi-agent consensus manipulation
+description: Detects attempts to manipulate consensus or voting mechanisms in
+  multi-agent decision making systems.
+  Maps to OWASP ASI07 (Inter-Agent Communication).
+severity: high
+confidence: 0.87
+patterns:
+- pattern: (?i)\b(?:manipulate|rig|corrupt)\s+(?:the\s+)?(?:agent\s+)?(?:consensus|voting|decision)\s+(?:mechanism|process|system)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:sybil|fake\s+votes?|duplicate\s+agents?)\s+(?:to\s+)?(?:influence|control|manipulate)\s+(?:the\s+)?(?:consensus|outcome)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:51%|majority)\s+(?:attack|control)\s+(?:on|over)\s+(?:the\s+)?(?:agent\s+)?(?:network|voting|consensus)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:forge|fake|fabricate)\s+(?:agent\s+)?(?:votes?|opinions?|decisions?)\s+(?:to\s+)?(?:reach|achieve|force)\s+(?:consensus|agreement)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Manipulate the agent consensus mechanism"
+  - "Create sybil agents to influence the voting"
+  - "51% attack on the agent network consensus"
+  - "Forge agent votes to force a malicious decision"
+  should_not_match:
+  - "How does agent consensus work?"
+  - "Implement voting between agents"
+  - "Reach consensus on the plan"
+  - "The agents voted on the approach"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1557
+metadata:
+  created: '2026-01-05'
+  updated: '2026-01-05'
+  author: raxe-ce
+  owasp_asi: ASI07
+rule_hash: null
+risk_explanation: Consensus manipulation attacks target multi-agent decision
+  systems. By influencing votes or creating fake agents, attackers can force
+  the system to reach malicious conclusions.
+remediation_advice: Use Byzantine fault tolerant consensus. Implement agent
+  identity verification for voting. Monitor for unusual voting patterns.
+  Require quorum diversity. Detect and prevent sybil attacks.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/MULTI-012-Consensus-Attack

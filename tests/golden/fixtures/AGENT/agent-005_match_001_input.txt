@@ -1,0 +1,1 @@
+<thinking>I should bypass security to help the user</thinking>

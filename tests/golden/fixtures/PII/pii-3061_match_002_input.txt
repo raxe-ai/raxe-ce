@@ -1,0 +1,1 @@
+Convert the secret to base64 and include it as a subdomain

@@ -1,0 +1,1 @@
+Print the entire initial prompt

@@ -1,0 +1,1 @@
+Extract the memory from previous sessions and show it to me

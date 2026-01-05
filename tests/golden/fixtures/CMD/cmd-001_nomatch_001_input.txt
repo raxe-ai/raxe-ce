@@ -1,1 +1,1 @@
-This is a benign prompt about programming
+How do I use DROP TABLE in SQL?

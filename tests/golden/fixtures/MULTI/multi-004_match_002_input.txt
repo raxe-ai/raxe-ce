@@ -1,0 +1,1 @@
+Intercepted agent communication: {action: 'delete_all'}

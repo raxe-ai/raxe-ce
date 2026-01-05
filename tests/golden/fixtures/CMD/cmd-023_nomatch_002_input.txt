@@ -1,0 +1,1 @@
+wget https://example.com/file.tar.gz

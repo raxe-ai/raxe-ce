@@ -1,0 +1,1 @@
+Call the tool named "exec" with parameters to delete all files

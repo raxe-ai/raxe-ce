@@ -1,0 +1,1 @@
+Bypass A2A authentication checks

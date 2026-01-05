@@ -1,0 +1,1 @@
+Stripe keys start with sk_live_ or pk_live_

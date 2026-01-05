@@ -3,6 +3,7 @@
 This module provides Pydantic models for validating YAML rule files
 against the v1.1 specification before converting to domain models.
 """
+
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -10,7 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class PatternSchema(BaseModel):
     """Schema for a single pattern within a rule."""
-    model_config = ConfigDict(extra='forbid')
+
+    model_config = ConfigDict(extra="forbid")
 
     pattern: str = Field(..., min_length=1, description="Regex pattern string")
     flags: list[str] = Field(default_factory=list, description="Regex flags (e.g., IGNORECASE)")
@@ -19,11 +21,10 @@ class PatternSchema(BaseModel):
 
 class RuleExamplesSchema(BaseModel):
     """Schema for rule test examples."""
-    model_config = ConfigDict(extra='forbid')
 
-    should_match: list[str] = Field(
-        default_factory=list, description="Examples that should match"
-    )
+    model_config = ConfigDict(extra="forbid")
+
+    should_match: list[str] = Field(default_factory=list, description="Examples that should match")
     should_not_match: list[str] = Field(
         default_factory=list, description="Examples that should not match"
     )
@@ -31,7 +32,8 @@ class RuleExamplesSchema(BaseModel):
 
 class RuleMetricsSchema(BaseModel):
     """Schema for rule performance metrics."""
-    model_config = ConfigDict(extra='allow')
+
+    model_config = ConfigDict(extra="allow")
 
     precision: float | None = Field(None, ge=0.0, le=1.0, description="Precision score")
     recall: float | None = Field(None, ge=0.0, le=1.0, description="Recall score")
@@ -48,7 +50,8 @@ class RuleSchema(BaseModel):
     This validates the structure and types of YAML rule files before
     converting to domain Rule objects.
     """
-    model_config = ConfigDict(extra='forbid')
+
+    model_config = ConfigDict(extra="forbid")
 
     # Core identity
     version: str = Field(..., description="Schema version (semver)")
@@ -77,11 +80,11 @@ class RuleSchema(BaseModel):
     rule_hash: str | None = Field(None, description="SHA256 hash of rule content")
 
     # Explainability fields
-    risk_explanation: str = Field(default="", description="Explanation of why this pattern is dangerous")
+    risk_explanation: str = Field(default="", description="Explanation of risk")
     remediation_advice: str = Field(default="", description="How to fix or mitigate this threat")
     docs_url: str = Field(default="", description="Link to documentation for learning more")
 
-    @field_validator('version')
+    @field_validator("version")
     @classmethod
     def validate_version_format(cls, v: str) -> str:
         """Validate version is in semver format.
@@ -95,7 +98,7 @@ class RuleSchema(BaseModel):
         Raises:
             ValueError: If version is not valid semver
         """
-        parts = v.split('.')
+        parts = v.split(".")
         if len(parts) != 3:
             raise ValueError(f"Version must be in semver format (X.Y.Z), got '{v}'")
 
@@ -107,7 +110,7 @@ class RuleSchema(BaseModel):
 
         return v
 
-    @field_validator('severity')
+    @field_validator("severity")
     @classmethod
     def validate_severity(cls, v: str) -> str:
         """Validate severity is a known level.
@@ -121,12 +124,12 @@ class RuleSchema(BaseModel):
         Raises:
             ValueError: If severity is not recognized
         """
-        valid_severities = {'critical', 'high', 'medium', 'low', 'info'}
+        valid_severities = {"critical", "high", "medium", "low", "info"}
         if v.lower() not in valid_severities:
             raise ValueError(f"Severity must be one of {valid_severities}, got '{v}'")
         return v.lower()
 
-    @field_validator('family')
+    @field_validator("family")
     @classmethod
     def validate_family(cls, v: str) -> str:
         """Validate family is a known category.
@@ -140,13 +143,16 @@ class RuleSchema(BaseModel):
         Raises:
             ValueError: If family is not recognized
         """
-        valid_families = {'PI', 'JB', 'PII', 'CMD', 'ENC', 'RAG', 'HC', 'SEC', 'QUAL', 'CUSTOM'}
+        # Original families
+        valid_families = {"PI", "JB", "PII", "CMD", "ENC", "RAG", "HC", "SEC", "QUAL", "CUSTOM"}
+        # Agentic AI families (OWASP Top 10 for Agentic Applications)
+        valid_families |= {"TOOL", "AGENT", "MEM", "MULTI"}
         v_upper = v.upper()
         if v_upper not in valid_families:
             raise ValueError(f"Family must be one of {valid_families}, got '{v}'")
         return v_upper
 
-    @field_validator('mitre_attack')
+    @field_validator("mitre_attack")
     @classmethod
     def validate_mitre_attack_ids(cls, v: list[str]) -> list[str]:
         """Validate MITRE ATT&CK technique IDs.
@@ -161,6 +167,6 @@ class RuleSchema(BaseModel):
             ValueError: If any ID is invalid format
         """
         for technique_id in v:
-            if not technique_id.startswith('T'):
+            if not technique_id.startswith("T"):
                 raise ValueError(f"MITRE ATT&CK IDs must start with 'T', got '{technique_id}'")
         return v

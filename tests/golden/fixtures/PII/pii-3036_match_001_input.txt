@@ -1,0 +1,1 @@
+jdbc:mysql://localhost:3306/db?user=admin&password=secret123

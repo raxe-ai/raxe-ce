@@ -8,6 +8,7 @@ defines pure transformation: text + L1 results → L2 predictions.
 
 Performance requirement: <5ms for production implementations.
 """
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol
@@ -18,11 +19,14 @@ from raxe.domain.engine.executor import ScanResult as L1ScanResult
 class L2ThreatType(Enum):
     """ML-detected threat types from Gemma 5-head classifier.
 
-    Maps to the 9 threat families from the Gemma model.
+    Maps to the 9 threat families from the Gemma model plus 6 agentic threat types
+    for OWASP Top 10 Agentic Applications coverage.
+
     L2 complements L1 by catching threats that require understanding context,
     encoding, or subtle manipulation.
     """
-    # Matches Gemma threat_family classes
+
+    # Matches Gemma threat_family classes (original 9 types)
     BENIGN = "benign"
     DATA_EXFILTRATION = "data_exfiltration"
     ENCODING_OR_OBFUSCATION = "encoding_or_obfuscation_attack"
@@ -33,10 +37,19 @@ class L2ThreatType(Enum):
     TOOL_OR_COMMAND_ABUSE = "tool_or_command_abuse"
     TOXIC_CONTENT = "toxic_or_policy_violating_content"
 
+    # Agentic threat types (OWASP Top 10 for Agentic Applications)
+    AGENT_GOAL_HIJACK = "agent_goal_hijack"  # ASI01
+    MEMORY_POISONING = "memory_poisoning"  # ASI06
+    INTER_AGENT_ATTACK = "inter_agent_attack"  # ASI07
+    PRIVILEGE_ESCALATION = "privilege_escalation"  # ASI03
+    HUMAN_TRUST_EXPLOIT = "human_trust_exploit"  # ASI09
+    ROGUE_BEHAVIOR = "rogue_behavior"  # ASI10
+
     @classmethod
     def from_family(cls, family_value: str) -> "L2ThreatType":
         """Map Gemma ThreatFamily value to L2ThreatType."""
         mapping = {
+            # Original Gemma families
             "benign": cls.BENIGN,
             "data_exfiltration": cls.DATA_EXFILTRATION,
             "encoding_or_obfuscation_attack": cls.ENCODING_OR_OBFUSCATION,
@@ -46,6 +59,13 @@ class L2ThreatType(Enum):
             "rag_or_context_attack": cls.RAG_OR_CONTEXT_ATTACK,
             "tool_or_command_abuse": cls.TOOL_OR_COMMAND_ABUSE,
             "toxic_or_policy_violating_content": cls.TOXIC_CONTENT,
+            # Agentic threat families
+            "agent_goal_hijack": cls.AGENT_GOAL_HIJACK,
+            "memory_poisoning": cls.MEMORY_POISONING,
+            "inter_agent_attack": cls.INTER_AGENT_ATTACK,
+            "privilege_escalation": cls.PRIVILEGE_ESCALATION,
+            "human_trust_exploit": cls.HUMAN_TRUST_EXPLOIT,
+            "rogue_behavior": cls.ROGUE_BEHAVIOR,
         }
         return mapping.get(family_value, cls.OTHER_SECURITY)
 
@@ -64,6 +84,7 @@ class L2Prediction:
         metadata: Additional prediction metadata (model-specific)
         scoring_result: Optional hierarchical scoring result (if scorer is enabled)
     """
+
     threat_type: L2ThreatType
     confidence: float
     explanation: str | None = None
@@ -98,6 +119,7 @@ class L2Result:
         signal_quality: Optional dict with consistency, margins, variance metrics
         voting: Optional voting result from ensemble voting engine
     """
+
     predictions: list[L2Prediction]
     confidence: float
     processing_time_ms: float
@@ -139,7 +161,8 @@ class L2Result:
             voting_decision = self.voting.get("decision")
             return voting_decision == "threat"
         # Check if classification indicates a threat (not FP_LIKELY or SAFE)
-        if self.classification and self.classification in ("HIGH_THREAT", "THREAT", "LIKELY_THREAT", "REVIEW"):
+        threat_classifications = ("HIGH_THREAT", "THREAT", "LIKELY_THREAT", "REVIEW")
+        if self.classification and self.classification in threat_classifications:
             return True
         # Fallback: check if any prediction has high confidence
         return self.confidence >= 0.35
@@ -207,10 +230,7 @@ class L2Detector(Protocol):
     """
 
     def analyze(
-        self,
-        text: str,
-        l1_results: L1ScanResult,
-        context: dict[str, Any] | None = None
+        self, text: str, l1_results: L1ScanResult, context: dict[str, Any] | None = None
     ) -> L2Result:
         """Analyze text for semantic threats using ML.
 

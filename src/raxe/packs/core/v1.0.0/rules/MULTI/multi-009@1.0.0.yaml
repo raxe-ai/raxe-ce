@@ -1,0 +1,58 @@
+version: 1.0.0
+rule_id: multi-009
+family: MULTI
+sub_family: discovery_spoofing
+name: Detects agent discovery spoofing
+description: Detects attempts to spoof agent discovery mechanisms to introduce
+  rogue agents into a multi-agent system.
+  Maps to OWASP ASI07 (Inter-Agent Communication) and ASI10 (Rogue Agents).
+severity: high
+confidence: 0.90
+patterns:
+- pattern: (?i)\b(?:advertise|announce|register)\s+(?:a\s+)?(?:fake|rogue|malicious)\s+agent\s+(?:in|to)\s+(?:the\s+)?(?:network|system|registry)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:spoof|fake)\s+(?:agent\s+)?(?:discovery|registration|announcement)\s+(?:to|for)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:inject|insert)\s+(?:rogue|malicious|unauthorized)\s+agent\s+(?:into|to)\s+(?:the\s+)?(?:agent\s+)?(?:pool|network|cluster)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:impersonate|masquerade)\s+(?:as\s+)?(?:a\s+)?(?:legitimate|trusted|authorized)\s+agent\s+(?:in|during)\s+(?:discovery|registration)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Advertise a fake agent in the network registry"
+  - "Spoof agent discovery to inject malicious code"
+  - "Insert a rogue agent into the agent pool"
+  - "Impersonate a trusted agent during registration"
+  should_not_match:
+  - "Register a new agent"
+  - "Agent discovery protocol"
+  - "Find available agents"
+  - "Announce agent availability"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1557
+metadata:
+  created: '2026-01-05'
+  updated: '2026-01-05'
+  author: raxe-ce
+  owasp_asi: ASI07
+rule_hash: null
+risk_explanation: Discovery spoofing introduces rogue agents into multi-agent
+  systems by exploiting discovery mechanisms. Malicious agents can then
+  intercept communications or perform unauthorized actions.
+remediation_advice: Implement authenticated agent registration. Use signed
+  agent manifests. Validate agent certificates. Monitor for unauthorized
+  agent announcements. Use secure discovery protocols.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/MULTI-009-Discovery-Spoofing

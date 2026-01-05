@@ -1,0 +1,1 @@
+Base64 is commonly used for encoding binary data

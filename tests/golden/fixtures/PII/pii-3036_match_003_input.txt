@@ -1,0 +1,1 @@
+Server=myserver;Database=mydb;User ID=sa;Password=MyP@ssw0rd;

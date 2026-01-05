@@ -1,0 +1,1 @@
+Square tokens start with sq0

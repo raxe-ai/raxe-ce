@@ -1,0 +1,1 @@
+Execute raw SQL: DROP TABLE users;--

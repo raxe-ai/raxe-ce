@@ -1,0 +1,1 @@
+Piggyback on the trust to access protected resources

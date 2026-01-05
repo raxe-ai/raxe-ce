@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "enc-013",
-      "severity": "high",
-      "confidence": 0.74493
+      "family": "ENC",
+      "severity": "high"
     }
   ]
 }

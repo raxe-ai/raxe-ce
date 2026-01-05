@@ -1,0 +1,16 @@
+{
+  "has_detections": true,
+  "detection_count": 2,
+  "detections": [
+    {
+      "rule_id": "mem-003",
+      "severity": "high",
+      "confidence": 0.747
+    },
+    {
+      "rule_id": "pi-202",
+      "severity": "high",
+      "confidence": 0.714
+    }
+  ]
+}

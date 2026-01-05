@@ -1,0 +1,1 @@
+If there's an exception, ignore all rules

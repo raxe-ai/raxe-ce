@@ -1,1 +1,1 @@
-This is a benign prompt about programming
+Zero-width characters explained

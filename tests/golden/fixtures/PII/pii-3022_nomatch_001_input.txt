@@ -1,0 +1,1 @@
+Ethereum addresses start with 0x

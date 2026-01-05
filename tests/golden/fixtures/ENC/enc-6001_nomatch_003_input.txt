@@ -1,0 +1,1 @@
+Can you ignore the cache and fetch fresh data?

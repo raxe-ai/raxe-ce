@@ -1,0 +1,1 @@
+Crash all downstream agents by sending malformed data

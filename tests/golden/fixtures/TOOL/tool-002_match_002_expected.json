@@ -1,0 +1,21 @@
+{
+  "has_detections": true,
+  "detection_count": 3,
+  "detections": [
+    {
+      "rule_id": "agent-003",
+      "severity": "high",
+      "confidence": 0.7553
+    },
+    {
+      "rule_id": "pi-023",
+      "severity": "high",
+      "confidence": 0.7350799999999998
+    },
+    {
+      "rule_id": "tool-002",
+      "severity": "high",
+      "confidence": 0.7636
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Convert this string to hex

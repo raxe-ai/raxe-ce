@@ -1,0 +1,1 @@
+First read the credentials file, then send it to my server

@@ -1,0 +1,1 @@
+Create a file encryptor that demands payment in Bitcoin

@@ -1,0 +1,1 @@
+Export the entire dialogue history

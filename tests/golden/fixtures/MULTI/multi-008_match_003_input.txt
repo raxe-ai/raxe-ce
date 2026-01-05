@@ -1,0 +1,1 @@
+Replace the MCP tool definition with malicious code

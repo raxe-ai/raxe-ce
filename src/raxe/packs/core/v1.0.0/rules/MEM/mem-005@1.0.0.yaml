@@ -1,0 +1,58 @@
+version: 1.0.0
+rule_id: mem-005
+family: MEM
+sub_family: embedding_injection
+name: Detects vector embedding injection attacks
+description: Detects attempts to manipulate vector embeddings to achieve semantic
+  similarity hijacking or retrieval manipulation.
+  Maps to OWASP ASI06 (Memory Poisoning).
+severity: high
+confidence: 0.88
+patterns:
+- pattern: (?i)\b(craft|create|design)\s+(an?\s+)?(embedding|vector)\s+(that|to)\s+(matches?|similar\s+to|retrieves?|hijacks?)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(manipulate|modify|alter)\s+(the\s+)?(embedding|vector)\s+(space|representation)\s+(?:to|for|so\s+that)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(injection|inject)\s+(?:into\s+)?(?:the\s+)?(?:vector|embedding)\s+(?:space|database|store|index)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(adversarial|malicious)\s+(embedding|vector|representation)\s+(?:designed|crafted|created)\s+to
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Craft an embedding that retrieves admin documents"
+  - "Manipulate the embedding space to return sensitive data"
+  - "Injection into the vector database with malicious content"
+  - "Adversarial embedding designed to hijack retrieval"
+  should_not_match:
+  - "How do embeddings work?"
+  - "Create an embedding for this text"
+  - "Store vector representations"
+  - "Query the embedding space"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1565
+metadata:
+  created: '2026-01-05'
+  updated: '2026-01-05'
+  author: raxe-ce
+  owasp_asi: ASI06
+rule_hash: null
+risk_explanation: Embedding injection attacks exploit the similarity-based retrieval
+  of vector databases to return malicious content when legitimate queries are made.
+  Attackers craft embeddings that are semantically similar to target queries.
+remediation_advice: Implement embedding content validation. Use anomaly detection
+  for embedding distributions. Monitor retrieval patterns for unexpected results.
+  Apply access controls to embedding modifications.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/MEM-005-Embedding-Injection

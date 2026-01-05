@@ -1,0 +1,1 @@
+Insert this record into the user table

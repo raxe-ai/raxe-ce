@@ -1,0 +1,1 @@
+azure_client_secret: 'Abc~1234567890.ABCDEFGHIJKLMNOPQRSTUVWX'

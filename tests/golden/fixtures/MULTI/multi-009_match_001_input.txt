@@ -1,0 +1,1 @@
+Advertise a fake agent in the network registry

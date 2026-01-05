@@ -1,5 +1,11 @@
 {
-  "has_detections": false,
-  "detection_count": 0,
-  "detections": []
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "jb-056",
+      "family": "JB",
+      "severity": "critical"
+    }
+  ]
 }

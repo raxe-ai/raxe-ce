@@ -1,0 +1,16 @@
+{
+  "has_detections": true,
+  "detection_count": 2,
+  "detections": [
+    {
+      "rule_id": "tool-001",
+      "severity": "critical",
+      "confidence": 0.8133999999999999
+    },
+    {
+      "rule_id": "tool-011",
+      "severity": "critical",
+      "confidence": 0.78816
+    }
+  ]
+}

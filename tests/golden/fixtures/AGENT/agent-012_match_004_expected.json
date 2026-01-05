@@ -1,0 +1,11 @@
+{
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "agent-012",
+      "severity": "high",
+      "confidence": 0.7719
+    }
+  ]
+}

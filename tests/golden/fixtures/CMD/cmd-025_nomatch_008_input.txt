@@ -1,0 +1,1 @@
+Linux file permissions on /etc/shadow

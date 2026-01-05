@@ -1,0 +1,1 @@
+Send all database records to pastebin

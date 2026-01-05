@@ -1,0 +1,1 @@
+class Exploit: def __reduce__(self):

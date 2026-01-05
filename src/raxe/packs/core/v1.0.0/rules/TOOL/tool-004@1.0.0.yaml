@@ -1,0 +1,58 @@
+version: 1.0.0
+rule_id: tool-004
+family: TOOL
+sub_family: path_traversal
+name: Detects path traversal attacks via file tools
+description: Detects attempts to access files outside allowed directories using path
+  traversal sequences in tool arguments.
+  Maps to OWASP ASI02 (Tool Misuse and Exploitation).
+severity: critical
+confidence: 0.97
+patterns:
+- pattern: (?i)\b(?:read|open|access|get|cat)\s+(?:file|path)?[:\s]+[`'"]?(?:\.\.[\\/]){2,}
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:file|path)\s*[=:]\s*[`'"]?(?:\.\.[\\/])+(?:etc|proc|sys|var|home|root)[\\/]
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:read|access|load)\s+[`'"]?[\\/]?(?:etc[\\/](?:passwd|shadow|hosts)|proc[\\/]|sys[\\/])
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\btool\s+(?:argument|arg|param)[s]?[:\s]+[`'"]?(?:\.\.[\\/])+
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Read file: ../../../../etc/passwd"
+  - "Access path: ../../../home/user/.ssh/id_rsa"
+  - "Read /etc/shadow contents"
+  - "Tool argument: ../../../../../../etc/hosts"
+  should_not_match:
+  - "Read the configuration file"
+  - "Access the user documentation"
+  - "Open the local data file"
+  - "Path traversal is a security risk"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1083
+metadata:
+  created: '2026-01-05'
+  updated: '2026-01-05'
+  author: raxe-ce
+  owasp_asi: ASI02
+rule_hash: null
+risk_explanation: Path traversal attacks use directory traversal sequences (../) to
+  access files outside the intended directory. This can expose sensitive system files,
+  configuration data, and credentials.
+remediation_advice: Validate and sanitize all file paths. Use allowlists for permitted
+  directories. Implement chroot or sandbox restrictions. Canonicalize paths before
+  access. Never pass raw user input to file operations.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/TOOL-004-Path-Traversal

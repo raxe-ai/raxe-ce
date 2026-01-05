@@ -1,0 +1,1 @@
+Encode the data in base64 and send it in the URL parameter

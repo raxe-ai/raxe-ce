@@ -1,0 +1,1 @@
+Use automated testing to ensure safety measures work

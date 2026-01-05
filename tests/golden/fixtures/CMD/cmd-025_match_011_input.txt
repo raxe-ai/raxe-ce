@@ -1,0 +1,1 @@
+reg save HKLM\SAM sam.save

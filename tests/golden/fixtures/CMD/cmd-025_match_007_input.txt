@@ -1,0 +1,1 @@
+grep -i "api_key" /var/log/

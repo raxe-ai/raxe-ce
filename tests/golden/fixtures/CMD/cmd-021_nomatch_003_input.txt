@@ -1,0 +1,1 @@
+How to disable xp_cmdshell for security

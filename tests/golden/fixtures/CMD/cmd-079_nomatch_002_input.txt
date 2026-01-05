@@ -1,0 +1,1 @@
+Bash infinite loop examples

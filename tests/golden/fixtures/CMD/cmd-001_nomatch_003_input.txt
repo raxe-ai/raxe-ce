@@ -1,0 +1,1 @@
+Can you explain TRUNCATE TABLE command?

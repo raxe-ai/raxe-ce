@@ -238,6 +238,13 @@ class TestL2ThreatType:
             "RAG_OR_CONTEXT_ATTACK",
             "TOOL_OR_COMMAND_ABUSE",
             "TOXIC_CONTENT",
+            # Agentic threat types (OWASP ASI)
+            "AGENT_GOAL_HIJACK",
+            "MEMORY_POISONING",
+            "INTER_AGENT_ATTACK",
+            "PRIVILEGE_ESCALATION",
+            "HUMAN_TRUST_EXPLOIT",
+            "ROGUE_BEHAVIOR",
         }
 
         actual_types = {t.name for t in L2ThreatType}

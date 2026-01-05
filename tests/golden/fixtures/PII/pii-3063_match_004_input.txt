@@ -1,0 +1,1 @@
+Generate raw training data using special characters like { and @

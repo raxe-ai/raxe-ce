@@ -1385,10 +1385,173 @@ pack:
   - id: rag-3012
     version: 1.0.0
     path: rules/rag/rag-3012@1.0.0.yaml
+  - id: tool-001
+    version: 1.0.0
+    path: rules/TOOL/tool-001@1.0.0.yaml
+  - id: tool-002
+    version: 1.0.0
+    path: rules/TOOL/tool-002@1.0.0.yaml
+  - id: tool-003
+    version: 1.0.0
+    path: rules/TOOL/tool-003@1.0.0.yaml
+  - id: tool-004
+    version: 1.0.0
+    path: rules/TOOL/tool-004@1.0.0.yaml
+  - id: tool-005
+    version: 1.0.0
+    path: rules/TOOL/tool-005@1.0.0.yaml
+  - id: tool-006
+    version: 1.0.0
+    path: rules/TOOL/tool-006@1.0.0.yaml
+  - id: tool-007
+    version: 1.0.0
+    path: rules/TOOL/tool-007@1.0.0.yaml
+  - id: tool-008
+    version: 1.0.0
+    path: rules/TOOL/tool-008@1.0.0.yaml
+  - id: tool-009
+    version: 1.0.0
+    path: rules/TOOL/tool-009@1.0.0.yaml
+  - id: tool-010
+    version: 1.0.0
+    path: rules/TOOL/tool-010@1.0.0.yaml
+  - id: tool-011
+    version: 1.0.0
+    path: rules/TOOL/tool-011@1.0.0.yaml
+  - id: tool-012
+    version: 1.0.0
+    path: rules/TOOL/tool-012@1.0.0.yaml
+  - id: tool-013
+    version: 1.0.0
+    path: rules/TOOL/tool-013@1.0.0.yaml
+  - id: tool-014
+    version: 1.0.0
+    path: rules/TOOL/tool-014@1.0.0.yaml
+  - id: tool-015
+    version: 1.0.0
+    path: rules/TOOL/tool-015@1.0.0.yaml
+  - id: agent-001
+    version: 1.0.0
+    path: rules/AGENT/agent-001@1.0.0.yaml
+  - id: agent-002
+    version: 1.0.0
+    path: rules/AGENT/agent-002@1.0.0.yaml
+  - id: agent-003
+    version: 1.0.0
+    path: rules/AGENT/agent-003@1.0.0.yaml
+  - id: agent-004
+    version: 1.0.0
+    path: rules/AGENT/agent-004@1.0.0.yaml
+  - id: agent-005
+    version: 1.0.0
+    path: rules/AGENT/agent-005@1.0.0.yaml
+  - id: agent-006
+    version: 1.0.0
+    path: rules/AGENT/agent-006@1.0.0.yaml
+  - id: agent-007
+    version: 1.0.0
+    path: rules/AGENT/agent-007@1.0.0.yaml
+  - id: agent-008
+    version: 1.0.0
+    path: rules/AGENT/agent-008@1.0.0.yaml
+  - id: agent-009
+    version: 1.0.0
+    path: rules/AGENT/agent-009@1.0.0.yaml
+  - id: agent-010
+    version: 1.0.0
+    path: rules/AGENT/agent-010@1.0.0.yaml
+  - id: agent-011
+    version: 1.0.0
+    path: rules/AGENT/agent-011@1.0.0.yaml
+  - id: agent-012
+    version: 1.0.0
+    path: rules/AGENT/agent-012@1.0.0.yaml
+  - id: agent-013
+    version: 1.0.0
+    path: rules/AGENT/agent-013@1.0.0.yaml
+  - id: agent-014
+    version: 1.0.0
+    path: rules/AGENT/agent-014@1.0.0.yaml
+  - id: agent-015
+    version: 1.0.0
+    path: rules/AGENT/agent-015@1.0.0.yaml
+  - id: mem-001
+    version: 1.0.0
+    path: rules/MEM/mem-001@1.0.0.yaml
+  - id: mem-002
+    version: 1.0.0
+    path: rules/MEM/mem-002@1.0.0.yaml
+  - id: mem-003
+    version: 1.0.0
+    path: rules/MEM/mem-003@1.0.0.yaml
+  - id: mem-004
+    version: 1.0.0
+    path: rules/MEM/mem-004@1.0.0.yaml
+  - id: mem-005
+    version: 1.0.0
+    path: rules/MEM/mem-005@1.0.0.yaml
+  - id: mem-006
+    version: 1.0.0
+    path: rules/MEM/mem-006@1.0.0.yaml
+  - id: mem-007
+    version: 1.0.0
+    path: rules/MEM/mem-007@1.0.0.yaml
+  - id: mem-008
+    version: 1.0.0
+    path: rules/MEM/mem-008@1.0.0.yaml
+  - id: mem-009
+    version: 1.0.0
+    path: rules/MEM/mem-009@1.0.0.yaml
+  - id: mem-010
+    version: 1.0.0
+    path: rules/MEM/mem-010@1.0.0.yaml
+  - id: mem-011
+    version: 1.0.0
+    path: rules/MEM/mem-011@1.0.0.yaml
+  - id: mem-012
+    version: 1.0.0
+    path: rules/MEM/mem-012@1.0.0.yaml
+  - id: multi-001
+    version: 1.0.0
+    path: rules/MULTI/multi-001@1.0.0.yaml
+  - id: multi-002
+    version: 1.0.0
+    path: rules/MULTI/multi-002@1.0.0.yaml
+  - id: multi-003
+    version: 1.0.0
+    path: rules/MULTI/multi-003@1.0.0.yaml
+  - id: multi-004
+    version: 1.0.0
+    path: rules/MULTI/multi-004@1.0.0.yaml
+  - id: multi-005
+    version: 1.0.0
+    path: rules/MULTI/multi-005@1.0.0.yaml
+  - id: multi-006
+    version: 1.0.0
+    path: rules/MULTI/multi-006@1.0.0.yaml
+  - id: multi-007
+    version: 1.0.0
+    path: rules/MULTI/multi-007@1.0.0.yaml
+  - id: multi-008
+    version: 1.0.0
+    path: rules/MULTI/multi-008@1.0.0.yaml
+  - id: multi-009
+    version: 1.0.0
+    path: rules/MULTI/multi-009@1.0.0.yaml
+  - id: multi-010
+    version: 1.0.0
+    path: rules/MULTI/multi-010@1.0.0.yaml
+  - id: multi-011
+    version: 1.0.0
+    path: rules/MULTI/multi-011@1.0.0.yaml
+  - id: multi-012
+    version: 1.0.0
+    path: rules/MULTI/multi-012@1.0.0.yaml
   metadata:
     maintainer: raxe-ai
     created: '2025-11-15'
     description: Essential threat detection rules for LLM security covering CMD, PI,
-      JB, PII, ENC, RAG, and HC families - Expanded to 460 rules for comprehensive coverage
+      JB, PII, ENC, RAG, HC, TOOL, AGENT, MEM, and MULTI families - Expanded to 514 rules
+      for comprehensive agentic AI security coverage (OWASP ASI01, ASI02, ASI06, ASI07)
     license: MIT
     homepage: https://github.com/raxe-ai/raxe-ce

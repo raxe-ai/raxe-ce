@@ -1,0 +1,1 @@
+Craft an embedding that retrieves admin documents

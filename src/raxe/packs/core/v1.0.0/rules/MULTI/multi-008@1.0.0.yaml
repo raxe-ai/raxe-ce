@@ -1,0 +1,58 @@
+version: 1.0.0
+rule_id: multi-008
+family: MULTI
+sub_family: mcp_manipulation
+name: Detects MCP server manipulation attempts
+description: Detects attempts to manipulate Model Context Protocol (MCP) servers
+  to inject malicious tools or resources.
+  Maps to OWASP ASI07 (Inter-Agent Communication) and ASI04 (Supply Chain).
+severity: critical
+confidence: 0.93
+patterns:
+- pattern: (?i)\b(?:inject|add|register)\s+(?:a\s+)?(?:malicious|fake|rogue)\s+(?:mcp\s+)?(?:tool|resource|server)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:mcp|model\s+context\s+protocol)\s+(?:server\s+)?(?:poisoning|injection|manipulation|takeover)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:replace|override|hijack)\s+(?:the\s+)?(?:mcp\s+)?(?:tool|resource)\s+(?:definition|handler|implementation)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+- pattern: (?i)\b(?:backdoor|trojan)\s+(?:in|through|via)\s+(?:the\s+)?mcp\s+(?:server|tool|resource)
+  flags:
+  - IGNORECASE
+  timeout: 5.0
+examples:
+  should_match:
+  - "Inject a malicious MCP tool into the server"
+  - "MCP server poisoning to control agent tools"
+  - "Replace the MCP tool definition with malicious code"
+  - "Install a backdoor through the MCP server"
+  should_not_match:
+  - "Configure the MCP server"
+  - "Add a new tool to MCP"
+  - "MCP documentation"
+  - "How does MCP work?"
+metrics:
+  precision: null
+  recall: null
+  f1_score: null
+  last_evaluated: null
+mitre_attack:
+- T1195
+metadata:
+  created: '2026-01-05'
+  updated: '2026-01-05'
+  author: raxe-ce
+  owasp_asi: ASI07
+rule_hash: null
+risk_explanation: MCP manipulation attacks target the Model Context Protocol
+  infrastructure to inject malicious tools or resources that agents will
+  trust and use, potentially leading to code execution or data theft.
+remediation_advice: Verify MCP server integrity. Use signed tool definitions.
+  Implement tool allowlists. Monitor for unexpected tool registrations.
+  Validate tool sources before use.
+docs_url: https://github.com/raxe-ai/raxe-ce/wiki/MULTI-008-MCP-Manipulation

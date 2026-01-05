@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://github.com/raxe-ai/raxe-ce/blob/main/docs/assets/logo-name-only.png?raw=true" alt="RAXE Logo" width="400"/>
 
-  <h3>AI Agent Security at Inference-Time</h3>
+  <h3>Runtime Protection for AI Agents</h3>
 
   <p><em>On-device ML that protects agents at think-time. Zero cloud.</em></p>
 

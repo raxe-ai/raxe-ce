@@ -4,6 +4,7 @@ Provides auto-discovery, selection, and comparison of L2 models.
 Supports multiple model types (ONNX INT8, PyTorch, etc.) with
 zero code changes to add new models.
 """
+
 from __future__ import annotations
 
 import json
@@ -71,12 +72,7 @@ class ModelRegistry:
             logger.warning(f"Models directory not found: {self.models_dir}")
             return
 
-        discovery_stats = {
-            "manifest": 0,
-            "raxe_root": 0,
-            "metadata_json": 0,
-            "errors": 0
-        }
+        discovery_stats = {"manifest": 0, "raxe_root": 0, "metadata_json": 0, "errors": 0}
 
         # PRIORITY 1: Discover manifest-based models from subdirectories
         manifest_models = self._discover_manifest_models()
@@ -165,7 +161,11 @@ class ModelRegistry:
                     continue
 
         # Log discovery summary
-        total = discovery_stats["manifest"] + discovery_stats["raxe_root"] + discovery_stats["metadata_json"]
+        total = (
+            discovery_stats["manifest"]
+            + discovery_stats["raxe_root"]
+            + discovery_stats["metadata_json"]
+        )
         if total > 0:
             logger.info(
                 f"Model discovery complete: {total} models loaded "
@@ -177,11 +177,7 @@ class ModelRegistry:
         else:
             logger.warning(f"No models discovered in {self.models_dir}")
 
-    def _create_default_metadata(
-        self,
-        model_id: str,
-        file_path: Path
-    ) -> ModelMetadata:
+    def _create_default_metadata(self, model_id: str, file_path: Path) -> ModelMetadata:
         """Create default metadata for model without JSON file."""
         from raxe.domain.ml.model_metadata import (
             FileInfo,
@@ -252,11 +248,7 @@ class ModelRegistry:
 
         return models
 
-    def _load_manifest_model(
-        self,
-        folder: Path,
-        manifest_file: Path
-    ) -> ModelMetadata | None:
+    def _load_manifest_model(self, folder: Path, manifest_file: Path) -> ModelMetadata | None:
         """Load model from manifest file.
 
         Args:
@@ -283,8 +275,8 @@ class ModelRegistry:
             is_valid, errors = self._validate_tokenizer(manifest_data)
             if not is_valid:
                 logger.warning(
-                    f"Tokenizer validation warnings for {model_id}:\n" +
-                    "\n".join(f"  - {err}" for err in errors)
+                    f"Tokenizer validation warnings for {model_id}:\n"
+                    + "\n".join(f"  - {err}" for err in errors)
                 )
 
         # Convert manifest to metadata
@@ -379,7 +371,7 @@ class ModelRegistry:
                         "do_lower_case": tok.get("do_lower_case", False),
                         "padding_side": tok.get("padding_side", "right"),
                         "truncation_side": tok.get("truncation_side", "right"),
-                    }
+                    },
                 }
 
             return adapted
@@ -425,19 +417,13 @@ class ModelRegistry:
             # Validate full tokenizer config
             tokenizer_config = tokenizer_data.get("config", {})
             _is_valid, validation_errors = registry.validate_tokenizer(
-                tokenizer_name,
-                tokenizer_config,
-                embedding_model
+                tokenizer_name, tokenizer_config, embedding_model
             )
             errors.extend(validation_errors)
 
         return len(errors) == 0, errors
 
-    def _manifest_to_metadata(
-        self,
-        manifest: dict,
-        folder: Path
-    ) -> ModelMetadata:
+    def _manifest_to_metadata(self, manifest: dict, folder: Path) -> ModelMetadata:
         """Convert manifest data to ModelMetadata.
 
         Args:
@@ -466,7 +452,9 @@ class ModelRegistry:
 
         # Extract model section
         model_data = manifest.get("model", {})
-        is_onnx_only = manifest.get("is_onnx_only", False) or model_data.get("model_type") == "onnx_only"
+        is_onnx_only = (
+            manifest.get("is_onnx_only", False) or model_data.get("model_type") == "onnx_only"
+        )
 
         # Handle different model types
         if is_onnx_only:
@@ -490,7 +478,9 @@ class ModelRegistry:
 
         # Extract file info
         file_info = FileInfo(
-            filename=bundle_filename if bundle_filename else folder.name,  # Use folder name for ONNX-only
+            filename=bundle_filename
+            if bundle_filename
+            else folder.name,  # Use folder name for ONNX-only
             size_mb=size_mb,
             onnx_embeddings=model_data.get("onnx_embeddings"),
         )
@@ -566,9 +556,7 @@ class ModelRegistry:
         )
 
     def list_models(
-        self,
-        status: ModelStatus | None = None,
-        runtime: str | None = None
+        self, status: ModelStatus | None = None, runtime: str | None = None
     ) -> list[ModelMetadata]:
         """List all discovered models.
 
@@ -617,8 +605,7 @@ class ModelRegistry:
         return model_id in self._models
 
     def get_best_model(
-        self,
-        criteria: Literal["latency", "accuracy", "balanced", "memory"] = "balanced"
+        self, criteria: Literal["latency", "accuracy", "balanced", "memory"] = "balanced"
     ) -> ModelMetadata | None:
         """Get best model based on criteria.
 
@@ -658,14 +645,12 @@ class ModelRegistry:
         self,
         model_id: str | None = None,
         criteria: str | None = None,
-        voting_preset: str | None = None,
     ) -> L2Detector:
         """Create detector from model.
 
         Args:
             model_id: Specific model to use, or None to auto-select
             criteria: Auto-selection criteria if model_id not specified
-            voting_preset: Voting preset override (balanced, high_security, low_fp)
 
         Returns:
             L2Detector instance
@@ -702,7 +687,9 @@ class ModelRegistry:
         if model.file_info.onnx_embeddings:
             onnx_path = self.models_dir / model.file_info.onnx_embeddings
             if not onnx_path.exists():
-                logger.warning(f"ONNX embeddings not found: {onnx_path}, falling back to sentence-transformers")
+                logger.warning(
+                    f"ONNX embeddings not found: {onnx_path}, falling back to sentence-transformers"
+                )
                 onnx_path = None
 
         # Extract tokenizer config if present
@@ -724,7 +711,6 @@ class ModelRegistry:
             return create_gemma_detector(
                 model_dir=str(model_file),
                 confidence_threshold=l2_config.thresholds.threat_threshold,
-                voting_preset=voting_preset,
             )
         else:
             # File-based models not supported (only folder-based ONNX models)
@@ -733,10 +719,7 @@ class ModelRegistry:
                 f"Only folder-based Gemma ONNX models are supported."
             )
 
-    def compare_models(
-        self,
-        model_ids: list[str] | None = None
-    ) -> dict[str, ModelMetadata]:
+    def compare_models(self, model_ids: list[str] | None = None) -> dict[str, ModelMetadata]:
         """Compare multiple models.
 
         Args:

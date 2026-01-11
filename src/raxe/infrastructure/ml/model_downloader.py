@@ -1,53 +1,88 @@
 """Model downloader for fetching L2 models post-installation.
 
 Downloads Gemma-based ML models from GitHub Releases after pip install.
-Models are too large for PyPI (~329MB vs 100MB limit), so we download on-demand.
+Models are too large for PyPI (~330MB vs 100MB limit), so we download on-demand.
 
-The default model is the Gemma Compact 5-head classifier which provides:
-- Binary threat detection (is_threat)
-- Threat family classification (9 families)
-- Severity assessment (5 levels)
-- Primary technique identification (22 techniques)
-- Harm type prediction (10 types, multilabel)
+Architecture: Single source of truth for model configuration.
+- CURRENT_MODEL: The one model that RAXE uses (change only this to update)
+- MODEL_REGISTRY: Auto-generated from CURRENT_MODEL for backward compatibility
+
+Current model (v0.3.0 - RAXE 0.7.0+):
+- Gemma MLP 5-head classifier with BinaryFirstEngine
+- TPR: 90.4%, FPR: 7.4%
+- INT8 quantized for CPU inference (~330MB)
 """
+
 from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import shutil
 import tarfile
 import tempfile
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
-from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
 
 logger = logging.getLogger(__name__)
 
-# Model hosting configuration
-# Models are hosted on GitHub Releases for the raxe-ai/raxe-models repo
-# Override with RAXE_MODEL_URL env var for testing/mirrors
-import os
-MODEL_BASE_URL = os.environ.get(
-    "RAXE_MODEL_URL",
-    "https://github.com/raxe-ai/raxe-models/releases/download/v0.1.0"
+# =============================================================================
+# SINGLE SOURCE OF TRUTH: Change ONLY this section to update the model
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """Configuration for an ML model. Immutable for safety."""
+
+    id: str
+    name: str
+    description: str
+    size_mb: int
+    url: str
+    sha256: str
+    folder_name: str
+
+
+# THE CURRENT MODEL - This is the ONLY place to update when releasing a new model
+_MODEL_BASE_URL = os.environ.get(
+    "RAXE_MODEL_URL", "https://github.com/raxe-ai/raxe-models/releases/download/v0.3.0"
 )
 
-# Model registry - maps model names to download URLs and metadata
-# Gemma-based 5-head model for Community Edition
-MODEL_REGISTRY = {
-    "threat_classifier_gemma_compact": {
-        "name": "Threat Classifier Gemma Compact",
-        "description": "Gemma-based 5-head classifier (~329MB). INT8 quantized for CPU inference.",
-        "size_mb": 329,
-        "url": f"{MODEL_BASE_URL}/threat_classifier_gemma_compact_deploy.tar.gz",
-        "sha256": None,  # Will be set when models are published
-        "folder_name": "threat_classifier_gemma_compact_deploy",
+CURRENT_MODEL = ModelConfig(
+    id="threat_classifier_gemma_mlp_v3",
+    name="Threat Classifier Gemma MLP v3",
+    description="Gemma MLP 5-head classifier with BinaryFirstEngine. TPR 90.4%, FPR 7.4%.",
+    size_mb=330,
+    url=f"{_MODEL_BASE_URL}/threat_classifier_gemma_mlp_v3_deploy.tar.gz",
+    sha256="4e60e8e5774c82939b2181488d81414511f02410928dee6b0713f03b95bf621e",
+    folder_name="threat_classifier_gemma_mlp_v3_deploy",
+)
+
+# =============================================================================
+# Backward compatibility exports (AUTO-GENERATED from CURRENT_MODEL)
+# =============================================================================
+
+# Type alias for model metadata dict
+ModelMetadata = dict[str, str | int | None]
+
+# DEFAULT_MODEL is derived from CURRENT_MODEL - never edit directly
+DEFAULT_MODEL: str = CURRENT_MODEL.id
+
+# MODEL_REGISTRY is auto-generated for backward compatibility
+MODEL_REGISTRY: dict[str, ModelMetadata] = {
+    CURRENT_MODEL.id: {
+        "name": CURRENT_MODEL.name,
+        "description": CURRENT_MODEL.description,
+        "size_mb": CURRENT_MODEL.size_mb,
+        "url": CURRENT_MODEL.url,
+        "sha256": CURRENT_MODEL.sha256,
+        "folder_name": CURRENT_MODEL.folder_name,
     },
 }
-
-# Default model for automatic download
-DEFAULT_MODEL = "threat_classifier_gemma_compact"
 
 
 def get_models_directory() -> Path:
@@ -120,7 +155,7 @@ def is_model_installed(model_name: str) -> bool:
     if model_name not in MODEL_REGISTRY:
         return False
 
-    folder_name = MODEL_REGISTRY[model_name]["folder_name"]
+    folder_name = str(MODEL_REGISTRY[model_name]["folder_name"])
 
     # Check user models directory (primary location for downloads)
     user_models = get_models_directory()
@@ -177,7 +212,7 @@ def get_installed_models() -> list[str]:
     return installed
 
 
-def get_available_models() -> list[dict]:
+def get_available_models() -> list[dict[str, str | int | bool | None]]:
     """Get list of all available models with metadata.
 
     Returns:
@@ -221,7 +256,7 @@ def download_model(
         raise ValueError(f"Unknown model: {model_name}. Available: {available}")
 
     metadata = MODEL_REGISTRY[model_name]
-    folder_name = metadata["folder_name"]
+    folder_name = str(metadata["folder_name"])
     target_dir = get_models_directory() / folder_name
 
     # Check if already installed
@@ -234,8 +269,9 @@ def download_model(
         logger.info(f"Removing existing model at {target_dir}")
         shutil.rmtree(target_dir)
 
-    url = metadata["url"]
+    url = str(metadata["url"])
     expected_sha256 = metadata.get("sha256")
+    expected_sha256_str = str(expected_sha256) if expected_sha256 else None
 
     logger.info(f"Downloading {model_name} from {url}")
 
@@ -248,12 +284,12 @@ def download_model(
             _download_file(url, tmp_path, progress_callback)
 
             # Verify checksum if provided
-            if expected_sha256:
+            if expected_sha256_str:
                 actual_sha256 = _calculate_sha256(tmp_path)
-                if actual_sha256 != expected_sha256:
+                if actual_sha256 != expected_sha256_str:
                     raise RuntimeError(
                         f"Checksum mismatch for {model_name}. "
-                        f"Expected: {expected_sha256}, Got: {actual_sha256}"
+                        f"Expected: {expected_sha256_str}, Got: {actual_sha256}"
                     )
 
             # Extract archive
@@ -404,11 +440,23 @@ def _get_safe_members(tar: tarfile.TarFile, dest_dir: Path) -> list[tarfile.TarI
     return safe_members
 
 
+def get_current_model_config() -> ModelConfig:
+    """Get the current model configuration.
+
+    This is the recommended way to access model metadata.
+    Returns the immutable ModelConfig for the current model.
+
+    Returns:
+        ModelConfig with all model metadata
+    """
+    return CURRENT_MODEL
+
+
 def download_default_model(
     progress_callback: Callable[[int, int], None] | None = None,
     force: bool = False,
 ) -> Path:
-    """Download the default model (Gemma Compact for best accuracy/performance ratio).
+    """Download the current model (Gemma MLP v3 with BinaryFirstEngine).
 
     Args:
         progress_callback: Optional callback(downloaded_bytes, total_bytes)
@@ -439,7 +487,7 @@ def ensure_model_available(
 
     if is_model_installed(model_name):
         # Return the path where it's installed
-        folder_name = MODEL_REGISTRY[model_name]["folder_name"]
+        folder_name = str(MODEL_REGISTRY[model_name]["folder_name"])
 
         # Check user directory first
         user_path = get_models_directory() / folder_name

@@ -19,11 +19,10 @@ Quick Start:
 See docs/VOTING_ENGINE.md for detailed documentation.
 """
 
-# Core engine
-from raxe.domain.ml.voting.engine import (
-    HeadOutputs,
-    VotingEngine,
-    create_voting_engine,
+# Core engines
+from raxe.domain.ml.voting.binary_first_engine import (
+    BinaryFirstConfig,
+    BinaryFirstEngine,
 )
 
 # Configuration
@@ -39,14 +38,10 @@ from raxe.domain.ml.voting.config import (
     VotingPreset,
     get_voting_config,
 )
-
-# Models
-from raxe.domain.ml.voting.models import (
-    Decision,
-    HeadOutput,
-    HeadVoteDetail,
-    Vote,
-    VotingResult,
+from raxe.domain.ml.voting.engine import (
+    HeadOutputs,
+    VotingEngine,
+    create_voting_engine,
 )
 
 # Head voters (for testing and extension)
@@ -58,11 +53,22 @@ from raxe.domain.ml.voting.head_voters import (
     vote_technique,
 )
 
+# Models
+from raxe.domain.ml.voting.models import (
+    Decision,
+    HeadOutput,
+    HeadVoteDetail,
+    Vote,
+    VotingResult,
+)
+
 __all__ = [
-    # Engine
+    # Engines
     "VotingEngine",
     "create_voting_engine",
     "HeadOutputs",
+    "BinaryFirstEngine",
+    "BinaryFirstConfig",
     # Configuration
     "VotingConfig",
     "VotingPreset",

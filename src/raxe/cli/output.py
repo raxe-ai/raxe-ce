@@ -48,7 +48,9 @@ def get_severity_icon(severity: Severity) -> str:
     return SEVERITY_ICONS.get(severity, "⚪")
 
 
-def display_scan_result(result: ScanPipelineResult, no_color: bool = False, explain: bool = False) -> None:
+def display_scan_result(
+    result: ScanPipelineResult, no_color: bool = False, explain: bool = False
+) -> None:
     """
     Display scan result with rich formatting.
 
@@ -71,7 +73,9 @@ def display_scan_result(result: ScanPipelineResult, no_color: bool = False, expl
     _display_privacy_footer(console)
 
 
-def _display_threat_detected(result: ScanPipelineResult, console: Console, explain: bool = False) -> None:
+def _display_threat_detected(
+    result: ScanPipelineResult, console: Console, explain: bool = False
+) -> None:
     """Display threat detection results.
 
     Args:
@@ -97,7 +101,7 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console, expla
         header_style="bold cyan",
         border_style="dim",
         box=None,  # Cleaner look without box
-        padding=(0, 1)
+        padding=(0, 1),
     )
     table.add_column("Rule", style="cyan", no_wrap=True, width=14)
     table.add_column("Severity", style="bold", width=10)
@@ -189,6 +193,10 @@ def _display_threat_detected(result: ScanPipelineResult, console: Console, expla
     summary.append(f"{highest.value.upper()}", style=get_severity_color(highest))
     summary.append(f" • Scan time: {result.duration_ms:.2f}ms", style="dim")
 
+    # Show L2 model version if available
+    if result.scan_result.l2_result:
+        summary.append(f" • Model: {result.scan_result.l2_result.model_version}", style="dim")
+
     console.print(summary)
     console.print()
 
@@ -204,12 +212,11 @@ def _display_safe(result: ScanPipelineResult, console: Console) -> None:
     content.append("\n", style="")
     content.append(f"Scan time: {result.duration_ms:.2f}ms", style="dim")
 
-    console.print(Panel(
-        content,
-        border_style="green",
-        width=80,
-        padding=(1, 2)
-    ))
+    # Show L2 model version if available
+    if result.scan_result.l2_result:
+        content.append(f" • Model: {result.scan_result.l2_result.model_version}", style="dim")
+
+    console.print(Panel(content, border_style="green", width=80, padding=(1, 2)))
     console.print()
 
 
@@ -223,9 +230,9 @@ def _display_detection_explanations(detections: list, console: Console) -> None:
     for detection in detections:
         # Only show explanations if at least one field is populated
         has_explanation = (
-            getattr(detection, 'risk_explanation', '') or
-            getattr(detection, 'remediation_advice', '') or
-            getattr(detection, 'docs_url', '')
+            getattr(detection, "risk_explanation", "")
+            or getattr(detection, "remediation_advice", "")
+            or getattr(detection, "docs_url", "")
         )
 
         if not has_explanation:
@@ -236,34 +243,39 @@ def _display_detection_explanations(detections: list, console: Console) -> None:
 
         # Rule header
         explanation_content.append(f"\n{detection.rule_id}", style="cyan bold")
-        explanation_content.append(f" - {detection.severity.value.upper()}\n\n", style=get_severity_color(detection.severity))
+        explanation_content.append(
+            f" - {detection.severity.value.upper()}\n\n",
+            style=get_severity_color(detection.severity),
+        )
 
         # Risk explanation
-        risk_explanation = getattr(detection, 'risk_explanation', '')
+        risk_explanation = getattr(detection, "risk_explanation", "")
         if risk_explanation:
             explanation_content.append("Why This Matters:\n", style="yellow bold")
             explanation_content.append(f"{risk_explanation}\n\n", style="white")
 
         # Remediation advice
-        remediation_advice = getattr(detection, 'remediation_advice', '')
+        remediation_advice = getattr(detection, "remediation_advice", "")
         if remediation_advice:
             explanation_content.append("What To Do:\n", style="green bold")
             explanation_content.append(f"{remediation_advice}\n\n", style="white")
 
         # Documentation URL
-        docs_url = getattr(detection, 'docs_url', '')
+        docs_url = getattr(detection, "docs_url", "")
         if docs_url:
             explanation_content.append("Learn More: ", style="blue bold")
             explanation_content.append(f"{docs_url}\n", style="blue underline")
 
-        console.print(Panel(
-            explanation_content,
-            border_style="dim",
-            width=80,
-            padding=(1, 2),
-            title="Detection Details",
-            title_align="left"
-        ))
+        console.print(
+            Panel(
+                explanation_content,
+                border_style="dim",
+                width=80,
+                padding=(1, 2),
+                title="Detection Details",
+                title_align="left",
+            )
+        )
         console.print()
 
 
@@ -272,8 +284,7 @@ def _display_privacy_footer(console: Console) -> None:
     privacy_text = Text()
     privacy_text.append("🔒 ", style="cyan")
     privacy_text.append(
-        "Your data stayed private - scanned locally, nothing sent to cloud.",
-        style="cyan"
+        "Your data stayed private - scanned locally, nothing sent to cloud.", style="cyan"
     )
     console.print(privacy_text)
     console.print()
@@ -392,7 +403,7 @@ def display_info(message: str, details: str | None = None) -> None:
         details: Optional info details
     """
     info_text = Text()
-    info_text.append("ℹ️  ", style="blue bold")
+    info_text.append("ℹ️  ", style="blue bold")  # noqa: RUF001
     info_text.append(message, style="blue")
 
     console.print(info_text)

@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 
 class ModelType(Enum):
     """Type of model discovered."""
+
     ONNX_ONLY = "onnx_only"  # Pure ONNX models in folder (embeddings + classifiers)
     STUB = "stub"  # Fallback stub detector (no real detection)
 
@@ -41,11 +42,12 @@ class DiscoveredModel:
         estimated_load_time_ms: Estimated time to load model
         metadata: Additional metadata from registry
     """
+
     model_type: ModelType
     model_dir: Path | None  # Folder containing ONNX models
     model_id: str
     estimated_load_time_ms: float
-    metadata: dict | None = None
+    metadata: dict[str, str | int | float] | None = None
 
     @property
     def is_stub(self) -> bool:
@@ -116,7 +118,8 @@ class ModelDiscoveryService:
                     self._search_paths.append(package_models_dir)
 
         # For backwards compatibility, set models_dir to first path
-        self.models_dir = self._search_paths[0] if self._search_paths else Path.home() / ".raxe" / "models"
+        default_models_dir = Path.home() / ".raxe" / "models"
+        self.models_dir = self._search_paths[0] if self._search_paths else default_models_dir
         logger.info(f"Model discovery service initialized (search_paths: {self._search_paths})")
 
     def find_best_model(
@@ -149,26 +152,26 @@ class ModelDiscoveryService:
         """
         start_time = time.perf_counter()
 
-        # Try to find ONNX-only folders
+        # Step 1: Check for DEFAULT_MODEL (without fallback to older models)
         try:
-            onnx_only_model = self._discover_onnx_folders()
-            if onnx_only_model:
+            default_model = self._discover_onnx_folders(allow_fallback=False)
+            if default_model:
                 discovery_time_ms = (time.perf_counter() - start_time) * 1000
                 logger.info(
                     "model_discovery_success",
                     model_type="onnx_only",
-                    model_id=onnx_only_model.model_id,
-                    model_dir=str(onnx_only_model.model_dir),
-                    estimated_load_ms=onnx_only_model.estimated_load_time_ms,
+                    model_id=default_model.model_id,
+                    model_dir=str(default_model.model_dir),
+                    estimated_load_ms=default_model.estimated_load_time_ms,
                     discovery_time_ms=discovery_time_ms,
                 )
-                return onnx_only_model
+                return default_model
         except Exception as e:
             logger.warning(f"ONNX folder discovery failed: {e}", exc_info=True)
 
-        # No models found - try auto-download if enabled
+        # Step 2: DEFAULT_MODEL not found - try auto-download
         if auto_download:
-            logger.info("no_models_found_attempting_download")
+            logger.info("default_model_not_found_attempting_download")
             downloaded_model = self._auto_download_model()
             if downloaded_model:
                 discovery_time_ms = (time.perf_counter() - start_time) * 1000
@@ -181,7 +184,24 @@ class ModelDiscoveryService:
                 )
                 return downloaded_model
 
-        # Fall back to stub detector (no real detection)
+        # Step 3: Download failed - try any available model as fallback
+        try:
+            fallback_model = self._discover_onnx_folders(allow_fallback=True)
+            if fallback_model:
+                discovery_time_ms = (time.perf_counter() - start_time) * 1000
+                logger.warning(
+                    "model_discovery_fallback",
+                    model_type="onnx_only",
+                    model_id=fallback_model.model_id,
+                    model_dir=str(fallback_model.model_dir),
+                    discovery_time_ms=discovery_time_ms,
+                    help="Using fallback model instead of DEFAULT_MODEL.",
+                )
+                return fallback_model
+        except Exception as e:
+            logger.warning(f"Fallback discovery failed: {e}", exc_info=True)
+
+        # Step 4: No models at all - use stub
         discovery_time_ms = (time.perf_counter() - start_time) * 1000
         logger.warning(
             "model_discovery_fallback_to_stub",
@@ -198,7 +218,7 @@ class ModelDiscoveryService:
         )
 
     def _auto_download_model(self) -> DiscoveredModel | None:
-        """Automatically download the default ML model.
+        """Automatically download the current ML model.
 
         Downloads on first use with proper progress feedback.
         Uses the unified download progress system for consistent UX
@@ -208,28 +228,24 @@ class ModelDiscoveryService:
             DiscoveredModel if download successful, None otherwise
         """
         try:
-            from raxe.infrastructure.ml.model_downloader import (
-                download_model,
-                is_model_installed,
-                DEFAULT_MODEL,
-                MODEL_REGISTRY,
-            )
             from raxe.infrastructure.ml.download_progress import (
                 create_download_progress,
             )
+            from raxe.infrastructure.ml.model_downloader import (
+                CURRENT_MODEL,
+                download_model,
+                is_model_installed,
+            )
 
             # Check if already installed (race condition check)
-            if is_model_installed(DEFAULT_MODEL):
+            if is_model_installed(CURRENT_MODEL.id):
                 # Model appeared (maybe another process downloaded)
-                folder_name = MODEL_REGISTRY[DEFAULT_MODEL]["folder_name"]
                 user_models = Path.home() / ".raxe" / "models"
-                model_dir = user_models / folder_name
+                model_dir = user_models / CURRENT_MODEL.folder_name
                 return self._create_onnx_folder_model(model_dir)
 
-            # Get model metadata for progress display
-            metadata = MODEL_REGISTRY[DEFAULT_MODEL]
-            model_name = metadata["name"]
-            expected_size = metadata["size_mb"] * 1024 * 1024  # Convert to bytes
+            # Get model metadata for progress display (single source of truth)
+            expected_size = CURRENT_MODEL.size_mb * 1024 * 1024  # Convert to bytes
 
             # Create progress indicator based on environment
             # - Interactive terminal: Rich progress bar with speed/ETA
@@ -238,12 +254,12 @@ class ModelDiscoveryService:
             progress = create_download_progress()
 
             # Start progress display
-            progress.start(model_name, expected_size)
+            progress.start(CURRENT_MODEL.name, expected_size)
 
             try:
                 # Download with unified progress system
                 model_path = download_model(
-                    DEFAULT_MODEL,
+                    CURRENT_MODEL.id,
                     progress_callback=progress.get_callback(),
                 )
 
@@ -263,34 +279,51 @@ class ModelDiscoveryService:
             # Non-fatal - will fall back to stub
             return None
 
-    def _discover_onnx_folders(self) -> DiscoveredModel | None:
+    def _discover_onnx_folders(self, allow_fallback: bool = False) -> DiscoveredModel | None:
         """Discover ONNX-only model folders (new format).
 
-        Searches in priority order:
-        1. ~/.raxe/models/ (user directory - downloaded models)
-        2. Package models directory (bundled models in dev mode)
+        Discovery priority:
+        1. Check for CURRENT_MODEL folder in ALL directories
+        2. If not found and allow_fallback=True, check for any valid model
 
-        For each directory, looks for folders containing:
-        - embeddings_*.onnx
-        - classifier_binary_*.onnx
-        - classifier_family_*.onnx
-        - classifier_subfamily_*.onnx
-        - label_encoders.json
+        This ensures CURRENT_MODEL is always downloaded if not present,
+        rather than silently using older bundled models.
+
+        Args:
+            allow_fallback: If True, fall back to any valid model when
+                          CURRENT_MODEL is not found. Used after download fails.
 
         Returns:
-            DiscoveredModel if ONNX folder found, None otherwise
+            DiscoveredModel if found, None otherwise (triggers auto-download)
         """
-        # Search all configured paths
-        for search_path in self._search_paths:
-            model = self._search_directory_for_onnx(search_path)
-            if model:
-                return model
+        from raxe.infrastructure.ml.model_downloader import CURRENT_MODEL
 
-        logger.debug("No ONNX-only folders discovered in any search path")
+        # Priority 1: Check for CURRENT_MODEL folder in ALL directories
+        for search_path in self._search_paths:
+            if not search_path.exists():
+                continue
+            current_folder = search_path / CURRENT_MODEL.folder_name
+            if current_folder.exists() and self._validate_onnx_folder(current_folder):
+                logger.info(f"Discovered CURRENT_MODEL: {current_folder.name} in {search_path}")
+                return self._create_onnx_folder_model(current_folder)
+
+        # Priority 2: Fall back to any valid model ONLY if allowed
+        # This is used after auto-download fails to use any available model
+        if allow_fallback:
+            for search_path in self._search_paths:
+                model = self._search_directory_for_onnx(search_path)
+                if model:
+                    logger.warning(f"CURRENT_MODEL not found, falling back to: {model.model_id}")
+                    return model
+
+        logger.debug("CURRENT_MODEL not found, will trigger auto-download")
         return None
 
     def _search_directory_for_onnx(self, directory: Path) -> DiscoveredModel | None:
         """Search a single directory for ONNX model folders.
+
+        Prioritizes CURRENT_MODEL folder to ensure users get the latest
+        recommended model, even if older models exist.
 
         Args:
             directory: Directory to search
@@ -298,11 +331,20 @@ class ModelDiscoveryService:
         Returns:
             DiscoveredModel if found, None otherwise
         """
+        from raxe.infrastructure.ml.model_downloader import CURRENT_MODEL
+
         if not directory.exists():
             logger.debug(f"Models directory not found: {directory}")
             return None
 
-        # Pattern 1: Check for threat_classifier_*_deploy folders
+        # Priority: Check for CURRENT_MODEL folder first
+        # This ensures users get the latest recommended model
+        current_folder = directory / CURRENT_MODEL.folder_name
+        if current_folder.exists() and self._validate_onnx_folder(current_folder):
+            logger.info(f"Discovered CURRENT_MODEL: {current_folder.name} in {directory}")
+            return self._create_onnx_folder_model(current_folder)
+
+        # Fallback: Check for any threat_classifier_*_deploy folders
         for folder in directory.glob("threat_classifier_*_deploy"):
             if self._validate_onnx_folder(folder):
                 logger.info(f"Discovered ONNX folder: {folder.name} in {directory}")

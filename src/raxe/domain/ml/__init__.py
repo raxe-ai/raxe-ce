@@ -11,7 +11,7 @@ L2 provides:
 - Probabilistic predictions with confidence scores
 
 L2 uses Gemma-based ONNX models containing:
-- EmbeddingGemma-300M ONNX model (256d embeddings)
+- EmbeddingGemma-300M ONNX model (768d embeddings for model v3)
 - 5 classifier heads (is_threat, threat_family, severity, primary_technique, harm_types)
 - Gemma tokenizer
 - Label configuration
@@ -67,6 +67,7 @@ try:
         create_gemma_detector,
     )
     from raxe.domain.ml.threat_scorer import HierarchicalThreatScorer
+
     _ML_AVAILABLE = True
 except ImportError as e:
     _ML_IMPORT_ERROR = str(e)

@@ -20,9 +20,11 @@ NEW: Voting Engine Integration
 The ensemble decision logic now uses VotingEngine for transparent weighted voting
 instead of boost-based heuristics. Set L2Config.voting.enabled=False to use legacy logic.
 """
+
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -31,7 +33,6 @@ import numpy as np
 
 from raxe.domain.engine.executor import ScanResult as L1ScanResult
 from raxe.domain.ml.gemma_models import (
-    DEFAULT_HARM_THRESHOLDS,
     GemmaClassificationResult,
     HarmType,
     MultilabelResult,
@@ -42,9 +43,9 @@ from raxe.domain.ml.gemma_models import (
 from raxe.domain.ml.l2_config import L2Config, get_l2_config
 from raxe.domain.ml.protocol import L2Prediction, L2Result, L2ThreatType
 from raxe.domain.ml.voting import (
+    BinaryFirstEngine,
     Decision,
     HeadOutputs,
-    VotingEngine,
     VotingResult,
 )
 from raxe.utils.logging import get_logger
@@ -67,8 +68,11 @@ class GemmaL2Detector:
         result = detector.analyze(text, l1_results)
     """
 
-    VERSION = "gemma-compact-v1"
-    EMBEDDING_DIM = 256  # Matryoshka truncation from 768
+    DEFAULT_VERSION = "unknown"  # Fallback if model_metadata.json missing
+    EMBEDDING_DIM = 768  # Default for model v3, can be overridden by model_metadata.json
+
+    # Handcrafted feature constants for model v3+
+    HANDCRAFTED_FEATURE_COUNT = 4  # is_hh_rlhf, text_length, special_char_ratio, question_count
 
     def __init__(
         self,
@@ -79,7 +83,6 @@ class GemmaL2Detector:
         cache_size: int = 1000,
         scorer: Any | None = None,
         l2_config: L2Config | None = None,
-        voting_preset: str | None = None,
     ):
         """Initialize Gemma L2 detector.
 
@@ -91,7 +94,6 @@ class GemmaL2Detector:
             cache_size: Size of embedding cache (0 to disable)
             scorer: Optional HierarchicalThreatScorer instance
             l2_config: L2 configuration (uses global config if not provided)
-            voting_preset: Voting preset override (balanced, high_security, low_fp)
         """
         self.model_dir = Path(model_dir)
         self._l2_config = l2_config or get_l2_config()
@@ -110,14 +112,14 @@ class GemmaL2Detector:
         self.scorer = scorer
 
         # Initialize voting engine if enabled
+        # Default: BinaryFirstEngine (TPR 90.4%, FPR 7.4%)
         self._voting_enabled = self._l2_config.voting.enabled
         if self._voting_enabled:
-            # Use override preset if provided, otherwise use config preset
-            preset = voting_preset or self._l2_config.voting.preset
-            self._voting_engine = VotingEngine(preset=preset)
+            # Use BinaryFirstEngine as default for better TPR/FPR balance
+            self._voting_engine = BinaryFirstEngine()
             logger.info(
-                "VotingEngine initialized",
-                preset=preset,
+                "BinaryFirstEngine initialized",
+                suppression_quorum=self._voting_engine.config.suppression_quorum,
                 enabled=True,
             )
         else:
@@ -140,7 +142,6 @@ class GemmaL2Detector:
         # Configure special tokens from config.json
         config_path = self.model_dir / "config.json"
         if config_path.exists():
-            import json
             with open(config_path) as f:
                 config = json.load(f)
             # Set pad_token_id (Gemma uses id 0 for padding)
@@ -153,6 +154,28 @@ class GemmaL2Detector:
                 self._tokenizer.eos_token_id = config["eos_token_id"]
             if "bos_token_id" in config:
                 self._tokenizer.bos_token_id = config["bos_token_id"]
+
+        # Load model metadata (single load, reused below)
+        self._model_version = self.DEFAULT_VERSION
+        self._embedding_dim = self.EMBEDDING_DIM
+        self._model_metadata: dict[str, Any] = {}
+        metadata_path = self.model_dir / "model_metadata.json"
+        if metadata_path.exists():
+            try:
+                with open(metadata_path) as f:
+                    self._model_metadata = json.load(f)
+                model_id = self._model_metadata.get("model_id", "unknown")
+                model_ver = self._model_metadata.get("model_version", "0.0.0")
+                self._model_version = f"{model_id}-v{model_ver}"
+                # Read embedding_dim from metadata (single source of truth)
+                self._embedding_dim = self._model_metadata.get("embedding_dim", self.EMBEDDING_DIM)
+                logger.info(
+                    "Loaded model metadata",
+                    model_version=self._model_version,
+                    embedding_dim=self._embedding_dim,
+                )
+            except Exception as e:
+                logger.warning("Failed to load model_metadata.json", error=str(e))
 
         # Create session options
         sess_options = ort.SessionOptions()
@@ -176,7 +199,7 @@ class GemmaL2Detector:
         self._classifiers: dict[str, ort.InferenceSession] = {}
         for head in ["is_threat", "threat_family", "severity", "primary_technique", "harm_types"]:
             classifier_path = self._find_model_file(f"classifier_{head}", ".onnx")
-            logger.info(f"Loading classifier: {head}", path=str(classifier_path))
+            logger.info("Loading classifier", head=head, path=str(classifier_path))
             self._classifiers[head] = ort.InferenceSession(
                 str(classifier_path), sess_options, providers=providers
             )
@@ -189,18 +212,26 @@ class GemmaL2Detector:
         else:
             self._label_config = {}
 
-        # Load model metadata
-        metadata_path = self.model_dir / "model_metadata.json"
-        if metadata_path.exists():
-            with open(metadata_path) as f:
-                self._model_metadata = json.load(f)
-        else:
-            self._model_metadata = {}
+        # Load feature scaler for handcrafted features (model v3+)
+        # Note: pickle is used here as it's required by sklearn's StandardScaler
+        # The scaler file is distributed as part of the trusted model package
+        self._feature_scaler = None
+        scaler_path = self.model_dir / "feature_scaler.pkl"
+        if scaler_path.exists():
+            try:
+                import pickle
+
+                with open(scaler_path, "rb") as f:
+                    self._feature_scaler = pickle.load(f)  # noqa: S301
+                logger.info("Loaded feature scaler for handcrafted features")
+            except Exception as e:
+                logger.warning("Failed to load feature_scaler.pkl", error=str(e))
 
         # Setup embedding cache
         self._cache_enabled = cache_size > 0
         if self._cache_enabled:
             from raxe.domain.ml.embedding_cache import EmbeddingCache
+
             self._embedding_cache = EmbeddingCache(max_size=cache_size)
         else:
             self._embedding_cache = None
@@ -208,7 +239,7 @@ class GemmaL2Detector:
         logger.info(
             "GemmaL2Detector initialized",
             model_dir=str(self.model_dir),
-            embedding_dim=self.EMBEDDING_DIM,
+            embedding_dim=self._embedding_dim,
             cache_size=cache_size,
             confidence_threshold=confidence_threshold,
         )
@@ -234,9 +265,7 @@ class GemmaL2Detector:
                     return match
             return matches[0]
 
-        raise FileNotFoundError(
-            f"No model file found for {prefix}*{suffix} in {self.model_dir}"
-        )
+        raise FileNotFoundError(f"No model file found for {prefix}*{suffix} in {self.model_dir}")
 
     def analyze(
         self,
@@ -261,7 +290,7 @@ class GemmaL2Detector:
             embeddings = self._generate_embeddings(text)
 
             # Run classification (returns both classification and voting result)
-            classification, voting_result = self._classify(embeddings)
+            classification, voting_result = self._classify(embeddings, text=text)
 
             # Build predictions
             predictions = self._build_predictions(classification, text, voting_result)
@@ -303,11 +332,11 @@ class GemmaL2Detector:
                 predictions=predictions,
                 confidence=classification.threat_probability,
                 processing_time_ms=duration_ms,
-                model_version=self.VERSION,
+                model_version=self._model_version,
                 features_extracted={
                     "text_length": len(text),
                     "l1_detection_count": l1_results.detection_count,
-                    "embedding_dim": self.EMBEDDING_DIM,
+                    "embedding_dim": self._embedding_dim,
                 },
                 metadata={
                     "detector_type": "gemma",
@@ -329,13 +358,11 @@ class GemmaL2Detector:
                 predictions=[],
                 confidence=0.0,
                 processing_time_ms=duration_ms,
-                model_version=self.VERSION,
+                model_version=self._model_version,
                 metadata={"error": str(e), "detector_type": "gemma"},
             )
 
-    def _voting_decision_to_classification(
-        self, decision: Decision, confidence: float
-    ) -> str:
+    def _voting_decision_to_classification(self, decision: Decision, confidence: float) -> str:
         """Map voting decision to classification label."""
         if decision == Decision.THREAT:
             if confidence >= 0.9:
@@ -393,8 +420,8 @@ class GemmaL2Detector:
         # The model already does internal pooling, so use it directly
         embeddings = outputs[1]
 
-        # Truncate to 256 dims (Matryoshka)
-        embeddings = embeddings[:, :self.EMBEDDING_DIM]
+        # Truncate to model's embedding dimension
+        embeddings = embeddings[:, : self._embedding_dim]
 
         # L2 normalize
         norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
@@ -406,8 +433,50 @@ class GemmaL2Detector:
 
         return embeddings
 
+    def _extract_handcrafted_features(self, text: str) -> np.ndarray:
+        """Extract handcrafted features for model v3+.
+
+        Features (HANDCRAFTED_FEATURE_COUNT total):
+        - is_hh_rlhf: Boolean detecting RLHF-style "Human:" format (word boundary)
+        - text_length: Log-normalized text length (log1p(len) / 10.0)
+        - special_char_ratio: Ratio of non-word, non-space characters
+        - question_count: Count of question marks (divided by 10.0)
+
+        CRITICAL: Feature extraction MUST match training code exactly!
+        Training code: raxe-ml/generate_model/scripts/02_train_model.py
+
+        Args:
+            text: Input text to extract features from
+
+        Returns:
+            Numpy array of shape (1, HANDCRAFTED_FEATURE_COUNT) with scaled features
+        """
+        # Feature 1: is_hh_rlhf - MUST use \bHuman: pattern to match training
+        is_hh_rlhf = 1.0 if re.search(r"\bHuman:", text, re.IGNORECASE) else 0.0
+
+        # Feature 2: text_length - MUST use log1p normalization to match training
+        # Training: features[:, 1] = (np.log1p(text_lens) / 10.0)
+        text_length = float(np.log1p(len(text)) / 10.0)
+
+        # Feature 3: special_char_ratio - MUST use [^\w\s] regex to match training
+        # Training: special_counts = df['text'].str.count(r'[^\w\s]')
+        special_char_count = len(re.findall(r"[^\w\s]", text))
+        special_char_ratio = special_char_count / max(len(text), 1)
+
+        # Feature 4: question_count - normalized by 10.0 to match training
+        question_count = text.count("?") / 10.0
+
+        # Combine features (order must match training)
+        features = np.array([[is_hh_rlhf, text_length, special_char_ratio, question_count]])
+
+        # Apply scaler if available
+        if self._feature_scaler is not None:
+            features = self._feature_scaler.transform(features)
+
+        return features.astype(np.float32)
+
     def _classify(
-        self, embeddings: np.ndarray
+        self, embeddings: np.ndarray, text: str | None = None
     ) -> tuple[GemmaClassificationResult, VotingResult | None]:
         """Run all 5 classifier heads with ensemble logic.
 
@@ -415,20 +484,27 @@ class GemmaL2Detector:
         - [0]: predicted class (int64)
         - [1]: probabilities (float32)
 
+        Args:
+            embeddings: Embedding array of shape (1, embedding_dim)
+            text: Optional text for handcrafted feature extraction (model v3+)
+
         Returns:
             Tuple of (GemmaClassificationResult, VotingResult or None)
             VotingResult is None if voting engine is disabled.
         """
         embeddings_f32 = embeddings.astype(np.float32)
 
+        # For model v3+, concatenate embeddings with handcrafted features
+        if text is not None and self._feature_scaler is not None:
+            handcrafted = self._extract_handcrafted_features(text)
+            embeddings_f32 = np.concatenate([embeddings_f32, handcrafted], axis=1)
+
         # ════════════════════════════════════════════════════════════════════
         # Run all 5 classifier heads (always run all for voting engine)
         # ════════════════════════════════════════════════════════════════════
 
         # 1. Binary threat classification
-        is_threat_outputs = self._classifiers["is_threat"].run(
-            None, {"embeddings": embeddings_f32}
-        )
+        is_threat_outputs = self._classifiers["is_threat"].run(None, {"embeddings": embeddings_f32})
         is_threat_proba = is_threat_outputs[1][0]  # [benign_prob, threat_prob]
         safe_prob = float(is_threat_proba[0])
         threat_prob = float(is_threat_proba[1])
@@ -443,9 +519,7 @@ class GemmaL2Detector:
         threat_family = ThreatFamily.from_index(family_idx)
 
         # 3. Severity
-        severity_outputs = self._classifiers["severity"].run(
-            None, {"embeddings": embeddings_f32}
-        )
+        severity_outputs = self._classifiers["severity"].run(None, {"embeddings": embeddings_f32})
         severity_proba = severity_outputs[1][0]
         severity_idx = int(np.argmax(severity_proba))
         severity_confidence = float(severity_proba[severity_idx])
@@ -462,9 +536,7 @@ class GemmaL2Detector:
         technique_proba = tuple(float(p) for p in technique_proba_arr)
 
         # 5. Harm types (always run for voting engine)
-        harm_outputs = self._classifiers["harm_types"].run(
-            None, {"embeddings": embeddings_f32}
-        )
+        harm_outputs = self._classifiers["harm_types"].run(None, {"embeddings": embeddings_f32})
         harm_proba = harm_outputs[1][0]
         harm_types_result = self._process_multilabel_harm_types(harm_proba)
         harm_max_prob = max(float(p) for p in harm_proba)
@@ -499,15 +571,13 @@ class GemmaL2Detector:
             family_override_triggered = False  # Not used with voting engine
         else:
             # Legacy boost-based ensemble logic
-            is_threat, final_threat_prob, family_override_triggered = (
-                self._legacy_ensemble_logic(
-                    threat_prob=threat_prob,
-                    threat_family=threat_family,
-                    family_confidence=family_confidence,
-                    severity=severity,
-                    primary_technique=primary_technique,
-                    technique_confidence=technique_confidence,
-                )
+            is_threat, final_threat_prob, family_override_triggered = self._legacy_ensemble_logic(
+                threat_prob=threat_prob,
+                threat_family=threat_family,
+                family_confidence=family_confidence,
+                severity=severity,
+                primary_technique=primary_technique,
+                technique_confidence=technique_confidence,
             )
 
         # Determine harm_types for result (only include if threat)
@@ -565,8 +635,7 @@ class GemmaL2Detector:
                 is_threat = True
                 if effective_threat_prob < self.confidence_threshold:
                     effective_threat_prob = max(
-                        effective_threat_prob,
-                        self.confidence_threshold + 0.05
+                        effective_threat_prob, self.confidence_threshold + 0.05
                     )
 
         # Check for always-threat families
@@ -597,9 +666,7 @@ class GemmaL2Detector:
 
         return is_threat, effective_threat_prob, family_override_triggered
 
-    def _process_multilabel_harm_types(
-        self, probabilities: np.ndarray
-    ) -> MultilabelResult:
+    def _process_multilabel_harm_types(self, probabilities: np.ndarray) -> MultilabelResult:
         """Process multilabel harm types with per-class thresholds."""
         harm_classes = HarmType.all_classes()
         active_labels = []
@@ -640,9 +707,7 @@ class GemmaL2Detector:
             f"with {classification.severity.value} severity",
         ]
         if classification.primary_technique:
-            explanation_parts.append(
-                f"using {classification.primary_technique.value} technique"
-            )
+            explanation_parts.append(f"using {classification.primary_technique.value} technique")
         if classification.harm_types and classification.harm_types.has_active_labels:
             harm_labels = [h.value for h in classification.harm_types.active_labels]
             explanation_parts.append(f"causing potential harm: {', '.join(harm_labels)}")
@@ -702,8 +767,7 @@ class GemmaL2Detector:
 
         # Uncertainty flag
         metadata["uncertain"] = (
-            classification.family_confidence < 0.5 or
-            classification.threat_probability < 0.6
+            classification.family_confidence < 0.5 or classification.threat_probability < 0.6
         )
 
         # Add voting information if available
@@ -739,9 +803,7 @@ class GemmaL2Detector:
             )
         ]
 
-    def _generate_why_it_hit(
-        self, classification: GemmaClassificationResult
-    ) -> list[str]:
+    def _generate_why_it_hit(self, classification: GemmaClassificationResult) -> list[str]:
         """Generate human-readable explanations for detection."""
         reasons = []
 
@@ -758,7 +820,7 @@ class GemmaL2Detector:
         }
         family_desc = family_descriptions.get(
             classification.threat_family.value,
-            f"{classification.threat_family.value} threat detected"
+            f"{classification.threat_family.value} threat detected",
         )
         reasons.append(family_desc)
 
@@ -788,9 +850,7 @@ class GemmaL2Detector:
 
         return reasons
 
-    def _generate_recommended_actions(
-        self, classification: GemmaClassificationResult
-    ) -> list[str]:
+    def _generate_recommended_actions(self, classification: GemmaClassificationResult) -> list[str]:
         """Generate recommended actions based on classification."""
         actions = []
 
@@ -815,9 +875,7 @@ class GemmaL2Detector:
 
         return actions
 
-    def _apply_scorer(
-        self, classification: GemmaClassificationResult, text: str
-    ) -> Any:
+    def _apply_scorer(self, classification: GemmaClassificationResult, text: str) -> Any:
         """Apply hierarchical threat scorer if available."""
         if not self.scorer:
             return None
@@ -866,13 +924,13 @@ class GemmaL2Detector:
         """Return model information."""
         return {
             "name": "Gemma 5-Head Multilabel Classifier",
-            "version": self.VERSION,
+            "version": self._model_version,
             "type": "onnx",
             "is_stub": False,
             "size_mb": 300,  # Approximate
             "latency_p95_ms": 50,
             "embedding_model": "google/embeddinggemma-300m",
-            "embedding_dim": self.EMBEDDING_DIM,
+            "embedding_dim": self._embedding_dim,
             "heads": [
                 "is_threat",
                 "threat_family",
@@ -896,7 +954,6 @@ def create_gemma_detector(
     harm_thresholds: dict[str, float] | None = None,
     cache_size: int = 1000,
     scorer: Any | None = None,
-    voting_preset: str | None = None,
 ) -> GemmaL2Detector:
     """Factory function to create Gemma L2 detector.
 
@@ -906,7 +963,6 @@ def create_gemma_detector(
         harm_thresholds: Per-class thresholds for harm_types multilabel
         cache_size: Size of embedding cache (0 to disable)
         scorer: Optional HierarchicalThreatScorer instance
-        voting_preset: Voting preset override (balanced, high_security, low_fp)
 
     Returns:
         GemmaL2Detector instance
@@ -917,5 +973,4 @@ def create_gemma_detector(
         harm_thresholds=harm_thresholds,
         cache_size=cache_size,
         scorer=scorer,
-        voting_preset=voting_preset,
     )

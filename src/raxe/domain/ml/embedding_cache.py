@@ -105,9 +105,7 @@ class EmbeddingCache:
     max_size: int = 1000
 
     # Private fields initialized in __post_init__
-    _cache: OrderedDict[str, "np.ndarray"] = field(
-        default_factory=OrderedDict, repr=False
-    )
+    _cache: OrderedDict[str, np.ndarray] = field(default_factory=OrderedDict, repr=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     _hits: int = field(default=0, repr=False)
     _misses: int = field(default=0, repr=False)
@@ -200,7 +198,7 @@ class EmbeddingCache:
                 evictions=self._evictions,
             )
 
-    def get(self, text: str) -> "np.ndarray | None":
+    def get(self, text: str) -> np.ndarray | None:
         """
         Retrieve cached embedding for text.
 
@@ -229,7 +227,7 @@ class EmbeddingCache:
                 self._misses += 1
                 return None
 
-    def put(self, text: str, embedding: "np.ndarray") -> None:
+    def put(self, text: str, embedding: np.ndarray) -> None:
         """
         Store embedding in cache.
 

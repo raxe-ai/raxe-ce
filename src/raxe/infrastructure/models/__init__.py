@@ -4,13 +4,13 @@ Provides model discovery, loading, and management utilities.
 """
 
 from raxe.infrastructure.models.discovery import (
-    ModelDiscoveryService,
     DiscoveredModel,
+    ModelDiscoveryService,
     ModelType,
 )
 
 __all__ = [
-    "ModelDiscoveryService",
     "DiscoveredModel",
+    "ModelDiscoveryService",
     "ModelType",
 ]

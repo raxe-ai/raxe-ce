@@ -15,7 +15,6 @@ from raxe.domain.ml.voting.config import (
     BinaryHeadThresholds,
     FamilyHeadThresholds,
     HarmHeadThresholds,
-    HeadWeights,
     SeverityHeadThresholds,
     TechniqueHeadThresholds,
 )
@@ -200,12 +199,16 @@ def vote_severity(
         vote = Vote.SAFE
         confidence = severity_confidence
         threshold_used = 0.0
-        rationale = f"severity={severity_prediction} in safe_severities {thresholds.safe_severities}"
+        rationale = (
+            f"severity={severity_prediction} in safe_severities {thresholds.safe_severities}"
+        )
     elif severity_lower in thresholds.threat_severities:
         vote = Vote.THREAT
         confidence = severity_confidence
         threshold_used = 0.0
-        rationale = f"severity={severity_prediction} in threat_severities {thresholds.threat_severities}"
+        rationale = (
+            f"severity={severity_prediction} in threat_severities {thresholds.threat_severities}"
+        )
     else:
         # Unknown severity - vote based on whether it's closer to threat or safe
         # This shouldn't happen with valid model outputs

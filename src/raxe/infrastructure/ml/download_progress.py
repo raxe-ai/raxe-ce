@@ -8,13 +8,14 @@ Provides consistent progress feedback across all entry points:
 This module ensures users always know what's happening during
 the ~107MB model download, regardless of how they're using RAXE.
 """
+
 from __future__ import annotations
 
 import os
 import sys
 import time
 from abc import ABC, abstractmethod
-from typing import Callable
+from collections.abc import Callable
 
 
 class DownloadProgress(ABC):
@@ -96,9 +97,7 @@ class RichDownloadProgress(DownloadProgress):
 
         # Print header
         self._console.print()
-        self._console.print(
-            f"[bold cyan]Downloading ML model:[/bold cyan] {model_name}"
-        )
+        self._console.print(f"[bold cyan]Downloading ML model:[/bold cyan] {model_name}")
 
         # Create progress bar
         self._progress = Progress(
@@ -130,9 +129,7 @@ class RichDownloadProgress(DownloadProgress):
         """Complete and stop Rich progress."""
         if self._progress:
             self._progress.stop()
-            self._console.print(
-                "[bold green]Download complete![/bold green]"
-            )
+            self._console.print("[bold green]Download complete![/bold green]")
             self._console.print()
 
     def error(self, message: str) -> None:
@@ -140,6 +137,7 @@ class RichDownloadProgress(DownloadProgress):
         if self._progress:
             self._progress.stop()
         from rich.console import Console
+
         console = Console(stderr=True)
         console.print()
         console.print(f"[bold red]Download failed:[/bold red] {message}")
@@ -250,7 +248,11 @@ class MinimalDownloadProgress(DownloadProgress):
         elapsed = now - self._start_time
         if elapsed > 0:
             speed_mbps = (downloaded_bytes / (1024 * 1024)) / elapsed
-            eta_seconds = (total_bytes - downloaded_bytes) / (downloaded_bytes / elapsed) if downloaded_bytes > 0 else 0
+            eta_seconds = (
+                (total_bytes - downloaded_bytes) / (downloaded_bytes / elapsed)
+                if downloaded_bytes > 0
+                else 0
+            )
             eta_str = f"{eta_seconds:.0f}s" if eta_seconds < 60 else f"{eta_seconds/60:.1f}m"
             speed_str = f"{speed_mbps:.1f}MB/s"
         else:

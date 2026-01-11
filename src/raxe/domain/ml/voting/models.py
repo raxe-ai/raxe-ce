@@ -9,7 +9,7 @@ Model Hierarchy:
 - VotingResult: Complete voting engine output with full transparency
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -130,11 +130,11 @@ class VotingResult:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"confidence must be 0-1, got {self.confidence}")
         if self.threat_vote_count < 0:
-            raise ValueError(f"threat_vote_count must be non-negative")
+            raise ValueError("threat_vote_count must be non-negative")
         if self.safe_vote_count < 0:
-            raise ValueError(f"safe_vote_count must be non-negative")
+            raise ValueError("safe_vote_count must be non-negative")
         if self.abstain_vote_count < 0:
-            raise ValueError(f"abstain_vote_count must be non-negative")
+            raise ValueError("abstain_vote_count must be non-negative")
 
     @property
     def is_threat(self) -> bool:
@@ -181,9 +181,7 @@ class VotingResult:
             "decision": self.decision.value,
             "confidence": self.confidence,
             "preset_used": self.preset_used,
-            "per_head_votes": {
-                name: vote.to_dict() for name, vote in self.per_head_votes.items()
-            },
+            "per_head_votes": {name: vote.to_dict() for name, vote in self.per_head_votes.items()},
             "aggregated_scores": self.aggregated_scores,
             "decision_rule_triggered": self.decision_rule_triggered,
             "threat_vote_count": self.threat_vote_count,

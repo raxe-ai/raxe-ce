@@ -29,14 +29,12 @@ harm_type_thresholds:
   violence_or_physical_harm: 0.40
 ```
 """
+
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
 
 import yaml
-
-from raxe.domain.ml.voting import VotingPreset, get_voting_config
 
 
 @dataclass
@@ -63,24 +61,24 @@ class L2ThresholdConfig:
     harm_type_default_threshold: float = 0.50
 
     # Per-harm-type thresholds (lower for safety-critical types)
-    harm_type_thresholds: dict[str, float] = field(default_factory=lambda: {
-        "cbrn_or_weapons": 0.50,
-        "crime_or_fraud": 0.50,
-        "cybersecurity_or_malware": 0.50,
-        "hate_or_harassment": 0.50,
-        "misinformation_or_disinfo": 0.50,
-        "other_harm": 0.50,
-        "privacy_or_pii": 0.40,  # Lower for safety
-        "self_harm_or_suicide": 0.40,  # Lower for safety
-        "sexual_content": 0.50,
-        "violence_or_physical_harm": 0.40,  # Lower for safety
-    })
+    harm_type_thresholds: dict[str, float] = field(
+        default_factory=lambda: {
+            "cbrn_or_weapons": 0.50,
+            "crime_or_fraud": 0.50,
+            "cybersecurity_or_malware": 0.50,
+            "hate_or_harassment": 0.50,
+            "misinformation_or_disinfo": 0.50,
+            "other_harm": 0.50,
+            "privacy_or_pii": 0.40,  # Lower for safety
+            "self_harm_or_suicide": 0.40,  # Lower for safety
+            "sexual_content": 0.50,
+            "violence_or_physical_harm": 0.40,  # Lower for safety
+        }
+    )
 
     def get_harm_threshold(self, harm_type: str) -> float:
         """Get threshold for a specific harm type."""
-        return self.harm_type_thresholds.get(
-            harm_type, self.harm_type_default_threshold
-        )
+        return self.harm_type_thresholds.get(harm_type, self.harm_type_default_threshold)
 
 
 @dataclass
@@ -103,19 +101,23 @@ class L2EnsembleConfig:
     technique_boost_amount: float = 0.10
 
     # Families that should ALWAYS trigger threat (even if is_threat is very low)
-    always_threat_families: list[str] = field(default_factory=lambda: [
-        # "jailbreak",  # Uncomment to always flag jailbreak attempts
-        # "data_exfiltration",  # Uncomment to always flag exfil attempts
-    ])
+    always_threat_families: list[str] = field(
+        default_factory=lambda: [
+            # "jailbreak",  # Uncomment to always flag jailbreak attempts
+            # "data_exfiltration",  # Uncomment to always flag exfil attempts
+        ]
+    )
 
     # Techniques that indicate high confidence threat
-    high_confidence_techniques: list[str] = field(default_factory=lambda: [
-        "instruction_override",
-        "system_prompt_or_config_extraction",
-        "tool_or_command_injection",
-        "data_exfil_system_prompt_or_config",
-        "data_exfil_user_content",
-    ])
+    high_confidence_techniques: list[str] = field(
+        default_factory=lambda: [
+            "instruction_override",
+            "system_prompt_or_config_extraction",
+            "tool_or_command_injection",
+            "data_exfil_system_prompt_or_config",
+            "data_exfil_user_content",
+        ]
+    )
 
 
 @dataclass
@@ -143,13 +145,15 @@ class L2Config:
     voting: L2VotingConfig = field(default_factory=L2VotingConfig)
 
     # Classification labels based on threat probability
-    classification_thresholds: dict[str, float] = field(default_factory=lambda: {
-        "HIGH_THREAT": 0.90,
-        "THREAT": 0.75,
-        "LIKELY_THREAT": 0.60,
-        "REVIEW": 0.40,
-        "FP_LIKELY": 0.0,  # Below 0.40
-    })
+    classification_thresholds: dict[str, float] = field(
+        default_factory=lambda: {
+            "HIGH_THREAT": 0.90,
+            "THREAT": 0.75,
+            "LIKELY_THREAT": 0.60,
+            "REVIEW": 0.40,
+            "FP_LIKELY": 0.0,  # Below 0.40
+        }
+    )
 
     def get_classification(self, threat_prob: float) -> str:
         """Get classification label based on threat probability."""

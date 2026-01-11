@@ -133,12 +133,15 @@ class EagerL2Detector:
         if not self.use_production:
             # Use stub detector
             from raxe.domain.ml.stub_detector import StubL2Detector
+
             self._detector = StubL2Detector()
-            self._init_stats.update({
-                "model_type": "stub",
-                "is_stub": True,
-                "reason": "use_production_disabled",
-            })
+            self._init_stats.update(
+                {
+                    "model_type": "stub",
+                    "is_stub": True,
+                    "reason": "use_production_disabled",
+                }
+            )
             logger.info("Using stub detector (use_production=False)")
             return
 
@@ -162,7 +165,7 @@ class EagerL2Detector:
                     logger.info(
                         "explicit_model_id_configured",
                         model_id=configured_model_id,
-                        source="config.yaml"
+                        source="config.yaml",
                     )
         except Exception as e:
             logger.debug(f"Failed to load config for model_id: {e}")
@@ -176,16 +179,12 @@ class EagerL2Detector:
             # Check if the configured model exists
             if registry.has_model(configured_model_id):
                 try:
-                    logger.info(
-                        "using_explicit_model_from_config",
-                        model_id=configured_model_id
-                    )
+                    logger.info("using_explicit_model_from_config", model_id=configured_model_id)
 
                     # Create detector from registry using explicit model_id
                     discovery_start = time.perf_counter()
                     self._detector = registry.create_detector(
                         model_id=configured_model_id,
-                        voting_preset=self.voting_preset,
                     )
                     discovery_time_ms = (time.perf_counter() - discovery_start) * 1000
 
@@ -193,14 +192,20 @@ class EagerL2Detector:
                     model_metadata = registry.get_model(configured_model_id)
 
                     # Store initialization statistics
-                    self._init_stats.update({
-                        "discovery_time_ms": discovery_time_ms,
-                        "model_id": configured_model_id,
-                        "model_type": model_metadata.runtime_type if model_metadata else "unknown",
-                        "is_stub": False,
-                        "estimated_load_ms": model_metadata.performance.p95_latency_ms if model_metadata else 0,
-                        "selection_method": "explicit_config",
-                    })
+                    self._init_stats.update(
+                        {
+                            "discovery_time_ms": discovery_time_ms,
+                            "model_id": configured_model_id,
+                            "model_type": model_metadata.runtime_type
+                            if model_metadata
+                            else "unknown",
+                            "is_stub": False,
+                            "estimated_load_ms": model_metadata.performance.p95_latency_ms
+                            if model_metadata
+                            else 0,
+                            "selection_method": "explicit_config",
+                        }
+                    )
 
                     logger.info(
                         "explicit_model_loaded_successfully",
@@ -214,7 +219,7 @@ class EagerL2Detector:
                         "explicit_model_load_failed",
                         model_id=configured_model_id,
                         error=str(e),
-                        fallback="auto_discovery"
+                        fallback="auto_discovery",
                     )
                     # Continue to auto-discovery fallback
             else:
@@ -222,7 +227,7 @@ class EagerL2Detector:
                     "configured_model_not_found",
                     model_id=configured_model_id,
                     available_models=[m.model_id for m in registry.list_models()],
-                    fallback="auto_discovery"
+                    fallback="auto_discovery",
                 )
                 # Continue to auto-discovery fallback
 
@@ -306,7 +311,6 @@ class EagerL2Detector:
                     model_dir=str(discovered.model_dir),
                     confidence_threshold=self.confidence_threshold,
                     scorer=scorer,
-                    voting_preset=self.voting_preset,
                 )
             else:
                 # No other model types supported - raise clear error
@@ -321,13 +325,15 @@ class EagerL2Detector:
             model_info = self._detector.model_info
 
             # Update statistics
-            self._init_stats.update({
-                "model_load_time_ms": load_time_ms,
-                "model_version": model_info.get("version", "unknown"),
-                "embedding_model": model_info.get("embedding_model", "unknown"),
-                "families": model_info.get("families", []),
-                "latency_p95_ms": model_info.get("latency_p95_ms", 0),
-            })
+            self._init_stats.update(
+                {
+                    "model_load_time_ms": load_time_ms,
+                    "model_version": model_info.get("version", "unknown"),
+                    "embedding_model": model_info.get("embedding_model", "unknown"),
+                    "families": model_info.get("families", []),
+                    "latency_p95_ms": model_info.get("latency_p95_ms", 0),
+                }
+            )
 
             logger.info(
                 "production_detector_loaded",
@@ -361,14 +367,17 @@ class EagerL2Detector:
         self._detector = StubL2Detector()
 
         # Update statistics
-        self._init_stats.update({
-            "model_type": "stub",
-            "is_stub": True,
-        })
+        self._init_stats.update(
+            {
+                "model_type": "stub",
+                "is_stub": True,
+            }
+        )
 
         # Show user-visible warning once per process
         if not EagerL2Detector._stub_warning_shown:
             from pathlib import Path
+
             Path(__file__).parent.parent / "domain" / "ml" / "models"
 
             EagerL2Detector._stub_warning_shown = True
@@ -380,10 +389,7 @@ class EagerL2Detector:
         )
 
     def analyze(
-        self,
-        text: str,
-        l1_result: ScanResult,
-        context: dict[str, Any] | None = None
+        self, text: str, l1_result: ScanResult, context: dict[str, Any] | None = None
     ) -> L2Result:
         """Analyze text with L2 ML detector.
 
@@ -455,10 +461,12 @@ class EagerL2Detector:
         info = self._detector.model_info.copy()
 
         # Add eager-specific metadata
-        info.update({
-            "detector_type": "eager",
-            "initialization_time_ms": self._init_stats.get("load_time_ms", 0),
-        })
+        info.update(
+            {
+                "detector_type": "eager",
+                "initialization_time_ms": self._init_stats.get("load_time_ms", 0),
+            }
+        )
 
         return info
 

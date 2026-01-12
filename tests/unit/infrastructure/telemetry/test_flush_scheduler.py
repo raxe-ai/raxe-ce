@@ -375,10 +375,14 @@ class TestFlushScheduler:
         stats = scheduler.get_stats()
         assert stats["standard_flushes"] >= 1
 
-    def test_graceful_shutdown_flushes_queues(
+    def test_graceful_shutdown_preserves_pending_events(
         self, mock_queue: MockDualQueue, mock_shipper: MockShipper
     ) -> None:
-        """Test that graceful shutdown flushes remaining events."""
+        """Test that graceful shutdown is non-blocking and preserves pending events.
+
+        Note: The implementation is intentionally non-blocking to prevent CLI hangs.
+        Events remain in the queue for delivery on next CLI run.
+        """
         mock_queue.add_critical_event({"event_id": "critical1"})
         mock_queue.add_standard_event({"event_id": "standard1"})
 
@@ -393,12 +397,14 @@ class TestFlushScheduler:
         scheduler = FlushScheduler(queue=mock_queue, shipper=mock_shipper, config=config)
         scheduler.start()
 
-        # Stop gracefully - should flush pending events
+        # Stop gracefully - events remain in queue (non-blocking shutdown)
         scheduler.stop(graceful=True)
 
-        # Both queues should be empty
-        assert mock_queue.get_critical_count() == 0
-        assert mock_queue.get_standard_count() == 0
+        # Events remain in queues for delivery on next CLI run
+        assert mock_queue.get_critical_count() == 1
+        assert mock_queue.get_standard_count() == 1
+        # Scheduler should be stopped
+        assert scheduler.is_running() is False
 
     def test_non_graceful_shutdown_does_not_flush(
         self, mock_queue: MockDualQueue, mock_shipper: MockShipper
@@ -469,17 +475,13 @@ class TestFlushScheduler:
         stats = scheduler.get_stats()
         assert stats["last_critical_flush"] is not None
 
-    def test_shipper_error_increments_error_count(
-        self, mock_queue: MockDualQueue
-    ) -> None:
+    def test_shipper_error_increments_error_count(self, mock_queue: MockDualQueue) -> None:
         """Test that shipper errors are tracked."""
         mock_queue.add_critical_event({"event_id": "critical1"})
 
         failing_shipper = MockShipper(should_fail=True)
         config = FlushConfig()
-        scheduler = FlushScheduler(
-            queue=mock_queue, shipper=failing_shipper, config=config
-        )
+        scheduler = FlushScheduler(queue=mock_queue, shipper=failing_shipper, config=config)
 
         count = scheduler.flush_critical()
 

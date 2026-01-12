@@ -128,7 +128,7 @@ plugin = TestPlugin()
 
         assert plugin is not None
         assert plugin.metadata.name == "test_plugin"
-        assert plugin.metadata.version == "1.0.0"
+        assert plugin.metadata.version == "0.0.1"
         assert plugin.config == {"setting": "value"}  # type: ignore
 
     def test_load_plugin_missing_file(self, tmp_path):

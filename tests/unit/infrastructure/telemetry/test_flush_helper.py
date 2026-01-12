@@ -12,8 +12,6 @@ import threading
 import time
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 class TestEnsureTelemetryFlushed:
     """Tests for ensure_telemetry_flushed function."""
@@ -21,6 +19,7 @@ class TestEnsureTelemetryFlushed:
     def test_import_works(self):
         """Test that the module can be imported."""
         from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
+
         assert callable(ensure_telemetry_flushed)
 
     def test_never_raises_on_import_error(self):
@@ -29,8 +28,8 @@ class TestEnsureTelemetryFlushed:
 
         # Mock to simulate import failure
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._get_telemetry_context',
-            side_effect=ImportError("Test import error")
+            "raxe.infrastructure.telemetry.flush_helper._get_telemetry_context",
+            side_effect=ImportError("Test import error"),
         ):
             # Should not raise
             ensure_telemetry_flushed(timeout_seconds=0.1)
@@ -40,8 +39,8 @@ class TestEnsureTelemetryFlushed:
         from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
 
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._end_telemetry_session',
-            side_effect=RuntimeError("Test error")
+            "raxe.infrastructure.telemetry.flush_helper._end_telemetry_session",
+            side_effect=RuntimeError("Test error"),
         ):
             # Should not raise
             ensure_telemetry_flushed(timeout_seconds=0.1)
@@ -70,8 +69,8 @@ class TestEnsureTelemetryFlushed:
 
         # Patch at the source module where get_orchestrator is imported from
         with patch(
-            'raxe.application.telemetry_orchestrator.get_orchestrator',
-            return_value=mock_orchestrator
+            "raxe.application.telemetry_orchestrator.get_orchestrator",
+            return_value=mock_orchestrator,
         ):
             _end_telemetry_session()
             mock_tracker.end_session.assert_called_once_with(end_reason="normal")
@@ -88,8 +87,8 @@ class TestEnsureTelemetryFlushed:
 
         # Patch at the source module where get_orchestrator is imported from
         with patch(
-            'raxe.application.telemetry_orchestrator.get_orchestrator',
-            return_value=mock_orchestrator
+            "raxe.application.telemetry_orchestrator.get_orchestrator",
+            return_value=mock_orchestrator,
         ):
             _end_telemetry_session()
             mock_tracker.end_session.assert_not_called()
@@ -103,8 +102,8 @@ class TestGetTelemetryContext:
         from raxe.infrastructure.telemetry.flush_helper import _get_telemetry_context
 
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._get_telemetry_context',
-            return_value=(None, None, None)
+            "raxe.infrastructure.telemetry.flush_helper._get_telemetry_context",
+            return_value=(None, None, None),
         ):
             api_key, installation_id, config = _get_telemetry_context()
             # At minimum should not raise
@@ -129,14 +128,16 @@ class TestFlushQueue:
         # Should not have tried to send (no events)
         mock_sender.send_batch.assert_not_called()
 
-    def test_stops_on_send_error(self):
-        """Test that flush stops on send error."""
+    def test_stops_on_consecutive_send_errors(self):
+        """Test that flush stops after max consecutive errors (3)."""
         from raxe.infrastructure.telemetry.flush_helper import _flush_queue
 
         mock_queue = MagicMock()
         mock_queue.dequeue_standard.side_effect = [
             [{"event_id": "1"}],  # First batch
-            [{"event_id": "2"}],  # Second batch (won't be reached)
+            [{"event_id": "2"}],  # Second batch
+            [{"event_id": "3"}],  # Third batch
+            [{"event_id": "4"}],  # Fourth batch (won't be reached)
         ]
 
         mock_sender = MagicMock()
@@ -145,8 +146,8 @@ class TestFlushQueue:
         # Should not raise
         _flush_queue(mock_queue, mock_sender, "standard", max_batches=10, batch_size=50)
 
-        # Should have stopped after first error
-        assert mock_sender.send_batch.call_count == 1
+        # Should have stopped after 3 consecutive errors (max_consecutive_errors = 3)
+        assert mock_sender.send_batch.call_count == 3
 
 
 class TestIntegration:
@@ -160,10 +161,10 @@ class TestIntegration:
         # In a real scenario, it would flush actual events
 
         # Mock all dependencies to return quickly
-        with patch('raxe.infrastructure.telemetry.flush_helper._end_telemetry_session'):
+        with patch("raxe.infrastructure.telemetry.flush_helper._end_telemetry_session"):
             with patch(
-                'raxe.infrastructure.telemetry.flush_helper._get_telemetry_context',
-                return_value=(None, None, None)  # No credentials = early exit
+                "raxe.infrastructure.telemetry.flush_helper._get_telemetry_context",
+                return_value=(None, None, None),  # No credentials = early exit
             ):
                 start = time.time()
                 ensure_telemetry_flushed(timeout_seconds=0.5)
@@ -242,6 +243,7 @@ class TestFlushStaleTelemetry:
     def test_import_works(self):
         """Test that the function can be imported."""
         from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
+
         assert callable(flush_stale_telemetry_async)
 
     def test_never_raises(self):
@@ -250,14 +252,14 @@ class TestFlushStaleTelemetry:
 
         # Mock queue to raise error
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._get_queue',
-            side_effect=RuntimeError("Test error")
+            "raxe.infrastructure.telemetry.flush_helper._get_queue",
+            side_effect=RuntimeError("Test error"),
         ):
             # Should not raise
             flush_stale_telemetry_async()
 
     def test_skips_empty_queue(self):
-        """Test that function skips when queue is empty."""
+        """Test that function skips when queue is empty without closing it."""
         from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
 
         mock_queue = MagicMock()
@@ -268,16 +270,17 @@ class TestFlushStaleTelemetry:
         }
 
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._get_queue',
-            return_value=mock_queue
+            "raxe.infrastructure.telemetry.flush_helper._get_queue", return_value=mock_queue
         ):
             flush_stale_telemetry_async()
-            mock_queue.close.assert_called_once()
+            # Queue stays open for future events when empty
+            mock_queue.close.assert_not_called()
 
     def test_skips_fresh_events(self):
         """Test that function skips events newer than threshold."""
-        from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
         from datetime import datetime, timezone
+
+        from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
 
         mock_queue = MagicMock()
         # Events are only 5 minutes old (below 15 minute threshold)
@@ -289,11 +292,10 @@ class TestFlushStaleTelemetry:
         }
 
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._get_queue',
-            return_value=mock_queue
+            "raxe.infrastructure.telemetry.flush_helper._get_queue", return_value=mock_queue
         ):
             with patch(
-                'raxe.infrastructure.telemetry.flush_helper.ensure_telemetry_flushed'
+                "raxe.infrastructure.telemetry.flush_helper.ensure_telemetry_flushed"
             ) as mock_flush:
                 flush_stale_telemetry_async(stale_threshold_minutes=15.0)
                 # Should NOT call flush because events are not stale
@@ -301,8 +303,9 @@ class TestFlushStaleTelemetry:
 
     def test_flushes_stale_events(self):
         """Test that function flushes events older than threshold."""
+        from datetime import datetime, timedelta, timezone
+
         from raxe.infrastructure.telemetry.flush_helper import flush_stale_telemetry_async
-        from datetime import datetime, timezone, timedelta
 
         mock_queue = MagicMock()
         # Events are 20 minutes old (above 15 minute threshold)
@@ -314,11 +317,10 @@ class TestFlushStaleTelemetry:
         }
 
         with patch(
-            'raxe.infrastructure.telemetry.flush_helper._get_queue',
-            return_value=mock_queue
+            "raxe.infrastructure.telemetry.flush_helper._get_queue", return_value=mock_queue
         ):
             with patch(
-                'raxe.infrastructure.telemetry.flush_helper.ensure_telemetry_flushed'
+                "raxe.infrastructure.telemetry.flush_helper.ensure_telemetry_flushed"
             ) as mock_flush:
                 flush_stale_telemetry_async(stale_threshold_minutes=15.0)
                 # Give thread time to run
@@ -327,4 +329,4 @@ class TestFlushStaleTelemetry:
                 mock_flush.assert_called_once()
                 # Verify end_session=False (startup flush shouldn't end session)
                 call_kwargs = mock_flush.call_args[1]
-                assert call_kwargs.get('end_session') is False
+                assert call_kwargs.get("end_session") is False

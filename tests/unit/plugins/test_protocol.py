@@ -25,7 +25,7 @@ class TestPluginMetadata:
         )
 
         assert metadata.name == "test_plugin"
-        assert metadata.version == "1.0.0"
+        assert metadata.version == "0.0.1"
         assert metadata.author == "Test Author"
         assert metadata.description == "Test plugin"
         assert metadata.priority == PluginPriority.NORMAL  # Default
@@ -205,11 +205,28 @@ class TestDetectorPlugin:
 
             def detect(self, text, context=None):
                 if "bad" in text:
+                    from datetime import datetime, timezone
+
+                    from raxe.domain.engine.matcher import Match
+
                     return [
                         Detection(
                             rule_id="test_001",
+                            rule_version="0.0.1",
                             severity=Severity.HIGH,
                             confidence=0.9,
+                            matches=[
+                                Match(
+                                    pattern_index=0,
+                                    start=0,
+                                    end=3,
+                                    matched_text="bad",
+                                    groups=(),
+                                    context_before="",
+                                    context_after="",
+                                )
+                            ],
+                            detected_at=datetime.now(timezone.utc).isoformat(),
                             message="Bad word detected",
                         )
                     ]

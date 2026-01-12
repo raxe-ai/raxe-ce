@@ -11,17 +11,23 @@ from typing import Any
 import pytest
 import yaml
 
-RULEPACK_PATH = Path(__file__).parent.parent.parent / "src" / "raxe" / "packs" / "core" / "v1.0.0" / "rules"
-EXPECTED_TOTAL_RULES = 460  # Community edition expanded rule set
+RULEPACK_PATH = (
+    Path(__file__).parent.parent.parent / "src" / "raxe" / "packs" / "core" / "v1.0.0" / "rules"
+)
+EXPECTED_TOTAL_RULES = 514  # Community edition expanded rule set (with agent security rules)
 
 EXPECTED_FAMILIES = {
+    "AGENT": 15,
     "cmd": 65,
-    "PI": 59,
-    "jb": 77,
-    "pii": 112,
     "enc": 70,
-    "rag": 12,
     "hc": 65,
+    "jb": 77,
+    "MEM": 12,
+    "MULTI": 12,
+    "PI": 59,
+    "pii": 112,
+    "rag": 12,
+    "TOOL": 15,
 }
 
 
@@ -75,9 +81,9 @@ class TestProductionRules:
         """Verify total number of rules is 104."""
         all_rules = get_all_rule_files()
         actual_count = len(all_rules)
-        assert actual_count == EXPECTED_TOTAL_RULES, (
-            f"Expected {EXPECTED_TOTAL_RULES} rules, found {actual_count}"
-        )
+        assert (
+            actual_count == EXPECTED_TOTAL_RULES
+        ), f"Expected {EXPECTED_TOTAL_RULES} rules, found {actual_count}"
 
     def test_rule_count_per_family(self):
         """Verify correct number of rules per family."""
@@ -86,9 +92,9 @@ class TestProductionRules:
             rule_files = list(family_dir.glob("*.yaml"))
             actual_count = len(rule_files)
 
-            assert actual_count == expected_count, (
-                f"Family {family}: expected {expected_count} rules, found {actual_count}"
-            )
+            assert (
+                actual_count == expected_count
+            ), f"Family {family}: expected {expected_count} rules, found {actual_count}"
 
     @pytest.mark.parametrize("rule_file", get_all_rule_files())
     def test_rule_loads_successfully(self, rule_file: Path):
@@ -130,9 +136,9 @@ class TestProductionRules:
         # Community edition allows experimental rules with lower confidence
         # Core rules should have >= 0.85, but experimental rules can be >= 0.7
         # This supports the 460+ rule community-driven approach
-        assert confidence >= 0.7, (
-            f"Rule {rule_file} has confidence {confidence}, below threshold 0.7"
-        )
+        assert (
+            confidence >= 0.7
+        ), f"Rule {rule_file} has confidence {confidence}, below threshold 0.7"
 
     @pytest.mark.parametrize("rule_file", get_all_rule_files())
     def test_rule_has_patterns(self, rule_file: Path):
@@ -159,12 +165,12 @@ class TestProductionRules:
         should_not_match = examples.get("should_not_match", [])
 
         # Production rules should have at least 2 examples of each type
-        assert len(should_match) >= 2, (
-            f"Rule {rule_file} has only {len(should_match)} should_match examples"
-        )
-        assert len(should_not_match) >= 2, (
-            f"Rule {rule_file} has only {len(should_not_match)} should_not_match examples"
-        )
+        assert (
+            len(should_match) >= 2
+        ), f"Rule {rule_file} has only {len(should_match)} should_match examples"
+        assert (
+            len(should_not_match) >= 2
+        ), f"Rule {rule_file} has only {len(should_not_match)} should_not_match examples"
 
     @pytest.mark.parametrize("rule_file", get_all_rule_files())
     def test_rule_severity_is_valid(self, rule_file: Path):
@@ -173,9 +179,7 @@ class TestProductionRules:
         severity = rule.get("severity")
 
         valid_severities = ["low", "medium", "high", "critical"]
-        assert severity in valid_severities, (
-            f"Rule {rule_file} has invalid severity: {severity}"
-        )
+        assert severity in valid_severities, f"Rule {rule_file} has invalid severity: {severity}"
 
     @pytest.mark.parametrize("rule_file", get_all_rule_files())
     def test_rule_family_matches_directory(self, rule_file: Path):
@@ -184,9 +188,9 @@ class TestProductionRules:
         family = rule.get("family", "").upper()
         directory_family = rule_file.parent.name.upper()
 
-        assert family == directory_family, (
-            f"Rule {rule_file} has family {family} but is in {directory_family} directory"
-        )
+        assert (
+            family == directory_family
+        ), f"Rule {rule_file} has family {family} but is in {directory_family} directory"
 
     def test_overall_statistics(self):
         """Test overall rulepack statistics."""
@@ -204,18 +208,18 @@ class TestProductionRules:
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0
 
         # Production pack should have high average confidence
-        assert avg_confidence >= 0.90, (
-            f"Average confidence {avg_confidence:.3f} below threshold 0.90"
-        )
+        assert (
+            avg_confidence >= 0.90
+        ), f"Average confidence {avg_confidence:.3f} below threshold 0.90"
 
         # Most rules should be critical or high severity
         critical_high_count = severities["critical"] + severities["high"]
         total_count = sum(severities.values())
         critical_high_ratio = critical_high_count / total_count if total_count > 0 else 0
 
-        assert critical_high_ratio >= 0.80, (
-            f"Only {critical_high_ratio:.1%} rules are critical/high severity"
-        )
+        assert (
+            critical_high_ratio >= 0.80
+        ), f"Only {critical_high_ratio:.1%} rules are critical/high severity"
 
         print("\nProduction Rulepack Statistics:")
         print(f"  Total Rules: {len(all_rules)}")

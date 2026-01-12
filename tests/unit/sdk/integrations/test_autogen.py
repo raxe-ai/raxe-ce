@@ -2,7 +2,8 @@
 
 Tests the AutoGen-specific integration for scanning multi-agent conversations.
 """
-from unittest.mock import Mock, call, patch
+
+from unittest.mock import Mock
 
 import pytest
 
@@ -12,6 +13,40 @@ from raxe.sdk.agent_scanner import (
 )
 from raxe.sdk.exceptions import SecurityException
 from raxe.sdk.integrations.autogen import RaxeConversationGuard
+
+# =============================================================================
+# Helper for creating properly spec'd mock agents
+# =============================================================================
+
+
+class _ConversableAgentSpec:
+    """Spec class for AutoGen v0.2.x ConversableAgent.
+
+    Using a spec ensures the mock doesn't respond to v0.4+ attributes
+    (like on_messages, on_messages_stream) which would cause detection
+    as a v0.4+ agent.
+    """
+
+    name: str
+
+    def register_hook(self, hook_name: str, hook: object) -> None: ...
+    def send(self, *args, **kwargs) -> None: ...
+    def receive(self, *args, **kwargs) -> None: ...
+    def generate_reply(self, *args, **kwargs) -> None: ...
+
+
+def _create_mock_agent(name: str) -> Mock:
+    """Create a properly spec'd mock AutoGen v0.2.x agent.
+
+    Args:
+        name: Name for the agent
+
+    Returns:
+        Mock agent with correct spec
+    """
+    agent = Mock(spec=_ConversableAgentSpec)
+    agent.name = name
+    return agent
 
 
 @pytest.fixture
@@ -50,15 +85,8 @@ def threat_raxe():
 
 @pytest.fixture
 def mock_agent():
-    """Create mock AutoGen ConversableAgent."""
-    agent = Mock()
-    agent.name = "test_agent"
-    agent.register_hook = Mock()
-    agent.send = Mock()
-    agent.receive = Mock()
-    agent.generate_reply = Mock()
-
-    return agent
+    """Create mock AutoGen v0.2.x ConversableAgent."""
+    return _create_mock_agent("test_agent")
 
 
 class TestRaxeConversationGuardInit:
@@ -105,19 +133,8 @@ class TestAgentRegistration:
 
     def test_register_all_agents(self, mock_raxe):
         """Test registering multiple agents at once."""
-        agent1 = Mock()
-        agent1.name = "agent1"
-        agent1.register_hook = Mock()
-        agent1.send = Mock()
-        agent1.receive = Mock()
-        agent1.generate_reply = Mock()
-
-        agent2 = Mock()
-        agent2.name = "agent2"
-        agent2.register_hook = Mock()
-        agent2.send = Mock()
-        agent2.receive = Mock()
-        agent2.generate_reply = Mock()
+        agent1 = _create_mock_agent("agent1")
+        agent2 = _create_mock_agent("agent2")
 
         guard = RaxeConversationGuard(mock_raxe)
         guard.register_all(agent1, agent2)
@@ -146,12 +163,8 @@ class TestAgentRegistration:
 
     def test_register_agent_without_name(self, mock_raxe):
         """Test registering agent without name raises ValueError."""
-        agent = Mock()
-        agent.name = None
-        agent.register_hook = Mock()
-        agent.send = Mock()
-        agent.receive = Mock()
-        agent.generate_reply = Mock()
+        agent = _create_mock_agent("placeholder")
+        agent.name = None  # Override to test missing name
 
         guard = RaxeConversationGuard(mock_raxe)
 
@@ -189,8 +202,11 @@ class TestHookRegistration:
         guard.register(mock_agent)
 
         # Find call with process_message_before_send
-        calls = [c for c in mock_agent.register_hook.call_args_list
-                 if c[0][0] == "process_message_before_send"]
+        calls = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_message_before_send"
+        ]
         assert len(calls) == 1
 
     def test_process_last_received_message_hook_registered(self, mock_raxe, mock_agent):
@@ -200,8 +216,11 @@ class TestHookRegistration:
         guard.register(mock_agent)
 
         # Find call with process_last_received_message
-        calls = [c for c in mock_agent.register_hook.call_args_list
-                 if c[0][0] == "process_last_received_message"]
+        calls = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_last_received_message"
+        ]
         assert len(calls) == 1
 
 
@@ -298,8 +317,11 @@ class TestOutgoingMessageScanning:
         guard.register(mock_agent)
 
         # Get the registered hook
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_message_before_send"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_message_before_send"
+        ][0]
         hook = hook_call[0][1]
 
         # Call the hook
@@ -313,8 +335,11 @@ class TestOutgoingMessageScanning:
         guard = RaxeConversationGuard(mock_raxe)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_message_before_send"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_message_before_send"
+        ][0]
         hook = hook_call[0][1]
 
         message = {"content": "Hello world"}
@@ -329,8 +354,11 @@ class TestOutgoingMessageScanning:
         guard = RaxeConversationGuard(threat_raxe, config=config)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_message_before_send"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_message_before_send"
+        ][0]
         hook = hook_call[0][1]
 
         with pytest.raises(SecurityException):
@@ -345,8 +373,11 @@ class TestIncomingMessageScanning:
         guard = RaxeConversationGuard(mock_raxe)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_last_received_message"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_last_received_message"
+        ][0]
         hook = hook_call[0][1]
 
         messages = [
@@ -363,8 +394,11 @@ class TestIncomingMessageScanning:
         guard = RaxeConversationGuard(mock_raxe)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_last_received_message"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_last_received_message"
+        ][0]
         hook = hook_call[0][1]
 
         result = hook([])
@@ -378,8 +412,11 @@ class TestIncomingMessageScanning:
         guard = RaxeConversationGuard(threat_raxe, config=config)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_last_received_message"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_last_received_message"
+        ][0]
         hook = hook_call[0][1]
 
         messages = [{"content": "Malicious input", "role": "user"}]
@@ -396,8 +433,11 @@ class TestMessageTypeDetection:
         guard = RaxeConversationGuard(mock_raxe)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_last_received_message"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_last_received_message"
+        ][0]
         hook = hook_call[0][1]
 
         messages = [{"content": "Hello", "role": "user"}]
@@ -411,8 +451,11 @@ class TestMessageTypeDetection:
         guard = RaxeConversationGuard(mock_raxe)
         guard.register(mock_agent)
 
-        hook_call = [c for c in mock_agent.register_hook.call_args_list
-                     if c[0][0] == "process_last_received_message"][0]
+        hook_call = [
+            c
+            for c in mock_agent.register_hook.call_args_list
+            if c[0][0] == "process_last_received_message"
+        ][0]
         hook = hook_call[0][1]
 
         messages = [{"content": "42", "role": "function", "name": "calculator"}]
@@ -474,12 +517,7 @@ class TestDuckTypingValidation:
         """Test agent with all required methods is valid."""
         guard = RaxeConversationGuard(mock_raxe)
 
-        agent = Mock()
-        agent.name = "valid_agent"
-        agent.register_hook = Mock()
-        agent.send = Mock()
-        agent.receive = Mock()
-        agent.generate_reply = Mock()
+        agent = _create_mock_agent("valid_agent")
 
         # Should not raise
         guard.register(agent)

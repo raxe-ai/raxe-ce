@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from raxe.infrastructure.telemetry.credential_store import compute_key_id
+from raxe.infrastructure.telemetry.credential_store import Credentials, compute_key_id
 from raxe.infrastructure.telemetry.dual_queue import DualQueue, StateKey
 from raxe.infrastructure.telemetry.sender import BatchSender
 
@@ -242,11 +242,21 @@ class TestTelemetryOrchestratorApiKeyIdStorage:
         """Mock CredentialStore to return test credentials."""
         with patch("raxe.application.telemetry_orchestrator.CredentialStore") as mock:
             mock_instance = MagicMock()
-            mock_credentials = MagicMock()
-            mock_credentials.api_key = "raxe_temp_0123456789abcdef0123456789abcdef"
-            mock_credentials.installation_id = "inst_test123456789"
-            mock_credentials.tier = "temporary"
+            # Use real Credentials dataclass instead of MagicMock to avoid
+            # serialization issues (MagicMock returns MagicMocks for any attr)
+            mock_credentials = Credentials(
+                api_key="raxe_temp_0123456789abcdef0123456789abcdef",
+                key_type="temporary",
+                installation_id="inst_test123456789",
+                created_at="2025-01-01T00:00:00Z",
+                expires_at="2025-01-15T00:00:00Z",
+                first_seen_at=None,
+                tier="temporary",
+            )
+            # Set both load() and get_or_create() return values
+            # since TelemetryOrchestrator uses get_or_create
             mock_instance.load.return_value = mock_credentials
+            mock_instance.get_or_create.return_value = mock_credentials
             mock.return_value = mock_instance
             yield mock
 
@@ -301,7 +311,9 @@ class TestAuthKeyIdFromTelemetry:
         expected_key_id = "key_fromtelemetry"
 
         # Patch the module import location (inside the function)
-        with patch("raxe.application.telemetry_orchestrator.get_orchestrator") as mock_get_orchestrator:
+        with patch(
+            "raxe.application.telemetry_orchestrator.get_orchestrator"
+        ) as mock_get_orchestrator:
             mock_orchestrator = MagicMock()
             mock_orchestrator.get_current_api_key_id.return_value = expected_key_id
             mock_get_orchestrator.return_value = mock_orchestrator
@@ -313,7 +325,9 @@ class TestAuthKeyIdFromTelemetry:
 
     def test_get_current_key_id_from_telemetry_returns_none_on_error(self):
         """Test _get_current_key_id_from_telemetry returns None on exception."""
-        with patch("raxe.application.telemetry_orchestrator.get_orchestrator") as mock_get_orchestrator:
+        with patch(
+            "raxe.application.telemetry_orchestrator.get_orchestrator"
+        ) as mock_get_orchestrator:
             mock_get_orchestrator.side_effect = Exception("Init error")
 
             from raxe.cli.auth import _get_current_key_id_from_telemetry
@@ -323,7 +337,9 @@ class TestAuthKeyIdFromTelemetry:
 
     def test_get_current_key_id_from_telemetry_returns_none_when_not_set(self):
         """Test _get_current_key_id_from_telemetry returns None when not stored."""
-        with patch("raxe.application.telemetry_orchestrator.get_orchestrator") as mock_get_orchestrator:
+        with patch(
+            "raxe.application.telemetry_orchestrator.get_orchestrator"
+        ) as mock_get_orchestrator:
             mock_orchestrator = MagicMock()
             mock_orchestrator.get_current_api_key_id.return_value = None
             mock_get_orchestrator.return_value = mock_orchestrator
@@ -340,8 +356,10 @@ class TestHttpShipperApiKeyId:
     def test_http_shipper_passes_api_key_id_to_sender(self):
         """Test HttpShipper passes api_key_id to BatchSender."""
         # Patch the sender import inside HttpShipper.__init__
-        with patch("raxe.infrastructure.telemetry.sender.BatchSender") as mock_sender, \
-             patch("raxe.infrastructure.telemetry.sender.CircuitBreaker"):
+        with (
+            patch("raxe.infrastructure.telemetry.sender.BatchSender") as mock_sender,
+            patch("raxe.infrastructure.telemetry.sender.CircuitBreaker"),
+        ):
             from raxe.infrastructure.telemetry.flush_scheduler import HttpShipper
 
             test_key_id = "key_test123"
@@ -360,8 +378,10 @@ class TestHttpShipperApiKeyId:
 
     def test_http_shipper_update_credentials_updates_api_key_id(self):
         """Test HttpShipper.update_credentials updates api_key_id."""
-        with patch("raxe.infrastructure.telemetry.sender.BatchSender") as mock_sender, \
-             patch("raxe.infrastructure.telemetry.sender.CircuitBreaker"):
+        with (
+            patch("raxe.infrastructure.telemetry.sender.BatchSender") as mock_sender,
+            patch("raxe.infrastructure.telemetry.sender.CircuitBreaker"),
+        ):
             from raxe.infrastructure.telemetry.flush_scheduler import HttpShipper
 
             mock_sender_instance = MagicMock()

@@ -234,6 +234,7 @@ class ModelDiscoveryService:
             from raxe.infrastructure.ml.model_downloader import (
                 CURRENT_MODEL,
                 download_model,
+                get_remote_file_size,
                 is_model_installed,
             )
 
@@ -244,8 +245,9 @@ class ModelDiscoveryService:
                 model_dir = user_models / CURRENT_MODEL.folder_name
                 return self._create_onnx_folder_model(model_dir)
 
-            # Get model metadata for progress display (single source of truth)
-            expected_size = CURRENT_MODEL.size_mb * 1024 * 1024  # Convert to bytes
+            # Get actual file size from server (fallback to metadata estimate)
+            actual_size = get_remote_file_size(CURRENT_MODEL.url)
+            expected_size = actual_size if actual_size else CURRENT_MODEL.size_mb * 1024 * 1024
 
             # Create progress indicator based on environment
             # - Interactive terminal: Rich progress bar with speed/ETA

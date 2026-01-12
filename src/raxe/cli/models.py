@@ -2,6 +2,7 @@
 
 Provides commands to list, inspect, test, and compare L2 models.
 """
+
 import click
 from rich.panel import Panel
 from rich.table import Table
@@ -83,7 +84,7 @@ def list_models(status: str, runtime: str):
 
         # Format accuracy
         if model.accuracy and model.accuracy.binary_f1:
-            accuracy_str = f"{model.accuracy.binary_f1*100:.1f}%"
+            accuracy_str = f"{model.accuracy.binary_f1 * 100:.1f}%"
             # Add emoji for high accuracy
             if model.accuracy.binary_f1 > 0.92:
                 accuracy_str += " 🎯"
@@ -112,14 +113,18 @@ def list_models(status: str, runtime: str):
     console.print()
 
     # Show legend
-    console.print("[dim]Legend: ⚡ = Fast (<20ms)  ⚡⚡ = Ultra-fast (<10ms)  🎯 = High accuracy (>92%)[/dim]")
+    console.print(
+        "[dim]Legend: ⚡ = Fast (<20ms)  ⚡⚡ = Ultra-fast (<10ms)  🎯 = High accuracy (>92%)[/dim]"
+    )
     console.print()
 
     # Show summary
     active_count = len([m for m in models_list if m.is_active])
     experimental_count = len([m for m in models_list if m.is_experimental])
 
-    console.print(f"[dim]Total: {len(models_list)} models  |  Active: {active_count}  |  Experimental: {experimental_count}[/dim]")
+    console.print(
+        f"[dim]Total: {len(models_list)} models  |  Active: {active_count}  |  Experimental: {experimental_count}[/dim]"
+    )
     console.print()
 
 
@@ -164,7 +169,9 @@ def model_info(model_id: str):
         "deprecated": "red",
     }
     info.append("Status: ", style="bold")
-    info.append(f"{model.status.value.upper()}", style=status_color.get(model.status.value, "white"))
+    info.append(
+        f"{model.status.value.upper()}", style=status_color.get(model.status.value, "white")
+    )
     info.append("\n\n")
 
     # Performance
@@ -185,15 +192,15 @@ def model_info(model_id: str):
     if model.accuracy:
         info.append("Accuracy Metrics:\n", style="bold green")
         if model.accuracy.binary_f1:
-            info.append(f"  Binary F1: {model.accuracy.binary_f1*100:.1f}%\n")
+            info.append(f"  Binary F1: {model.accuracy.binary_f1 * 100:.1f}%\n")
         if model.accuracy.family_f1:
-            info.append(f"  Family F1: {model.accuracy.family_f1*100:.1f}%\n")
+            info.append(f"  Family F1: {model.accuracy.family_f1 * 100:.1f}%\n")
         if model.accuracy.subfamily_f1:
-            info.append(f"  Subfamily F1: {model.accuracy.subfamily_f1*100:.1f}%\n")
+            info.append(f"  Subfamily F1: {model.accuracy.subfamily_f1 * 100:.1f}%\n")
         if model.accuracy.false_positive_rate:
-            info.append(f"  False Positive Rate: {model.accuracy.false_positive_rate*100:.2f}%\n")
+            info.append(f"  False Positive Rate: {model.accuracy.false_positive_rate * 100:.2f}%\n")
         if model.accuracy.false_negative_rate:
-            info.append(f"  False Negative Rate: {model.accuracy.false_negative_rate*100:.2f}%\n")
+            info.append(f"  False Negative Rate: {model.accuracy.false_negative_rate * 100:.2f}%\n")
         info.append("\n")
 
     # Requirements
@@ -342,7 +349,7 @@ def compare_models(model_ids: tuple[str, ...]):
 
         # Accuracy
         accuracy = model.accuracy.binary_f1 if model.accuracy else None
-        accuracy_str = f"{accuracy*100:.1f}%" if accuracy else "unknown"
+        accuracy_str = f"{accuracy * 100:.1f}%" if accuracy else "unknown"
 
         # Memory
         memory = model.performance.memory_mb or 0
@@ -370,13 +377,17 @@ def compare_models(model_ids: tuple[str, ...]):
     best_accuracy = max(
         [m for m in models_dict.values() if m.accuracy and m.accuracy.binary_f1],
         key=lambda m: m.accuracy.binary_f1,
-        default=None
+        default=None,
     )
 
     console.print("[bold]Recommendations:[/bold]")
-    console.print(f"  ⚡ Fastest: [cyan]{best_latency.model_id}[/cyan] ({best_latency.performance.p95_latency_ms:.1f}ms)")
+    console.print(
+        f"  ⚡ Fastest: [cyan]{best_latency.model_id}[/cyan] ({best_latency.performance.p95_latency_ms:.1f}ms)"
+    )
     if best_accuracy:
-        console.print(f"  🎯 Most Accurate: [cyan]{best_accuracy.model_id}[/cyan] ({best_accuracy.accuracy.binary_f1*100:.1f}%)")
+        console.print(
+            f"  🎯 Most Accurate: [cyan]{best_accuracy.model_id}[/cyan] ({best_accuracy.accuracy.binary_f1 * 100:.1f}%)"
+        )
     console.print()
 
 
@@ -418,6 +429,7 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
         MODEL_REGISTRY,
         download_model,
         get_available_models,
+        get_remote_file_size,
         is_model_installed,
     )
 
@@ -434,7 +446,11 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
         console.print()
 
         for model in available:
-            status = "[green]✓ Installed[/green]" if model["installed"] else "[yellow]Not installed[/yellow]"
+            status = (
+                "[green]✓ Installed[/green]"
+                if model["installed"]
+                else "[yellow]Not installed[/yellow]"
+            )
             default_tag = " [cyan](default)[/cyan]" if model["is_default"] else ""
             console.print(f"  • [cyan]{model['id']}[/cyan]{default_tag}")
             console.print(f"    {model['description']}")
@@ -469,7 +485,15 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
             console.print(f"[green]✓[/green] {metadata['name']} already installed")
             continue
 
-        console.print(f"[bold]Downloading:[/bold] {metadata['name']} (~{metadata['size_mb']}MB)")
+        # Get actual file size from server (fallback to metadata estimate)
+        url = str(metadata["url"])
+        actual_size_bytes = get_remote_file_size(url)
+        if actual_size_bytes:
+            size_mb = actual_size_bytes / (1024 * 1024)
+        else:
+            size_mb = int(metadata["size_mb"])
+
+        console.print(f"[bold]Downloading:[/bold] {metadata['name']} (~{size_mb:.0f}MB)")
 
         # Create progress bar
         with Progress(
@@ -480,7 +504,12 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task(f"Downloading {model_id}...", total=metadata["size_mb"] * 1024 * 1024)
+            # Use actual size if available, otherwise fallback to metadata estimate
+            if actual_size_bytes:
+                initial_total = actual_size_bytes
+            else:
+                initial_total = int(metadata["size_mb"]) * 1024 * 1024
+            task = progress.add_task(f"Downloading {model_id}...", total=initial_total)
 
             def update_progress(downloaded: int, total: int) -> None:
                 if total > 0:
@@ -489,7 +518,9 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
                     progress.update(task, completed=downloaded)
 
             try:
-                model_path = download_model(model_id, progress_callback=update_progress, force=force)
+                model_path = download_model(
+                    model_id, progress_callback=update_progress, force=force
+                )
                 console.print(f"[green]✓[/green] Installed to: {model_path}")
                 console.print()
             except Exception as e:
@@ -506,13 +537,14 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
     try:
         import numpy  # noqa: F401
         import onnxruntime  # noqa: F401
+
         ml_ready = True
     except ImportError:
         ml_ready = False
 
     if ml_ready:
         console.print("Next steps:")
-        console.print("  • Run [cyan]raxe scan \"test prompt\"[/cyan] to use L2 detection")
+        console.print('  • Run [cyan]raxe scan "test prompt"[/cyan] to use L2 detection')
         console.print("  • Run [cyan]raxe models list[/cyan] to see installed models")
     else:
         console.print("[yellow]ML dependencies not installed.[/yellow]")
@@ -556,7 +588,9 @@ def model_status():
     table.add_column("Notes")
 
     for model in available:
-        status = "[green]✓ Ready[/green]" if model["installed"] else "[yellow]Not installed[/yellow]"
+        status = (
+            "[green]✓ Ready[/green]" if model["installed"] else "[yellow]Not installed[/yellow]"
+        )
         notes = "Default" if model["is_default"] else ""
         table.add_row(
             model["id"],

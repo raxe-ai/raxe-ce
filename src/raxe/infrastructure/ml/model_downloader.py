@@ -1,7 +1,7 @@
 """Model downloader for fetching L2 models post-installation.
 
 Downloads Gemma-based ML models from GitHub Releases after pip install.
-Models are too large for PyPI (~330MB vs 100MB limit), so we download on-demand.
+Models are too large for PyPI (~235MB vs 100MB limit), so we download on-demand.
 
 Architecture: Single source of truth for model configuration.
 - CURRENT_MODEL: The one model that RAXE uses (change only this to update)
@@ -10,7 +10,7 @@ Architecture: Single source of truth for model configuration.
 Current model (v0.3.0 - RAXE 0.7.0+):
 - Gemma MLP 5-head classifier with BinaryFirstEngine
 - TPR: 90.4%, FPR: 7.4%
-- INT8 quantized for CPU inference (~330MB)
+- INT8 quantized for CPU inference (~235MB)
 """
 
 from __future__ import annotations
@@ -25,9 +25,32 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 logger = logging.getLogger(__name__)
+
+
+def get_remote_file_size(url: str, timeout: int = 10) -> int | None:
+    """Get file size from server via HEAD request.
+
+    This is useful for displaying accurate download sizes before starting
+    the actual download. Uses a lightweight HEAD request instead of GET.
+
+    Args:
+        url: URL to check
+        timeout: Request timeout in seconds
+
+    Returns:
+        File size in bytes, or None if unavailable
+    """
+    try:
+        request = Request(url, method="HEAD")
+        with urlopen(request, timeout=timeout) as response:  # nosec B310 - URLs are from CURRENT_MODEL config
+            content_length = response.headers.get("Content-Length")
+            return int(content_length) if content_length else None
+    except Exception:
+        return None
+
 
 # =============================================================================
 # SINGLE SOURCE OF TRUTH: Change ONLY this section to update the model
@@ -56,7 +79,7 @@ CURRENT_MODEL = ModelConfig(
     id="threat_classifier_gemma_mlp_v3",
     name="Threat Classifier Gemma MLP v3",
     description="Gemma MLP 5-head classifier with BinaryFirstEngine. TPR 90.4%, FPR 7.4%.",
-    size_mb=330,
+    size_mb=235,  # Actual compressed size; use get_remote_file_size() for exact value
     url=f"{_MODEL_BASE_URL}/threat_classifier_gemma_mlp_v3_deploy.tar.gz",
     sha256="4e60e8e5774c82939b2181488d81414511f02410928dee6b0713f03b95bf621e",
     folder_name="threat_classifier_gemma_mlp_v3_deploy",

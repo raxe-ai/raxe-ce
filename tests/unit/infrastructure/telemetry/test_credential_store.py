@@ -485,7 +485,7 @@ class TestCredentialStore:
 
         # Verify error details
         assert exc_info.value.days_expired >= 1
-        assert "console.raxe.ai" in exc_info.value.console_url
+        assert "raxe.ai" in exc_info.value.console_url
 
     def test_upgrade_key_live(self, temp_credentials_file: Path) -> None:
         """Test upgrading to live key."""
@@ -782,9 +782,7 @@ class TestHealthCheckStale:
     def test_is_health_check_stale_old(self) -> None:
         """Test old health check is stale."""
         # Use old timestamp (48 hours ago)
-        old = (datetime.now(timezone.utc) - timedelta(hours=48)).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        )
+        old = (datetime.now(timezone.utc) - timedelta(hours=48)).strftime("%Y-%m-%dT%H:%M:%SZ")
         creds = Credentials(
             api_key="raxe_temp_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
             key_type="temporary",
@@ -851,10 +849,12 @@ class TestUpdateFromHealth:
         creds_file = tmp_path / "missing.json"
         store = CredentialStore(credential_path=creds_file)
 
-        result = store.update_from_health({
-            "can_disable_telemetry": True,
-            "tier": "pro",
-        })
+        result = store.update_from_health(
+            {
+                "can_disable_telemetry": True,
+                "tier": "pro",
+            }
+        )
         assert result is None
 
     def test_update_from_health_persists(self, tmp_path: Path) -> None:
@@ -866,11 +866,13 @@ class TestUpdateFromHealth:
         store.get_or_create(raise_on_expired=False)
 
         # Update from health response
-        store.update_from_health({
-            "can_disable_telemetry": True,
-            "tier": "enterprise",
-            "server_time": "2025-01-26T14:00:00Z",
-        })
+        store.update_from_health(
+            {
+                "can_disable_telemetry": True,
+                "tier": "enterprise",
+                "server_time": "2025-01-26T14:00:00Z",
+            }
+        )
 
         # Load fresh to verify persistence
         new_store = CredentialStore(credential_path=creds_file)
@@ -898,11 +900,13 @@ class TestUpdateFromHealth:
         store.save(creds)
 
         # Update from health
-        updated = store.update_from_health({
-            "can_disable_telemetry": False,
-            "tier": "community",
-            "server_time": "2025-01-26T12:00:00Z",
-        })
+        updated = store.update_from_health(
+            {
+                "can_disable_telemetry": False,
+                "tier": "community",
+                "server_time": "2025-01-26T12:00:00Z",
+            }
+        )
 
         assert updated is not None
         assert updated.first_seen_at == "2025-01-26T10:30:00Z"
@@ -915,7 +919,7 @@ class TestCredentialExpiredError:
         """Test creating error with default values."""
         error = CredentialExpiredError("Key expired")
         assert str(error) == "Key expired"
-        assert error.console_url == "https://console.raxe.ai/keys"
+        assert error.console_url == "https://console.beta.raxe.ai/keys"
         assert error.days_expired == 0
 
     def test_error_creation_with_custom_values(self) -> None:
@@ -1153,6 +1157,7 @@ class TestComputeKeyId:
     def test_hex_suffix_is_valid(self) -> None:
         """Test the suffix is valid hexadecimal."""
         import re
+
         api_key = "raxe_temp_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
         key_id = compute_key_id(api_key)
 

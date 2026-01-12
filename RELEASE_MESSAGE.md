@@ -1,66 +1,55 @@
-# RAXE v0.4.0 - Agentic Framework Integrations
+# RAXE v0.7.0 - Enhanced ML Detection for Agent Runtime Security
 
-We're excited to announce RAXE v0.4.0 with first-class support for the most popular agentic AI frameworks!
+**Protecting Agents from Agents at Runtime**
+
+RAXE v0.7.0 delivers significant ML model improvements for higher-quality threat detection in agentic AI systems. As agents increasingly communicate with other agents, the attack surface expands—RAXE now catches more sophisticated threats with greater accuracy.
 
 ## What's New
 
-### Agentic Framework Integrations
+### ML Model v3: BinaryFirstEngine
 
-RAXE now seamlessly integrates with your existing multi-agent systems:
+A completely redesigned voting engine that prioritizes the binary threat classifier for faster, more accurate decisions:
 
-**LangChain** - Just add the callback handler:
-```python
-from langchain.llms import OpenAI
-from raxe.sdk.integrations import RaxeCallbackHandler
+- **Higher accuracy** - Binary-first approach reduces false positives while maintaining high recall
+- **Faster decisions** - Optimized inference path for sub-3ms latency
+- **Better explainability** - Clear voting rationale shows why threats were detected
+- **Novel attack detection** - Identifies "Uncategorized Threats" that don't fit known families
 
-llm = OpenAI(callbacks=[RaxeCallbackHandler()])
+### Improved Detection Quality
+
+- **Handcrafted feature alignment** - Feature extraction now matches training exactly, improving model consistency
+- **Family classification** - L1 detections now correctly report threat families (PI, JB, PII, CMD, ENC, RAG)
+- **Uncertainty handling** - When the model detects a threat but can't classify the family, it now clearly indicates uncertainty rather than mislabeling
+
+### Agent-to-Agent Security
+
+RAXE protects the full agent communication chain:
+
+```
+User → Agent A → Agent B → Tool → Response
+         ↓          ↓        ↓
+       RAXE      RAXE     RAXE
 ```
 
-**CrewAI** - Protect your crews with step callbacks:
-```python
-from raxe.sdk.integrations import RaxeCrewGuard
+Every message between agents is scanned for:
+- Prompt injection attempts
+- Jailbreak escalation
+- Tool abuse patterns
+- Data exfiltration
+- Encoded/obfuscated attacks
 
-guard = RaxeCrewGuard(Raxe())
-crew = Crew(agents=[...], step_callback=guard.step_callback)
-```
+### Integration Highlights
 
-**AutoGen** - Works with both v0.2.x and v0.4+:
-```python
-from raxe.sdk.integrations import RaxeConversationGuard
+Works with all major agentic frameworks:
 
-guard = RaxeConversationGuard(Raxe())
-guard.register(my_agent)  # v0.2.x
-# or
-protected = guard.wrap_agent(agent)  # v0.4+
-```
-
-**LlamaIndex** - Callback and instrumentation support:
-```python
-from raxe.sdk.integrations import RaxeLlamaIndexCallback
-
-Settings.callback_manager = CallbackManager([RaxeLlamaIndexCallback()])
-```
-
-**Portkey AI Gateway** - Custom guardrail webhook:
-```python
-from raxe.sdk.integrations import RaxePortkeyWebhook
-
-webhook = RaxePortkeyWebhook()  # Use as Portkey guardrail
-```
-
-### Core AgentScanner
-
-All integrations are powered by the new unified `AgentScanner`:
-- `ScanMode` - LOG_ONLY, BLOCK_ON_THREAT, BLOCK_ON_HIGH, BLOCK_ON_CRITICAL
-- `ToolPolicy` - Block dangerous tools like shell, file_write
-- `MessageType` - Track HUMAN_INPUT, AGENT_TO_AGENT, FUNCTION_CALL, FUNCTION_RESULT
-
-### Key Features
-
-- **Log-only by default** - Safe to add to production without breaking flows
-- **Blocking when you need it** - Enable `block_on_prompt_threats=True` for strict mode
-- **Tool validation** - Prevent agents from using dangerous tools
-- **Trace-aware scanning** - Correlation IDs for debugging multi-agent flows
+| Framework | Integration |
+|-----------|-------------|
+| LangChain | `RaxeCallbackHandler` |
+| CrewAI | `RaxeCrewGuard` |
+| AutoGen | `RaxeConversationGuard` |
+| LlamaIndex | `RaxeLlamaIndexCallback` |
+| LiteLLM | `RaxeLiteLLMCallback` |
+| OpenAI SDK | `RaxeOpenAI` wrapper |
 
 ## Upgrade
 
@@ -68,14 +57,19 @@ All integrations are powered by the new unified `AgentScanner`:
 pip install --upgrade raxe
 ```
 
+The ML model will auto-download on first scan (~235MB).
+
+## Technical Details
+
+- **Voting Engine**: `BinaryFirstEngine` with configurable presets (balanced, high_security, low_fp)
+- **Telemetry Schema**: v2.2.0 with improved family tracking and uncertainty metadata
+- **Dependencies**: scikit-learn 1.7.x pinned for feature scaler compatibility
+
 ## Documentation
 
+- [Detection Engine](https://docs.raxe.ai/concepts/detection-engine)
+- [Threat Families](https://docs.raxe.ai/concepts/threat-families)
 - [Integration Guide](https://docs.raxe.ai/integrations)
-- [LangChain](https://docs.raxe.ai/integrations/langchain)
-- [CrewAI](https://docs.raxe.ai/integrations/crewai)
-- [AutoGen](https://docs.raxe.ai/integrations/autogen)
-- [LlamaIndex](https://docs.raxe.ai/integrations/llamaindex)
-- [Portkey](https://docs.raxe.ai/integrations/portkey)
 
 ---
 

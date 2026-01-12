@@ -6,8 +6,8 @@
 ## Schema Version
 
 ```
-Version: 2.1.0
-Last Updated: 2025-12-13
+Version: 2.2.0
+Last Updated: 2026-01-12
 Status: LOCKED (changes require version bump)
 ```
 
@@ -194,7 +194,7 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 | `l1.duration_ms` | `l1_result.scan_duration_ms` | L1Result |
 | `l1.detection_count` | `len(l1_result.detections)` | L1Result |
 | `l1.highest_severity` | `max(d.severity for d in detections)` | L1Result |
-| `l1.families` | `list(set(d.family for d in detections))` | L1Result |
+| `l1.families` | Extracted from `d.category` field, normalized to uppercase (e.g., "pi" → "PI") | Detection.category |
 | `l1.detections[].confidence` | `detection.confidence` (default 1.0) | Detection |
 
 ### L2 Fields (5-Head Model)
@@ -265,6 +265,17 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 | `quality.binary_margin` | `abs(threat_probability - 0.5)` | Derived |
 | `quality.family_entropy` | `-sum(p * log(p) for p in family_probs if p > 0)` | Derived |
 | `quality.consistency_score` | Custom head agreement metric | Derived |
+
+#### Family Uncertainty Metadata (NEW in v2.2)
+
+When the binary classifier detects a threat but the family classifier returns "benign" with low confidence, this indicates a potential novel attack pattern that doesn't fit known threat families.
+
+| Field | Calculation | Source |
+|-------|-------------|--------|
+| `metadata.family_uncertain` | `family == "benign" and family_confidence < 0.60` | Derived |
+| `metadata.threat_type_display` | `"uncategorized_threat"` when family_uncertain is true | Derived |
+
+**CLI Behavior:** When `family_uncertain` is true, the CLI displays "Uncategorized Threat" instead of "Benign" to avoid user confusion.
 
 #### Voting Engine (NEW in v2.1)
 
@@ -410,6 +421,12 @@ telemetry = builder.build(
 ---
 
 ## Changelog
+
+### v2.2.0 (2026-01-12)
+- Fixed L1 family extraction to read from `Detection.category` field (was incorrectly looking for non-existent `family` field)
+- Added `L1_CATEGORY_TO_FAMILY` mapping for consistent uppercase family codes (e.g., "pi" → "PI")
+- Added `metadata.family_uncertain` flag for L2 when binary=threat but family=benign with low confidence
+- Added `metadata.threat_type_display` for CLI to show "Uncategorized Threat" in uncertain cases
 
 ### v2.1.0 (2025-12-13)
 - Added `l2.voting` block for ensemble voting engine transparency

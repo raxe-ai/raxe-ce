@@ -1,6 +1,102 @@
 # CHANGELOG
 
 
+## v0.7.0 (2026-01-12)
+
+### Bug Fixes
+
+- **deps**: Pin scikit-learn to 1.7.x for feature_scaler compatibility
+  ([`fb1cb1c`](https://github.com/raxe-ai/raxe-ce/commit/fb1cb1c5f60bcb73bdc8770f161af820f2214d9c))
+
+The feature_scaler.pkl was trained with sklearn 1.7.2. Without pinning, users get
+  InconsistentVersionWarning when sklearn 1.8.0 is installed.
+
+Pin to >=1.7.0,<1.8.0 to ensure compatibility with the trained scaler.
+
+- **ml**: Correct handcrafted feature extraction to match training
+  ([`92d6bdc`](https://github.com/raxe-ai/raxe-ce/commit/92d6bdc575c63880f9deebb657ffa5a5bd738d48))
+
+CRITICAL FIX: Feature extraction in inference didn't match training code.
+
+Changes: - text_length: Changed from len/1000 to log1p(len)/10.0 - special_char_ratio: Changed regex
+  from explicit chars to [^\w\s] - is_hh_rlhf: Changed pattern to \bHuman: with word boundary
+
+This was causing L2 to output ~12% threat probability for obvious attack prompts instead of the
+  expected 95%+.
+
+Reference: raxe-ml/generate_model/scripts/02_train_model.py
+
+Verified: - TPR: 91.80% (threshold: 90%) - FPR: 9.80% (threshold: 10%) - All 207 ML unit tests pass
+
+- **ml**: Fetch actual model download size via HEAD request
+  ([`eba31c2`](https://github.com/raxe-ai/raxe-ce/commit/eba31c243adc3235756fd06d89920cf236ad67e4))
+
+Previously, the model download displayed a hardcoded size (330MB) that didn't match the actual
+  download size (235MB), causing user confusion.
+
+Changes: - Add get_remote_file_size() function using HEAD request to fetch actual Content-Length
+  before displaying download messages - Update CURRENT_MODEL.size_mb from 330 to 235 (actual
+  compressed size) - Update models.py and discovery.py to use actual size with fallback - Add unit
+  tests for get_remote_file_size() - Add comprehensive fresh install testing guide with BQ
+  verification
+
+The announced size now matches the actual download progress bar.
+
+- **telemetry**: Improve L1 family extraction and L2 uncategorized threat handling
+  ([`09d4d50`](https://github.com/raxe-ai/raxe-ce/commit/09d4d5078ce556bc9c02bc447e643cd8563c1ea6))
+
+- Fix L1 family showing "unknown" by reading from Detection.category field - Add
+  L1_CATEGORY_TO_FAMILY mapping for consistent uppercase family codes - Add family_uncertain
+  metadata flag when binary=threat but family=benign - Update CLI to show "Uncategorized Threat" for
+  low-confidence benign families - Add unit tests for family extraction logic - Add
+  FRESH_INSTALL_TEST_GUIDE.md to .gitignore (internal doc)
+
+- **test**: Correct version assertion in test_create_minimal_rule
+  ([`0667138`](https://github.com/raxe-ai/raxe-ce/commit/0667138a54b57429747edbe81c6d0df9b59f7360))
+
+- **test**: Correct version assertion in test_creates_valid_installation_event
+  ([`800d0ff`](https://github.com/raxe-ai/raxe-ce/commit/800d0ffafec1d73a0c3cc026d2b9a7398d67d047))
+
+- **test**: Update console URL assertions for beta environment
+  ([`8f84c08`](https://github.com/raxe-ai/raxe-ce/commit/8f84c08274d0f6eef1ced632148ee2cd7626a404))
+
+- **test**: Use lowercase severity values to match type hints
+  ([`a6cd459`](https://github.com/raxe-ai/raxe-ce/commit/a6cd4594239c29542d5edebd5226763971526279))
+
+### Chores
+
+- Bump version to 0.7.0 and apply formatting
+  ([`2774554`](https://github.com/raxe-ai/raxe-ce/commit/2774554b9763374435935efe60a51d04ef0fc8a1))
+
+Version bump for RAXE 0.7.0 release with: - BinaryFirstEngine voting (TPR 90.4%, FPR 7.4%) - Model
+  v3 with 768d embeddings - Fixed handcrafted feature extraction
+
+Also applies ruff formatting to ML module files.
+
+### Documentation
+
+- Update release message for v0.7.0 and telemetry schema to v2.2.0
+  ([`6b4ae6b`](https://github.com/raxe-ai/raxe-ce/commit/6b4ae6b0bf4795b6d5b3fc47c024a9274678c63f))
+
+- Update RELEASE_MESSAGE.md with ML model v3 enhancements - Focus on Agent Runtime Security
+  messaging - Update telemetry schema to document L1 family extraction fix - Add family_uncertain
+  metadata documentation
+
+### Features
+
+- **ml**: Add BinaryFirstEngine voting engine for model v3
+  ([`c4eb738`](https://github.com/raxe-ai/raxe-ce/commit/c4eb738816631405580b190147205c4f8d98740f))
+
+New voting engine that uses binary head as primary decision maker: - TPR: 90.4%, FPR: 7.4% (meets
+  production thresholds) - Auxiliary heads used for suppression only (reduce FP) - Zone-based
+  confidence: HIGH (≥0.85), MID (0.50-0.85), LOW (<0.50)
+
+Changes: - Add BinaryFirstEngine with comprehensive tests (628 test lines) - Update model_downloader
+  to v0.3.0 model (single source of truth) - Update discovery service to prefer DEFAULT_MODEL -
+  Export BinaryFirstEngine from voting module - Show L2 model version in CLI scan output - Fix
+  docstring: 256d → 768d embeddings for model v3
+
+
 ## v0.6.0 (2026-01-05)
 
 ### Documentation

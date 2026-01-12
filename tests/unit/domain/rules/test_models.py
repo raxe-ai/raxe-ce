@@ -3,6 +3,7 @@
 Tests pure domain logic - no I/O operations, no mocks needed.
 These tests should be fast and comprehensive.
 """
+
 import re
 
 import pytest
@@ -194,7 +195,7 @@ class TestRule:
         )
 
         assert rule.rule_id == "test-001"
-        assert rule.version == "1.0.0"
+        assert rule.version == "0.0.1"
         assert rule.family == RuleFamily.PI
         assert rule.severity == Severity.HIGH
 

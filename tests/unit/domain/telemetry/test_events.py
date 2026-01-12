@@ -623,7 +623,7 @@ class TestCreateScanEvent:
             prompt_hash="a" * 64,
             threat_detected=True,
             scan_duration_ms=4.5,
-            highest_severity="LOW",
+            highest_severity="low",
         )
 
         assert event.priority == "standard"
@@ -634,29 +634,29 @@ class TestCreateScanEvent:
             prompt_hash="a" * 64,
             threat_detected=True,
             scan_duration_ms=4.5,
-            highest_severity="MEDIUM",
+            highest_severity="medium",
         )
 
         assert event.priority == "standard"
 
     def test_critical_priority_for_high_severity(self) -> None:
-        """Scans with HIGH severity should have critical priority."""
+        """Scans with high severity should have critical priority."""
         event = create_scan_event(
             prompt_hash="a" * 64,
             threat_detected=True,
             scan_duration_ms=4.5,
-            highest_severity="HIGH",
+            highest_severity="high",
         )
 
         assert event.priority == "critical"
 
     def test_critical_priority_for_critical_severity(self) -> None:
-        """Scans with CRITICAL severity should have critical priority."""
+        """Scans with critical severity should have critical priority."""
         event = create_scan_event(
             prompt_hash="a" * 64,
             threat_detected=True,
             scan_duration_ms=4.5,
-            highest_severity="CRITICAL",
+            highest_severity="critical",
         )
 
         assert event.priority == "critical"
@@ -668,7 +668,7 @@ class TestCreateScanEvent:
             threat_detected=True,
             scan_duration_ms=4.5,
             detection_count=2,
-            highest_severity="HIGH",
+            highest_severity="high",
             rule_ids=["pi-001", "pi-002"],
             families=["PI"],
             l1_duration_ms=1.5,
@@ -683,7 +683,7 @@ class TestCreateScanEvent:
         )
 
         assert event.payload["detection_count"] == 2
-        assert event.payload["highest_severity"] == "HIGH"
+        assert event.payload["highest_severity"] == "high"
         assert event.payload["rule_ids"] == ["pi-001", "pi-002"]
         assert event.payload["families"] == ["PI"]
         assert event.payload["l1_duration_ms"] == 1.5
@@ -712,11 +712,11 @@ class TestCreateScanEvent:
     @pytest.mark.parametrize(
         "severity,expected_priority",
         [
-            ("NONE", "standard"),
-            ("LOW", "standard"),
-            ("MEDIUM", "standard"),
-            ("HIGH", "critical"),
-            ("CRITICAL", "critical"),
+            ("none", "standard"),
+            ("low", "standard"),
+            ("medium", "standard"),
+            ("high", "critical"),
+            ("critical", "critical"),
         ],
     )
     def test_priority_by_severity(self, severity: str, expected_priority: str) -> None:

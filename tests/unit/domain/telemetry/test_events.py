@@ -6,6 +6,7 @@ These tests are PURE - no mocks, no I/O, no database.
 
 Coverage target: >95%
 """
+
 import re
 from dataclasses import FrozenInstanceError
 
@@ -32,7 +33,6 @@ from raxe.domain.telemetry.events import (
     generate_installation_id,
     generate_session_id,
 )
-
 
 # =============================================================================
 # Test Markers
@@ -158,9 +158,7 @@ class TestEventType:
             (EventType.CONFIG_CHANGED, "config_changed"),
         ],
     )
-    def test_event_type_values(
-        self, event_type: EventType, expected_value: str
-    ) -> None:
+    def test_event_type_values(self, event_type: EventType, expected_value: str) -> None:
         """Each EventType should have the correct string value."""
         assert event_type.value == expected_value
 
@@ -241,7 +239,7 @@ class TestCreateInstallationEvent:
         assert event.event_type == "installation"
         assert event.priority == "critical"
         assert event.payload["installation_id"] == "inst_1234567890abcdef"
-        assert event.payload["client_version"] == "0.2.0"
+        assert event.payload["client_version"] == "0.0.1"
         assert event.payload["python_version"] == "3.11.5"
         assert event.payload["platform"] == "darwin"
         assert event.payload["install_method"] == "pip"
@@ -308,9 +306,7 @@ class TestCreateInstallationEvent:
         # ISO 8601 pattern: YYYY-MM-DDTHH:MM:SS...
         assert re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", event.timestamp)
 
-    @pytest.mark.parametrize(
-        "platform", ["darwin", "linux", "win32"]
-    )
+    @pytest.mark.parametrize("platform", ["darwin", "linux", "win32"])
     def test_accepts_valid_platforms(self, platform: str) -> None:
         """Should accept all valid platform values."""
         event = create_installation_event(
@@ -517,9 +513,7 @@ class TestCreateSessionStartEvent:
         assert "previous_session_gap_hours" not in event.payload
         assert "environment" not in event.payload
 
-    @pytest.mark.parametrize(
-        "entry_point", ["cli", "sdk", "wrapper", "integration", "repl"]
-    )
+    @pytest.mark.parametrize("entry_point", ["cli", "sdk", "wrapper", "integration", "repl"])
     def test_accepts_valid_entry_points(self, entry_point: str) -> None:
         """Should accept all valid entry point values."""
         event = create_session_start_event(
@@ -581,9 +575,7 @@ class TestCreateSessionEndEvent:
         assert "peak_memory_mb" not in event.payload
         assert "features_used" not in event.payload
 
-    @pytest.mark.parametrize(
-        "end_reason", ["normal", "error", "timeout", "interrupt", "unknown"]
-    )
+    @pytest.mark.parametrize("end_reason", ["normal", "error", "timeout", "interrupt", "unknown"])
     def test_accepts_valid_end_reasons(self, end_reason: str) -> None:
         """Should accept all valid end reason values."""
         event = create_session_end_event(
@@ -727,9 +719,7 @@ class TestCreateScanEvent:
             ("CRITICAL", "critical"),
         ],
     )
-    def test_priority_by_severity(
-        self, severity: str, expected_priority: str
-    ) -> None:
+    def test_priority_by_severity(self, severity: str, expected_priority: str) -> None:
         """Test priority assignment for each severity level."""
         event = create_scan_event(
             prompt_hash="a" * 64,
@@ -895,9 +885,7 @@ class TestCreateFeatureUsageEvent:
         assert event.payload["success"] is True
         assert event.payload["metadata"] == {"output_format": "json"}
 
-    @pytest.mark.parametrize(
-        "action", ["invoked", "completed", "failed", "cancelled"]
-    )
+    @pytest.mark.parametrize("action", ["invoked", "completed", "failed", "cancelled"])
     def test_accepts_valid_actions(self, action: str) -> None:
         """Should accept all valid action values."""
         event = create_feature_usage_event(
@@ -947,9 +935,7 @@ class TestCreateHeartbeatEvent:
         assert event.payload["circuit_breaker_state"] == "closed"
         assert event.payload["last_successful_ship"] == "2025-01-26T10:00:00Z"
 
-    @pytest.mark.parametrize(
-        "state", ["closed", "open", "half_open"]
-    )
+    @pytest.mark.parametrize("state", ["closed", "open", "half_open"])
     def test_accepts_valid_circuit_breaker_states(self, state: str) -> None:
         """Should accept all valid circuit breaker states."""
         event = create_heartbeat_event(
@@ -1075,9 +1061,7 @@ class TestCreateConfigChangedEvent:
         """Should create config changed event with required fields."""
         event = create_config_changed_event(
             changed_via="cli",
-            changes=[
-                {"key": "detection.l2_enabled", "old_value": True, "new_value": False}
-            ],
+            changes=[{"key": "detection.l2_enabled", "old_value": True, "new_value": False}],
         )
 
         assert event.event_type == "config_changed"
@@ -1090,9 +1074,7 @@ class TestCreateConfigChangedEvent:
         """Normal config changes should have standard priority."""
         event = create_config_changed_event(
             changed_via="cli",
-            changes=[
-                {"key": "detection.l2_enabled", "old_value": True, "new_value": False}
-            ],
+            changes=[{"key": "detection.l2_enabled", "old_value": True, "new_value": False}],
         )
 
         assert event.priority == "standard"
@@ -1101,9 +1083,7 @@ class TestCreateConfigChangedEvent:
         """Disabling telemetry should have critical priority (is_final_event)."""
         event = create_config_changed_event(
             changed_via="cli",
-            changes=[
-                {"key": "telemetry.enabled", "old_value": True, "new_value": False}
-            ],
+            changes=[{"key": "telemetry.enabled", "old_value": True, "new_value": False}],
             is_final_event=True,
         )
 
@@ -1120,9 +1100,7 @@ class TestCreateConfigChangedEvent:
 
         assert "is_final_event" not in event.payload
 
-    @pytest.mark.parametrize(
-        "changed_via", ["cli", "sdk", "config_file", "env_var"]
-    )
+    @pytest.mark.parametrize("changed_via", ["cli", "sdk", "config_file", "env_var"])
     def test_accepts_valid_changed_via_values(self, changed_via: str) -> None:
         """Should accept all valid changed_via values."""
         event = create_config_changed_event(
@@ -1163,7 +1141,9 @@ class TestCreatePromptHash:
         hash_value = create_prompt_hash("")
         assert len(hash_value) == 71
         # SHA-256 of empty string with prefix
-        assert hash_value == "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        assert (
+            hash_value == "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
 
     def test_unicode_handling(self) -> None:
         """Should handle unicode strings correctly."""

@@ -770,6 +770,16 @@ class GemmaL2Detector:
             classification.family_confidence < 0.5 or classification.threat_probability < 0.6
         )
 
+        # Family uncertainty flag: binary says threat but family is benign with low confidence
+        # This indicates a likely novel attack pattern that doesn't fit known threat families
+        family_is_benign = classification.threat_family.value == "benign"
+        family_confidence_low = classification.family_confidence < 0.60
+        if family_is_benign and family_confidence_low:
+            metadata["family_uncertain"] = True
+            metadata["threat_type_display"] = "uncategorized_threat"
+        else:
+            metadata["family_uncertain"] = False
+
         # Add voting information if available
         if voting_result:
             metadata["voting"] = {

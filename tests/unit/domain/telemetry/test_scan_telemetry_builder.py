@@ -1,9 +1,170 @@
-"""Tests for ScanTelemetryBuilder voting block."""
+"""Tests for ScanTelemetryBuilder voting block and L1 family extraction."""
 
-import pytest
+from dataclasses import dataclass
 
 from raxe.domain.ml.protocol import L2Prediction, L2Result
 from raxe.domain.telemetry.scan_telemetry_builder import ScanTelemetryBuilder
+
+
+@dataclass
+class MockDetection:
+    """Mock Detection object for testing family extraction."""
+
+    rule_id: str = "unknown"
+    category: str | None = None
+    severity: str = "medium"
+    confidence: float = 0.9
+
+
+class TestGetFamilyFromDetection:
+    """Tests for _get_family_from_detection method."""
+
+    def test_extracts_family_from_category_field(self):
+        """Should extract and uppercase family from category field."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="pi-001", category="pi")
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "PI"
+
+    def test_extracts_family_from_category_jailbreak(self):
+        """Should extract JB from jb category."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="jb-002", category="jb")
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "JB"
+
+    def test_extracts_family_from_category_pii(self):
+        """Should extract PII from pii category."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="pii-001", category="pii")
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "PII"
+
+    def test_extracts_family_from_category_encoding(self):
+        """Should extract ENC from enc category."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="enc-001", category="enc")
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "ENC"
+
+    def test_falls_back_to_rule_id_prefix_when_no_category(self):
+        """Should derive family from rule_id prefix when category is None."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="pi-001", category=None)
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "PI"
+
+    def test_falls_back_to_rule_id_prefix_when_category_unknown(self):
+        """Should derive family from rule_id prefix when category is 'unknown'."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="jb-003", category="unknown")
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "JB"
+
+    def test_returns_unknown_when_no_category_and_no_hyphen(self):
+        """Should return UNKNOWN when no category and rule_id has no hyphen."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="orphan_rule", category=None)
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "UNKNOWN"
+
+    def test_handles_long_form_category_names(self):
+        """Should map long form category names to short family codes."""
+        builder = ScanTelemetryBuilder()
+
+        detection = MockDetection(rule_id="pi-001", category="prompt_injection")
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "PI"
+
+    def test_handles_missing_attributes(self):
+        """Should handle objects with missing attributes gracefully."""
+        builder = ScanTelemetryBuilder()
+
+        # Create a bare object without category attribute
+        class BareDetection:
+            rule_id = "cmd-001"
+
+        detection = BareDetection()
+        result = builder._get_family_from_detection(detection)
+
+        assert result == "CMD"
+
+
+class TestBuildL1BlockFamilies:
+    """Tests for L1 block family extraction."""
+
+    def test_l1_block_includes_families_from_category(self):
+        """Should include families extracted from Detection.category field."""
+        builder = ScanTelemetryBuilder()
+
+        # Create a mock L1Result with detections that have category field
+        class MockL1Result:
+            scan_duration_ms = 5.0
+            detections = [
+                MockDetection(rule_id="pi-001", category="pi", severity="high"),
+                MockDetection(rule_id="jb-001", category="jb", severity="high"),
+            ]
+
+        l1_result = MockL1Result()
+        result = builder._build_l1_block(l1_result)
+
+        assert result is not None
+        assert "families" in result
+        assert "PI" in result["families"]
+        assert "JB" in result["families"]
+        assert len(result["families"]) == 2
+
+    def test_l1_detection_details_include_family(self):
+        """Should include family in per-detection details."""
+        builder = ScanTelemetryBuilder()
+
+        class MockL1Result:
+            scan_duration_ms = 5.0
+            detections = [
+                MockDetection(rule_id="pi-001", category="pi", severity="high"),
+            ]
+
+        l1_result = MockL1Result()
+        result = builder._build_l1_block(l1_result)
+
+        assert result is not None
+        assert "detections" in result
+        assert len(result["detections"]) == 1
+        assert result["detections"][0]["family"] == "PI"
+
+    def test_l1_families_deduplicates(self):
+        """Should deduplicate families when multiple detections have same family."""
+        builder = ScanTelemetryBuilder()
+
+        class MockL1Result:
+            scan_duration_ms = 5.0
+            detections = [
+                MockDetection(rule_id="pi-001", category="pi", severity="high"),
+                MockDetection(rule_id="pi-002", category="pi", severity="medium"),
+                MockDetection(rule_id="pi-003", category="pi", severity="low"),
+            ]
+
+        l1_result = MockL1Result()
+        result = builder._build_l1_block(l1_result)
+
+        assert result is not None
+        assert len(result["families"]) == 1
+        assert result["families"] == ["PI"]
 
 
 class TestBuildVotingBlock:

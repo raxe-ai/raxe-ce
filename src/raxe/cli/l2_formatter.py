@@ -141,9 +141,7 @@ class L2ResultFormatter:
 
     # Remediation advice per threat type (Gemma model)
     REMEDIATION_ADVICE: ClassVar[dict[str, str]] = {
-        "benign": (
-            "No action required. The content appears safe."
-        ),
+        "benign": ("No action required. The content appears safe."),
         "data_exfiltration": (
             "Review data access controls and implement DLP policies. "
             "Block requests attempting to extract sensitive information."
@@ -192,7 +190,9 @@ class L2ResultFormatter:
     }
 
     @staticmethod
-    def _make_progress_bar(value: float, width: int = 20, filled: str = "█", empty: str = "░") -> str:
+    def _make_progress_bar(
+        value: float, width: int = 20, filled: str = "█", empty: str = "░"
+    ) -> str:
         """Create a text-based progress bar.
 
         Args:
@@ -295,7 +295,9 @@ class L2ResultFormatter:
         console.print("  If triggered, classified as:", style="dim")
         family_display = family.replace("_", " ").title()
         severity_display = severity.replace("_", " ").title()
-        technique_display = technique.replace("_", " ").title() if technique and technique != "none" else "Unknown"
+        technique_display = (
+            technique.replace("_", " ").title() if technique and technique != "none" else "Unknown"
+        )
 
         console.print(f"    Family          {family_display}", style="dim")
         console.print(f"    Severity        {severity_display}", style="dim")
@@ -365,7 +367,11 @@ class L2ResultFormatter:
 
             # Get family info for display
             family = metadata.get("family", "unknown")
-            family_display = family.replace("_", " ").title()
+            # Override display for uncategorized threats (benign family with low confidence)
+            if metadata.get("family_uncertain") and family.lower() == "benign":
+                family_display = "Uncategorized Threat"
+            else:
+                family_display = family.replace("_", " ").title()
 
             # Get display styling
             class_icon, class_color = L2ResultFormatter._get_classification_display(classification)
@@ -454,8 +460,12 @@ class L2ResultFormatter:
 
             # Main threat score with large progress bar
             threat_bar = L2ResultFormatter._make_progress_bar(binary_conf, width=20)
-            threat_color = "green" if binary_conf >= 0.8 else "yellow" if binary_conf >= 0.5 else "red"
-            threat_label = "High" if binary_conf >= 0.8 else "Medium" if binary_conf >= 0.5 else "Low"
+            threat_color = (
+                "green" if binary_conf >= 0.8 else "yellow" if binary_conf >= 0.5 else "red"
+            )
+            threat_label = (
+                "High" if binary_conf >= 0.8 else "Medium" if binary_conf >= 0.5 else "Low"
+            )
 
             threat_line = Text()
             threat_line.append("  Threat Score      ")
@@ -471,7 +481,12 @@ class L2ResultFormatter:
             severity_conf = scores.get("severity_confidence", 0.0)
 
             # Format family name nicely
-            family_display = family.replace("_", " ").title()
+            # Override display for uncategorized threats (benign family with low confidence)
+            family_uncertain = metadata.get("family_uncertain", False)
+            if family_uncertain and family.lower() == "benign":
+                family_display = "Uncategorized Threat"
+            else:
+                family_display = family.replace("_", " ").title()
             subfamily_display = subfamily.replace("_", " ").title() if subfamily else "Unknown"
             severity_display = severity.replace("_", " ").title()
 
@@ -479,6 +494,17 @@ class L2ResultFormatter:
             console.print(f"    Family          {family_display}", style="dim")
             console.print(f"    Technique       {subfamily_display}", style="dim")
             console.print(f"    Severity        {severity_display}", style="dim")
+            # Add note for uncategorized threats
+            if family_uncertain and family.lower() == "benign":
+                console.print()
+                console.print(
+                    "    ⚠️  Threat detected but family couldn't be classified.",
+                    style="yellow dim",
+                )
+                console.print(
+                    "        This may be a novel attack pattern.",
+                    style="yellow dim",
+                )
             console.print()
 
             # Confidence breakdown as simple bars (all aligned)
@@ -494,14 +520,26 @@ class L2ResultFormatter:
                 console.print(line)
 
             # All confidence signals with consistent alignment
-            print_conf_row("Threat", binary_conf,
-                          "green" if binary_conf >= 0.7 else "yellow" if binary_conf >= 0.4 else "red")
-            print_conf_row("Family", family_conf,
-                          "green" if family_conf >= 0.6 else "yellow" if family_conf >= 0.3 else "dim")
-            print_conf_row("Severity", severity_conf,
-                          "green" if severity_conf >= 0.6 else "yellow" if severity_conf >= 0.3 else "dim")
-            print_conf_row("Technique", subfamily_conf,
-                          "green" if subfamily_conf >= 0.6 else "yellow" if subfamily_conf >= 0.3 else "dim")
+            print_conf_row(
+                "Threat",
+                binary_conf,
+                "green" if binary_conf >= 0.7 else "yellow" if binary_conf >= 0.4 else "red",
+            )
+            print_conf_row(
+                "Family",
+                family_conf,
+                "green" if family_conf >= 0.6 else "yellow" if family_conf >= 0.3 else "dim",
+            )
+            print_conf_row(
+                "Severity",
+                severity_conf,
+                "green" if severity_conf >= 0.6 else "yellow" if severity_conf >= 0.3 else "dim",
+            )
+            print_conf_row(
+                "Technique",
+                subfamily_conf,
+                "green" if subfamily_conf >= 0.6 else "yellow" if subfamily_conf >= 0.3 else "dim",
+            )
 
             console.print()
 
@@ -573,7 +611,9 @@ class L2ResultFormatter:
         rule = voting.get("decision_rule_triggered", "unknown")
 
         # Color based on decision
-        decision_color = "red" if decision == "THREAT" else "yellow" if decision == "REVIEW" else "green"
+        decision_color = (
+            "red" if decision == "THREAT" else "yellow" if decision == "REVIEW" else "green"
+        )
         decision_icon = "🔴" if decision == "THREAT" else "🟡" if decision == "REVIEW" else "🟢"
 
         console.print(f"  {decision_icon} Decision: ", style=decision_color + " bold", end="")
@@ -588,7 +628,10 @@ class L2ResultFormatter:
         abstain_votes = voting.get("abstain_vote_count", 0)
 
         console.print("  Vote Summary:", style="white bold")
-        console.print(f"    🔴 THREAT: {threat_votes}  •  🟢 SAFE: {safe_votes}  •  ⚪ ABSTAIN: {abstain_votes}", style="dim")
+        console.print(
+            f"    🔴 THREAT: {threat_votes}  •  🟢 SAFE: {safe_votes}  •  ⚪ ABSTAIN: {abstain_votes}",
+            style="dim",
+        )
         console.print()
 
         # Per-head votes
@@ -649,7 +692,10 @@ class L2ResultFormatter:
         ratio = voting.get("weighted_ratio", 0) if weighted_safe > 0 else 0
 
         console.print("  Weighted Scores:", style="white bold")
-        console.print(f"    Threat: {weighted_threat:.1f}  •  Safe: {weighted_safe:.1f}  •  Ratio: {ratio:.2f}", style="dim")
+        console.print(
+            f"    Threat: {weighted_threat:.1f}  •  Safe: {weighted_safe:.1f}  •  Ratio: {ratio:.2f}",
+            style="dim",
+        )
         console.print()
 
     @staticmethod
@@ -670,7 +716,7 @@ class L2ResultFormatter:
                 "title": threat_key.replace("_", " ").title(),
                 "description": "Detected threat",
                 "icon": "⚠️",
-            }
+            },
         )
 
         # Create detailed explanation panel
@@ -685,9 +731,22 @@ class L2ResultFormatter:
         # NEW: Display ML model metadata fields if available (is_attack, family, sub_family)
         family = prediction.metadata.get("family")
         sub_family = prediction.metadata.get("sub_family")
+        family_uncertain = prediction.metadata.get("family_uncertain", False)
         if family:
             content.append("Attack Classification:\n", style="cyan bold")
-            content.append(f"  Family: {family}\n", style="white")
+            # Override display for uncategorized threats
+            if family_uncertain and family.lower() == "benign":
+                content.append("  Family: Uncategorized Threat\n", style="yellow")
+                content.append(
+                    "  ⚠️  Threat detected but family couldn't be classified.\n",
+                    style="yellow dim",
+                )
+                content.append(
+                    "      This may be a novel attack pattern.\n",
+                    style="yellow dim",
+                )
+            else:
+                content.append(f"  Family: {family}\n", style="white")
             if sub_family:
                 content.append(f"  Sub-family: {sub_family}\n", style="white")
             content.append("\n")
@@ -808,8 +867,7 @@ class L2ResultFormatter:
 
         # What to do - Remediation advice
         remediation = L2ResultFormatter.REMEDIATION_ADVICE.get(
-            threat_key,
-            "Review the prompt and apply appropriate security controls."
+            threat_key, "Review the prompt and apply appropriate security controls."
         )
         content.append("What To Do:\n", style="green bold")
         content.append(f"{remediation}\n\n", style="white")
@@ -826,13 +884,15 @@ class L2ResultFormatter:
         if family:
             panel_title += f" [{family}]"
 
-        console.print(Panel(
-            content,
-            border_style=border_color,
-            title=panel_title,
-            title_align="left",
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                content,
+                border_style=border_color,
+                title=panel_title,
+                title_align="left",
+                padding=(1, 2),
+            )
+        )
 
     @staticmethod
     def format_prediction_compact(
@@ -847,8 +907,7 @@ class L2ResultFormatter:
         """
         threat_key = prediction.threat_type.value
         threat_info = L2ResultFormatter.THREAT_DESCRIPTIONS.get(
-            threat_key,
-            {"title": threat_key.replace("_", " ").title(), "icon": "⚠️"}
+            threat_key, {"title": threat_key.replace("_", " ").title(), "icon": "⚠️"}
         )
 
         icon = threat_info["icon"]

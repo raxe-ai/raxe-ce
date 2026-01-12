@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
@@ -87,6 +87,23 @@ HARM_TYPE_LABELS = [
 
 # Severity ordering for comparison
 SEVERITY_ORDER = {"none": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+
+# L1 Family category mapping (lowercase category -> uppercase family)
+# Used to normalize category values from Detection.category field
+L1_CATEGORY_TO_FAMILY = {
+    "pi": "PI",
+    "jb": "JB",
+    "pii": "PII",
+    "cmd": "CMD",
+    "enc": "ENC",
+    "exfil": "EXFIL",
+    "rag": "RAG",
+    "other": "OTHER",
+    "prompt_injection": "PI",
+    "jailbreak": "JB",
+    "encoding": "ENC",
+    "data_exfiltration": "EXFIL",
+}
 
 
 @dataclass
@@ -202,6 +219,37 @@ class ScanTelemetryBuilder:
         hash_bytes = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         return f"sha256:{hash_bytes}"
 
+    def _get_family_from_detection(self, detection: Any) -> str:
+        """Extract normalized family name from a Detection object.
+
+        Detection objects store family info in the `category` field (lowercase).
+        This method normalizes to uppercase family name for telemetry consistency.
+
+        Priority:
+        1. category field (e.g., "pi" -> "PI")
+        2. Derive from rule_id prefix (e.g., "pi-001" -> "PI")
+        3. Fallback to "UNKNOWN"
+
+        Args:
+            detection: Detection object from L1 scan
+
+        Returns:
+            Uppercase family name (e.g., "PI", "JB", "PII")
+        """
+        # First try category field (contains lowercase family)
+        category = getattr(detection, "category", None)
+        if category and category != "unknown":
+            # Use mapping if available, otherwise uppercase the category
+            return L1_CATEGORY_TO_FAMILY.get(category.lower(), category.upper())
+
+        # Fallback: derive from rule_id prefix
+        rule_id = getattr(detection, "rule_id", "")
+        if rule_id and "-" in rule_id:
+            prefix = rule_id.split("-")[0].lower()
+            return L1_CATEGORY_TO_FAMILY.get(prefix, prefix.upper())
+
+        return "UNKNOWN"
+
     def _build_l1_block(self, l1_result: L1Result | None) -> dict[str, Any] | None:
         """Build L1 telemetry block from L1Result.
 
@@ -224,10 +272,10 @@ class ScanTelemetryBuilder:
         # Get duration
         duration_ms = getattr(l1_result, "scan_duration_ms", 0.0) or 0.0
 
-        # Extract unique families
+        # Extract unique families using category field
         families: list[str] = []
         for detection in detections:
-            family = getattr(detection, "family", None)
+            family = self._get_family_from_detection(detection)
             if family and family not in families:
                 families.append(family)
 
@@ -249,7 +297,7 @@ class ScanTelemetryBuilder:
         detection_details: list[dict[str, Any]] = []
         for detection in detections[: self.max_l1_detections]:
             rule_id = getattr(detection, "rule_id", "unknown")
-            family = getattr(detection, "family", "unknown")
+            family = self._get_family_from_detection(detection)
             severity = getattr(detection, "severity", "none")
             confidence = getattr(detection, "confidence", 1.0)
 
@@ -258,12 +306,14 @@ class ScanTelemetryBuilder:
                 severity = severity.value
             severity_str = str(severity).lower()
 
-            detection_details.append({
-                "rule_id": rule_id,
-                "family": family,
-                "severity": severity_str,
-                "confidence": float(confidence) if confidence is not None else 1.0,
-            })
+            detection_details.append(
+                {
+                    "rule_id": rule_id,
+                    "family": family,
+                    "severity": severity_str,
+                    "confidence": float(confidence) if confidence is not None else 1.0,
+                }
+            )
 
         return {
             "hit": hit,
@@ -404,9 +454,7 @@ class ScanTelemetryBuilder:
 
         return result
 
-    def _build_voting_block(
-        self, l2_result: L2Result | None
-    ) -> dict[str, Any] | None:
+    def _build_voting_block(self, l2_result: L2Result | None) -> dict[str, Any] | None:
         """Build voting block from L2Result voting field.
 
         Args:
@@ -456,9 +504,7 @@ class ScanTelemetryBuilder:
         probs = metadata.get(probs_key)
         if probs and isinstance(probs, (list, tuple)) and len(probs) == len(labels):
             # Sort by probability descending
-            sorted_items = sorted(
-                zip(labels, probs), key=lambda x: -x[1]
-            )[:3]
+            sorted_items = sorted(zip(labels, probs, strict=False), key=lambda x: -x[1])[:3]
             return [{"label": label, "probability": float(prob)} for label, prob in sorted_items]
 
         # Fallback: construct from prediction and confidence
@@ -467,9 +513,7 @@ class ScanTelemetryBuilder:
 
         return []
 
-    def _extract_severity_distribution(
-        self, metadata: dict[str, Any]
-    ) -> dict[str, float]:
+    def _extract_severity_distribution(self, metadata: dict[str, Any]) -> dict[str, float]:
         """Extract severity distribution from metadata.
 
         Args:
@@ -481,14 +525,14 @@ class ScanTelemetryBuilder:
         # Try to get full distribution
         probs = metadata.get("severity_probabilities")
         if probs and isinstance(probs, (list, tuple)) and len(probs) == 5:
-            return dict(zip(SEVERITY_LABELS, [float(p) for p in probs]))
+            return dict(zip(SEVERITY_LABELS, [float(p) for p in probs], strict=False))
 
         # Fallback: construct from prediction and confidence
         prediction = metadata.get("severity", "none")
         confidence = (metadata.get("scores", {}) or {}).get("severity_confidence", 0.0)
 
         # Initialize with small values
-        dist = {label: 0.01 for label in SEVERITY_LABELS}
+        dist = dict.fromkeys(SEVERITY_LABELS, 0.01)
         if prediction in dist:
             dist[prediction] = float(confidence)
             # Normalize
@@ -498,9 +542,7 @@ class ScanTelemetryBuilder:
 
         return dist
 
-    def _build_harm_types_block(
-        self, harm_types_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _build_harm_types_block(self, harm_types_data: dict[str, Any]) -> dict[str, Any]:
         """Build harm types block from harm types result.
 
         Args:
@@ -514,7 +556,7 @@ class ScanTelemetryBuilder:
                 "active_labels": [],
                 "active_count": 0,
                 "max_probability": 0.0,
-                "probabilities": {label: 0.0 for label in HARM_TYPE_LABELS},
+                "probabilities": dict.fromkeys(HARM_TYPE_LABELS, 0.0),
             }
 
         # Extract active labels
@@ -527,7 +569,7 @@ class ScanTelemetryBuilder:
         if isinstance(probs_data, dict):
             probabilities = {label: float(probs_data.get(label, 0.0)) for label in HARM_TYPE_LABELS}
         else:
-            probabilities = {label: 0.0 for label in HARM_TYPE_LABELS}
+            probabilities = dict.fromkeys(HARM_TYPE_LABELS, 0.0)
 
         # Calculate max probability
         max_prob = harm_types_data.get("max_probability", 0.0)
@@ -578,7 +620,9 @@ class ScanTelemetryBuilder:
             family_entropy = self._calculate_entropy(list(family_probs))
         else:
             # Estimate entropy from confidence
-            family_entropy = -math.log(max(family_confidence, 0.01)) if family_confidence > 0 else 0.0
+            family_entropy = (
+                -math.log(max(family_confidence, 0.01)) if family_confidence > 0 else 0.0
+            )
 
         # Calculate consistency score (multi-head agreement metric)
         # Higher score = heads agree, lower = confusion

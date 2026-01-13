@@ -13,7 +13,6 @@ consistency and proper configuration cascade.
 from __future__ import annotations
 
 import atexit
-import os
 import threading
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -738,8 +737,6 @@ class Raxe:
         Returns:
             Modified ScanPipelineResult with policy attribution and blocking decision
         """
-        from pathlib import Path
-
         from raxe.application.scan_pipeline import BlockAction
         from raxe.domain.tenants.presets import GLOBAL_PRESETS
         from raxe.domain.tenants.resolver import resolve_policy
@@ -747,11 +744,11 @@ class Raxe:
             YamlAppRepository,
             YamlPolicyRepository,
             YamlTenantRepository,
+            get_tenants_base_path,
         )
 
         # Get base path for tenant storage (can be overridden with RAXE_TENANTS_DIR)
-        env_path = os.getenv("RAXE_TENANTS_DIR")
-        base_path = Path(env_path) if env_path else Path.home() / ".raxe" / "tenants"
+        base_path = get_tenants_base_path()
 
         # Load tenant, app if specified
         tenant = None
@@ -1182,9 +1179,10 @@ class Raxe:
         if tenant_id:
             import yaml
 
+            from raxe.infrastructure.tenants import get_tenants_base_path
+
             # Get tenant suppression path (respects RAXE_TENANTS_DIR env var)
-            env_path = os.getenv("RAXE_TENANTS_DIR")
-            tenants_base = Path(env_path) if env_path else Path.home() / ".raxe" / "tenants"
+            tenants_base = get_tenants_base_path()
             tenant_suppression_path = tenants_base / tenant_id / "suppressions.yaml"
 
             if tenant_suppression_path.exists():

@@ -9,32 +9,20 @@ Commands:
 """
 
 import json
-import os
 import sys
-from pathlib import Path
 
 import click
 from rich.console import Console
 from rich.table import Table
 
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
-from raxe.infrastructure.tenants import YamlPolicyRepository, YamlTenantRepository
+from raxe.infrastructure.tenants import (
+    YamlPolicyRepository,
+    YamlTenantRepository,
+    get_tenants_base_path,
+)
 
 console = Console()
-
-
-def get_tenants_base_path() -> Path:
-    """Get the base path for tenant storage.
-
-    Can be overridden with RAXE_TENANTS_DIR environment variable.
-
-    Returns:
-        Path to tenant storage directory (default: ~/.raxe/tenants/)
-    """
-    env_path = os.getenv("RAXE_TENANTS_DIR")
-    if env_path:
-        return Path(env_path)
-    return Path.home() / ".raxe" / "tenants"
 
 
 def _slugify(name: str) -> str:

@@ -633,15 +633,13 @@ def scan(
     # Load tenant-scoped suppressions if tenant is specified
     tenant_suppressions_loaded = 0
     if tenant_id:
-        import os
-
         import yaml
 
         from raxe.domain.suppression import SuppressionAction
+        from raxe.infrastructure.tenants import get_tenants_base_path
 
         # Get tenant suppression path (respects RAXE_TENANTS_DIR env var)
-        env_path = os.getenv("RAXE_TENANTS_DIR")
-        tenants_base = Path(env_path) if env_path else Path.home() / ".raxe" / "tenants"
+        tenants_base = get_tenants_base_path()
         tenant_suppression_path = tenants_base / tenant_id / "suppressions.yaml"
 
         if tenant_suppression_path.exists():

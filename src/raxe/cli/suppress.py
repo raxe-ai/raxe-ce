@@ -13,7 +13,6 @@ Tenant-scoped suppressions:
 - With --tenant: Uses tenant-scoped ~/.raxe/tenants/{tenant_id}/suppressions.yaml
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -26,22 +25,9 @@ from raxe.domain.suppression_factory import (
     create_suppression_manager,
     create_suppression_manager_with_yaml,
 )
+from raxe.infrastructure.tenants import get_tenants_base_path
 
 console = Console()
-
-
-def _get_tenants_base_path() -> Path:
-    """Get the base path for tenant storage.
-
-    Can be overridden with RAXE_TENANTS_DIR environment variable.
-
-    Returns:
-        Path to tenant storage directory (default: ~/.raxe/tenants/)
-    """
-    env_path = os.getenv("RAXE_TENANTS_DIR")
-    if env_path:
-        return Path(env_path)
-    return Path.home() / ".raxe" / "tenants"
 
 
 def _get_tenant_suppression_path(tenant_id: str) -> Path:
@@ -53,7 +39,7 @@ def _get_tenant_suppression_path(tenant_id: str) -> Path:
     Returns:
         Path to {tenants_base_path}/{tenant_id}/suppressions.yaml
     """
-    return _get_tenants_base_path() / tenant_id / "suppressions.yaml"
+    return get_tenants_base_path() / tenant_id / "suppressions.yaml"
 
 
 def _verify_tenant_exists(tenant_id: str) -> bool:
@@ -67,7 +53,7 @@ def _verify_tenant_exists(tenant_id: str) -> bool:
     """
     from raxe.infrastructure.tenants import YamlTenantRepository
 
-    base_path = _get_tenants_base_path()
+    base_path = get_tenants_base_path()
     repo = YamlTenantRepository(base_path)
     return repo.get_tenant(tenant_id) is not None
 

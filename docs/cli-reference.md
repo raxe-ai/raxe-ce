@@ -952,6 +952,304 @@ raxe auth status --json
 
 ---
 
+### raxe tenant
+
+Manage multi-tenant configurations. See [Multi-Tenant Guide](MULTI_TENANT.md) for full documentation.
+
+#### raxe tenant create
+
+Create a new tenant.
+
+**Usage:**
+```bash
+raxe tenant create --name <NAME> --id <ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--name` | `-n` | Human-readable tenant name (required) |
+| `--id` | | Tenant identifier (required) |
+| `--policy` | `-p` | Default policy: `monitor`, `balanced`, `strict` (default: `balanced`) |
+
+**Examples:**
+
+```bash
+# Create tenant with balanced policy (default)
+raxe tenant create --name "Acme Corp" --id acme
+
+# Create tenant with strict policy
+raxe tenant create --name "Security Team" --id security --policy strict
+```
+
+#### raxe tenant list
+
+List all configured tenants.
+
+**Usage:**
+```bash
+raxe tenant list [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--output` | Output format: `table` (default) or `json` |
+
+**Examples:**
+
+```bash
+raxe tenant list
+raxe tenant list --output json
+```
+
+#### raxe tenant show
+
+Display details for a specific tenant.
+
+**Usage:**
+```bash
+raxe tenant show <TENANT_ID>
+```
+
+#### raxe tenant delete
+
+Delete a tenant and all its apps.
+
+**Usage:**
+```bash
+raxe tenant delete <TENANT_ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--force` | Skip confirmation prompt |
+
+---
+
+### raxe app
+
+Manage applications within tenants.
+
+#### raxe app create
+
+Create a new app for a tenant.
+
+**Usage:**
+```bash
+raxe app create --tenant <TENANT_ID> --name <NAME> --id <ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--tenant` | `-t` | Parent tenant ID (required) |
+| `--name` | `-n` | Human-readable app name (required) |
+| `--id` | | App identifier (required) |
+| `--policy` | `-p` | Default policy for this app |
+
+**Examples:**
+
+```bash
+# Create app with tenant's default policy
+raxe app create --tenant acme --name "Chatbot" --id chatbot
+
+# Create app with custom policy
+raxe app create --tenant acme --name "Trading" --id trading --policy strict
+```
+
+#### raxe app list
+
+List apps for a tenant.
+
+**Usage:**
+```bash
+raxe app list --tenant <TENANT_ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--output` | Output format: `table` (default) or `json` |
+
+#### raxe app show
+
+Display details for a specific app.
+
+**Usage:**
+```bash
+raxe app show <APP_ID> --tenant <TENANT_ID>
+```
+
+#### raxe app delete
+
+Delete an app.
+
+**Usage:**
+```bash
+raxe app delete <APP_ID> --tenant <TENANT_ID> [OPTIONS]
+```
+
+---
+
+### raxe policy
+
+Manage security policies for multi-tenant deployments.
+
+#### raxe policy list
+
+List available policies for a tenant.
+
+**Usage:**
+```bash
+raxe policy list --tenant <TENANT_ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--output` | Output format: `table` (default) or `json` |
+
+**Examples:**
+
+```bash
+# List all available policies (presets + custom)
+raxe policy list --tenant acme
+
+# JSON output for automation
+raxe policy list --tenant acme --output json
+```
+
+Shows:
+- **Preset policies**: monitor, balanced, strict (always available)
+- **Custom policies**: Tenant-specific policies
+- Which policy is the default for tenant/app
+
+#### raxe policy set
+
+Set the default policy for a tenant or app.
+
+**Usage:**
+```bash
+raxe policy set <POLICY_ID> --tenant <TENANT_ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--tenant` | Target tenant (required) |
+| `--app` | Target app (optional, overrides tenant default) |
+
+**Examples:**
+
+```bash
+# Set tenant default policy
+raxe policy set balanced --tenant acme
+
+# Set app-specific policy (overrides tenant default)
+raxe policy set strict --tenant acme --app trading
+```
+
+#### raxe policy explain
+
+Show how policy resolution works for a tenant/app.
+
+**Usage:**
+```bash
+raxe policy explain --tenant <TENANT_ID> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--app` | Include app in resolution chain |
+
+**Examples:**
+
+```bash
+# Show tenant policy resolution
+raxe policy explain --tenant acme
+
+# Show full resolution chain including app
+raxe policy explain --tenant acme --app chatbot
+```
+
+#### raxe policy create
+
+Create a custom policy for a tenant.
+
+**Usage:**
+```bash
+raxe policy create --tenant <TENANT_ID> --name <NAME> --mode <MODE> [OPTIONS]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--name` | Policy name (required) |
+| `--mode` | Base mode: `monitor`, `balanced`, `strict` (required) |
+| `--id` | Custom policy ID (auto-generated if not provided) |
+
+---
+
+### raxe scan (with tenant context)
+
+The `raxe scan` command supports multi-tenant scanning with the `--tenant` and `--app` options.
+
+**Additional Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--tenant` | Tenant ID to use for policy resolution |
+| `--app` | App ID within tenant |
+| `--policy` | Override policy for this scan only |
+
+**Examples:**
+
+```bash
+# Scan with tenant context (uses tenant's default policy)
+raxe scan "test prompt" --tenant acme
+
+# Scan with app context (uses app's policy if set)
+raxe scan "test prompt" --tenant acme --app chatbot
+
+# Override policy for this scan
+raxe scan "test prompt" --tenant acme --policy strict
+
+# JSON output includes policy attribution
+raxe scan "test prompt" --tenant acme --output json
+```
+
+**JSON Output with Policy Attribution:**
+
+```json
+{
+  "has_threats": true,
+  "severity": "HIGH",
+  "detections": [...],
+  "policy": {
+    "effective_policy_id": "strict",
+    "effective_policy_mode": "strict",
+    "resolution_source": "app"
+  },
+  "tenant_id": "acme",
+  "app_id": "chatbot",
+  "event_id": "evt_abc123"
+}
+```
+
+---
+
 ### raxe repl
 
 Start interactive scanning mode.

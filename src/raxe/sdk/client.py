@@ -758,6 +758,10 @@ class Raxe:
         app = None
         policy_registry = dict(GLOBAL_PRESETS)
 
+        # Track warnings for CLI/SDK consumers
+        tenant_not_found = False
+        policy_not_found = False
+
         if tenant_id:
             tenant_repo = YamlTenantRepository(base_path)
             tenant = tenant_repo.get_tenant(tenant_id)
@@ -765,6 +769,7 @@ class Raxe:
             # Warn if tenant not found - this may indicate misconfiguration
             # The scan will proceed with system default policy
             if tenant is None:
+                tenant_not_found = True
                 import logging
 
                 logger = logging.getLogger(__name__)
@@ -810,6 +815,7 @@ class Raxe:
 
         # Warn if explicit policy_id was requested but not found (fell back to something else)
         if policy_id is not None and resolution.resolution_source != "request":
+            policy_not_found = True
             import logging
 
             logger = logging.getLogger(__name__)
@@ -837,6 +843,12 @@ class Raxe:
             new_metadata["tenant_id"] = tenant_id
         if app_id:
             new_metadata["app_id"] = app_id
+
+        # Add warning flags for CLI/SDK consumers
+        if tenant_not_found:
+            new_metadata["tenant_not_found"] = True
+        if policy_not_found:
+            new_metadata["policy_not_found"] = True
 
         # CRITICAL: Apply policy blocking thresholds
         # Evaluate if the scan result should be blocked based on the resolved policy

@@ -799,28 +799,24 @@ def scan(
         sys.exit(EXIT_SCAN_ERROR)
 
     # Warn if tenant was specified but not found (using system default)
-    if tenant_id and result.metadata:
-        resolution_source = result.metadata.get("resolution_source", "")
+    if result.metadata and result.metadata.get("tenant_not_found"):
         effective_policy = result.metadata.get("effective_policy_id", "")
-        # If tenant was specified but resolution source is system_default, tenant wasn't found
-        if resolution_source == "system_default":
-            console.print(
-                f"[yellow]Warning:[/yellow] Tenant '[bold]{tenant_id}[/bold]' not found. "
-                f"Using system default policy ([cyan]{effective_policy}[/cyan]).",
-                highlight=False,
-            )
+        console.print(
+            f"[yellow]Warning:[/yellow] Tenant '[bold]{tenant_id}[/bold]' not found. "
+            f"Using system default policy ([cyan]{effective_policy}[/cyan]).",
+            highlight=False,
+        )
 
     # Warn if explicit policy_id was requested but not found
-    if policy_id and result.metadata:
-        resolution_source = result.metadata.get("resolution_source", "")
+    if result.metadata and result.metadata.get("policy_not_found"):
         effective_policy = result.metadata.get("effective_policy_id", "")
-        if resolution_source != "request":
-            console.print(
-                f"[yellow]Warning:[/yellow] Policy '[bold]{policy_id}[/bold]' not found. "
-                f"Valid policies: [cyan]monitor, balanced, strict[/cyan]. "
-                f"Using '[bold]{effective_policy}[/bold]' from {resolution_source}.",
-                highlight=False,
-            )
+        resolution_source = result.metadata.get("resolution_source", "")
+        console.print(
+            f"[yellow]Warning:[/yellow] Policy '[bold]{policy_id}[/bold]' not found. "
+            f"Valid policies: [cyan]monitor, balanced, strict[/cyan]. "
+            f"Using '[bold]{effective_policy}[/bold]' from {resolution_source}.",
+            highlight=False,
+        )
 
     # Output based on format
     if format == "json" and not profile:

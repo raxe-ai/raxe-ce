@@ -798,6 +798,18 @@ def scan(
         display_error("Scan execution failed", str(e))
         sys.exit(EXIT_SCAN_ERROR)
 
+    # Warn if tenant was specified but not found (using system default)
+    if tenant_id and result.metadata:
+        resolution_source = result.metadata.get("resolution_source", "")
+        effective_policy = result.metadata.get("effective_policy_id", "")
+        # If tenant was specified but resolution source is system_default, tenant wasn't found
+        if resolution_source == "system_default":
+            console.print(
+                f"[yellow]Warning:[/yellow] Tenant '[bold]{tenant_id}[/bold]' not found. "
+                f"Using system default policy ([cyan]{effective_policy}[/cyan]).",
+                highlight=False,
+            )
+
     # Warn if explicit policy_id was requested but not found
     if policy_id and result.metadata:
         resolution_source = result.metadata.get("resolution_source", "")

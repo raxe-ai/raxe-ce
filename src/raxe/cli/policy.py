@@ -97,10 +97,13 @@ def policy():
 @policy.command("presets")
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def list_presets(output: str):
     """List global policy presets (monitor, balanced, strict).
@@ -109,6 +112,7 @@ def list_presets(output: str):
     Examples:
         raxe policy presets
         raxe policy presets --output json
+        raxe policy presets --format json
     """
     presets = list(GLOBAL_PRESETS.values())
 
@@ -148,10 +152,13 @@ def list_presets(output: str):
 )
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def list_policies(tenant_id: str | None, output: str):
     """List policies for a tenant or global presets.
@@ -161,6 +168,7 @@ def list_policies(tenant_id: str | None, output: str):
         raxe policy list                    # Shows global presets
         raxe policy list --tenant acme      # Shows tenant's custom policies
         raxe policy list --tenant acme --output json
+        raxe policy list --tenant acme --format json
     """
     if tenant_id is None:
         # Show global presets
@@ -257,10 +265,13 @@ def list_policies(tenant_id: str | None, output: str):
 )
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def show_policy(policy_id: str, tenant_id: str | None, output: str):
     """Show details of a specific policy.
@@ -270,6 +281,7 @@ def show_policy(policy_id: str, tenant_id: str | None, output: str):
         raxe policy show balanced           # Show global preset
         raxe policy show my-policy --tenant acme
         raxe policy show strict --output json
+        raxe policy show strict --format json
     """
     policy_obj: TenantPolicy | None = None
 
@@ -796,10 +808,13 @@ def update_policy(
 )
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, output: str):
     """Explain which policy would be used for a given context.
@@ -890,12 +905,48 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
         console.print(f"  Source: {resolution.resolution_source}")
         console.print()
 
-        # Resolution path
+        # Resolution path with policy lookups
         console.print("[bold]Resolution Path[/bold]")
         console.print()
         for step in resolution.resolution_path:
-            if "None" in step or "not configured" in step.lower():
-                console.print(f"  • [dim]{step}[/dim]")
+            parts = step.split(":", 1)
+            level = parts[0]
+            value = parts[1] if len(parts) > 1 else ""
+
+            if value == "None" or value == "":
+                console.print(f"  • {level}: [dim](none specified)[/dim]")
+            elif level == "request":
+                # Request-level policy override
+                resolved_policy = policy_registry.get(value)
+                if resolved_policy:
+                    console.print(
+                        f"  • {level}: [yellow]{value}[/yellow] → "
+                        f"[green]{resolved_policy.mode.value}[/green]"
+                    )
+                else:
+                    console.print(f"  • {level}: [yellow]{value}[/yellow]")
+            elif level == "app":
+                # App level - look up app's default policy
+                app_obj = app_repo.get_app(value, tenant_id)
+                if app_obj and app_obj.default_policy_id:
+                    console.print(
+                        f"  • {level}: [cyan]{value}[/cyan] → "
+                        f"[green]{app_obj.default_policy_id}[/green]"
+                    )
+                else:
+                    console.print(f"  • {level}: [cyan]{value}[/cyan] → [dim](inherit)[/dim]")
+            elif level == "tenant":
+                # Tenant level - look up tenant's default policy
+                tenant_obj = tenant_repo.get_tenant(value)
+                if tenant_obj:
+                    console.print(
+                        f"  • {level}: [cyan]{value}[/cyan] → "
+                        f"[green]{tenant_obj.default_policy_id}[/green]"
+                    )
+                else:
+                    console.print(f"  • {level}: [cyan]{value}[/cyan]")
+            elif level == "system":
+                console.print(f"  • system_default: [green]{value}[/green]")
             else:
                 console.print(f"  • {step}")
         console.print()

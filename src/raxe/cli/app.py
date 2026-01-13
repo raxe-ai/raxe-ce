@@ -208,10 +208,13 @@ def create_app(tenant_id: str, name: str, app_id: str | None, policy: str | None
 )
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def list_apps(tenant_id: str, output: str):
     """List all apps in a tenant.
@@ -220,6 +223,7 @@ def list_apps(tenant_id: str, output: str):
     Examples:
         raxe app list --tenant acme
         raxe app list --tenant acme --output json
+        raxe app list --tenant acme --format json
     """
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
@@ -280,10 +284,13 @@ def list_apps(tenant_id: str, output: str):
 )
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def show_app(app_id: str, tenant_id: str, output: str):
     """Show details of a specific app.
@@ -292,6 +299,7 @@ def show_app(app_id: str, tenant_id: str, output: str):
     Examples:
         raxe app show chatbot --tenant acme
         raxe app show chatbot --tenant acme --output json
+        raxe app show chatbot --tenant acme --format json
     """
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):

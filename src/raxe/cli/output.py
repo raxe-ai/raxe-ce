@@ -191,6 +191,19 @@ def _display_threat_detected(
     summary.append(f"{total_detections} detection(s) • ", style="")
     summary.append("Severity: ", style="dim")
     summary.append(f"{highest.value.upper()}", style=get_severity_color(highest))
+
+    # Add blocking status indicator if multi-tenant policy is in use
+    if result.metadata and result.metadata.get("effective_policy_mode"):
+        policy_mode = result.metadata.get("effective_policy_mode", "")
+        if result.should_block:
+            summary.append(" • Action: ", style="dim")
+            summary.append("BLOCKED", style="red bold")
+            summary.append(f" ({policy_mode} mode)", style="dim")
+        else:
+            summary.append(" • Action: ", style="dim")
+            summary.append("ALLOWED", style="green bold")
+            summary.append(f" ({policy_mode} mode)", style="dim")
+
     summary.append(f" • Scan time: {result.duration_ms:.2f}ms", style="dim")
 
     # Show L2 model version if available

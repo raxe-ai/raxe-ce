@@ -136,10 +136,13 @@ def create_tenant(name: str, tenant_id: str | None, policy: str):
 @tenant.command("list")
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def list_tenants(output: str):
     """List all tenants.
@@ -148,6 +151,7 @@ def list_tenants(output: str):
     Examples:
         raxe tenant list
         raxe tenant list --output json
+        raxe tenant list --format json
     """
     base_path = get_tenants_base_path()
     repo = YamlTenantRepository(base_path)
@@ -196,10 +200,13 @@ def list_tenants(output: str):
 @click.argument("tenant_id")
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
+    "output",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
 def show_tenant(tenant_id: str, output: str):
     """Show details of a specific tenant.
@@ -208,6 +215,7 @@ def show_tenant(tenant_id: str, output: str):
     Examples:
         raxe tenant show acme
         raxe tenant show acme --output json
+        raxe tenant show acme --format json
     """
     base_path = get_tenants_base_path()
     repo = YamlTenantRepository(base_path)

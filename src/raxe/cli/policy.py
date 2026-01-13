@@ -17,6 +17,7 @@ Policy Modes:
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -34,9 +35,14 @@ console = Console()
 def get_tenants_base_path() -> Path:
     """Get the base path for tenant storage.
 
+    Can be overridden with RAXE_TENANTS_DIR environment variable.
+
     Returns:
-        Path to ~/.raxe/tenants/
+        Path to tenant storage directory (default: ~/.raxe/tenants/)
     """
+    env_path = os.getenv("RAXE_TENANTS_DIR")
+    if env_path:
+        return Path(env_path)
     return Path.home() / ".raxe" / "tenants"
 
 
@@ -200,9 +206,7 @@ def list_policies(tenant_id: str | None, output: str):
         console.print(json.dumps(data, indent=2))
     else:
         # Show available policies (presets + custom)
-        table = Table(
-            title=f"Available Policies for {tenant_id}", show_header=True
-        )
+        table = Table(title=f"Available Policies for {tenant_id}", show_header=True)
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="white")
         table.add_column("Mode", style="yellow")

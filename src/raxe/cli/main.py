@@ -630,6 +630,52 @@ def scan(
         console.print("Try running: [cyan]raxe init[/cyan]")
         sys.exit(EXIT_CONFIG_ERROR)
 
+    # Load tenant-scoped suppressions if tenant is specified
+    tenant_suppressions_loaded = 0
+    if tenant_id:
+        import os
+
+        import yaml
+
+        from raxe.domain.suppression import SuppressionAction
+
+        # Get tenant suppression path (respects RAXE_TENANTS_DIR env var)
+        env_path = os.getenv("RAXE_TENANTS_DIR")
+        tenants_base = Path(env_path) if env_path else Path.home() / ".raxe" / "tenants"
+        tenant_suppression_path = tenants_base / tenant_id / "suppressions.yaml"
+
+        if tenant_suppression_path.exists():
+            try:
+                with open(tenant_suppression_path) as f:
+                    data = yaml.safe_load(f) or {}
+
+                suppressions_list = data.get("suppressions", [])
+                for supp in suppressions_list:
+                    pattern = supp.get("pattern")
+                    reason = supp.get("reason", "Tenant suppression")
+                    action_str = supp.get("action", "SUPPRESS").upper()
+
+                    if pattern:
+                        try:
+                            action = SuppressionAction(action_str)
+                        except ValueError:
+                            action = SuppressionAction.SUPPRESS
+
+                        raxe.suppression_manager.add_suppression(
+                            pattern=pattern,
+                            reason=f"[Tenant: {tenant_id}] {reason}",
+                            action=action,
+                            created_by=f"tenant:{tenant_id}",
+                            log_to_audit=False,  # Don't log tenant suppressions
+                        )
+                        tenant_suppressions_loaded += 1
+            except Exception as e:
+                # Log warning but don't fail - suppressions are optional
+                if verbose:
+                    console.print(
+                        f"[yellow]Warning:[/yellow] Failed to load tenant suppressions: {e}"
+                    )
+
     # Add CLI-specified suppressions (temporary, for this scan only)
     cli_suppressions: list[tuple[str, str]] = []  # (pattern, action) tuples
     if suppress_patterns:
@@ -751,6 +797,18 @@ def scan(
     except Exception as e:
         display_error("Scan execution failed", str(e))
         sys.exit(EXIT_SCAN_ERROR)
+
+    # Warn if explicit policy_id was requested but not found
+    if policy_id and result.metadata:
+        resolution_source = result.metadata.get("resolution_source", "")
+        effective_policy = result.metadata.get("effective_policy_id", "")
+        if resolution_source != "request":
+            console.print(
+                f"[yellow]Warning:[/yellow] Policy '[bold]{policy_id}[/bold]' not found. "
+                f"Valid policies: [cyan]monitor, balanced, strict[/cyan]. "
+                f"Using '[bold]{effective_policy}[/bold]' from {resolution_source}.",
+                highlight=False,
+            )
 
     # Output based on format
     if format == "json" and not profile:
@@ -931,7 +989,8 @@ def scan(
         pass  # Never let telemetry affect scan completion
 
     # Exit with appropriate code for CI/CD (quiet mode)
-    if quiet and result.scan_result.has_threats:
+    # Use should_block which respects the policy mode (monitor=never block, etc.)
+    if quiet and result.should_block:
         sys.exit(EXIT_THREAT_DETECTED)
 
 

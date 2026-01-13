@@ -13,6 +13,7 @@ consistency and proper configuration cascade.
 from __future__ import annotations
 
 import atexit
+import os
 import threading
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -748,8 +749,9 @@ class Raxe:
             YamlTenantRepository,
         )
 
-        # Get base path for tenant storage
-        base_path = Path.home() / ".raxe" / "tenants"
+        # Get base path for tenant storage (can be overridden with RAXE_TENANTS_DIR)
+        env_path = os.getenv("RAXE_TENANTS_DIR")
+        base_path = Path(env_path) if env_path else Path.home() / ".raxe" / "tenants"
 
         # Load tenant, app if specified
         tenant = None
@@ -805,6 +807,23 @@ class Raxe:
             tenant=tenant,
             policy_registry=policy_registry,
         )
+
+        # Warn if explicit policy_id was requested but not found (fell back to something else)
+        if policy_id is not None and resolution.resolution_source != "request":
+            import logging
+
+            logger = logging.getLogger(__name__)
+            valid_policies = list(policy_registry.keys())
+            logger.warning(
+                "invalid_policy_id",
+                extra={
+                    "requested_policy_id": policy_id,
+                    "valid_policies": valid_policies,
+                    "effective_policy_id": resolution.policy.policy_id,
+                    "reason": f"Policy '{policy_id}' not found. Valid: {valid_policies}. "
+                    f"Using '{resolution.policy.policy_id}' from {resolution.resolution_source}.",
+                },
+            )
 
         # Add attribution to metadata
         new_metadata = dict(result.metadata) if result.metadata else {}
@@ -1145,9 +1164,44 @@ class Raxe:
                 explain=explain,
             )
 
+        # Load tenant-scoped suppressions if tenant_id is specified
+        # These are merged with any inline suppressions (inline takes precedence)
+        effective_suppress = list(suppress) if suppress else []
+        if tenant_id:
+            import yaml
+
+            # Get tenant suppression path (respects RAXE_TENANTS_DIR env var)
+            env_path = os.getenv("RAXE_TENANTS_DIR")
+            tenants_base = Path(env_path) if env_path else Path.home() / ".raxe" / "tenants"
+            tenant_suppression_path = tenants_base / tenant_id / "suppressions.yaml"
+
+            if tenant_suppression_path.exists():
+                try:
+                    with open(tenant_suppression_path) as f:
+                        data = yaml.safe_load(f) or {}
+
+                    for supp in data.get("suppressions", []):
+                        pattern = supp.get("pattern")
+                        reason = supp.get("reason", "Tenant suppression")
+                        action = supp.get("action", "SUPPRESS")
+
+                        if pattern:
+                            # Add tenant suppression as dict format
+                            effective_suppress.append(
+                                {
+                                    "pattern": pattern,
+                                    "action": action,
+                                    "reason": f"[Tenant: {tenant_id}] {reason}",
+                                }
+                            )
+                except Exception as e:
+                    logger.warning(f"Failed to load tenant suppressions: {e}")
+
         # Apply inline and scoped suppressions (takes precedence over config file)
         # This must happen after the scan but before tracking
-        result = self._apply_inline_suppressions(result, suppress)
+        result = self._apply_inline_suppressions(
+            result, effective_suppress if effective_suppress else None
+        )
 
         # Resolve and apply multi-tenant policy attribution
         # This adds policy_id, mode, and resolution_path to the result

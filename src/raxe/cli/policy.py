@@ -23,38 +23,20 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from raxe.domain.tenants.models import PolicyMode, TenantPolicy
-from raxe.domain.tenants.presets import GLOBAL_PRESETS
-from raxe.infrastructure.tenants import (
-    YamlPolicyRepository,
-    YamlTenantRepository,
-    get_tenants_base_path,
+from raxe.application import (
+    AppNotFoundError,
+    CreatePolicyRequest,
+    DuplicateEntityError,
+    ImmutablePresetError,
+    PolicyNotFoundError,
+    TenantNotFoundError,
+    UpdatePolicyRequest,
+    create_tenant_service,
 )
+from raxe.domain.tenants.models import TenantPolicy
+from raxe.domain.tenants.presets import GLOBAL_PRESETS
 
 console = Console()
-
-
-def _slugify(name: str) -> str:
-    """Convert a name to a URL-safe slug.
-
-    Args:
-        name: Human-readable name
-
-    Returns:
-        Lowercase slug with hyphens
-    """
-    import re
-
-    # Convert to lowercase, replace spaces/underscores with hyphens
-    slug = name.lower().strip()
-    slug = re.sub(r"[\s_]+", "-", slug)
-    # Remove non-alphanumeric characters except hyphens
-    slug = re.sub(r"[^a-z0-9-]", "", slug)
-    # Remove consecutive hyphens
-    slug = re.sub(r"-+", "-", slug)
-    # Remove leading/trailing hyphens
-    slug = slug.strip("-")
-    return slug or "policy"
 
 
 def _policy_to_dict(p: TenantPolicy) -> dict:
@@ -182,17 +164,15 @@ def list_policies(tenant_id: str | None, output: str):
         return
 
     # Show tenant-specific policies
-    base_path = get_tenants_base_path()
-    tenant_repo = YamlTenantRepository(base_path)
-    policy_repo = YamlPolicyRepository(base_path)
+    service = create_tenant_service()
 
-    # Verify tenant exists
-    tenant = tenant_repo.get_tenant(tenant_id)
-    if not tenant:
+    try:
+        tenant = service.get_tenant(tenant_id)
+    except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
         sys.exit(1)
 
-    policies = policy_repo.list_policies(tenant_id)
+    policies = service.list_policies(tenant_id)
 
     # Combine global presets with custom policies
     all_policies = list(GLOBAL_PRESETS.values()) + policies
@@ -271,18 +251,11 @@ def show_policy(policy_id: str, tenant_id: str | None, output: str):
         raxe policy show strict --output json
         raxe policy show strict --format json
     """
-    policy_obj: TenantPolicy | None = None
+    service = create_tenant_service()
 
-    # First check global presets
-    if policy_id in GLOBAL_PRESETS:
-        policy_obj = GLOBAL_PRESETS[policy_id]
-    elif tenant_id:
-        # Check tenant-specific policies
-        base_path = get_tenants_base_path()
-        policy_repo = YamlPolicyRepository(base_path)
-        policy_obj = policy_repo.get_policy(policy_id, tenant_id)
-
-    if not policy_obj:
+    try:
+        policy_obj = service.get_policy(policy_id, tenant_id)
+    except PolicyNotFoundError:
         console.print(f"[red]Error:[/red] Policy '{policy_id}' not found")
         if not tenant_id:
             console.print("[dim]Tip: Use --tenant <id> for tenant-specific policies[/dim]")
@@ -416,51 +389,10 @@ def create_policy(
             --blocking --severity-threshold MEDIUM --confidence-threshold 0.7 \\
             --l2 --l2-threshold 0.4 --telemetry verbose
     """
-    from datetime import datetime, timezone
+    service = create_tenant_service()
 
-    base_path = get_tenants_base_path()
-    tenant_repo = YamlTenantRepository(base_path)
-    policy_repo = YamlPolicyRepository(base_path)
-
-    # Verify tenant exists
-    tenant = tenant_repo.get_tenant(tenant_id)
-    if not tenant:
-        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        console.print()
-        console.print("Create a tenant first with:")
-        console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
-        sys.exit(1)
-
-    # Generate policy ID if not provided
-    if not policy_id:
-        policy_id = _slugify(name)
-
-    # Check if policy already exists
-    existing = policy_repo.get_policy(policy_id, tenant_id)
-    if existing:
-        console.print(
-            f"[red]Error:[/red] Policy '{policy_id}' already exists for tenant '{tenant_id}'"
-        )
-        sys.exit(1)
-
-    # For custom mode, validate threshold options are provided
-    if mode == "custom":
-        # Custom mode requires at least some threshold options, use balanced as default base
-        base_preset = GLOBAL_PRESETS.get("balanced")
-        final_blocking = blocking_enabled if blocking_enabled is not None else True
-        final_severity = severity_threshold if severity_threshold else "HIGH"
-        final_confidence = confidence_threshold if confidence_threshold is not None else 0.85
-        final_l2 = l2_enabled if l2_enabled is not None else True
-        final_l2_threshold = l2_threshold if l2_threshold is not None else 0.35
-        final_telemetry = telemetry if telemetry else "standard"
-    else:
-        # For preset modes, use the preset values (ignore threshold options)
-        base_preset = GLOBAL_PRESETS.get(mode)
-        if not base_preset:
-            console.print(f"[red]Error:[/red] Invalid mode '{mode}'")
-            sys.exit(1)
-
-        # Warn if threshold options provided for non-custom mode
+    # Warn if threshold options provided for non-custom mode
+    if mode != "custom":
         custom_options = [
             blocking_enabled is not None,
             severity_threshold is not None,
@@ -475,56 +407,56 @@ def create_policy(
                 "Use --mode custom for full control."
             )
 
-        final_blocking = base_preset.blocking_enabled
-        final_severity = base_preset.block_severity_threshold
-        final_confidence = base_preset.block_confidence_threshold
-        final_l2 = base_preset.l2_enabled
-        final_l2_threshold = base_preset.l2_threat_threshold
-        final_telemetry = base_preset.telemetry_detail
-
-    now = datetime.now(timezone.utc).isoformat()
-
-    # Create policy
-    policy_obj = TenantPolicy(
-        policy_id=policy_id,
-        name=name,
+    # Build request
+    request = CreatePolicyRequest(
         tenant_id=tenant_id,
-        mode=PolicyMode(mode),
-        blocking_enabled=final_blocking,
-        block_severity_threshold=final_severity,
-        block_confidence_threshold=final_confidence,
-        l2_enabled=final_l2,
-        l2_threat_threshold=final_l2_threshold,
-        telemetry_detail=final_telemetry,
-        version=1,
-        created_at=now,
-        updated_at=now,
+        name=name,
+        mode=mode,
+        policy_id=policy_id,
+        blocking_enabled=blocking_enabled,
+        block_severity_threshold=severity_threshold,
+        block_confidence_threshold=confidence_threshold,
+        l2_enabled=l2_enabled,
+        l2_threat_threshold=l2_threshold,
+        telemetry_detail=telemetry,
     )
 
-    # Save policy
-    policy_repo.save_policy(policy_obj)
+    try:
+        policy_obj = service.create_policy(request)
+    except TenantNotFoundError:
+        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
+        console.print()
+        console.print("Create a tenant first with:")
+        console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
+        sys.exit(1)
+    except DuplicateEntityError as e:
+        console.print(
+            f"[red]Error:[/red] Policy '{e.entity_id}' already exists for tenant '{tenant_id}'"
+        )
+        sys.exit(1)
 
-    console.print(f"[green]✓[/green] Created policy '{name}'")
+    console.print(f"[green]✓[/green] Created policy '{policy_obj.name}'")
     console.print()
-    console.print(f"  ID: [cyan]{policy_id}[/cyan]")
-    console.print(f"  Tenant: {tenant_id}")
-    console.print(f"  Mode: [yellow]{mode}[/yellow]")
-    console.print("  Version: 1")
+    console.print(f"  ID: [cyan]{policy_obj.policy_id}[/cyan]")
+    console.print(f"  Tenant: {policy_obj.tenant_id}")
+    console.print(f"  Mode: [yellow]{policy_obj.mode.value}[/yellow]")
+    console.print(f"  Version: {policy_obj.version}")
     if policy_obj.blocking_enabled:
         blocking = "[green]Enabled[/green]"
     else:
         blocking = "[yellow]Disabled[/yellow]"
     console.print(f"  Blocking: {blocking}")
-    if mode == "custom":
-        console.print(f"  Severity Threshold: {final_severity}")
-        console.print(f"  Confidence Threshold: {final_confidence}")
-        console.print(f"  L2 Detection: {'Enabled' if final_l2 else 'Disabled'}")
-        console.print(f"  L2 Threshold: {final_l2_threshold}")
-        console.print(f"  Telemetry: {final_telemetry}")
+    if policy_obj.mode.value == "custom":
+        console.print(f"  Severity Threshold: {policy_obj.block_severity_threshold}")
+        console.print(f"  Confidence Threshold: {policy_obj.block_confidence_threshold}")
+        console.print(f"  L2 Detection: {'Enabled' if policy_obj.l2_enabled else 'Disabled'}")
+        console.print(f"  L2 Threshold: {policy_obj.l2_threat_threshold}")
+        console.print(f"  Telemetry: {policy_obj.telemetry_detail}")
     console.print()
     console.print("To use this policy:")
-    sdk_example = f"raxe.scan(text, tenant_id='{tenant_id}', policy_id='{policy_id}')"
-    console.print(f"  [cyan]{sdk_example}[/cyan]")
+    tenant = policy_obj.tenant_id
+    pol_id = policy_obj.policy_id
+    console.print(f"  [cyan]raxe.scan(text, tenant_id='{tenant}', policy_id='{pol_id}')[/cyan]")
     console.print()
 
 
@@ -552,26 +484,20 @@ def delete_policy(policy_id: str, tenant_id: str, force: bool):
     Examples:
         raxe policy delete my-policy --tenant acme --force
     """
-    # Cannot delete global presets
-    if policy_id in GLOBAL_PRESETS:
-        console.print(f"[red]Error:[/red] Cannot delete global preset '{policy_id}'")
-        console.print("[dim]Global presets are immutable system policies[/dim]")
-        sys.exit(1)
+    service = create_tenant_service()
 
-    base_path = get_tenants_base_path()
-    tenant_repo = YamlTenantRepository(base_path)
-    policy_repo = YamlPolicyRepository(base_path)
-
-    # Verify tenant exists
-    tenant = tenant_repo.get_tenant(tenant_id)
-    if not tenant:
-        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
-
-    # Check if policy exists
-    policy_obj = policy_repo.get_policy(policy_id, tenant_id)
-    if not policy_obj:
-        console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
+    # Get policy first for confirmation prompt (also validates it exists)
+    try:
+        policy_obj = service.get_policy(policy_id, tenant_id)
+    except PolicyNotFoundError:
+        # Check if it's a global preset
+        if policy_id in GLOBAL_PRESETS:
+            console.print(f"[red]Error:[/red] Cannot delete global preset '{policy_id}'")
+            console.print("[dim]Global presets are immutable system policies[/dim]")
+        else:
+            console.print(
+                f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'"
+            )
         sys.exit(1)
 
     if not force:
@@ -581,8 +507,18 @@ def delete_policy(policy_id: str, tenant_id: str, force: bool):
             console.print("[dim]Aborted[/dim]")
             sys.exit(1)
 
-    # Delete policy
-    policy_repo.delete_policy(policy_id, tenant_id)
+    try:
+        service.delete_policy(policy_id, tenant_id)
+    except ImmutablePresetError:
+        console.print(f"[red]Error:[/red] Cannot delete global preset '{policy_id}'")
+        console.print("[dim]Global presets are immutable system policies[/dim]")
+        sys.exit(1)
+    except TenantNotFoundError:
+        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
+        sys.exit(1)
+    except PolicyNotFoundError:
+        console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
+        sys.exit(1)
 
     console.print(f"[green]✓[/green] Deleted policy '{policy_id}'")
     console.print()
@@ -656,31 +592,7 @@ def update_policy(
         raxe policy update my-policy --tenant acme --no-blocking
         raxe policy update my-policy --tenant acme --name "New Name" --l2-threshold 0.5
     """
-    from datetime import datetime, timezone
-
-    # Cannot update global presets
-    if policy_id in GLOBAL_PRESETS:
-        console.print(f"[red]Error:[/red] Cannot update global preset '{policy_id}'")
-        console.print("[dim]Global presets are immutable. Create a custom policy instead:[/dim]")
-        cmd = f"raxe policy create --tenant {tenant_id} --mode {policy_id} --name 'My Custom'"
-        console.print(f"  [cyan]{cmd}[/cyan]")
-        sys.exit(1)
-
-    base_path = get_tenants_base_path()
-    tenant_repo = YamlTenantRepository(base_path)
-    policy_repo = YamlPolicyRepository(base_path)
-
-    # Verify tenant exists
-    tenant = tenant_repo.get_tenant(tenant_id)
-    if not tenant:
-        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
-
-    # Get existing policy
-    existing = policy_repo.get_policy(policy_id, tenant_id)
-    if not existing:
-        console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
-        sys.exit(1)
+    service = create_tenant_service()
 
     # Check if any updates provided
     updates = [
@@ -697,80 +609,83 @@ def update_policy(
         console.print("[dim]Use --help to see available options[/dim]")
         sys.exit(1)
 
-    now = datetime.now(timezone.utc).isoformat()
+    # Get existing policy for displaying change summary
+    try:
+        existing = service.get_policy(policy_id, tenant_id)
+    except PolicyNotFoundError:
+        # Check if it's a global preset
+        if policy_id in GLOBAL_PRESETS:
+            console.print(f"[red]Error:[/red] Cannot update global preset '{policy_id}'")
+            console.print("[dim]Global presets are immutable. Create a custom policy:[/dim]")
+            cmd = f"raxe policy create --tenant {tenant_id} --mode {policy_id} --name 'My Custom'"
+            console.print(f"  [cyan]{cmd}[/cyan]")
+        else:
+            console.print(
+                f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'"
+            )
+        sys.exit(1)
 
-    # Create updated policy (frozen dataclass, must recreate)
-    # Any update to thresholds changes mode to custom
-    new_mode = existing.mode
-    if any(
-        [
-            blocking_enabled is not None,
-            severity_threshold is not None,
-            confidence_threshold is not None,
-            l2_enabled is not None,
-            l2_threshold is not None,
-        ]
-    ):
-        new_mode = PolicyMode.CUSTOM
-
-    # Determine new values (use provided value or keep existing)
-    new_blocking = blocking_enabled if blocking_enabled is not None else existing.blocking_enabled
-    new_severity = severity_threshold if severity_threshold else existing.block_severity_threshold
-    new_confidence = (
-        confidence_threshold
-        if confidence_threshold is not None
-        else existing.block_confidence_threshold
-    )
-    new_l2 = l2_enabled if l2_enabled is not None else existing.l2_enabled
-    new_l2_thresh = l2_threshold if l2_threshold is not None else existing.l2_threat_threshold
-    new_telemetry = telemetry if telemetry else existing.telemetry_detail
-
-    updated_policy = TenantPolicy(
-        policy_id=existing.policy_id,
-        name=name if name is not None else existing.name,
-        tenant_id=existing.tenant_id,
-        mode=new_mode,
-        blocking_enabled=new_blocking,
-        block_severity_threshold=new_severity,
-        block_confidence_threshold=new_confidence,
-        l2_enabled=new_l2,
-        l2_threat_threshold=new_l2_thresh,
-        telemetry_detail=new_telemetry,
-        version=existing.version + 1,  # Increment version
-        created_at=existing.created_at,
-        updated_at=now,
+    # Build update request
+    request = UpdatePolicyRequest(
+        policy_id=policy_id,
+        tenant_id=tenant_id,
+        name=name,
+        blocking_enabled=blocking_enabled,
+        block_severity_threshold=severity_threshold,
+        block_confidence_threshold=confidence_threshold,
+        l2_enabled=l2_enabled,
+        l2_threat_threshold=l2_threshold,
+        telemetry_detail=telemetry,
     )
 
-    # Save updated policy
-    policy_repo.save_policy(updated_policy)
+    try:
+        updated_policy = service.update_policy(request)
+    except ImmutablePresetError:
+        console.print(f"[red]Error:[/red] Cannot update global preset '{policy_id}'")
+        console.print("[dim]Global presets are immutable. Create a custom policy instead:[/dim]")
+        cmd = f"raxe policy create --tenant {tenant_id} --mode {policy_id} --name 'My Custom'"
+        console.print(f"  [cyan]{cmd}[/cyan]")
+        sys.exit(1)
+    except TenantNotFoundError:
+        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
+        sys.exit(1)
+    except PolicyNotFoundError:
+        console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
+        sys.exit(1)
 
     console.print(f"[green]✓[/green] Updated policy '{policy_id}'")
     console.print()
     console.print(f"  Version: {existing.version} → [cyan]{updated_policy.version}[/cyan]")
     if name is not None:
-        console.print(f"  Name: {existing.name} → [cyan]{name}[/cyan]")
-    if new_mode != existing.mode:
-        console.print(f"  Mode: {existing.mode.value} → [yellow]{new_mode.value}[/yellow]")
+        console.print(f"  Name: {existing.name} → [cyan]{updated_policy.name}[/cyan]")
+    if updated_policy.mode != existing.mode:
+        old_mode = existing.mode.value
+        new_mode = updated_policy.mode.value
+        console.print(f"  Mode: {old_mode} → [yellow]{new_mode}[/yellow]")
     if blocking_enabled is not None:
         old_blocking = "enabled" if existing.blocking_enabled else "disabled"
-        new_blocking = "enabled" if blocking_enabled else "disabled"
-        console.print(f"  Blocking: {old_blocking} → [cyan]{new_blocking}[/cyan]")
+        new_blocking_str = "enabled" if updated_policy.blocking_enabled else "disabled"
+        console.print(f"  Blocking: {old_blocking} → [cyan]{new_blocking_str}[/cyan]")
     if severity_threshold is not None:
         old_sev = existing.block_severity_threshold
-        console.print(f"  Severity Threshold: {old_sev} → [cyan]{severity_threshold}[/cyan]")
+        new_sev = updated_policy.block_severity_threshold
+        console.print(f"  Severity Threshold: {old_sev} → [cyan]{new_sev}[/cyan]")
     if confidence_threshold is not None:
         old_conf = existing.block_confidence_threshold
-        console.print(f"  Confidence Threshold: {old_conf} → [cyan]{confidence_threshold}[/cyan]")
+        new_conf = updated_policy.block_confidence_threshold
+        console.print(f"  Confidence Threshold: {old_conf} → [cyan]{new_conf}[/cyan]")
     if l2_enabled is not None:
         old_l2 = "enabled" if existing.l2_enabled else "disabled"
-        new_l2 = "enabled" if l2_enabled else "disabled"
-        console.print(f"  L2 Detection: {old_l2} → [cyan]{new_l2}[/cyan]")
+        new_l2_str = "enabled" if updated_policy.l2_enabled else "disabled"
+        console.print(f"  L2 Detection: {old_l2} → [cyan]{new_l2_str}[/cyan]")
     if l2_threshold is not None:
-        console.print(
-            f"  L2 Threshold: {existing.l2_threat_threshold} → [cyan]{l2_threshold}[/cyan]"
-        )
+        old_l2_thresh = existing.l2_threat_threshold
+        new_l2_thresh = updated_policy.l2_threat_threshold
+        console.print(f"  L2 Threshold: {old_l2_thresh} → [cyan]{new_l2_thresh}[/cyan]")
     if telemetry is not None:
-        console.print(f"  Telemetry: {existing.telemetry_detail} → [cyan]{telemetry}[/cyan]")
+        old_telem = existing.telemetry_detail
+        new_telem = updated_policy.telemetry_detail
+        console.print(f"  Telemetry: {old_telem} → [cyan]{new_telem}[/cyan]")
     console.print()
 
 
@@ -816,44 +731,23 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
         raxe policy explain --tenant acme --app chatbot
         raxe policy explain --tenant acme --policy strict
     """
-    from raxe.domain.tenants.resolver import resolve_policy
-    from raxe.infrastructure.tenants import YamlAppRepository
+    service = create_tenant_service()
 
-    base_path = get_tenants_base_path()
-    tenant_repo = YamlTenantRepository(base_path)
-    policy_repo = YamlPolicyRepository(base_path)
-    app_repo = YamlAppRepository(base_path)
-
-    # Verify tenant exists
-    tenant = tenant_repo.get_tenant(tenant_id)
-    if not tenant:
+    try:
+        resolution = service.explain_policy(
+            tenant_id=tenant_id,
+            app_id=app_id,
+            policy_id=policy_id,
+        )
+    except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
         console.print()
         console.print("Create a tenant first with:")
         console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
         sys.exit(1)
-
-    # Load app if specified
-    app = None
-    if app_id:
-        app = app_repo.get_app(app_id, tenant_id)
-        if not app:
-            console.print(f"[red]Error:[/red] App '{app_id}' not found in tenant '{tenant_id}'")
-            sys.exit(1)
-
-    # Build policy registry (global presets + tenant policies)
-    policy_registry = dict(GLOBAL_PRESETS)
-    tenant_policies = policy_repo.list_policies(tenant_id=tenant_id)
-    for p in tenant_policies:
-        policy_registry[p.policy_id] = p
-
-    # Resolve policy
-    resolution = resolve_policy(
-        request_policy_id=policy_id,
-        app=app,
-        tenant=tenant,
-        policy_registry=policy_registry,
-    )
+    except AppNotFoundError:
+        console.print(f"[red]Error:[/red] App '{app_id}' not found in tenant '{tenant_id}'")
+        sys.exit(1)
 
     if output == "json":
         data = {
@@ -893,7 +787,7 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
         console.print(f"  Source: {resolution.resolution_source}")
         console.print()
 
-        # Resolution path with policy lookups
+        # Resolution path
         console.print("[bold]Resolution Path[/bold]")
         console.print()
         for step in resolution.resolution_path:
@@ -904,35 +798,11 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
             if value == "None" or value == "":
                 console.print(f"  • {level}: [dim](none specified)[/dim]")
             elif level == "request":
-                # Request-level policy override
-                resolved_policy = policy_registry.get(value)
-                if resolved_policy:
-                    console.print(
-                        f"  • {level}: [yellow]{value}[/yellow] → "
-                        f"[green]{resolved_policy.mode.value}[/green]"
-                    )
-                else:
-                    console.print(f"  • {level}: [yellow]{value}[/yellow]")
+                console.print(f"  • {level}: [yellow]{value}[/yellow]")
             elif level == "app":
-                # App level - look up app's default policy
-                app_obj = app_repo.get_app(value, tenant_id)
-                if app_obj and app_obj.default_policy_id:
-                    console.print(
-                        f"  • {level}: [cyan]{value}[/cyan] → "
-                        f"[green]{app_obj.default_policy_id}[/green]"
-                    )
-                else:
-                    console.print(f"  • {level}: [cyan]{value}[/cyan] → [dim](inherit)[/dim]")
+                console.print(f"  • {level}: [cyan]{value}[/cyan]")
             elif level == "tenant":
-                # Tenant level - look up tenant's default policy
-                tenant_obj = tenant_repo.get_tenant(value)
-                if tenant_obj:
-                    console.print(
-                        f"  • {level}: [cyan]{value}[/cyan] → "
-                        f"[green]{tenant_obj.default_policy_id}[/green]"
-                    )
-                else:
-                    console.print(f"  • {level}: [cyan]{value}[/cyan]")
+                console.print(f"  • {level}: [cyan]{value}[/cyan]")
             elif level == "system":
                 console.print(f"  • system_default: [green]{value}[/green]")
             else:

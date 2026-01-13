@@ -37,12 +37,46 @@ from .telemetry_orchestrator import (
     get_orchestrator,
     reset_orchestrator,
 )
+from .tenant_exceptions import (
+    AppNotFoundError,
+    DuplicateEntityError,
+    EntityNotFoundError,
+    ImmutablePresetError,
+    PolicyNotFoundError,
+    PolicyValidationError,
+    TenantNotFoundError,
+    TenantServiceError,
+)
+from .tenant_service import (
+    CreateAppRequest,
+    CreatePolicyRequest,
+    CreateTenantRequest,
+    TenantService,
+    UpdatePolicyRequest,
+    create_tenant_service,
+)
 
 __all__ = [
+    "AppNotFoundError",
+    "CreateAppRequest",
+    "CreatePolicyRequest",
+    "CreateTenantRequest",
+    "DuplicateEntityError",
+    "EntityNotFoundError",
+    "ImmutablePresetError",
+    "PolicyNotFoundError",
+    "PolicyValidationError",
     # Session tracking
     "SessionTracker",
     # Telemetry orchestration
     "TelemetryOrchestrator",
+    "TenantNotFoundError",
+    # Tenant service
+    "TenantService",
+    # Tenant exceptions
+    "TenantServiceError",
+    "UpdatePolicyRequest",
+    "create_tenant_service",
     "get_orchestrator",
     "reset_orchestrator",
 ]

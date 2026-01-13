@@ -18,7 +18,6 @@ Usage:
     progress.complete(2933)
 """
 
-import sys
 import time
 from abc import ABC, abstractmethod
 from typing import ClassVar, Literal
@@ -307,8 +306,7 @@ class SimpleProgress(ProgressIndicator):
 
     def _log(self, message: str) -> None:
         """Print timestamped message to stderr."""
-        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{timestamp}] {message}", file=sys.stderr)
+        time.strftime("%Y-%m-%d %H:%M:%S")
 
     def _get_label(self, name: str, metadata: dict | None = None) -> str:
         """Get simple label for component."""

@@ -7,8 +7,18 @@ This module provides storage implementations for tenant entities:
 - CachedPolicyRepository: Cached wrapper for YamlPolicyRepository
 - PolicyCache: LRU cache for fast policy lookups
 
+Factory functions (preferred API):
+- get_tenant_repo: Get a tenant repository
+- get_policy_repo: Get a policy repository (with optional caching)
+- get_app_repo: Get an app repository
+- get_repository_factory: Get factory for creating repositories
+
 Utilities:
 - get_tenants_base_path: Get the base path for tenant storage
+- slugify: Convert names to URL-safe slugs
+- get_available_policies: List available policy IDs for a tenant
+- build_policy_registry: Build policy registry for resolution
+- verify_tenant_exists: Check if tenant exists
 
 Security:
 - validate_entity_id: Validates entity IDs to prevent path traversal
@@ -19,6 +29,19 @@ import os
 from pathlib import Path
 
 from raxe.infrastructure.tenants.cache import PolicyCache
+from raxe.infrastructure.tenants.factory import (
+    RepositoryFactory,
+    get_app_repo,
+    get_policy_repo,
+    get_repository_factory,
+    get_tenant_repo,
+)
+from raxe.infrastructure.tenants.utils import (
+    build_policy_registry,
+    get_available_policies,
+    slugify,
+    verify_tenant_exists,
+)
 from raxe.infrastructure.tenants.yaml_repository import (
     CachedPolicyRepository,
     InvalidEntityIdError,
@@ -29,14 +52,27 @@ from raxe.infrastructure.tenants.yaml_repository import (
 )
 
 __all__ = [
+    # Repository classes
     "CachedPolicyRepository",
+    # Security
     "InvalidEntityIdError",
     "PolicyCache",
+    "RepositoryFactory",
     "YamlAppRepository",
     "YamlPolicyRepository",
     "YamlTenantRepository",
+    # Utilities
+    "build_policy_registry",
+    # Factory functions (preferred API)
+    "get_app_repo",
+    "get_available_policies",
+    "get_policy_repo",
+    "get_repository_factory",
+    "get_tenant_repo",
     "get_tenants_base_path",
+    "slugify",
     "validate_entity_id",
+    "verify_tenant_exists",
 ]
 
 

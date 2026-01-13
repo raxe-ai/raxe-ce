@@ -63,33 +63,33 @@ from raxe.domain.ml.voting.models import (
 )
 
 __all__ = [
-    # Engines
-    "VotingEngine",
-    "create_voting_engine",
-    "HeadOutputs",
-    "BinaryFirstEngine",
     "BinaryFirstConfig",
-    # Configuration
-    "VotingConfig",
-    "VotingPreset",
-    "get_voting_config",
+    "BinaryFirstEngine",
     "BinaryHeadThresholds",
+    "Decision",
+    "DecisionThresholds",
     "FamilyHeadThresholds",
+    "HarmHeadThresholds",
+    "HeadOutput",
+    "HeadOutputs",
+    "HeadVoteDetail",
+    "HeadWeights",
     "SeverityHeadThresholds",
     "TechniqueHeadThresholds",
-    "HarmHeadThresholds",
-    "HeadWeights",
-    "DecisionThresholds",
     # Models
     "Vote",
-    "Decision",
-    "HeadVoteDetail",
-    "HeadOutput",
+    # Configuration
+    "VotingConfig",
+    # Engines
+    "VotingEngine",
+    "VotingPreset",
     "VotingResult",
+    "create_voting_engine",
+    "get_voting_config",
     # Head voters
     "vote_binary",
     "vote_family",
+    "vote_harm",
     "vote_severity",
     "vote_technique",
-    "vote_harm",
 ]

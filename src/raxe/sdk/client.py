@@ -455,6 +455,7 @@ class Raxe:
             telemetry_policy_name = None
             telemetry_policy_mode = None
             telemetry_policy_version = None
+            telemetry_resolution_source = None
             if result.metadata:
                 telemetry_tenant_id = result.metadata.get("tenant_id")
                 telemetry_app_id = result.metadata.get("app_id")
@@ -462,6 +463,7 @@ class Raxe:
                 telemetry_policy_name = result.metadata.get("effective_policy_name")
                 telemetry_policy_mode = result.metadata.get("effective_policy_mode")
                 telemetry_policy_version = result.metadata.get("effective_policy_version")
+                telemetry_resolution_source = result.metadata.get("resolution_source")
 
             # Build telemetry payload using v2 schema
             # All fields are dynamically calculated from actual scan results
@@ -482,6 +484,7 @@ class Raxe:
                 policy_name=telemetry_policy_name,
                 policy_mode=telemetry_policy_mode,
                 policy_version=telemetry_policy_version,
+                resolution_source=telemetry_resolution_source,
             )
 
             # Track using v2 method

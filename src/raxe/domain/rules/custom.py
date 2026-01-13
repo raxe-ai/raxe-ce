@@ -5,6 +5,7 @@ custom threat detection rules defined in YAML format.
 
 Pure domain layer - NO I/O operations (loading done in infrastructure layer).
 """
+
 import hashlib
 from dataclasses import dataclass
 from typing import Any
@@ -24,6 +25,7 @@ class CustomRuleMetadata:
         references: List of reference URLs or documents
         enabled: Whether the rule is active
     """
+
     author: str
     created_at: str
     updated_at: str | None = None
@@ -85,6 +87,7 @@ class CustomRuleValidator:
                 pattern_str = detection.get("pattern", "")
                 try:
                     import re
+
                     re.compile(pattern_str)
                 except re.error as e:
                     errors.append(f"Invalid regex pattern: {e}")
@@ -99,7 +102,7 @@ class CustomRuleValidator:
         # Validate confidence (if present)
         confidence = detection.get("confidence")
         if confidence is not None:
-            if not isinstance(confidence, (int, float)):
+            if not isinstance(confidence, int | float):
                 errors.append(f"detection.confidence must be a number, got {type(confidence)}")
             elif not (0.0 <= float(confidence) <= 1.0):
                 errors.append(f"detection.confidence must be between 0 and 1, got {confidence}")
@@ -193,11 +196,13 @@ class CustomRuleBuilder:
             flags = detection.get("flags", [])
             timeout = detection.get("timeout", 5.0)
 
-            patterns.append(Pattern(
-                pattern=pattern_str,
-                flags=flags,
-                timeout=timeout,
-            ))
+            patterns.append(
+                Pattern(
+                    pattern=pattern_str,
+                    flags=flags,
+                    timeout=timeout,
+                )
+            )
 
         # Build examples
         examples_dict = rule_dict.get("examples", {})
@@ -228,7 +233,9 @@ class CustomRuleBuilder:
         }
 
         # Calculate rule hash
-        rule_content = f"{rule_id}{version}{name}{description}{''.join(p.pattern for p in patterns)}"
+        rule_content = (
+            f"{rule_id}{version}{name}{description}{''.join(p.pattern for p in patterns)}"
+        )
         rule_hash = hashlib.sha256(rule_content.encode()).hexdigest()
 
         return Rule(

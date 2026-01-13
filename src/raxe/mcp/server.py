@@ -9,7 +9,6 @@ The server is sync-first and uses the MCP SDK's synchronous APIs.
 
 from __future__ import annotations
 
-import sys
 import time
 from collections import defaultdict
 from typing import Any
@@ -38,7 +37,6 @@ from mcp.types import (
 )
 from pydantic import AnyUrl
 
-from raxe import __version__
 from raxe.sdk.client import Raxe
 
 
@@ -388,21 +386,16 @@ def run_server(
 
     if transport == "stdio":
         if verbose:
-            print(f"Starting RAXE MCP server v{__version__} (stdio transport)", file=sys.stderr)
+            pass
         asyncio.run(server.run_async())
     elif transport == "sse":
         # SSE transport requires additional setup
         if verbose:
-            print(
-                f"Starting RAXE MCP server v{__version__} on {host}:{port} (SSE transport)",
-                file=sys.stderr,
-            )
+            pass
         # For SSE, we would use starlette/uvicorn
         # This is a placeholder - full SSE implementation would go here
-        print("SSE transport not yet implemented. Use stdio transport.", file=sys.stderr)
         return 1
     else:
-        print(f"Unknown transport: {transport}", file=sys.stderr)
         return 1
 
     return 0

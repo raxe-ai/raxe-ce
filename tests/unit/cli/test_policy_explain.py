@@ -26,6 +26,16 @@ def temp_tenant_dir(tmp_path):
     return tenant_dir
 
 
+@pytest.fixture
+def mock_tenant_path(temp_tenant_dir):
+    """Patch get_tenants_base_path to use temp directory."""
+    with patch(
+        "raxe.infrastructure.tenants.get_tenants_base_path",
+        return_value=temp_tenant_dir,
+    ):
+        yield temp_tenant_dir
+
+
 def _create_tenant(temp_tenant_dir, tenant_id: str, name: str, policy_id: str = "balanced"):
     """Helper to create a tenant for testing."""
     from datetime import datetime, timezone
@@ -68,89 +78,69 @@ def _create_app(
 class TestPolicyExplain:
     """Tests for policy explain command."""
 
-    def test_explain_tenant_only(self, runner, temp_tenant_dir):
+    def test_explain_tenant_only(self, runner, mock_tenant_path):
         """Test explaining policy for tenant without app."""
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "strict")
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "strict")
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme"],
+        )
 
         assert result.exit_code == 0
         assert "strict" in result.output
         assert "tenant" in result.output.lower()
 
-    def test_explain_with_app(self, runner, temp_tenant_dir):
+    def test_explain_with_app(self, runner, mock_tenant_path):
         """Test explaining policy with app override."""
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "balanced")
-        _create_app(temp_tenant_dir, "acme", "chatbot", "Chatbot", "strict")
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "balanced")
+        _create_app(mock_tenant_path, "acme", "chatbot", "Chatbot", "strict")
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme", "--app", "chatbot"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme", "--app", "chatbot"],
+        )
 
         assert result.exit_code == 0
         assert "strict" in result.output
         assert "app" in result.output.lower()
 
-    def test_explain_with_policy_override(self, runner, temp_tenant_dir):
+    def test_explain_with_policy_override(self, runner, mock_tenant_path):
         """Test explaining with explicit policy override."""
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "balanced")
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "balanced")
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme", "--policy", "monitor"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme", "--policy", "monitor"],
+        )
 
         assert result.exit_code == 0
         assert "monitor" in result.output
         assert "request" in result.output.lower() or "override" in result.output.lower()
 
-    def test_explain_shows_resolution_path(self, runner, temp_tenant_dir):
+    def test_explain_shows_resolution_path(self, runner, mock_tenant_path):
         """Test that explain shows full resolution path."""
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "balanced")
-        _create_app(temp_tenant_dir, "acme", "chatbot", "Chatbot")  # No policy override
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "balanced")
+        _create_app(mock_tenant_path, "acme", "chatbot", "Chatbot")  # No policy override
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme", "--app", "chatbot"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme", "--app", "chatbot"],
+        )
 
         assert result.exit_code == 0
         # Should show that app has no override, falls back to tenant
         assert "balanced" in result.output
         assert "tenant" in result.output.lower()
 
-    def test_explain_json_output(self, runner, temp_tenant_dir):
+    def test_explain_json_output(self, runner, mock_tenant_path):
         """Test explain with JSON output."""
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "strict")
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "strict")
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme", "--output", "json"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme", "--output", "json"],
+        )
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -159,50 +149,38 @@ class TestPolicyExplain:
         assert "resolution_path" in data
         assert data["effective_policy_id"] == "strict"
 
-    def test_explain_nonexistent_tenant_fails(self, runner, temp_tenant_dir):
+    def test_explain_nonexistent_tenant_fails(self, runner, mock_tenant_path):
         """Test explain with non-existent tenant fails."""
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "nonexistent"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "nonexistent"],
+        )
 
         assert result.exit_code != 0
         assert "not found" in result.output.lower()
 
-    def test_explain_system_default_fallback(self, runner, temp_tenant_dir):
+    def test_explain_system_default_fallback(self, runner, mock_tenant_path):
         """Test explain shows system default when no config."""
         # Create tenant with no default policy
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "balanced")
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "balanced")
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme"],
+        )
 
         assert result.exit_code == 0
         # Should show tenant default
         assert "balanced" in result.output
 
-    def test_explain_shows_policy_details(self, runner, temp_tenant_dir):
+    def test_explain_shows_policy_details(self, runner, mock_tenant_path):
         """Test explain shows blocking_enabled and thresholds."""
-        _create_tenant(temp_tenant_dir, "acme", "Acme Corp", "strict")
+        _create_tenant(mock_tenant_path, "acme", "Acme Corp", "strict")
 
-        with patch(
-            "raxe.cli.policy.get_tenants_base_path",
-            return_value=temp_tenant_dir,
-        ):
-            result = runner.invoke(
-                policy,
-                ["explain", "--tenant", "acme"],
-            )
+        result = runner.invoke(
+            policy,
+            ["explain", "--tenant", "acme"],
+        )
 
         assert result.exit_code == 0
         # Should show policy details

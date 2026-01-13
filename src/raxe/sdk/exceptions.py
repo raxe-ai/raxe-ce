@@ -836,35 +836,35 @@ def from_error_code(
 # ============================================================================
 
 __all__ = [
+    # Domain exceptions
+    "ConfigurationError",
+    "DatabaseError",
     # Core classes
     "ErrorCategory",
     "ErrorCode",
+    "InfrastructureError",
+    "RaxeBlockedError",
     "RaxeError",
     # Base exception
     "RaxeException",
-    # Domain exceptions
-    "ConfigurationError",
-    "ValidationError",
     "RuleError",
-    "DatabaseError",
-    "InfrastructureError",
+    "ScanTimeoutError",
     # Security exceptions (backwards compatible)
     "SecurityException",
-    "RaxeBlockedError",
-    "ScanTimeoutError",
-    # Error factories
-    "config_not_found_error",
+    "ValidationError",
     "config_invalid_format_error",
     "config_missing_required_error",
-    "rule_not_found_error",
-    "rule_invalid_pattern_error",
-    "validation_empty_input_error",
-    "validation_input_too_long_error",
-    "database_connection_error",
-    "infrastructure_timeout_error",
-    "security_threat_detected_error",
-    "security_blocked_by_policy_error",
+    # Error factories
+    "config_not_found_error",
     "credential_expired_error",
+    "database_connection_error",
     # Utilities
     "from_error_code",
+    "infrastructure_timeout_error",
+    "rule_invalid_pattern_error",
+    "rule_not_found_error",
+    "security_blocked_by_policy_error",
+    "security_threat_detected_error",
+    "validation_empty_input_error",
+    "validation_input_too_long_error",
 ]

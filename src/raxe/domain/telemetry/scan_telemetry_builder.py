@@ -137,6 +137,7 @@ class ScanTelemetryBuilder:
         policy_name: str | None = None,
         policy_mode: str | None = None,
         policy_version: int | None = None,
+        resolution_source: str | None = None,
     ) -> dict[str, Any]:
         """Build complete scan telemetry payload.
 
@@ -160,6 +161,7 @@ class ScanTelemetryBuilder:
             policy_name: Human-readable policy name (not PII)
             policy_mode: Policy mode (monitor/balanced/strict/custom)
             policy_version: Policy version number
+            resolution_source: How policy was resolved (request/app/tenant/system_default)
 
         Returns:
             Complete telemetry payload dict matching schema v2.0
@@ -223,6 +225,8 @@ class ScanTelemetryBuilder:
             payload["policy_mode"] = policy_mode
         if policy_version is not None:
             payload["policy_version"] = policy_version
+        if resolution_source:
+            payload["resolution_source"] = resolution_source
 
         # Add L1 block if available
         if l1_block:
@@ -529,7 +533,7 @@ class ScanTelemetryBuilder:
 
         # If full probabilities available, use them
         probs = metadata.get(probs_key)
-        if probs and isinstance(probs, (list, tuple)) and len(probs) == len(labels):
+        if probs and isinstance(probs, list | tuple) and len(probs) == len(labels):
             # Sort by probability descending
             sorted_items = sorted(zip(labels, probs, strict=False), key=lambda x: -x[1])[:3]
             return [{"label": label, "probability": float(prob)} for label, prob in sorted_items]
@@ -551,7 +555,7 @@ class ScanTelemetryBuilder:
         """
         # Try to get full distribution
         probs = metadata.get("severity_probabilities")
-        if probs and isinstance(probs, (list, tuple)) and len(probs) == 5:
+        if probs and isinstance(probs, list | tuple) and len(probs) == 5:
             return dict(zip(SEVERITY_LABELS, [float(p) for p in probs], strict=False))
 
         # Fallback: construct from prediction and confidence
@@ -643,7 +647,7 @@ class ScanTelemetryBuilder:
 
         # Calculate family entropy if probabilities available
         family_probs = metadata.get("family_probabilities")
-        if family_probs and isinstance(family_probs, (list, tuple)):
+        if family_probs and isinstance(family_probs, list | tuple):
             family_entropy = self._calculate_entropy(list(family_probs))
         else:
             # Estimate entropy from confidence
@@ -715,6 +719,7 @@ def build_scan_telemetry(
     policy_name: str | None = None,
     policy_mode: str | None = None,
     policy_version: int | None = None,
+    resolution_source: str | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Convenience function to build scan telemetry.
@@ -735,6 +740,7 @@ def build_scan_telemetry(
         policy_name: Human-readable policy name
         policy_mode: Policy mode (monitor/balanced/strict/custom)
         policy_version: Policy version number
+        resolution_source: How policy was resolved (request/app/tenant/system_default)
         **kwargs: Additional arguments passed to builder
 
     Returns:
@@ -755,5 +761,6 @@ def build_scan_telemetry(
         policy_name=policy_name,
         policy_mode=policy_mode,
         policy_version=policy_version,
+        resolution_source=resolution_source,
         **kwargs,
     )

@@ -4,6 +4,7 @@ Defines the YAML manifest structure for folder-based model packages.
 Manifests provide rich metadata about models including tokenizer requirements,
 performance metrics, and deployment information.
 """
+
 from __future__ import annotations
 
 import re
@@ -14,6 +15,7 @@ from typing import Any
 
 class ModelStatus(Enum):
     """Model deployment status."""
+
     ACTIVE = "active"
     EXPERIMENTAL = "experimental"
     DEPRECATED = "deprecated"
@@ -26,6 +28,7 @@ class TokenizerConfig:
     Specifies the tokenizer to use with the model and its settings.
     Used to ensure tokenizer compatibility with embedding models.
     """
+
     name: str
     type: str
     config: dict[str, Any]
@@ -76,6 +79,7 @@ class ManifestSchema:
           target_latency_ms: 3.0
           memory_mb: 130
     """
+
     # Required fields
     name: str
     version: str
@@ -121,7 +125,7 @@ class ManifestSchema:
             tokenizer = TokenizerConfig(
                 name=tok_data.get("name", ""),
                 type=tok_data.get("type", ""),
-                config=tok_data.get("config", {})
+                config=tok_data.get("config", {}),
             )
 
         return cls(
@@ -132,7 +136,7 @@ class ManifestSchema:
             tokenizer=tokenizer,
             performance=data.get("performance"),
             accuracy=data.get("accuracy"),
-            deployment=data.get("deployment")
+            deployment=data.get("deployment"),
         )
 
 
@@ -183,8 +187,7 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
         valid_statuses = [s.value for s in ModelStatus]
         if status not in valid_statuses:
             errors.append(
-                f"Invalid status: {status}. "
-                f"Must be one of: {', '.join(valid_statuses)}"
+                f"Invalid status: {status}. " f"Must be one of: {', '.join(valid_statuses)}"
             )
 
     if "model" not in data or not data["model"]:
@@ -212,7 +215,9 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
                 errors.append("Field 'tokenizer.type' is required when tokenizer is specified")
 
             if "config" not in tok_data or not isinstance(tok_data.get("config"), dict):
-                errors.append("Field 'tokenizer.config' must be a dictionary when tokenizer is specified")
+                errors.append(
+                    "Field 'tokenizer.config' must be a dictionary when tokenizer is specified"
+                )
 
     # Optional performance validation
     if data.get("performance"):
@@ -221,15 +226,18 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
             errors.append("Field 'performance' must be a dictionary")
         else:
             # Validate numeric fields
-            numeric_fields = ["target_latency_ms", "p50_latency_ms", "p95_latency_ms",
-                            "p99_latency_ms", "memory_mb"]
+            numeric_fields = [
+                "target_latency_ms",
+                "p50_latency_ms",
+                "p95_latency_ms",
+                "p99_latency_ms",
+                "memory_mb",
+            ]
             for field in numeric_fields:
                 if field in perf:
                     value = perf[field]
-                    if not isinstance(value, (int, float)) or value < 0:
-                        errors.append(
-                            f"Field 'performance.{field}' must be a non-negative number"
-                        )
+                    if not isinstance(value, int | float) or value < 0:
+                        errors.append(f"Field 'performance.{field}' must be a non-negative number")
 
     # Optional accuracy validation
     if data.get("accuracy"):
@@ -238,15 +246,18 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
             errors.append("Field 'accuracy' must be a dictionary")
         else:
             # Validate metric fields (0-1 range)
-            metric_fields = ["binary_f1", "family_f1", "subfamily_f1",
-                           "false_positive_rate", "false_negative_rate"]
+            metric_fields = [
+                "binary_f1",
+                "family_f1",
+                "subfamily_f1",
+                "false_positive_rate",
+                "false_negative_rate",
+            ]
             for field in metric_fields:
                 if field in acc:
                     value = acc[field]
-                    if not isinstance(value, (int, float)) or not (0 <= value <= 1):
-                        errors.append(
-                            f"Field 'accuracy.{field}' must be a number between 0 and 1"
-                        )
+                    if not isinstance(value, int | float) or not (0 <= value <= 1):
+                        errors.append(f"Field 'accuracy.{field}' must be a number between 0 and 1")
 
     return len(errors) == 0, errors
 
@@ -309,13 +320,7 @@ def get_required_fields() -> list[str]:
     Returns:
         List of required field names
     """
-    return [
-        "name",
-        "version",
-        "status",
-        "model",
-        "model.bundle_file"
-    ]
+    return ["name", "version", "status", "model", "model.bundle_file"]
 
 
 def get_optional_fields() -> list[str]:
@@ -341,5 +346,5 @@ def get_optional_fields() -> list[str]:
         "accuracy.subfamily_f1",
         "deployment",
         "deployment.status",
-        "deployment.environments"
+        "deployment.environments",
     ]

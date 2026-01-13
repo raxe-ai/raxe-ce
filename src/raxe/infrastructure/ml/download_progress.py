@@ -195,8 +195,7 @@ class SimpleDownloadProgress(DownloadProgress):
 
     def _log(self, message: str) -> None:
         """Print timestamped message to stderr."""
-        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{timestamp}] {message}", file=sys.stderr)
+        time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class MinimalDownloadProgress(DownloadProgress):
@@ -223,11 +222,7 @@ class MinimalDownloadProgress(DownloadProgress):
         self._total_bytes = total_bytes
         self._start_time = time.time()
         self._last_update = self._start_time
-        size_mb = total_bytes / (1024 * 1024)
-        print(
-            f"\n[RAXE] Downloading ML model (~{size_mb:.0f}MB)...",
-            file=sys.stderr,
-        )
+        total_bytes / (1024 * 1024)
 
     def update(self, downloaded_bytes: int, total_bytes: int) -> None:
         """Update single-line progress."""
@@ -240,47 +235,31 @@ class MinimalDownloadProgress(DownloadProgress):
             return
         self._last_update = now
 
-        percent = (downloaded_bytes / total_bytes) * 100
-        downloaded_mb = downloaded_bytes / (1024 * 1024)
-        total_mb = total_bytes / (1024 * 1024)
+        (downloaded_bytes / total_bytes) * 100
+        downloaded_bytes / (1024 * 1024)
+        total_bytes / (1024 * 1024)
 
         # Calculate speed
         elapsed = now - self._start_time
         if elapsed > 0:
-            speed_mbps = (downloaded_bytes / (1024 * 1024)) / elapsed
+            (downloaded_bytes / (1024 * 1024)) / elapsed
             eta_seconds = (
                 (total_bytes - downloaded_bytes) / (downloaded_bytes / elapsed)
                 if downloaded_bytes > 0
                 else 0
             )
-            eta_str = f"{eta_seconds:.0f}s" if eta_seconds < 60 else f"{eta_seconds/60:.1f}m"
-            speed_str = f"{speed_mbps:.1f}MB/s"
+            f"{eta_seconds:.0f}s" if eta_seconds < 60 else f"{eta_seconds/60:.1f}m"
         else:
-            speed_str = "---"
-            eta_str = "---"
+            pass
 
         # Single line update with carriage return
-        print(
-            f"\r[RAXE] Progress: {percent:.0f}% ({downloaded_mb:.1f}/{total_mb:.1f}MB) | {speed_str} | ETA: {eta_str}   ",
-            end="",
-            file=sys.stderr,
-        )
 
     def complete(self) -> None:
         """Print completion message."""
-        duration = time.time() - self._start_time
-        print(file=sys.stderr)  # New line after progress
-        print(
-            f"[RAXE] Model downloaded successfully ({duration:.1f}s)",
-            file=sys.stderr,
-        )
+        time.time() - self._start_time
 
     def error(self, message: str) -> None:
         """Print error message."""
-        print(file=sys.stderr)  # New line after progress
-        print(f"[RAXE] Download failed: {message}", file=sys.stderr)
-        print("[RAXE] L1 detection (460+ rules) will still work.", file=sys.stderr)
-        print("[RAXE] Run 'raxe models download' to retry.", file=sys.stderr)
 
 
 class QuietDownloadProgress(DownloadProgress):
@@ -300,7 +279,7 @@ class QuietDownloadProgress(DownloadProgress):
 
     def error(self, message: str) -> None:
         # Errors must always be shown
-        print(f"[RAXE] Download failed: {message}", file=sys.stderr)
+        pass
 
 
 def detect_download_progress_mode() -> str:

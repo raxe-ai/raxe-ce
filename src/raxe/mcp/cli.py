@@ -4,6 +4,7 @@ RAXE MCP Server CLI Entry Point.
 This module provides the raxe-mcp command for running the MCP server.
 Requires: pip install raxe[mcp]
 """
+
 from __future__ import annotations
 
 import sys
@@ -20,11 +21,6 @@ def main() -> int:
     try:
         import mcp  # noqa: F401
     except ImportError:
-        print(
-            "ERROR: MCP dependencies not installed.\n"
-            "Install with: pip install raxe[mcp]",
-            file=sys.stderr,
-        )
         return 1
 
     # Parse command line arguments
@@ -66,9 +62,6 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.version:
-        from raxe import __version__
-
-        print(f"raxe-mcp {__version__}")
         return 0
 
     # Import server after confirming dependencies are available
@@ -82,10 +75,8 @@ def main() -> int:
             verbose=args.verbose,
         )
     except KeyboardInterrupt:
-        print("\nServer stopped.")
         return 0
-    except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
+    except Exception:
         if args.verbose:
             import traceback
 

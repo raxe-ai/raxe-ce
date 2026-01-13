@@ -59,19 +59,19 @@ from raxe.sdk.exceptions import (
 from raxe.sdk.suppression_context import suppression_scope
 
 __all__ = [
-    # Core client
-    "Raxe",
+    "AgentScanResult",
     # Agent scanning
     "AgentScanner",
-    "AgentScanResult",
-    "ScanConfig",
-    "ScanType",
-    "ToolPolicy",
-    "ToolValidationMode",
+    # Core client
+    "Raxe",
     # Exceptions
     "RaxeBlockedError",
     "RaxeException",
+    "ScanConfig",
+    "ScanType",
     "SecurityException",
+    "ToolPolicy",
+    "ToolValidationMode",
     # Utilities
     "suppression_scope",
 ]

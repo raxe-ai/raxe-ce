@@ -1,6 +1,70 @@
 # CHANGELOG
 
 
+## v0.7.1 (2026-01-13)
+
+### Features
+
+- **multi-tenant**: Add multi-tenant policy management platform
+
+  Complete multi-tenant support for CDN providers (B2B2C) and enterprise customers:
+
+  **Policy Modes:**
+  - `monitor`: Log-only, no blocking (for learning/development)
+  - `balanced`: Block HIGH/CRITICAL threats with 85%+ confidence (default)
+  - `strict`: Block all MEDIUM+ threats (maximum protection)
+
+  **Hierarchical Resolution:**
+  - Request → App → Tenant → System default fallback chain
+  - Full policy attribution in scan results for audit/compliance
+
+  **CLI Commands:**
+  - `raxe tenant create/list/show/delete` - Tenant management
+  - `raxe app create/list/show/delete` - Application management
+  - `raxe policy create/list/show/set/explain` - Policy configuration
+  - `raxe suppress add/remove/list --tenant` - Tenant-scoped suppressions
+  - All commands support `--output json` for AI agent integration
+
+  **SDK Changes:**
+  - `raxe.scan(text, tenant_id=..., app_id=..., policy_id=...)` parameters
+  - `ScanResult.metadata` includes policy attribution fields
+  - `effective_policy_id`, `effective_policy_mode`, `resolution_source` in results
+
+  **Storage:**
+  - Tenant-scoped configuration at `~/.raxe/tenants/{tenant_id}/`
+  - YAML-based policies, apps, and suppressions
+  - Isolated tenant data for security and compliance
+
+- **telemetry**: Add policy attribution to scan telemetry (schema v2.3)
+
+  New telemetry fields for audit/compliance:
+  - `tenant_id`: Tenant identifier for multi-tenant deployments
+  - `app_id`: Application identifier within tenant
+  - `policy_id`: Effective policy ID after resolution
+  - `policy_mode`: Policy mode (monitor/balanced/strict)
+  - `resolution_source`: How policy was resolved (request/app/tenant/system_default)
+
+### Bug Fixes
+
+- **telemetry**: Fix resolution_source not being sent to BigQuery
+
+  The `resolution_source` field was stored in metadata but not extracted in
+  `_track_scan()` or passed to the telemetry builder. Now correctly flows
+  through the entire telemetry pipeline.
+
+- **cli**: Migrate tenant.py and policy.py to use TenantService (Clean Architecture)
+
+  CLI commands now properly delegate to the application layer instead of
+  directly accessing infrastructure. This improves testability and
+  maintains separation of concerns.
+
+### Documentation
+
+- Add comprehensive multi-tenant testing guide (`docs/testing/MULTI_TENANT_TESTING.md`)
+- Add multi-tenant quick reference (`docs/testing/MULTI_TENANT_QUICK_REF.md`)
+- Add CLI reference documentation (`docs/cli-reference.md`)
+- Update telemetry schema to v2.3 with multi-tenant fields
+
 ## v0.7.0 (2026-01-12)
 
 ### Bug Fixes

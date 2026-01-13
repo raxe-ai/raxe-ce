@@ -95,40 +95,40 @@ def get_ml_import_error() -> str | None:
 
 
 __all__ = [
-    # Availability check
-    "get_ml_import_error",
-    "is_ml_available",
     # Domain Models (Gemma)
     "DEFAULT_HARM_THRESHOLDS",
-    "GemmaClassificationResult",
-    "HarmType",
-    "MultilabelResult",
-    "PrimaryTechnique",
-    "Severity",
-    "ThreatFamily",
-    # Configuration
-    "L2Config",
-    "L2EnsembleConfig",
-    "L2ThresholdConfig",
-    "create_example_config",
-    "get_l2_config",
-    "load_l2_config",
-    "reset_l2_config",
-    "set_l2_config",
     # Threat Scoring
     "ActionType",
-    "ScoringMode",
-    "ScoringResult",
-    "ScoringThresholds",
-    "ThreatLevel",
-    "ThreatScore",
+    "GemmaClassificationResult",
     # L2 Detection
     "GemmaL2Detector",
+    "HarmType",
     "HierarchicalThreatScorer",
+    # Configuration
+    "L2Config",
     "L2Detector",
+    "L2EnsembleConfig",
     "L2Prediction",
     "L2Result",
     "L2ThreatType",
+    "L2ThresholdConfig",
+    "MultilabelResult",
+    "PrimaryTechnique",
+    "ScoringMode",
+    "ScoringResult",
+    "ScoringThresholds",
+    "Severity",
     "StubL2Detector",
+    "ThreatFamily",
+    "ThreatLevel",
+    "ThreatScore",
+    "create_example_config",
     "create_gemma_detector",
+    "get_l2_config",
+    # Availability check
+    "get_ml_import_error",
+    "is_ml_available",
+    "load_l2_config",
+    "reset_l2_config",
+    "set_l2_config",
 ]

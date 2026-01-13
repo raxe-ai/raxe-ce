@@ -15,6 +15,7 @@ Usage:
     from raxe.integrations.availability import get_available_integrations
     available = get_available_integrations()
 """
+
 from __future__ import annotations
 
 from raxe.integrations.availability import (
@@ -36,20 +37,20 @@ from raxe.integrations.registry import (
 )
 
 __all__ = [
-    # Availability checks
-    "is_available",
-    "require_integration",
-    "get_available_integrations",
-    # Pre-computed flags
-    "MCP_AVAILABLE",
-    "LANGCHAIN_AVAILABLE",
-    "CREWAI_AVAILABLE",
-    "AUTOGEN_AVAILABLE",
-    "LLAMAINDEX_AVAILABLE",
-    "OPENAI_AVAILABLE",
     "ANTHROPIC_AVAILABLE",
+    "AUTOGEN_AVAILABLE",
+    "CREWAI_AVAILABLE",
     # Registry
     "INTEGRATION_REGISTRY",
+    "LANGCHAIN_AVAILABLE",
+    "LLAMAINDEX_AVAILABLE",
+    # Pre-computed flags
+    "MCP_AVAILABLE",
+    "OPENAI_AVAILABLE",
     "IntegrationInfo",
+    "get_available_integrations",
+    # Availability checks
+    "is_available",
     "list_integrations",
+    "require_integration",
 ]

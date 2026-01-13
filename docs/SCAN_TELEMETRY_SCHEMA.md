@@ -39,10 +39,13 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
     "entry_point": "cli|sdk|wrapper|integration",
     "wrapper_type": "openai|anthropic|langchain|none|null",
 
+    "tenant_id": "<string|null: tenant identifier>",
+    "app_id": "<string|null: application identifier>",
     "policy_id": "<string|null: policy identifier>",
     "policy_name": "<string|null: human-readable policy name>",
     "policy_mode": "monitor|balanced|strict|custom|null",
     "policy_version": "<int|null: policy version number>",
+    "resolution_source": "request|app|tenant|system_default|null",
 
     "l1": {
       "hit": "<bool: detection_count > 0>",
@@ -191,14 +194,23 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 | `scan_duration_ms` | `(end_time - start_time) * 1000` | Timer |
 | `action_taken` | Policy decision | Policy engine |
 
-### Policy Attribution Fields (NEW in v2.3)
+### Multi-Tenant & Policy Attribution Fields (NEW in v2.3)
 
 | Field | Calculation | Source |
 |-------|-------------|--------|
+| `tenant_id` | Tenant identifier for multi-tenant deployments | Request/Config |
+| `app_id` | Application identifier within tenant | Request/Config |
 | `policy_id` | Effective policy ID after resolution | PolicyResolutionResult |
 | `policy_name` | Human-readable policy name | TenantPolicy.name |
-| `policy_mode` | Policy mode preset | TenantPolicy.mode.value |
+| `policy_mode` | Policy mode preset (monitor/balanced/strict/custom) | TenantPolicy.mode.value |
 | `policy_version` | Policy version for audit trail | TenantPolicy.version |
+| `resolution_source` | How the policy was resolved | PolicyResolutionResult.resolution_source |
+
+**Resolution Source Values:**
+- `request`: Policy explicitly specified in the scan request
+- `app`: Policy resolved from application default
+- `tenant`: Policy resolved from tenant default
+- `system_default`: System default policy (balanced) used
 
 **Note:** These fields are optional and only present when multi-tenant policy management is active. They support audit/compliance requirements by providing full attribution of which policy was applied to each scan.
 

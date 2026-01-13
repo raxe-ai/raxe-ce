@@ -654,7 +654,7 @@ class L2ResultFormatter:
                     continue
 
                 vote = vote_data.get("vote", "unknown")
-                conf = vote_data.get("confidence", 0.0)
+                vote_data.get("confidence", 0.0)
                 weight = vote_data.get("weight", 1.0)
                 prediction = vote_data.get("prediction", "")
                 raw_prob = vote_data.get("raw_probability", 0.0)

@@ -64,53 +64,53 @@ from .scan_telemetry_builder import (
 )
 
 __all__ = [
+    "DEFAULT_PRIORITY_CONFIG",
+    # Scan telemetry builder (v2 schema)
+    "SCAN_SCHEMA_VERSION",
+    "SCHEMA_VERSION",
+    "BackpressureDecision",
+    "BackpressureThresholds",
+    "EventType",
+    # Priority classification
+    "PriorityConfig",
+    # Backpressure
+    "QueueMetrics",
+    "ScanTelemetryBuilder",
     # Event models
     "TelemetryEvent",
-    "EventType",
+    "build_scan_telemetry",
+    "calculate_backpressure",
+    "calculate_effective_sample_rate",
+    "calculate_event_priority",
+    "classify_priority",
+    "create_activation_event",
+    "create_config_changed_event",
+    "create_error_event",
+    "create_feature_usage_event",
+    "create_heartbeat_event",
+    # Event factory functions
+    "create_installation_event",
+    "create_key_upgrade_event",
+    "create_performance_event",
+    # Utilities
+    "create_prompt_hash",
+    "create_scan_event",
+    "create_scan_event_legacy",
+    "create_scan_event_v2",
+    "create_session_end_event",
+    "create_session_start_event",
+    "create_team_invite_event",
+    "event_to_dict",
+    "generate_batch_id",
     # ID generators
     "generate_event_id",
     "generate_installation_id",
     "generate_session_id",
-    "generate_batch_id",
-    # Event factory functions
-    "create_installation_event",
-    "create_activation_event",
-    "create_session_start_event",
-    "create_session_end_event",
-    "create_scan_event",
-    "create_scan_event_v2",
-    "create_error_event",
-    "create_performance_event",
-    "create_feature_usage_event",
-    "create_heartbeat_event",
-    "create_key_upgrade_event",
-    "create_config_changed_event",
-    "create_team_invite_event",
-    # Scan telemetry builder (v2 schema)
-    "SCAN_SCHEMA_VERSION",
-    "SCHEMA_VERSION",
-    "ScanTelemetryBuilder",
-    "build_scan_telemetry",
     "get_scan_telemetry_builder",
-    # Utilities
-    "create_prompt_hash",
-    "event_to_dict",
-    # Priority classification
-    "PriorityConfig",
-    "DEFAULT_PRIORITY_CONFIG",
-    "classify_priority",
-    "is_critical_event_type",
-    "is_standard_event_type",
-    # Backpressure
-    "QueueMetrics",
-    "BackpressureDecision",
-    "BackpressureThresholds",
-    "calculate_backpressure",
-    "calculate_effective_sample_rate",
-    "should_sample_event",
     # Legacy (from event_creator.py) - keep for backwards compatibility
     "hash_text",
-    "create_scan_event_legacy",
+    "is_critical_event_type",
+    "is_standard_event_type",
+    "should_sample_event",
     "validate_event_privacy",
-    "calculate_event_priority",
 ]

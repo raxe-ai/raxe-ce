@@ -15,37 +15,16 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from raxe.domain.tenants.presets import GLOBAL_PRESETS
-from raxe.infrastructure.tenants import (
-    YamlPolicyRepository,
-    YamlTenantRepository,
-    get_tenants_base_path,
+from raxe.application import (
+    CreateTenantRequest,
+    DuplicateEntityError,
+    TenantNotFoundError,
+    create_tenant_service,
 )
+from raxe.domain.tenants.presets import GLOBAL_PRESETS
+from raxe.infrastructure.tenants import get_tenants_base_path
 
 console = Console()
-
-
-def _slugify(name: str) -> str:
-    """Convert a name to a URL-safe slug.
-
-    Args:
-        name: Human-readable name
-
-    Returns:
-        Lowercase slug with hyphens
-    """
-    import re
-
-    # Convert to lowercase, replace spaces/underscores with hyphens
-    slug = name.lower().strip()
-    slug = re.sub(r"[\s_]+", "-", slug)
-    # Remove non-alphanumeric characters except hyphens
-    slug = re.sub(r"[^a-z0-9-]", "", slug)
-    # Remove consecutive hyphens
-    slug = re.sub(r"-+", "-", slug)
-    # Remove leading/trailing hyphens
-    slug = slug.strip("-")
-    return slug or "tenant"
 
 
 @click.group()
@@ -83,42 +62,27 @@ def create_tenant(name: str, tenant_id: str | None, policy: str):
         raxe tenant create --name "Acme Corp"
         raxe tenant create --name "Bunny CDN" --id bunny --policy strict
     """
-    from datetime import datetime, timezone
-
-    from raxe.domain.tenants.models import Tenant
-
-    # Generate ID if not provided
-    if not tenant_id:
-        tenant_id = _slugify(name)
-
+    service = create_tenant_service()
     base_path = get_tenants_base_path()
-    repo = YamlTenantRepository(base_path)
 
-    # Check if tenant already exists
-    existing = repo.get_tenant(tenant_id)
-    if existing:
-        console.print(f"[red]Error:[/red] Tenant '{tenant_id}' already exists")
+    try:
+        request = CreateTenantRequest(
+            name=name,
+            tenant_id=tenant_id,
+            default_policy_id=policy,
+        )
+        tenant_obj = service.create_tenant(request)
+
+        console.print(f"[green]✓[/green] Created tenant '{tenant_obj.name}'")
+        console.print()
+        console.print(f"  ID: [cyan]{tenant_obj.tenant_id}[/cyan]")
+        console.print(f"  Name: {tenant_obj.name}")
+        console.print(f"  Default Policy: [yellow]{tenant_obj.default_policy_id}[/yellow]")
+        console.print(f"  Path: {base_path / tenant_obj.tenant_id}")
+        console.print()
+    except DuplicateEntityError as e:
+        console.print(f"[red]Error:[/red] Tenant '{e.entity_id}' already exists")
         sys.exit(1)
-
-    # Create tenant
-    now = datetime.now(timezone.utc).isoformat()
-    tenant_obj = Tenant(
-        tenant_id=tenant_id,
-        name=name,
-        default_policy_id=policy,
-        created_at=now,
-    )
-
-    # Save tenant
-    repo.save_tenant(tenant_obj)
-
-    console.print(f"[green]✓[/green] Created tenant '{name}'")
-    console.print()
-    console.print(f"  ID: [cyan]{tenant_id}[/cyan]")
-    console.print(f"  Name: {name}")
-    console.print(f"  Default Policy: [yellow]{policy}[/yellow]")
-    console.print(f"  Path: {base_path / tenant_id}")
-    console.print()
 
 
 @tenant.command("list")
@@ -141,10 +105,8 @@ def list_tenants(output: str):
         raxe tenant list --output json
         raxe tenant list --format json
     """
-    base_path = get_tenants_base_path()
-    repo = YamlTenantRepository(base_path)
-
-    tenants = repo.list_tenants()
+    service = create_tenant_service()
+    tenants = service.list_tenants()
 
     if not tenants:
         if output == "json":
@@ -205,12 +167,12 @@ def show_tenant(tenant_id: str, output: str):
         raxe tenant show acme --output json
         raxe tenant show acme --format json
     """
+    service = create_tenant_service()
     base_path = get_tenants_base_path()
-    repo = YamlTenantRepository(base_path)
 
-    tenant_obj = repo.get_tenant(tenant_id)
-
-    if not tenant_obj:
+    try:
+        tenant_obj = service.get_tenant(tenant_id)
+    except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
         sys.exit(1)
 
@@ -240,8 +202,7 @@ def show_tenant(tenant_id: str, output: str):
         console.print()
 
         # Show available policies
-        policy_repo = YamlPolicyRepository(base_path)
-        policies = policy_repo.list_policies(tenant_id)
+        policies = service.list_policies(tenant_id)
 
         if policies:
             console.print("[bold]Custom Policies:[/bold]")
@@ -267,12 +228,12 @@ def delete_tenant(tenant_id: str, force: bool):
     Examples:
         raxe tenant delete acme --force
     """
-    base_path = get_tenants_base_path()
-    repo = YamlTenantRepository(base_path)
+    service = create_tenant_service()
 
-    # Check tenant exists
-    tenant_obj = repo.get_tenant(tenant_id)
-    if not tenant_obj:
+    # Check tenant exists first (for confirmation prompt)
+    try:
+        tenant_obj = service.get_tenant(tenant_id)
+    except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
         sys.exit(1)
 
@@ -283,12 +244,8 @@ def delete_tenant(tenant_id: str, force: bool):
             console.print("[dim]Aborted[/dim]")
             sys.exit(1)
 
-    # Delete tenant directory
-    import shutil
-
-    tenant_path = base_path / tenant_id
-    if tenant_path.exists():
-        shutil.rmtree(tenant_path)
+    # Delete tenant through service
+    service.delete_tenant(tenant_id)
 
     console.print(f"[green]✓[/green] Deleted tenant '{tenant_id}'")
     console.print()
@@ -305,44 +262,30 @@ def set_tenant_policy(tenant_id: str, policy: str):
         raxe tenant set-policy acme strict
         raxe tenant set-policy bunny monitor
     """
+    service = create_tenant_service()
 
-    from raxe.domain.tenants.models import Tenant
+    try:
+        # Get existing tenant for old policy display
+        tenant_obj = service.get_tenant(tenant_id)
+        old_policy = tenant_obj.default_policy_id
 
-    base_path = get_tenants_base_path()
-    repo = YamlTenantRepository(base_path)
+        # Validate policy exists (Click already validates, but double-check)
+        if policy not in GLOBAL_PRESETS:
+            console.print(f"[red]Error:[/red] Invalid policy '{policy}'")
+            console.print(f"Valid policies: {', '.join(GLOBAL_PRESETS.keys())}")
+            sys.exit(1)
 
-    # Get existing tenant
-    tenant_obj = repo.get_tenant(tenant_id)
-    if not tenant_obj:
+        # Update tenant default policy
+        service.set_tenant_policy(tenant_id, policy)
+
+        console.print(f"[green]✓[/green] Updated default policy for '{tenant_id}'")
+        console.print()
+        console.print(f"  Old policy: [dim]{old_policy}[/dim]")
+        console.print(f"  New policy: [yellow]{policy}[/yellow]")
+        console.print()
+    except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
         sys.exit(1)
-
-    # Validate policy exists
-    if policy not in GLOBAL_PRESETS:
-        console.print(f"[red]Error:[/red] Invalid policy '{policy}'")
-        console.print(f"Valid policies: {', '.join(GLOBAL_PRESETS.keys())}")
-        sys.exit(1)
-
-    old_policy = tenant_obj.default_policy_id
-
-    # Create updated tenant (frozen dataclass, must recreate)
-    updated_tenant = Tenant(
-        tenant_id=tenant_obj.tenant_id,
-        name=tenant_obj.name,
-        default_policy_id=policy,
-        partner_id=tenant_obj.partner_id,
-        tier=tenant_obj.tier,
-        created_at=tenant_obj.created_at,
-    )
-
-    # Save updated tenant
-    repo.save_tenant(updated_tenant)
-
-    console.print(f"[green]✓[/green] Updated default policy for '{tenant_id}'")
-    console.print()
-    console.print(f"  Old policy: [dim]{old_policy}[/dim]")
-    console.print(f"  New policy: [yellow]{policy}[/yellow]")
-    console.print()
 
 
 # Export the group

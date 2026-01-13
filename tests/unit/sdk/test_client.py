@@ -565,3 +565,93 @@ class TestRaxeMetadata:
 
         # Should show rules count
         assert "rules=" in repr_str
+
+
+class TestRaxeMultiTenant:
+    """Tests for multi-tenant policy resolution."""
+
+    def test_scan_accepts_tenant_parameters(self):
+        """Scan accepts tenant_id, app_id, policy_id params."""
+        raxe = Raxe(l2_enabled=False)
+        # Should not raise - params are accepted
+        result = raxe.scan(
+            "test prompt",
+            tenant_id="acme",
+            app_id="chatbot",
+            policy_id="strict",
+            dry_run=True,
+        )
+        assert result is not None
+
+    def test_scan_with_policy_id_sets_attribution(self):
+        """Scan with policy_id sets policy attribution in result."""
+        raxe = Raxe(l2_enabled=False)
+        result = raxe.scan(
+            "test prompt",
+            policy_id="strict",
+            dry_run=True,
+        )
+
+        assert result.metadata.get("effective_policy_id") == "strict"
+        assert result.metadata.get("effective_policy_mode") == "strict"
+        assert result.metadata.get("resolution_source") == "request"
+
+    def test_scan_with_preset_policy_id(self):
+        """Scan with preset policy_id works."""
+        raxe = Raxe(l2_enabled=False)
+
+        for preset_id in ["monitor", "balanced", "strict"]:
+            result = raxe.scan(
+                "test prompt",
+                policy_id=preset_id,
+                dry_run=True,
+            )
+            assert result.metadata.get("effective_policy_id") == preset_id
+            assert result.metadata.get("effective_policy_mode") == preset_id
+
+    def test_scan_without_tenant_no_attribution(self):
+        """Scan without tenant params has no policy attribution."""
+        raxe = Raxe(l2_enabled=False)
+        result = raxe.scan("test prompt", dry_run=True)
+
+        # No policy attribution added when no tenant params
+        assert result.metadata.get("effective_policy_id") is None
+
+    def test_scan_l1_result_has_policy_attribution(self):
+        """L1 result includes policy attribution fields."""
+        raxe = Raxe(l2_enabled=False)
+        result = raxe.scan(
+            "test prompt",
+            policy_id="balanced",
+            dry_run=True,
+        )
+
+        l1_result = result.scan_result.l1_result
+        assert l1_result.effective_policy_id == "balanced"
+        assert l1_result.effective_policy_mode == "balanced"
+        assert l1_result.resolution_path is not None
+
+    def test_scan_tenant_id_in_metadata(self):
+        """Tenant ID is included in result metadata."""
+        raxe = Raxe(l2_enabled=False)
+        result = raxe.scan(
+            "test prompt",
+            tenant_id="acme",
+            policy_id="balanced",  # Use explicit policy since tenant may not exist
+            dry_run=True,
+        )
+
+        assert result.metadata.get("tenant_id") == "acme"
+
+    def test_scan_app_id_in_metadata(self):
+        """App ID is included in result metadata."""
+        raxe = Raxe(l2_enabled=False)
+        result = raxe.scan(
+            "test prompt",
+            tenant_id="acme",
+            app_id="chatbot",
+            policy_id="balanced",  # Use explicit policy since tenant/app may not exist
+            dry_run=True,
+        )
+
+        assert result.metadata.get("app_id") == "chatbot"

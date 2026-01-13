@@ -16,15 +16,14 @@ before sending to OpenAI, and optionally scans responses.
 Default behavior is LOG-ONLY (safe to add to production without breaking flows).
 Enable blocking with `raxe_block_on_threat=True` for strict mode.
 """
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any
 
 from raxe.sdk.agent_scanner import (
-    AgentScanner,
     AgentScannerConfig,
-    ScanType,
     create_agent_scanner,
 )
 
@@ -39,9 +38,9 @@ except ImportError:
     class OpenAI:
         def __init__(self, *args, **kwargs):
             raise ImportError(
-                "openai package is required for RaxeOpenAI. "
-                "Install with: pip install openai"
+                "openai package is required for RaxeOpenAI. Install with: pip install openai"
             )
+
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ class RaxeOpenAI(OpenAI):
         raxe: Raxe | None = None,
         raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """Initialize RaxeOpenAI client.
 
@@ -111,6 +110,7 @@ class RaxeOpenAI(OpenAI):
         # Create or use provided Raxe client
         if raxe is None:
             from raxe.sdk.client import Raxe
+
             raxe = Raxe()
 
         self.raxe = raxe
@@ -184,8 +184,7 @@ class RaxeOpenAI(OpenAI):
         # Log for monitoring
         if result.has_threats:
             logger.warning(
-                f"Threat detected in user message: {result.severity} "
-                f"(action={result.action_taken})"
+                f"Threat detected in user message: {result.severity} (action={result.action_taken})"
             )
 
     def _scan_response(self, response: Any):
@@ -202,9 +201,7 @@ class RaxeOpenAI(OpenAI):
                         # Scan response (AgentScanner handles blocking based on config)
                         result = self._scanner.scan_response(content)
                         if result.has_threats:
-                            logger.info(
-                                f"Threat detected in OpenAI response: {result.severity}"
-                            )
+                            logger.info(f"Threat detected in OpenAI response: {result.severity}")
         except Exception as e:
             # Don't fail on response scanning
             logger.error(f"Failed to scan response: {e}")

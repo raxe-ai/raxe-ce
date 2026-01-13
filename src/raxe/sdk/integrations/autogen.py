@@ -57,6 +57,7 @@ Usage (v0.4.x+ - wrapper-based):
 
     # Use protected agent in your workflow
 """
+
 from __future__ import annotations
 
 import logging
@@ -90,6 +91,7 @@ AutoGenMessage = dict[str, Any]
 # AutoGen Version Detection
 # ============================================================================
 
+
 def _detect_autogen_version() -> tuple[int, int, int]:
     """Detect installed AutoGen version.
 
@@ -102,6 +104,7 @@ def _detect_autogen_version() -> tuple[int, int, int]:
     # Try new package name first (v0.4+)
     try:
         import autogen_agentchat
+
         version_str = getattr(autogen_agentchat, "__version__", "0.0.0")
         parts = version_str.split(".")
         major = int(parts[0]) if len(parts) > 0 else 0
@@ -114,6 +117,7 @@ def _detect_autogen_version() -> tuple[int, int, int]:
     # Try legacy package name (v0.2.x)
     try:
         import autogen
+
         version_str = getattr(autogen, "__version__", "0.0.0")
         parts = version_str.split(".")
         major = int(parts[0]) if len(parts) > 0 else 0
@@ -126,6 +130,7 @@ def _detect_autogen_version() -> tuple[int, int, int]:
     # Try pyautogen (alternative package name)
     try:
         import pyautogen
+
         version_str = getattr(pyautogen, "__version__", "0.0.0")
         parts = version_str.split(".")
         major = int(parts[0]) if len(parts) > 0 else 0
@@ -467,8 +472,7 @@ class RaxeConversationGuard:
         )
         # Create a simple exception with the error info
         message = (
-            f"Security threat detected: {result.severity} "
-            f"({result.detection_count} detection(s))"
+            f"Security threat detected: {result.severity} ({result.detection_count} detection(s))"
         )
         exc = SecurityException.__new__(SecurityException)
         exc.result = None  # No pipeline result available
@@ -723,6 +727,7 @@ class RaxeConversationGuard:
 # ============================================================================
 # AutoGen v0.4+ Agent Wrapper
 # ============================================================================
+
 
 class _RaxeAgentWrapper:
     """Wrapper for AutoGen v0.4+ agents that adds RAXE scanning.

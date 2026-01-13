@@ -8,8 +8,10 @@ Performance targets:
 - Pattern compilation cached for reuse
 - Timeout protection per pattern (enforced via regex module)
 """
-import regex
+
 from dataclasses import dataclass
+
+import regex
 from regex import Pattern as RePattern
 
 from raxe.domain.rules.models import Pattern
@@ -30,6 +32,7 @@ class Match:
         context_before: Up to 50 chars before match
         context_after: Up to 50 chars after match
     """
+
     pattern_index: int
     start: int
     end: int
@@ -144,18 +147,20 @@ class PatternMatcher:
                 end = match_obj.end()
 
                 # Extract context (50 chars before and after)
-                context_before = text[max(0, start - 50):start]
-                context_after = text[end:min(len(text), end + 50)]
+                context_before = text[max(0, start - 50) : start]
+                context_after = text[end : min(len(text), end + 50)]
 
-                matches.append(Match(
-                    pattern_index=pattern_index,
-                    start=start,
-                    end=end,
-                    matched_text=text[start:end],
-                    groups=match_obj.groups(),
-                    context_before=context_before,
-                    context_after=context_after,
-                ))
+                matches.append(
+                    Match(
+                        pattern_index=pattern_index,
+                        start=start,
+                        end=end,
+                        matched_text=text[start:end],
+                        groups=match_obj.groups(),
+                        context_before=context_before,
+                        context_after=context_after,
+                    )
+                )
         except TimeoutError as e:
             raise ValueError(
                 f"Pattern matching timed out after {timeout}s (possible ReDoS): {e}"

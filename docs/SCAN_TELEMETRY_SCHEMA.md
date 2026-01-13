@@ -1,4 +1,4 @@
-# RAXE Scan Telemetry Schema v2.1
+# RAXE Scan Telemetry Schema v2.3
 
 > **CANONICAL SOURCE**: This is the authoritative schema definition for scan telemetry events.
 > All telemetry entry points (CLI, SDK, wrappers, decorators) MUST comply with this schema.
@@ -6,8 +6,8 @@
 ## Schema Version
 
 ```
-Version: 2.2.0
-Last Updated: 2026-01-12
+Version: 2.3.0
+Last Updated: 2026-01-13
 Status: LOCKED (changes require version bump)
 ```
 
@@ -38,6 +38,11 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
     "action_taken": "allow|block|warn|redact",
     "entry_point": "cli|sdk|wrapper|integration",
     "wrapper_type": "openai|anthropic|langchain|none|null",
+
+    "policy_id": "<string|null: policy identifier>",
+    "policy_name": "<string|null: human-readable policy name>",
+    "policy_mode": "monitor|balanced|strict|custom|null",
+    "policy_version": "<int|null: policy version number>",
 
     "l1": {
       "hit": "<bool: detection_count > 0>",
@@ -185,6 +190,17 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 | `threat_detected` | `l1.hit or l2.hit` | Derived |
 | `scan_duration_ms` | `(end_time - start_time) * 1000` | Timer |
 | `action_taken` | Policy decision | Policy engine |
+
+### Policy Attribution Fields (NEW in v2.3)
+
+| Field | Calculation | Source |
+|-------|-------------|--------|
+| `policy_id` | Effective policy ID after resolution | PolicyResolutionResult |
+| `policy_name` | Human-readable policy name | TenantPolicy.name |
+| `policy_mode` | Policy mode preset | TenantPolicy.mode.value |
+| `policy_version` | Policy version for audit trail | TenantPolicy.version |
+
+**Note:** These fields are optional and only present when multi-tenant policy management is active. They support audit/compliance requirements by providing full attribution of which policy was applied to each scan.
 
 ### L1 Fields
 
@@ -407,6 +423,11 @@ telemetry = builder.build(
     scan_duration_ms=duration_ms,
     entry_point="sdk",
     action_taken=policy_action,
+    # Policy attribution (optional, for multi-tenant)
+    policy_id="balanced",
+    policy_name="Balanced Mode",
+    policy_mode="balanced",
+    policy_version=1,
 )
 ```
 
@@ -421,6 +442,14 @@ telemetry = builder.build(
 ---
 
 ## Changelog
+
+### v2.3.0 (2026-01-13)
+- Added policy attribution fields for multi-tenant support:
+  - `policy_id`: Effective policy identifier after resolution
+  - `policy_name`: Human-readable policy name for display
+  - `policy_mode`: Policy mode preset (monitor/balanced/strict/custom)
+  - `policy_version`: Version number for audit trail and change tracking
+- These fields support audit/billing visibility requirements (Jose Lopez feedback)
 
 ### v2.2.0 (2026-01-12)
 - Fixed L1 family extraction to read from `Detection.category` field (was incorrectly looking for non-existent `family` field)

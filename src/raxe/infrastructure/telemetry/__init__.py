@@ -16,12 +16,6 @@ from raxe.infrastructure.telemetry.credential_store import (
     InvalidKeyFormatError,
     validate_key_format,
 )
-from raxe.infrastructure.telemetry.hook import TelemetryConfig, TelemetryHook, hash_text
-from raxe.infrastructure.telemetry.queue import (
-    EventPriority,
-    EventQueue,
-    QueuedEvent,
-)
 from raxe.infrastructure.telemetry.dual_queue import (
     DualQueue,
     StateKey,
@@ -41,6 +35,12 @@ from raxe.infrastructure.telemetry.health_client import (
     TimeoutError,
     check_health,
     check_health_async,
+)
+from raxe.infrastructure.telemetry.hook import TelemetryConfig, TelemetryHook, hash_text
+from raxe.infrastructure.telemetry.queue import (
+    EventPriority,
+    EventQueue,
+    QueuedEvent,
 )
 
 __all__ = [

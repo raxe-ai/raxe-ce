@@ -1,4 +1,5 @@
 """CLI commands for configuration management."""
+
 from pathlib import Path
 
 import click
@@ -76,9 +77,8 @@ def _send_key_upgrade_event(old_api_key: str | None, new_api_key: str) -> None:
                 # Calculate days on previous
                 try:
                     from datetime import datetime, timezone
-                    created = datetime.fromisoformat(
-                        existing.created_at.replace("Z", "+00:00")
-                    )
+
+                    created = datetime.fromisoformat(existing.created_at.replace("Z", "+00:00"))
                     now = datetime.now(timezone.utc)
                     days_on_previous = (now - created).days
                 except Exception:  # noqa: S110
@@ -102,14 +102,12 @@ def _send_key_upgrade_event(old_api_key: str | None, new_api_key: str) -> None:
         # Try to send via telemetry sender
         try:
             from raxe.infrastructure.telemetry.sender import TelemetrySender
+
             sender = TelemetrySender()
             sender.send(event)
             logger.debug("key_upgrade_event_sent", new_key_id=new_key_id)
         except Exception as send_error:
-            logger.debug(
-                "key_upgrade_event_send_failed",
-                error=str(send_error)
-            )
+            logger.debug("key_upgrade_event_send_failed", error=str(send_error))
 
     except Exception as e:
         # Don't fail the config update if telemetry fails

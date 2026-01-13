@@ -48,6 +48,7 @@ CrewAI Integration:
     protected_crew = guard.protect_crew(crew)
     result = protected_crew.kickoff()
 """
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -66,8 +67,20 @@ if TYPE_CHECKING:
         RaxeCrewGuard,
         create_crew_guard,
     )
+    from raxe.sdk.integrations.dspy import (
+        DSPyConfig,
+        RaxeDSPyCallback,
+        RaxeModuleGuard,
+        create_dspy_callback,
+        create_module_guard,
+    )
     from raxe.sdk.integrations.huggingface import RaxePipeline
     from raxe.sdk.integrations.langchain import RaxeCallbackHandler
+    from raxe.sdk.integrations.litellm import (
+        LiteLLMConfig,
+        RaxeLiteLLMCallback,
+        create_litellm_handler,
+    )
     from raxe.sdk.integrations.llamaindex import (
         RaxeAgentCallback,
         RaxeLlamaIndexCallback,
@@ -80,18 +93,6 @@ if TYPE_CHECKING:
         RaxePortkeyWebhook,
         create_portkey_guard,
         create_portkey_webhook,
-    )
-    from raxe.sdk.integrations.litellm import (
-        LiteLLMConfig,
-        RaxeLiteLLMCallback,
-        create_litellm_handler,
-    )
-    from raxe.sdk.integrations.dspy import (
-        DSPyConfig,
-        RaxeDSPyCallback,
-        RaxeModuleGuard,
-        create_dspy_callback,
-        create_module_guard,
     )
 
 __all__ = [
@@ -153,6 +154,7 @@ def __getattr__(name: str):
     if name == "RaxeCallbackHandler":
         try:
             from raxe.sdk.integrations.langchain import RaxeCallbackHandler
+
             return RaxeCallbackHandler
         except ImportError as e:
             raise ImportError(
@@ -163,6 +165,7 @@ def __getattr__(name: str):
     elif name == "RaxePipeline":
         try:
             from raxe.sdk.integrations.huggingface import RaxePipeline
+
             return RaxePipeline
         except ImportError as e:
             raise ImportError(
@@ -174,6 +177,7 @@ def __getattr__(name: str):
     elif name == "RaxeLlamaIndexCallback":
         try:
             from raxe.sdk.integrations.llamaindex import RaxeLlamaIndexCallback
+
             return RaxeLlamaIndexCallback
         except ImportError as e:
             raise ImportError(
@@ -184,6 +188,7 @@ def __getattr__(name: str):
     elif name == "RaxeQueryEngineCallback":
         try:
             from raxe.sdk.integrations.llamaindex import RaxeQueryEngineCallback
+
             return RaxeQueryEngineCallback
         except ImportError as e:
             raise ImportError(
@@ -194,6 +199,7 @@ def __getattr__(name: str):
     elif name == "RaxeAgentCallback":
         try:
             from raxe.sdk.integrations.llamaindex import RaxeAgentCallback
+
             return RaxeAgentCallback
         except ImportError as e:
             raise ImportError(
@@ -204,6 +210,7 @@ def __getattr__(name: str):
     elif name == "RaxeSpanHandler":
         try:
             from raxe.sdk.integrations.llamaindex import RaxeSpanHandler
+
             return RaxeSpanHandler
         except ImportError as e:
             raise ImportError(
@@ -216,6 +223,7 @@ def __getattr__(name: str):
         # AutoGen integration - no hard dependency on autogen
         # The guard uses duck typing to work with any ConversableAgent
         from raxe.sdk.integrations.autogen import RaxeConversationGuard
+
         return RaxeConversationGuard
 
     # CrewAI integration
@@ -223,6 +231,7 @@ def __getattr__(name: str):
         # CrewAI integration - no hard dependency on crewai
         # The guard uses duck typing to work with Crew, Agent, Task
         from raxe.sdk.integrations import crewai
+
         return getattr(crewai, name)
 
     # Portkey integration
@@ -236,6 +245,7 @@ def __getattr__(name: str):
         # Portkey integration - no hard dependency on portkey-ai
         # Works with any OpenAI-compatible client
         from raxe.sdk.integrations import portkey
+
         return getattr(portkey, name)
 
     # LiteLLM integration
@@ -247,6 +257,7 @@ def __getattr__(name: str):
         # LiteLLM integration - no hard dependency on litellm
         # The callback works with standard LiteLLM API
         from raxe.sdk.integrations import litellm
+
         return getattr(litellm, name)
 
     # DSPy integration
@@ -260,6 +271,7 @@ def __getattr__(name: str):
         # DSPy integration - no hard dependency on dspy
         # Works with DSPy's callback system
         from raxe.sdk.integrations import dspy
+
         return getattr(dspy, name)
 
     # Base agent scanner classes (no external dependencies)
@@ -272,6 +284,7 @@ def __getattr__(name: str):
         "ScanMode",
     ):
         from raxe.sdk.integrations import agent_scanner
+
         return getattr(agent_scanner, name)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

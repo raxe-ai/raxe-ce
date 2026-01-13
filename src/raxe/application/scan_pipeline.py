@@ -13,34 +13,38 @@ Performance targets:
 - P95 end-to-end latency: <10ms
 - Component breakdown: L1 <5ms, L2 <1ms, overhead <4ms
 """
+
 import hashlib
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+
+# Temporary BlockAction enum for backward compatibility
+from enum import Enum
 
 from raxe.application.apply_policy import ApplyPolicyUseCase
 from raxe.application.scan_merger import CombinedScanResult, ScanMerger
 from raxe.application.telemetry_orchestrator import get_orchestrator
 from raxe.domain.engine.executor import Detection, RuleExecutor
 from raxe.domain.ml.protocol import L2Detector, L2Result
-from raxe.domain.policies.models import PolicyAction
 from raxe.infrastructure.packs.registry import PackRegistry
 from raxe.infrastructure.telemetry.hook import TelemetryHook
 from raxe.utils.logging import get_logger
 
-# Temporary BlockAction enum for backward compatibility
-from enum import Enum
 
 class BlockAction(Enum):
     """Temporary backward compatibility - maps to PolicyAction."""
+
     ALLOW = "ALLOW"
     WARN = "WARN"
     BLOCK = "BLOCK"
     CHALLENGE = "CHALLENGE"
 
+
 # Import metrics collector
 try:
     from raxe.monitoring.metrics import collector
+
     METRICS_AVAILABLE = True
 except ImportError:
     METRICS_AVAILABLE = False
@@ -66,6 +70,7 @@ class ScanPipelineResult:
         l1_duration_ms: L1 processing time
         l2_duration_ms: L2 processing time
     """
+
     scan_result: CombinedScanResult
     policy_decision: BlockAction
     should_block: bool
@@ -261,6 +266,7 @@ class ScanPipeline:
         if self.enable_schema_validation:
             try:
                 from raxe.infrastructure.schemas.validator import get_validator
+
                 self._validator = get_validator()
                 logger.info(f"Schema validation enabled (mode={schema_validation_mode})")
             except Exception as e:
@@ -342,7 +348,7 @@ class ScanPipeline:
         scan_timestamp = datetime.now(timezone.utc).isoformat()
 
         # Record input length for metrics
-        input_length = len(text.encode('utf-8'))
+        input_length = len(text.encode("utf-8"))
 
         # PLUGIN HOOK: on_scan_start (allow text transformation)
         if self.plugin_manager:
@@ -378,6 +384,7 @@ class ScanPipeline:
         else:
             # L1 disabled - create empty result
             from raxe.domain.engine.executor import ScanResult
+
             l1_result = ScanResult(
                 detections=[],
                 scanned_at=scan_timestamp,
@@ -394,6 +401,7 @@ class ScanPipeline:
                 if plugin_detections:
                     # Merge plugin detections into L1 result
                     from raxe.domain.engine.executor import ScanResult
+
                     l1_result = ScanResult(
                         detections=l1_result.detections + plugin_detections,
                         has_detections=l1_result.has_detections or len(plugin_detections) > 0,
@@ -414,12 +422,16 @@ class ScanPipeline:
             should_skip_l2 = False
             if self.fail_fast_on_critical and l1_result.highest_severity:
                 from raxe.domain.rules.models import Severity
+
                 if l1_result.highest_severity == Severity.CRITICAL:
                     # Check confidence of CRITICAL detections
                     max_confidence = max(
-                        (d.confidence for d in l1_result.detections
-                         if d.severity == Severity.CRITICAL),
-                        default=0.0
+                        (
+                            d.confidence
+                            for d in l1_result.detections
+                            if d.severity == Severity.CRITICAL
+                        ),
+                        default=0.0,
                     )
 
                     if max_confidence >= self.min_confidence_for_skip:
@@ -497,10 +509,10 @@ class ScanPipeline:
         # 4. Apply confidence threshold filtering
         if confidence_threshold > 0:
             filtered_detections = [
-                d for d in l1_result.detections
-                if d.confidence >= confidence_threshold
+                d for d in l1_result.detections if d.confidence >= confidence_threshold
             ]
             from raxe.domain.engine.executor import ScanResult
+
             l1_result = ScanResult(
                 detections=filtered_detections,
                 scanned_at=l1_result.scanned_at,
@@ -549,6 +561,7 @@ class ScanPipeline:
 
             # Update l1_result with processed detections
             from raxe.domain.engine.executor import ScanResult
+
             l1_result = ScanResult(
                 detections=processed_detections,
                 scanned_at=l1_result.scanned_at,
@@ -590,7 +603,7 @@ class ScanPipeline:
         policy_decision, should_block = self._evaluate_policy(
             l1_result=l1_result,
             l2_result=l2_result,
-            combined_severity=combined_result.combined_severity
+            combined_severity=combined_result.combined_severity,
         )
 
         # 7. Calculate text hash (privacy-preserving)
@@ -636,6 +649,7 @@ class ScanPipeline:
                 for detection in l1_result.detections:
                     if METRICS_AVAILABLE:
                         from raxe.monitoring.metrics import detections_total, rule_matches
+
                         detections_total.labels(
                             rule_id=detection.rule_id,
                             severity=detection.severity.value,
@@ -807,7 +821,7 @@ class ScanPipeline:
             List of Detection objects representing L2 predictions
         """
         from datetime import datetime, timezone
-        from raxe.domain.engine.executor import Detection
+
         from raxe.domain.engine.matcher import Match
 
         detections = []
@@ -841,7 +855,9 @@ class ScanPipeline:
                 detection_layer="L2",
                 category=prediction.threat_type.value,
                 message=f"L2 ML detection: {prediction.threat_type.value}",
-                explanation=prediction.explanation if prediction.explanation else f"ML model detected {prediction.threat_type.value}",
+                explanation=prediction.explanation
+                if prediction.explanation
+                else f"ML model detected {prediction.threat_type.value}",
             )
             detections.append(detection)
 
@@ -911,16 +927,14 @@ class ScanPipeline:
                 elif self.schema_validation_mode == "warn":
                     # Log warning but allow send
                     logger.warning(
-                        f"Telemetry validation failed: {errors}. "
-                        f"Sending anyway (mode=warn)"
+                        f"Telemetry validation failed: {errors}. " f"Sending anyway (mode=warn)"
                     )
                     return True
 
                 elif self.schema_validation_mode == "enforce":
                     # Block invalid data
                     logger.error(
-                        f"Telemetry validation failed: {errors}. "
-                        f"Blocked (mode=enforce)"
+                        f"Telemetry validation failed: {errors}. " f"Blocked (mode=enforce)"
                     )
                     return False
 

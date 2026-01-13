@@ -60,6 +60,7 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
     # Show compact logo for text output
     if output_format == "text":
         from raxe.cli.branding import print_logo
+
         print_logo(console, compact=True)
         console.print()
 
@@ -83,7 +84,7 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
         elif retention:
             # Show retention analysis
             # Use installation date's cohort (simplified - use 30 days ago)
-            cohort_date = (datetime.now().date() - timedelta(days=30))
+            cohort_date = datetime.now().date() - timedelta(days=30)
             retention_data = engine.calculate_retention(cohort_date)
             if output_format == "json":
                 console.print_json(data=retention_data)
@@ -99,7 +100,9 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
             stats_data = {
                 "user": {
                     "installation_id": user_stats.installation_id,
-                    "installation_date": user_stats.installation_date.isoformat() if user_stats.installation_date else None,
+                    "installation_date": user_stats.installation_date.isoformat()
+                    if user_stats.installation_date
+                    else None,
                     "time_to_first_scan_seconds": user_stats.time_to_first_scan_seconds,
                     "total_scans": user_stats.total_scans,
                     "threats_detected": user_stats.threats_detected,
@@ -107,18 +110,15 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
                     "last_scan": user_stats.last_scan.isoformat() if user_stats.last_scan else None,
                     "avg_scan_time_ms": user_stats.avg_scan_time_ms,
                     "l1_detections": user_stats.l1_detections,
-                    "l2_detections": user_stats.l2_detections
+                    "l2_detections": user_stats.l2_detections,
                 },
                 "streaks": streak_info,
-                "achievements": {
-                    "progress": progress,
-                    "unlocked": [a.to_dict() for a in unlocked]
-                }
+                "achievements": {"progress": progress, "unlocked": [a.to_dict() for a in unlocked]},
             }
 
             if export:
                 # Export to file
-                with open(export, 'w') as f:
+                with open(export, "w") as f:
                     json.dump(stats_data, f, indent=2)
                 console.print(f"[green]Stats exported to {export}[/green]")
             elif output_format == "json":
@@ -167,18 +167,24 @@ def _display_user_stats(user_stats, streak_info: dict, progress: dict, unlocked:
             install_date = install_date.replace(tzinfo=timezone.utc)
 
         days_installed = (now - install_date).days
-        console.print(f"  └─ Installed: {days_installed} days ago ({user_stats.installation_date.date()})")
+        console.print(
+            f"  └─ Installed: {days_installed} days ago ({user_stats.installation_date.date()})"
+        )
     else:
         console.print("  └─ Installed: Unknown")
 
     if user_stats.time_to_first_scan_seconds is not None:
-        console.print(f"  └─ Time to first scan: {user_stats.time_to_first_scan_seconds:.0f} seconds ⚡")
+        console.print(
+            f"  └─ Time to first scan: {user_stats.time_to_first_scan_seconds:.0f} seconds ⚡"
+        )
     console.print()
 
     # Usage statistics
     console.print("[bold]Usage[/bold]")
     console.print(f"  └─ Total scans: {user_stats.total_scans:,}")
-    console.print(f"  └─ Threats detected: {user_stats.threats_detected} ({user_stats.detection_rate:.1f}%)")
+    console.print(
+        f"  └─ Threats detected: {user_stats.threats_detected} ({user_stats.detection_rate:.1f}%)"
+    )
     if user_stats.last_scan:
         # Ensure both datetimes are timezone-aware for correct comparison
         now = datetime.now(timezone.utc)
@@ -218,7 +224,9 @@ def _display_user_stats(user_stats, streak_info: dict, progress: dict, unlocked:
 
     # Achievements
     console.print("[bold]Achievements[/bold]")
-    console.print(f"  └─ Unlocked: {progress['unlocked']}/{progress['total_achievements']} ({progress['completion_percentage']:.0f}%)")
+    console.print(
+        f"  └─ Unlocked: {progress['unlocked']}/{progress['total_achievements']} ({progress['completion_percentage']:.0f}%)"
+    )
     console.print(f"  └─ Total points: {progress['total_points']}")
 
     if unlocked:
@@ -246,7 +254,9 @@ def _display_global_stats(stats_data: dict) -> None:
     # Threats
     threats = stats_data.get("threats", {})
     console.print("[bold]Threats Detected[/bold]")
-    console.print(f"  └─ Total: {threats.get('total_detected', 0):,} ({threats.get('detection_rate', 0):.1f}%)")
+    console.print(
+        f"  └─ Total: {threats.get('total_detected', 0):,} ({threats.get('detection_rate', 0):.1f}%)"
+    )
     console.print(f"  └─ Critical threats: {threats.get('critical_threats', 0):,}")
 
     severity_breakdown = threats.get("by_severity", {})

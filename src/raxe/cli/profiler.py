@@ -2,6 +2,7 @@
 
 Commands for profiling scan performance and identifying bottlenecks.
 """
+
 import click
 from rich.table import Table
 from rich.tree import Tree
@@ -56,9 +57,9 @@ def profile_command(text: str, l2: bool, output_format: str) -> None:
     try:
         # Get components using public API
         components = raxe.get_profiling_components()
-        executor = components['executor']
-        l2_detector = components['l2_detector'] if l2 else None
-        rules = components['rules']
+        executor = components["executor"]
+        l2_detector = components["l2_detector"] if l2 else None
+        rules = components["rules"]
 
         # Create profiler
         profiler = ScanProfiler(

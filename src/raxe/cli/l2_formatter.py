@@ -155,8 +155,7 @@ class L2ResultFormatter:
             "This prompt attempts to bypass AI safety guidelines."
         ),
         "other_security": (
-            "Review the prompt manually for security concerns. "
-            "Consider updating detection rules."
+            "Review the prompt manually for security concerns. Consider updating detection rules."
         ),
         "prompt_injection": (
             "Block the request. This is an attempt to override system instructions. "

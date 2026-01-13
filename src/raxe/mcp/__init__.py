@@ -27,6 +27,7 @@ Available Resources:
     - raxe://rules/{family}: Detection rules by family
     - raxe://stats: Current scan statistics
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -36,7 +37,7 @@ from raxe.integrations.availability import require_integration
 if TYPE_CHECKING:
     from raxe.mcp.server import RaxeMCPServer
 
-__all__ = ["create_server", "run_server", "RaxeMCPServer"]
+__all__ = ["RaxeMCPServer", "create_server", "run_server"]
 
 
 def __getattr__(name: str):

@@ -4,7 +4,6 @@ RAXE rules command - Rule discovery and management.
 Provides comprehensive rule discovery, inspection, and management capabilities.
 """
 
-
 import click
 from rich.panel import Panel
 from rich.table import Table
@@ -105,11 +104,16 @@ def list_rules(family: str | None, severity: str | None, output_format: str) -> 
 
     if severity:
         severity_enum = Severity(severity.lower())
-        severity_order = [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW, Severity.INFO]
+        severity_order = [
+            Severity.CRITICAL,
+            Severity.HIGH,
+            Severity.MEDIUM,
+            Severity.LOW,
+            Severity.INFO,
+        ]
         min_severity_idx = severity_order.index(severity_enum)
         filtered_rules = [
-            r for r in filtered_rules
-            if severity_order.index(r.severity) <= min_severity_idx
+            r for r in filtered_rules if severity_order.index(r.severity) <= min_severity_idx
         ]
 
     if not filtered_rules:
@@ -123,6 +127,7 @@ def list_rules(family: str | None, severity: str | None, output_format: str) -> 
         _display_rules_tree(filtered_rules)
     elif output_format == "json":
         import json
+
         rules_data = [
             {
                 "rule_id": r.rule_id,
@@ -290,13 +295,15 @@ def test_rule(rule_id: str, text: str) -> None:
             match = pattern.search(text)
             if match:
                 matched = True
-                match_details.append({
-                    "pattern_index": i,
-                    "pattern": rule.patterns[i].pattern,
-                    "match": match.group(0),
-                    "start": match.start(),
-                    "end": match.end(),
-                })
+                match_details.append(
+                    {
+                        "pattern_index": i,
+                        "pattern": rule.patterns[i].pattern,
+                        "match": match.group(0),
+                        "start": match.start(),
+                        "end": match.end(),
+                    }
+                )
 
         if matched:
             console.print("[green bold]✓ MATCH[/green bold]")
@@ -312,7 +319,9 @@ def test_rule(rule_id: str, text: str) -> None:
                 console.print(f"  Position: chars {detail['start']}-{detail['end']}")
                 console.print()
 
-            console.print(f"[bold]Severity:[/bold] [{_get_severity_color(rule.severity)}]{rule.severity.value}[/]")
+            console.print(
+                f"[bold]Severity:[/bold] [{_get_severity_color(rule.severity)}]{rule.severity.value}[/]"
+            )
             console.print(f"[bold]Confidence:[/bold] {rule.confidence * 100:.1f}%")
         else:
             console.print("[yellow bold]✗ NO MATCH[/yellow bold]")

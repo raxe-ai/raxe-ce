@@ -16,6 +16,7 @@ before sending to Claude, and optionally scans responses.
 Default behavior is LOG-ONLY (safe to add to production without breaking flows).
 Enable blocking with `raxe_block_on_threat=True` for strict mode.
 """
+
 from __future__ import annotations
 
 import logging
@@ -66,7 +67,7 @@ class RaxeAnthropic:
         raxe: Raxe | None = None,
         raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """Initialize RaxeAnthropic client.
 
@@ -110,6 +111,7 @@ class RaxeAnthropic:
         # Create or use provided Raxe client
         if raxe is None:
             from raxe.sdk.client import Raxe
+
             raxe = Raxe()
 
         self.raxe = raxe
@@ -196,8 +198,7 @@ class RaxeAnthropic:
         # Log for monitoring
         if result.has_threats:
             logger.warning(
-                f"Threat detected in user message: {result.severity} "
-                f"(action={result.action_taken})"
+                f"Threat detected in user message: {result.severity} (action={result.action_taken})"
             )
 
     def _scan_response(self, response: Any):
@@ -246,9 +247,7 @@ class RaxeAnthropic:
             try:
                 result = self._scanner.scan_response(accumulated_text)
                 if result.has_threats:
-                    logger.info(
-                        f"Threat detected in Claude streaming response: {result.severity}"
-                    )
+                    logger.info(f"Threat detected in Claude streaming response: {result.severity}")
             except Exception as e:
                 logger.error(f"Failed to scan streaming response: {e}")
 

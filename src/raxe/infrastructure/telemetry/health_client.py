@@ -22,12 +22,14 @@ logger = logging.getLogger(__name__)
 def _get_default_api_endpoint() -> str:
     """Get default API endpoint from centralized config."""
     from raxe.infrastructure.config.endpoints import get_api_base
+
     return get_api_base()
 
 
 def _get_default_console_keys_url() -> str:
     """Get default console keys URL from centralized config."""
     from raxe.infrastructure.config.endpoints import get_console_url
+
     return f"{get_console_url()}/keys"
 
 
@@ -66,6 +68,7 @@ class RateLimitInfo:
         requests_per_minute: Maximum requests allowed per minute
         events_per_day: Maximum events allowed per day
     """
+
     requests_per_minute: int
     events_per_day: int
 
@@ -78,6 +81,7 @@ class UsageInfo:
         events_sent: Number of events sent today
         events_remaining: Number of events remaining for today
     """
+
     events_sent: int
     events_remaining: int
 
@@ -91,6 +95,7 @@ class FeaturesInfo:
         offline_mode: Whether offline mode is available
         extended_retention: Whether extended data retention is enabled
     """
+
     can_disable_telemetry: bool
     offline_mode: bool
     extended_retention: bool = False
@@ -106,6 +111,7 @@ class TrialStatus:
         scans_during_trial: Total scans performed during trial
         threats_detected_during_trial: Threats detected during trial
     """
+
     is_trial: bool
     days_remaining: int | None
     scans_during_trial: int
@@ -132,6 +138,7 @@ class HealthResponse:
         server_time: Server timestamp (ISO 8601)
         trial_status: Trial information (for temp keys)
     """
+
     key_type: str
     tier: str
     days_remaining: int | None
@@ -242,9 +249,7 @@ def check_health(
 
             elif response.status_code == 401:
                 error_data = _safe_parse_error(response)
-                raise AuthenticationError(
-                    error_data.get("message", "Invalid or expired API key")
-                )
+                raise AuthenticationError(error_data.get("message", "Invalid or expired API key"))
 
             elif response.status_code == 403:
                 error_data = _safe_parse_error(response)
@@ -253,9 +258,7 @@ def check_health(
                 raise AuthenticationError(f"{message}\nGet a new key at: {console_url}")
 
             elif response.status_code >= 500:
-                raise ServerError(
-                    f"Server error (HTTP {response.status_code})"
-                )
+                raise ServerError(f"Server error (HTTP {response.status_code})")
 
             else:
                 error_data = _safe_parse_error(response)
@@ -266,15 +269,11 @@ def check_health(
 
     except httpx.ConnectError as e:
         logger.debug("Connection error: %s", e)
-        raise NetworkError(
-            "Could not reach server. Check your network connection."
-        ) from e
+        raise NetworkError("Could not reach server. Check your network connection.") from e
 
     except httpx.TimeoutException as e:
         logger.debug("Timeout error: %s", e)
-        raise TimeoutError(
-            "Request timed out. Server may be unavailable."
-        ) from e
+        raise TimeoutError("Request timed out. Server may be unavailable.") from e
 
     except httpx.HTTPError as e:
         logger.debug("HTTP error: %s", e)
@@ -322,9 +321,7 @@ async def check_health_async(
 
             elif response.status_code == 401:
                 error_data = _safe_parse_error(response)
-                raise AuthenticationError(
-                    error_data.get("message", "Invalid or expired API key")
-                )
+                raise AuthenticationError(error_data.get("message", "Invalid or expired API key"))
 
             elif response.status_code == 403:
                 error_data = _safe_parse_error(response)
@@ -333,9 +330,7 @@ async def check_health_async(
                 raise AuthenticationError(f"{message}\nGet a new key at: {console_url}")
 
             elif response.status_code >= 500:
-                raise ServerError(
-                    f"Server error (HTTP {response.status_code})"
-                )
+                raise ServerError(f"Server error (HTTP {response.status_code})")
 
             else:
                 error_data = _safe_parse_error(response)
@@ -346,15 +341,11 @@ async def check_health_async(
 
     except httpx.ConnectError as e:
         logger.debug("Connection error: %s", e)
-        raise NetworkError(
-            "Could not reach server. Check your network connection."
-        ) from e
+        raise NetworkError("Could not reach server. Check your network connection.") from e
 
     except httpx.TimeoutException as e:
         logger.debug("Timeout error: %s", e)
-        raise TimeoutError(
-            "Request timed out. Server may be unavailable."
-        ) from e
+        raise TimeoutError("Request timed out. Server may be unavailable.") from e
 
     except httpx.HTTPError as e:
         logger.debug("HTTP error: %s", e)
@@ -377,9 +368,9 @@ def _safe_parse_error(response: httpx.Response) -> dict[str, Any]:
 
 
 __all__ = [
-    "AuthenticationError",
     "DEFAULT_API_ENDPOINT",
     "DEFAULT_TIMEOUT",
+    "AuthenticationError",
     "FeaturesInfo",
     "HealthCheckError",
     "HealthResponse",

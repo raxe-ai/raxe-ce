@@ -502,3 +502,138 @@ class TestVotingBlockWithEmptyPredictions:
         assert result["enabled"] is True
         assert result["hit"] is False
         assert "voting" not in result  # No voting block when voting is None
+
+
+class TestMultiTenantTelemetry:
+    """Tests for multi-tenant fields in telemetry (tenant_id, policy_id)."""
+
+    def test_tenant_id_included_in_payload(self):
+        """Test tenant_id is included in telemetry payload when provided."""
+        builder = ScanTelemetryBuilder()
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="test prompt",
+            tenant_id="acme",
+        )
+
+        assert "tenant_id" in result
+        assert result["tenant_id"] == "acme"
+
+    def test_policy_id_included_in_payload(self):
+        """Test policy_id is included in telemetry payload when provided."""
+        builder = ScanTelemetryBuilder()
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="test prompt",
+            policy_id="strict",
+        )
+
+        assert "policy_id" in result
+        assert result["policy_id"] == "strict"
+
+    def test_both_tenant_and_policy_included(self):
+        """Test both tenant_id and policy_id are included when provided."""
+        builder = ScanTelemetryBuilder()
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="test prompt",
+            tenant_id="bunny-tenant-123",
+            policy_id="balanced",
+        )
+
+        assert result["tenant_id"] == "bunny-tenant-123"
+        assert result["policy_id"] == "balanced"
+
+    def test_tenant_fields_not_included_when_not_provided(self):
+        """Test tenant_id and policy_id are NOT in payload when not provided."""
+        builder = ScanTelemetryBuilder()
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="test prompt",
+        )
+
+        assert "tenant_id" not in result
+        assert "policy_id" not in result
+
+    def test_app_id_included_in_payload(self):
+        """Test app_id is included in telemetry payload when provided."""
+        builder = ScanTelemetryBuilder()
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="test prompt",
+            tenant_id="acme",
+            app_id="chatbot",
+        )
+
+        assert "app_id" in result
+        assert result["app_id"] == "chatbot"
+
+    def test_full_multi_tenant_context(self):
+        """Test complete multi-tenant context (tenant_id, app_id, policy_id)."""
+        builder = ScanTelemetryBuilder()
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="test prompt",
+            tenant_id="enterprise-bank",
+            app_id="fraud-detection",
+            policy_id="strict",
+        )
+
+        assert result["tenant_id"] == "enterprise-bank"
+        assert result["app_id"] == "fraud-detection"
+        assert result["policy_id"] == "strict"
+
+    def test_tenant_fields_are_not_pii(self):
+        """Test that tenant_id, app_id, policy_id are configuration identifiers (not PII).
+
+        These fields are safe to include in telemetry because they are:
+        - Configuration identifiers, not user identifiers
+        - Set by the application operator, not end users
+        - Used for billing/audit, not tracking individuals
+        """
+        builder = ScanTelemetryBuilder()
+
+        # Use realistic tenant/app/policy IDs
+        result = builder.build(
+            l1_result=None,
+            l2_result=None,
+            scan_duration_ms=5.0,
+            entry_point="sdk",
+            prompt="user query that should not appear in telemetry",
+            tenant_id="tenant_bunny_abc123",
+            app_id="app_chatbot_xyz789",
+            policy_id="pol_strict_v1",
+        )
+
+        # These are safe configuration identifiers
+        assert result["tenant_id"] == "tenant_bunny_abc123"
+        assert result["app_id"] == "app_chatbot_xyz789"
+        assert result["policy_id"] == "pol_strict_v1"
+
+        # Prompt should be hashed, not raw
+        assert "prompt" not in result  # Raw prompt not in payload
+        assert result["prompt_hash"].startswith("sha256:")  # Only hash present

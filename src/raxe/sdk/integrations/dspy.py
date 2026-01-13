@@ -41,6 +41,7 @@ For comprehensive tracing, combine with DSPy's built-in tracing:
         result = protected_module(question="...")
         history = dspy.settings.trace_history
 """
+
 from __future__ import annotations
 
 import logging
@@ -49,12 +50,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from raxe.sdk.agent_scanner import (
     AgentScannerConfig,
-    MessageType,
-    ScanContext,
     ThreatDetectedError,
     create_agent_scanner,
 )
-from raxe.sdk.exceptions import SecurityException
 
 if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
@@ -138,7 +136,7 @@ class RaxeDSPyCallback:
 
     def __init__(
         self,
-        raxe: "Raxe | None" = None,
+        raxe: Raxe | None = None,
         config: DSPyConfig | None = None,
     ) -> None:
         """Initialize DSPy callback handler.
@@ -172,9 +170,7 @@ class RaxeDSPyCallback:
             "threats_blocked": 0,
         }
 
-        logger.debug(
-            f"RaxeDSPyCallback initialized: block={self.config.block_on_threats}"
-        )
+        logger.debug(f"RaxeDSPyCallback initialized: block={self.config.block_on_threats}")
 
     def on_module_start(
         self,
@@ -605,7 +601,7 @@ class RaxeModuleGuard:
 
     def __init__(
         self,
-        raxe: "Raxe | None" = None,
+        raxe: Raxe | None = None,
         config: DSPyConfig | None = None,
     ) -> None:
         """Initialize module guard.
@@ -785,7 +781,7 @@ class _ModuleWrapper:
 
 
 def create_dspy_callback(
-    raxe: "Raxe | None" = None,
+    raxe: Raxe | None = None,
     *,
     block_on_threats: bool = False,
     scan_lm_prompts: bool = True,
@@ -820,7 +816,7 @@ def create_dspy_callback(
 
 
 def create_module_guard(
-    raxe: "Raxe | None" = None,
+    raxe: Raxe | None = None,
     *,
     block_on_threats: bool = False,
 ) -> RaxeModuleGuard:

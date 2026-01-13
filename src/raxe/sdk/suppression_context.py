@@ -12,6 +12,7 @@ Clean Architecture:
     - SDK layer convenience that wraps domain suppression logic
     - Thread-safe using contextvars
 """
+
 from __future__ import annotations
 
 import contextvars
@@ -123,8 +124,7 @@ def suppression_scope(
 
     # Create suppressions for all patterns
     new_suppressions = [
-        _create_scoped_suppression(pattern, action=action, reason=reason)
-        for pattern in patterns
+        _create_scoped_suppression(pattern, action=action, reason=reason) for pattern in patterns
     ]
 
     # Get current suppressions and add new ones

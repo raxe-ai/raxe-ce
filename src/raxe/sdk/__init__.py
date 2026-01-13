@@ -43,8 +43,8 @@ Public exports:
 """
 
 from raxe.sdk.agent_scanner import (
-    AgentScanResult,
     AgentScanner,
+    AgentScanResult,
     ScanConfig,
     ScanType,
     ToolPolicy,

@@ -2,6 +2,7 @@
 
 Commands for creating, validating, and managing custom detection rules.
 """
+
 from pathlib import Path
 
 import click
@@ -64,11 +65,13 @@ def create_rule(output: str | None, interactive: bool) -> None:
         return
 
     # Interactive mode
-    console.print(Panel.fit(
-        "[bold cyan]Custom Rule Creator[/bold cyan]\n\n"
-        "Create a new threat detection rule by answering the prompts below.",
-        title="RAXE",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]Custom Rule Creator[/bold cyan]\n\n"
+            "Create a new threat detection rule by answering the prompts below.",
+            title="RAXE",
+        )
+    )
 
     try:
         # Collect rule information
@@ -151,6 +154,7 @@ def create_rule(output: str | None, interactive: bool) -> None:
 
         # Generate YAML
         import yaml
+
         yaml_content = yaml.dump(rule_dict, default_flow_style=False, sort_keys=False)
 
         # Show preview
@@ -160,6 +164,7 @@ def create_rule(output: str | None, interactive: bool) -> None:
 
         # Validate
         from raxe.domain.rules.custom import CustomRuleValidator
+
         is_valid, errors = CustomRuleValidator.validate_rule_dict(rule_dict)
 
         if not is_valid:
@@ -279,8 +284,7 @@ def install_rule(file_path: str, force: bool) -> None:
         dest_file = loader.custom_rules_dir / f"{rule.rule_id}.yaml"
         if dest_file.exists() and not force:
             display_error(
-                f"Rule {rule.rule_id} already exists",
-                f"Use --force to overwrite: {dest_file}"
+                f"Rule {rule.rule_id} already exists", f"Use --force to overwrite: {dest_file}"
             )
             return
 

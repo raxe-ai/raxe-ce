@@ -2,6 +2,7 @@
 
 Commands for tuning confidence thresholds and benchmarking performance modes.
 """
+
 import click
 from rich.panel import Panel
 from rich.progress import Progress
@@ -48,7 +49,9 @@ def tune() -> None:
     type=click.Path(exists=True),
     help="Test file with prompts (one per line)",
 )
-def tune_threshold(min_threshold: float, max_threshold: float, step: float, test_file: str | None) -> None:
+def tune_threshold(
+    min_threshold: float, max_threshold: float, step: float, test_file: str | None
+) -> None:
     """Tune confidence threshold interactively.
 
     Tests different confidence thresholds to find the optimal balance
@@ -83,12 +86,14 @@ def tune_threshold(min_threshold: float, max_threshold: float, step: float, test
         display_error("No test prompts", "Provide --test-file or use defaults")
         return
 
-    console.print(Panel.fit(
-        f"[bold cyan]Confidence Threshold Tuning[/bold cyan]\n\n"
-        f"Testing {len(test_prompts)} prompts\n"
-        f"Threshold range: {min} to {max} (step: {step})",
-        title="RAXE Tune",
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold cyan]Confidence Threshold Tuning[/bold cyan]\n\n"
+            f"Testing {len(test_prompts)} prompts\n"
+            f"Threshold range: {min} to {max} (step: {step})",
+            title="RAXE Tune",
+        )
+    )
 
     # Test each threshold
     results = []
@@ -115,12 +120,14 @@ def tune_threshold(min_threshold: float, max_threshold: float, step: float, test
 
             detection_rate = total_detections / total_scans if total_scans > 0 else 0
 
-            results.append({
-                "threshold": current,
-                "detections": total_detections,
-                "rate": detection_rate,
-                "scans": total_scans,
-            })
+            results.append(
+                {
+                    "threshold": current,
+                    "detections": total_detections,
+                    "rate": detection_rate,
+                    "scans": total_scans,
+                }
+            )
 
             current += step
             progress.update(task, advance=1)
@@ -138,16 +145,16 @@ def tune_threshold(min_threshold: float, max_threshold: float, step: float, test
         rate_str = f"{r['rate']:.2%}"
 
         # Determine recommendation
-        if 0.4 <= r['threshold'] <= 0.6:
+        if 0.4 <= r["threshold"] <= 0.6:
             rec = "[green]Balanced[/green]"
-        elif r['threshold'] < 0.4:
+        elif r["threshold"] < 0.4:
             rec = "[yellow]High Recall[/yellow]"
         else:
             rec = "[blue]High Precision[/blue]"
 
         table.add_row(
             f"{r['threshold']:.1f}",
-            str(r['detections']),
+            str(r["detections"]),
             rate_str,
             rec,
         )
@@ -155,9 +162,11 @@ def tune_threshold(min_threshold: float, max_threshold: float, step: float, test
     console.print(table)
 
     # Find recommended threshold (around 0.5)
-    recommended = min(results, key=lambda r: abs(r['threshold'] - 0.5))
+    recommended = min(results, key=lambda r: abs(r["threshold"] - 0.5))
 
-    console.print(f"\n[bold green]Recommended Threshold:[/bold green] {recommended['threshold']:.1f}")
+    console.print(
+        f"\n[bold green]Recommended Threshold:[/bold green] {recommended['threshold']:.1f}"
+    )
     console.print(f"  Detections: {recommended['detections']}")
     console.print(f"  Rate: {recommended['rate']:.2%}")
 
@@ -191,11 +200,13 @@ def benchmark_modes(iterations: int, text: str) -> None:
         display_error("Failed to initialize RAXE", str(e))
         raise click.Abort() from e
 
-    console.print(Panel.fit(
-        f"[bold cyan]Performance Mode Benchmark[/bold cyan]\n\n"
-        f"Running {iterations} iterations per mode",
-        title="RAXE Tune",
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold cyan]Performance Mode Benchmark[/bold cyan]\n\n"
+            f"Running {iterations} iterations per mode",
+            title="RAXE Tune",
+        )
+    )
 
     modes = ["fast", "balanced", "thorough"]
     mode_results = {}
@@ -224,7 +235,9 @@ def benchmark_modes(iterations: int, text: str) -> None:
                     "p95_latency": sorted(latencies)[int(len(latencies) * 0.95)],
                     "min_latency": min(latencies),
                     "max_latency": max(latencies),
-                    "avg_detections": sum(detection_counts) / len(detection_counts) if detection_counts else 0,
+                    "avg_detections": sum(detection_counts) / len(detection_counts)
+                    if detection_counts
+                    else 0,
                 }
 
     # Display results
@@ -239,9 +252,9 @@ def benchmark_modes(iterations: int, text: str) -> None:
     table.add_column("Status")
 
     targets = {
-        "fast": 3.0,      # <3ms target
+        "fast": 3.0,  # <3ms target
         "balanced": 10.0,  # <10ms target
-        "thorough": 100.0, # <100ms acceptable
+        "thorough": 100.0,  # <100ms acceptable
     }
 
     for mode in modes:
@@ -252,9 +265,9 @@ def benchmark_modes(iterations: int, text: str) -> None:
         target = targets[mode]
 
         # Status based on target
-        if r['p95_latency'] <= target:
+        if r["p95_latency"] <= target:
             status = "[green]✓ On Target[/green]"
-        elif r['p95_latency'] <= target * 1.2:
+        elif r["p95_latency"] <= target * 1.2:
             status = "[yellow]⚠ Near Target[/yellow]"
         else:
             status = "[red]✗ Over Target[/red]"
@@ -275,7 +288,9 @@ def benchmark_modes(iterations: int, text: str) -> None:
 
     if "fast" in mode_results:
         fast = mode_results["fast"]
-        console.print(f"  [cyan]Fast:[/cyan] Use for <3ms requirement (avg: {fast['avg_latency']:.2f}ms)")
+        console.print(
+            f"  [cyan]Fast:[/cyan] Use for <3ms requirement (avg: {fast['avg_latency']:.2f}ms)"
+        )
 
     if "balanced" in mode_results:
         balanced = mode_results["balanced"]

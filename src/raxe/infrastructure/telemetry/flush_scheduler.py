@@ -16,7 +16,6 @@ from __future__ import annotations
 import atexit
 import signal
 import threading
-import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Protocol
@@ -175,9 +174,7 @@ class SQLiteDualQueueAdapter:
     def mark_failed(self, error: str, retry_delay_seconds: int = 60) -> None:
         """Mark pending events as failed."""
         if self._pending_event_ids:
-            self._queue.mark_batch_failed(
-                self._pending_event_ids, error, retry_delay_seconds
-            )
+            self._queue.mark_batch_failed(self._pending_event_ids, error, retry_delay_seconds)
             self._pending_event_ids = []
 
 
@@ -405,12 +402,8 @@ class FlushScheduler:
         try:
             if threading.current_thread() is threading.main_thread():
                 # Store original handlers to chain
-                self._original_sigterm = signal.signal(
-                    signal.SIGTERM, self._signal_handler
-                )
-                self._original_sigint = signal.signal(
-                    signal.SIGINT, self._signal_handler
-                )
+                self._original_sigterm = signal.signal(signal.SIGTERM, self._signal_handler)
+                self._original_sigint = signal.signal(signal.SIGINT, self._signal_handler)
         except ValueError:
             # Can't set signal handlers in non-main thread
             logger.debug("flush_scheduler_signal_handlers_skipped", reason="not_main_thread")
@@ -657,7 +650,9 @@ class FlushScheduler:
         standard_count = self.flush_standard()
         return critical_count + standard_count
 
-    def _ship_batch(self, events: list[dict[str, Any]], queue_type: str, no_retry: bool = False) -> int:
+    def _ship_batch(
+        self, events: list[dict[str, Any]], queue_type: str, no_retry: bool = False
+    ) -> int:
         """Ship a batch of events.
 
         Args:

@@ -20,20 +20,22 @@ AcquisitionSource = Literal[
 ]
 
 # Environment variables that indicate CI environments
-CI_ENV_VARS = frozenset({
-    "CI",
-    "GITHUB_ACTIONS",
-    "GITLAB_CI",
-    "CIRCLECI",
-    "TRAVIS",
-    "JENKINS_URL",
-    "BUILDKITE",
-    "AZURE_PIPELINES",
-    "BITBUCKET_PIPELINES",
-    "TEAMCITY_VERSION",
-    "DRONE",
-    "CODEBUILD_BUILD_ID",
-})
+CI_ENV_VARS = frozenset(
+    {
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITLAB_CI",
+        "CIRCLECI",
+        "TRAVIS",
+        "JENKINS_URL",
+        "BUILDKITE",
+        "AZURE_PIPELINES",
+        "BITBUCKET_PIPELINES",
+        "TEAMCITY_VERSION",
+        "DRONE",
+        "CODEBUILD_BUILD_ID",
+    }
+)
 
 
 def _is_ci_environment() -> bool:
@@ -61,7 +63,7 @@ def _is_docker_environment() -> bool:
 
     # Check cgroup for docker
     try:
-        with open("/proc/1/cgroup", "r") as f:
+        with open("/proc/1/cgroup") as f:
             return "docker" in f.read()
     except (FileNotFoundError, PermissionError, OSError):
         pass

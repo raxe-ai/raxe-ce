@@ -193,6 +193,7 @@ class RaxeError:
 # Pre-defined error templates for common scenarios
 # ============================================================================
 
+
 def config_not_found_error(path: str) -> RaxeError:
     """Create error for missing configuration file."""
     return RaxeError(
@@ -241,7 +242,11 @@ def rule_invalid_pattern_error(rule_id: str, pattern: str, error: str) -> RaxeEr
     return RaxeError(
         code=ErrorCode.RULE_INVALID_PATTERN,
         message=f"Invalid regex pattern in rule {rule_id}",
-        details={"rule_id": rule_id, "pattern_preview": pattern[:50] + "..." if len(pattern) > 50 else pattern, "error": error},
+        details={
+            "rule_id": rule_id,
+            "pattern_preview": pattern[:50] + "..." if len(pattern) > 50 else pattern,
+            "error": error,
+        },
         remediation="Fix the regex pattern syntax. Test patterns at regex101.com before adding to rules.",
     )
 
@@ -326,6 +331,7 @@ def security_blocked_by_policy_error(
 def _get_default_console_keys_url() -> str:
     """Get default console keys URL from centralized endpoints."""
     from raxe.infrastructure.config.endpoints import get_console_url
+
     return f"{get_console_url()}/keys"
 
 
@@ -356,14 +362,14 @@ def credential_expired_error(
         code=ErrorCode.SEC_CREDENTIAL_EXPIRED,
         message=f"Your temporary API key expired {expiry_text}",
         details={"days_expired": days_expired, "console_url": console_url},
-        remediation=f"Get a permanent key at: {console_url}\n"
-        "Or run: raxe auth login",
+        remediation=f"Get a permanent key at: {console_url}\nOr run: raxe auth login",
     )
 
 
 # ============================================================================
 # Base Exception Classes
 # ============================================================================
+
 
 class RaxeException(Exception):
     """Base exception for all RAXE errors.
@@ -445,6 +451,7 @@ class RaxeException(Exception):
 # Configuration Exceptions
 # ============================================================================
 
+
 class ConfigurationError(RaxeException):
     """Raised when configuration is invalid or missing.
 
@@ -465,6 +472,7 @@ class ConfigurationError(RaxeException):
 # ============================================================================
 # Validation Exceptions
 # ============================================================================
+
 
 class ValidationError(RaxeException):
     """Raised when input validation fails.
@@ -488,6 +496,7 @@ class ValidationError(RaxeException):
 # Rule Exceptions
 # ============================================================================
 
+
 class RuleError(RaxeException):
     """Raised when rule loading or processing fails.
 
@@ -509,6 +518,7 @@ class RuleError(RaxeException):
 # Database Exceptions
 # ============================================================================
 
+
 class DatabaseError(RaxeException):
     """Raised when database operations fail.
 
@@ -529,6 +539,7 @@ class DatabaseError(RaxeException):
 # ============================================================================
 # Infrastructure Exceptions
 # ============================================================================
+
 
 class InfrastructureError(RaxeException):
     """Raised when infrastructure operations fail.
@@ -552,6 +563,7 @@ class InfrastructureError(RaxeException):
 # ============================================================================
 # Security Exceptions (Backwards Compatible)
 # ============================================================================
+
 
 class SecurityException(RaxeException):
     """Raised when a security threat is detected and blocking is enabled.
@@ -596,8 +608,7 @@ class SecurityException(RaxeException):
             )
 
         message = (
-            f"Security threat detected: {result.severity} "
-            f"({result.total_detections} detection(s))"
+            f"Security threat detected: {result.severity} ({result.total_detections} detection(s))"
         )
         super().__init__(message, error=error)
 
@@ -630,8 +641,7 @@ class RaxeBlockedError(SecurityException):
 
         # Override message for backwards compatibility
         self.args = (
-            f"Request blocked by policy: {result.policy_decision} "
-            f"(Severity: {result.severity})",
+            f"Request blocked by policy: {result.policy_decision} (Severity: {result.severity})",
         )
 
 
@@ -676,6 +686,7 @@ class ScanTimeoutError(InfrastructureError):
 # ============================================================================
 # Exception Mapping Utilities
 # ============================================================================
+
 
 def from_error_code(
     code: ErrorCode,

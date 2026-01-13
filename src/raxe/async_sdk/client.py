@@ -28,6 +28,7 @@ Example usage:
     result1 = await raxe.scan("test")  # Cache miss
     result2 = await raxe.scan("test")  # Cache hit (fast)
 """
+
 import asyncio
 import logging
 from pathlib import Path
@@ -87,7 +88,7 @@ class AsyncRaxe:
         voting_preset: str | None = None,
         cache_size: int = 1000,
         cache_ttl: float = 300.0,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         """Initialize async RAXE client.
 
@@ -144,6 +145,7 @@ class AsyncRaxe:
                 from raxe.infrastructure.telemetry.flush_helper import (
                     flush_stale_telemetry_async,
                 )
+
                 flush_stale_telemetry_async()
             except Exception:
                 pass  # Never block on stale flush
@@ -185,8 +187,8 @@ class AsyncRaxe:
 
         # Get voting preset from config (L2 voting config)
         instance._voting_preset = None
-        if hasattr(instance.config, 'l2_scoring') and instance.config.l2_scoring:
-            instance._voting_preset = getattr(instance.config.l2_scoring, 'voting_preset', None)
+        if hasattr(instance.config, "l2_scoring") and instance.config.l2_scoring:
+            instance._voting_preset = getattr(instance.config.l2_scoring, "voting_preset", None)
 
         # Preload pipeline
         logger.info("Initializing async RAXE client from config file")
@@ -249,15 +251,15 @@ class AsyncRaxe:
             from datetime import datetime, timezone
 
             from raxe.application.scan_merger import CombinedScanResult
-            from raxe.domain.engine.executor import ScanResult
             from raxe.application.scan_pipeline import BlockAction
+            from raxe.domain.engine.executor import ScanResult
 
             clean_l1_result = ScanResult(
                 detections=[],
                 scanned_at=datetime.now(timezone.utc).isoformat(),
                 text_length=0,
                 rules_checked=0,
-                scan_duration_ms=0.0
+                scan_duration_ms=0.0,
             )
 
             combined_result = CombinedScanResult(
@@ -265,7 +267,7 @@ class AsyncRaxe:
                 l2_result=None,
                 combined_severity=None,
                 total_processing_ms=0.0,
-                metadata={"empty_text": True}
+                metadata={"empty_text": True},
             )
 
             return ScanPipelineResult(
@@ -274,7 +276,7 @@ class AsyncRaxe:
                 should_block=False,
                 duration_ms=0.0,
                 text_hash="",
-                metadata={"empty_text": True}
+                metadata={"empty_text": True},
             )
 
         # Check cache if enabled
@@ -285,6 +287,7 @@ class AsyncRaxe:
                 # Note: We still need to enforce blocking if requested
                 if block_on_threat and cached_result.should_block:
                     from raxe.sdk.exceptions import SecurityException
+
                     raise SecurityException(cached_result)
                 return cached_result
 
@@ -311,6 +314,7 @@ class AsyncRaxe:
         # Enforce blocking if requested
         if block_on_threat and result.should_block:
             from raxe.sdk.exceptions import SecurityException
+
             raise SecurityException(result)
 
         return result
@@ -516,9 +520,9 @@ class AsyncRaxe:
                 None,
                 ensure_telemetry_flushed,
                 5.0,  # timeout_seconds
-                50,   # max_batches (for high-throughput async usage)
-                50,   # batch_size
-                True, # end_session
+                50,  # max_batches (for high-throughput async usage)
+                50,  # batch_size
+                True,  # end_session
             )
         except Exception:
             pass  # Never let telemetry affect shutdown

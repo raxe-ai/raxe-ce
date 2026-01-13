@@ -22,6 +22,7 @@ Usage:
     # All inputs and outputs automatically scanned
     result = pipe("Once upon a time")
 """
+
 import logging
 from typing import Any
 
@@ -83,7 +84,7 @@ class RaxePipeline:
         raxe_block_on_input_threats: bool = False,  # Default: log-only (safe default)
         raxe_block_on_output_threats: bool = False,
         pipeline_kwargs: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         """Initialize RAXE-protected Hugging Face pipeline.
 
@@ -216,8 +217,7 @@ class RaxePipeline:
 
             except SecurityException:
                 logger.error(
-                    f"Blocked HuggingFace input {idx + 1}/{len(texts)} "
-                    f"due to security threat"
+                    f"Blocked HuggingFace input {idx + 1}/{len(texts)} due to security threat"
                 )
                 raise
 
@@ -252,16 +252,11 @@ class RaxePipeline:
 
             except SecurityException:
                 logger.error(
-                    f"Blocked HuggingFace output {idx + 1}/{len(texts)} "
-                    f"due to security threat"
+                    f"Blocked HuggingFace output {idx + 1}/{len(texts)} due to security threat"
                 )
                 raise
 
-    def _extract_input_texts(
-        self,
-        args: tuple,
-        kwargs: dict[str, Any]
-    ) -> list[str]:
+    def _extract_input_texts(self, args: tuple, kwargs: dict[str, Any]) -> list[str]:
         """Extract text strings from pipeline inputs.
 
         Args:

@@ -9,6 +9,7 @@ This class is the foundation for all RAXE integrations:
 ALL scanning MUST go through the Raxe.scan() method to ensure
 consistency and proper configuration cascade.
 """
+
 from __future__ import annotations
 
 import atexit
@@ -66,7 +67,11 @@ def _l2_prediction_to_detection(
 
     # Extract category from threat_type or metadata
     threat_type_value = prediction.threat_type.value if prediction.threat_type else "unknown"
-    category = prediction.metadata.get("family", threat_type_value) if prediction.metadata else threat_type_value
+    category = (
+        prediction.metadata.get("family", threat_type_value)
+        if prediction.metadata
+        else threat_type_value
+    )
 
     # Create a synthetic match for L2 detections
     # L2 detections don't have pattern matches, so we create a placeholder
@@ -157,8 +162,8 @@ class Raxe:
         telemetry: bool = True,
         l2_enabled: bool = True,
         voting_preset: str | None = None,
-        progress_callback = None,
-        **kwargs
+        progress_callback=None,
+        **kwargs,
     ):
         """Initialize RAXE client.
 
@@ -182,6 +187,7 @@ class Raxe:
         """
         # Store progress callback (use NullProgress if none provided)
         from raxe.cli.progress import NullProgress
+
         self._progress = progress_callback or NullProgress()
 
         # Build configuration with cascade
@@ -205,7 +211,7 @@ class Raxe:
                     "telemetry_disable_denied",
                     reason="tier_not_allowed",
                     message="Your tier does not allow disabling telemetry. "
-                    "Upgrade to Pro via 'raxe auth login'"
+                    "Upgrade to Pro via 'raxe auth login'",
                 )
                 # Keep telemetry enabled (ignore the disable request)
                 telemetry = True
@@ -256,14 +262,9 @@ class Raxe:
                 Raxe._atexit_registered = True
 
             # Complete progress
-            self._progress.complete(
-                total_duration_ms=self.preload_stats.duration_ms
-            )
+            self._progress.complete(total_duration_ms=self.preload_stats.duration_ms)
 
-            logger.info(
-                "raxe_client_init_complete",
-                rules_loaded=self.preload_stats.rules_loaded
-            )
+            logger.info("raxe_client_init_complete", rules_loaded=self.preload_stats.rules_loaded)
         except Exception as e:
             # Report error to progress
             self._progress.error("initialization", str(e))
@@ -369,10 +370,7 @@ class Raxe:
                         "console_url": e.console_url,
                     },
                 )
-                logger.warning(
-                    f"Telemetry disabled: {e}. "
-                    "Scanning will continue to work normally."
-                )
+                logger.warning(f"Telemetry disabled: {e}. Scanning will continue to work normally.")
                 return
 
             orchestrator = get_orchestrator()
@@ -386,6 +384,7 @@ class Raxe:
                 from raxe.infrastructure.telemetry.flush_helper import (
                     flush_stale_telemetry_async,
                 )
+
                 flush_stale_telemetry_async()
             except Exception:
                 pass  # Never block on stale flush
@@ -448,6 +447,22 @@ class Raxe:
                 l1_result = result.scan_result.l1_result
                 l2_result = result.scan_result.l2_result
 
+            # Extract tenant metadata from result for telemetry
+            # These are configuration identifiers (not PII) added by _apply_policy_attribution()
+            telemetry_tenant_id = None
+            telemetry_app_id = None
+            telemetry_policy_id = None
+            telemetry_policy_name = None
+            telemetry_policy_mode = None
+            telemetry_policy_version = None
+            if result.metadata:
+                telemetry_tenant_id = result.metadata.get("tenant_id")
+                telemetry_app_id = result.metadata.get("app_id")
+                telemetry_policy_id = result.metadata.get("effective_policy_id")
+                telemetry_policy_name = result.metadata.get("effective_policy_name")
+                telemetry_policy_mode = result.metadata.get("effective_policy_mode")
+                telemetry_policy_version = result.metadata.get("effective_policy_version")
+
             # Build telemetry payload using v2 schema
             # All fields are dynamically calculated from actual scan results
             telemetry_payload = build_scan_telemetry(
@@ -460,6 +475,13 @@ class Raxe:
                 action_taken="block" if result.should_block else "allow",
                 l2_enabled=result.metadata.get("l2_enabled", True),
                 integration_type=integration_type,
+                # Multi-tenant context (configuration identifiers, not PII)
+                tenant_id=telemetry_tenant_id,
+                app_id=telemetry_app_id,
+                policy_id=telemetry_policy_id,
+                policy_name=telemetry_policy_name,
+                policy_mode=telemetry_policy_mode,
+                policy_version=telemetry_policy_version,
             )
 
             # Track using v2 method
@@ -499,6 +521,7 @@ class Raxe:
         """
         if self._streak_tracker is None:
             from raxe.infrastructure.analytics.streaks import StreakTracker
+
             self._streak_tracker = StreakTracker()
         return self._streak_tracker
 
@@ -533,8 +556,7 @@ class Raxe:
         logger.info("Initializing RAXE client from config file")
         try:
             instance.pipeline, instance.preload_stats = preload_pipeline(
-                config=instance.config,
-                suppression_manager=instance.suppression_manager
+                config=instance.config, suppression_manager=instance.suppression_manager
             )
             instance._initialized = True
             logger.info(
@@ -671,7 +693,6 @@ class Raxe:
         new_metadata["inline_suppressed_count"] = suppressed_count
         new_metadata["inline_flagged_count"] = flagged_count
 
-
         return ScanPipelineResult(
             scan_result=new_combined,
             policy_decision=result.policy_decision,
@@ -680,6 +701,205 @@ class Raxe:
             text_hash=result.text_hash,
             metadata=new_metadata,
             l1_detections=len([d for d in processed_detections if d.detection_layer == "L1"]),
+            l2_detections=result.l2_detections,
+            plugin_detections=result.plugin_detections,
+            l1_duration_ms=result.l1_duration_ms,
+            l2_duration_ms=result.l2_duration_ms,
+        )
+
+    def _apply_policy_attribution(
+        self,
+        result: ScanPipelineResult,
+        tenant_id: str | None,
+        app_id: str | None,
+        policy_id: str | None,
+    ) -> ScanPipelineResult:
+        """Apply multi-tenant policy attribution and blocking logic to scan result.
+
+        This method resolves which policy applies based on the hierarchy:
+        1. Explicit policy_id (highest priority)
+        2. App default policy
+        3. Tenant default policy
+        4. System default (balanced)
+
+        The resolved policy info is added to the result metadata and
+        the L1 scan result's policy attribution fields.
+
+        CRITICAL: This method also enforces the resolved policy's blocking
+        thresholds (blocking_enabled, block_severity_threshold, block_confidence_threshold).
+
+        Args:
+            result: Original scan result from pipeline
+            tenant_id: Tenant ID for policy resolution
+            app_id: App ID within tenant
+            policy_id: Explicit policy ID override
+
+        Returns:
+            Modified ScanPipelineResult with policy attribution and blocking decision
+        """
+        from pathlib import Path
+
+        from raxe.application.scan_pipeline import BlockAction
+        from raxe.domain.tenants.presets import GLOBAL_PRESETS
+        from raxe.domain.tenants.resolver import resolve_policy
+        from raxe.infrastructure.tenants import (
+            YamlAppRepository,
+            YamlPolicyRepository,
+            YamlTenantRepository,
+        )
+
+        # Get base path for tenant storage
+        base_path = Path.home() / ".raxe" / "tenants"
+
+        # Load tenant, app if specified
+        tenant = None
+        app = None
+        policy_registry = dict(GLOBAL_PRESETS)
+
+        if tenant_id:
+            tenant_repo = YamlTenantRepository(base_path)
+            tenant = tenant_repo.get_tenant(tenant_id)
+
+            # Warn if tenant not found - this may indicate misconfiguration
+            # The scan will proceed with system default policy
+            if tenant is None:
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "tenant_not_found",
+                    extra={
+                        "tenant_id": tenant_id,
+                        "reason": f"Tenant '{tenant_id}' not found, using system default policy",
+                    },
+                )
+
+            # Load tenant-specific policies into registry
+            policy_repo = YamlPolicyRepository(base_path)
+            tenant_policies = policy_repo.list_policies(tenant_id=tenant_id)
+            for p in tenant_policies:
+                policy_registry[p.policy_id] = p
+
+            if app_id:
+                app_repo = YamlAppRepository(base_path)
+                app = app_repo.get_app(app_id, tenant_id)
+
+                # Warn if app not found
+                if app is None:
+                    import logging
+
+                    logger = logging.getLogger(__name__)
+                    logger.warning(
+                        "app_not_found",
+                        extra={
+                            "app_id": app_id,
+                            "tenant_id": tenant_id,
+                            "reason": f"App '{app_id}' not found in tenant '{tenant_id}'",
+                        },
+                    )
+
+        # Resolve policy
+        resolution = resolve_policy(
+            request_policy_id=policy_id,
+            app=app,
+            tenant=tenant,
+            policy_registry=policy_registry,
+        )
+
+        # Add attribution to metadata
+        new_metadata = dict(result.metadata) if result.metadata else {}
+        new_metadata["effective_policy_id"] = resolution.policy.policy_id
+        new_metadata["effective_policy_mode"] = resolution.policy.mode.value
+        new_metadata["effective_policy_name"] = resolution.policy.name
+        new_metadata["effective_policy_version"] = resolution.policy.version
+        new_metadata["resolution_source"] = resolution.resolution_source
+        new_metadata["resolution_path"] = resolution.resolution_path
+        if tenant_id:
+            new_metadata["tenant_id"] = tenant_id
+        if app_id:
+            new_metadata["app_id"] = app_id
+
+        # CRITICAL: Apply policy blocking thresholds
+        # Evaluate if the scan result should be blocked based on the resolved policy
+        policy = resolution.policy
+        should_block = False
+        policy_decision = result.policy_decision
+
+        if policy.blocking_enabled and result.has_threats:
+            # Get severity order for comparison
+            severity_order = {
+                "INFO": 1,
+                "LOW": 2,
+                "MEDIUM": 3,
+                "HIGH": 4,
+                "CRITICAL": 5,
+            }
+
+            threshold_order = severity_order.get(policy.block_severity_threshold, 4)
+
+            # Check each detection against policy thresholds
+            for detection in result.detections:
+                detection_severity = detection.severity
+                # Handle severity enum
+                if hasattr(detection_severity, "value"):
+                    severity_str = detection_severity.value
+                else:
+                    severity_str = str(detection_severity).upper()
+
+                detection_order = severity_order.get(severity_str, 0)
+                detection_confidence = getattr(detection, "confidence", 1.0)
+
+                # Block if severity meets threshold AND confidence meets threshold
+                if (
+                    detection_order >= threshold_order
+                    and detection_confidence >= policy.block_confidence_threshold
+                ):
+                    should_block = True
+                    policy_decision = BlockAction.BLOCK
+                    break
+
+            # If blocking is enabled but no detections meet the threshold, WARN
+            if not should_block and result.has_threats:
+                policy_decision = BlockAction.WARN
+        elif not policy.blocking_enabled and result.has_threats:
+            # Monitor mode: log only, never block
+            policy_decision = BlockAction.ALLOW
+            should_block = False
+
+        # Update L1 result with policy attribution if present
+        new_combined = result.scan_result
+        if result.scan_result and result.scan_result.l1_result:
+            from raxe.application.scan_merger import CombinedScanResult
+            from raxe.domain.engine.executor import ScanResult
+
+            old_l1 = result.scan_result.l1_result
+            new_l1_result = ScanResult(
+                detections=old_l1.detections,
+                scanned_at=old_l1.scanned_at,
+                text_length=old_l1.text_length,
+                rules_checked=old_l1.rules_checked,
+                scan_duration_ms=old_l1.scan_duration_ms,
+                effective_policy_id=resolution.policy.policy_id,
+                effective_policy_mode=resolution.policy.mode.value,
+                resolution_path=resolution.resolution_path,
+            )
+
+            new_combined = CombinedScanResult(
+                l1_result=new_l1_result,
+                l2_result=result.scan_result.l2_result,
+                combined_severity=result.scan_result.combined_severity,
+                total_processing_ms=result.scan_result.total_processing_ms,
+                metadata=result.scan_result.metadata,
+            )
+
+        return ScanPipelineResult(
+            scan_result=new_combined,
+            policy_decision=policy_decision,
+            should_block=should_block,
+            duration_ms=result.duration_ms,
+            text_hash=result.text_hash,
+            metadata=new_metadata,
+            l1_detections=result.l1_detections,
             l2_detections=result.l2_detections,
             plugin_detections=result.plugin_detections,
             l1_duration_ms=result.l1_duration_ms,
@@ -703,6 +923,10 @@ class Raxe:
         suppress: list[str | dict[str, Any]] | None = None,
         integration_type: str | None = None,
         entry_point: str | None = None,
+        # Multi-tenant policy parameters
+        tenant_id: str | None = None,
+        app_id: str | None = None,
+        policy_id: str | None = None,
     ) -> ScanPipelineResult:
         """Scan text for security threats with layer control.
 
@@ -750,6 +974,12 @@ class Raxe:
             entry_point: Optional entry point identifier for telemetry.
                 Valid values: "cli", "sdk", "wrapper", "integration", None.
                 If None, defaults to "integration" if integration_type is set, else "sdk".
+            tenant_id: Optional tenant ID for multi-tenant policy resolution.
+                When provided, policies are resolved from the tenant configuration.
+            app_id: Optional app ID within tenant for app-level policy override.
+                Used with tenant_id for finer-grained policy control.
+            policy_id: Optional explicit policy ID to use, overriding tenant/app defaults.
+                When provided, this policy is used directly (highest priority).
 
         Returns:
             ScanPipelineResult with:
@@ -809,7 +1039,7 @@ class Raxe:
                 scanned_at=datetime.now(timezone.utc).isoformat(),
                 text_length=0,
                 rules_checked=0,
-                scan_duration_ms=0.0
+                scan_duration_ms=0.0,
             )
 
             # Create combined result with no threats
@@ -818,7 +1048,7 @@ class Raxe:
                 l2_result=None,
                 combined_severity=None,
                 total_processing_ms=0.0,
-                metadata={"empty_text": True}
+                metadata={"empty_text": True},
             )
 
             return ScanPipelineResult(
@@ -827,7 +1057,7 @@ class Raxe:
                 should_block=False,
                 duration_ms=0.0,
                 text_hash="",
-                metadata={"empty_text": True}
+                metadata={"empty_text": True},
             )
 
         # Use async pipeline for 5x speedup (parallel L1+L2)
@@ -849,14 +1079,16 @@ class Raxe:
                     use_sync_fallback = False
 
                 if not use_sync_fallback:
-                    async_result = asyncio.run(async_pipeline.scan(
-                        text,
-                        customer_id=customer_id or self.config.customer_id,
-                        context=context,
-                        l1_enabled=l1_enabled,
-                        l2_enabled=l2_enabled,
-                        mode=mode,
-                    ))
+                    async_result = asyncio.run(
+                        async_pipeline.scan(
+                            text,
+                            customer_id=customer_id or self.config.customer_id,
+                            context=context,
+                            l1_enabled=l1_enabled,
+                            l2_enabled=l2_enabled,
+                            mode=mode,
+                        )
+                    )
 
                     # Convert AsyncScanPipelineResult to ScanPipelineResult
                     # They have the same structure, just different types
@@ -871,7 +1103,9 @@ class Raxe:
                     logger.debug(
                         "async_scan_complete",
                         duration_ms=result.duration_ms,
-                        parallel_speedup=async_result.metrics.parallel_speedup if async_result.metrics else 1.0
+                        parallel_speedup=async_result.metrics.parallel_speedup
+                        if async_result.metrics
+                        else 1.0,
                     )
                 else:
                     # Fallback to sync pipeline
@@ -914,6 +1148,16 @@ class Raxe:
         # Apply inline and scoped suppressions (takes precedence over config file)
         # This must happen after the scan but before tracking
         result = self._apply_inline_suppressions(result, suppress)
+
+        # Resolve and apply multi-tenant policy attribution
+        # This adds policy_id, mode, and resolution_path to the result
+        if tenant_id is not None or policy_id is not None:
+            result = self._apply_policy_attribution(
+                result,
+                tenant_id=tenant_id,
+                app_id=app_id,
+                policy_id=policy_id,
+            )
 
         # Record scan in tracking and history
         # This captures:
@@ -975,19 +1219,21 @@ class Raxe:
                     # Calculate per-prediction latency (distribute evenly)
                     per_prediction_ms = (
                         l2_result.processing_time_ms / len(l2_result.predictions)
-                        if l2_result.predictions else 0.0
+                        if l2_result.predictions
+                        else 0.0
                     )
                     for prediction in l2_result.predictions:
                         l2_detection = _l2_prediction_to_detection(
-                            prediction,
-                            processing_time_ms=per_prediction_ms
+                            prediction, processing_time_ms=per_prediction_ms
                         )
                         detections.append(l2_detection)
 
                 self.scan_history.record_scan(
                     prompt=text,
                     detections=detections,
-                    l1_duration_ms=result.scan_result.l1_result.scan_duration_ms if result.scan_result and result.scan_result.l1_result else None,
+                    l1_duration_ms=result.scan_result.l1_result.scan_duration_ms
+                    if result.scan_result and result.scan_result.l1_result
+                    else None,
                     l2_duration_ms=l2_duration_ms,
                     version="0.0.1",
                     event_id=event_id,
@@ -1010,10 +1256,12 @@ class Raxe:
                     scan_duration_ms=result.duration_ms,  # Actual scan time (not including init)
                     initialization_ms=init_stats.get("total_init_time_ms", 0),  # One-time init cost
                     l2_init_ms=init_stats.get("l2_init_time_ms", 0),  # ML model loading time
-                    l2_model_type=init_stats.get("l2_model_type", "none"),  # onnx_int8, sentence_transformers, stub
+                    l2_model_type=init_stats.get(
+                        "l2_model_type", "none"
+                    ),  # onnx_int8, sentence_transformers, stub
                     l1_enabled=l1_enabled,
                     l2_enabled=l2_enabled,
-                    mode=mode
+                    mode=mode,
                 )
 
                 # Streak tracking and achievements (P2 gamification)
@@ -1026,7 +1274,7 @@ class Raxe:
                     total_scans=usage_stats.total_scans,
                     threats_detected=usage_stats.scans_with_threats,
                     avg_scan_time_ms=result.duration_ms,  # Use current scan time as proxy
-                    threats_blocked=0  # TODO: Track blocked threats when blocking is implemented
+                    threats_blocked=0,  # TODO: Track blocked threats when blocking is implemented
                 )
                 newly_unlocked.extend(achievement_unlocks)
 
@@ -1037,17 +1285,13 @@ class Raxe:
                             "achievement_unlocked",
                             achievement_id=achievement.id,
                             name=achievement.name,
-                            points=achievement.points
+                            points=achievement.points,
                         )
 
             except Exception as e:
                 # Don't fail the scan if tracking/history fails
                 # Just log the error
-                logger.warning(
-                    "scan_tracking_failed",
-                    error=str(e),
-                    error_type=type(e).__name__
-                )
+                logger.warning("scan_tracking_failed", error=str(e), error_type=type(e).__name__)
         else:
             # Log that dry_run scan skipped tracking
             # Include initialization timing (separate from scan timing)
@@ -1061,10 +1305,12 @@ class Raxe:
                 scan_duration_ms=result.duration_ms,  # Actual scan time (not including init)
                 initialization_ms=init_stats.get("total_init_time_ms", 0),  # One-time init cost
                 l2_init_ms=init_stats.get("l2_init_time_ms", 0),  # ML model loading time
-                l2_model_type=init_stats.get("l2_model_type", "none"),  # onnx_int8, sentence_transformers, stub
+                l2_model_type=init_stats.get(
+                    "l2_model_type", "none"
+                ),  # onnx_int8, sentence_transformers, stub
                 l1_enabled=l1_enabled,
                 l2_enabled=l2_enabled,
-                mode=mode
+                mode=mode,
             )
 
         # Enforce blocking if requested
@@ -1149,7 +1395,7 @@ class Raxe:
         *,
         block: bool = True,
         on_threat: Callable | None = None,
-        allow_severity: list[str] | None = None
+        allow_severity: list[str] | None = None,
     ):
         """Decorator to protect a function.
 
@@ -1192,11 +1438,7 @@ class Raxe:
 
         def decorator(f):
             return protect_function(
-                self,
-                f,
-                block_on_threat=block,
-                on_threat=on_threat,
-                allow_severity=allow_severity
+                self, f, block_on_threat=block, on_threat=on_threat, allow_severity=allow_severity
             )
 
         # Support both @raxe.protect and @raxe.protect()
@@ -1363,9 +1605,9 @@ class Raxe:
             rules = components['rules']
         """
         return {
-            'executor': self.pipeline.rule_executor,
-            'l2_detector': self.pipeline.l2_detector if self.config.enable_l2 else None,
-            'rules': self.get_all_rules()
+            "executor": self.pipeline.rule_executor,
+            "l2_detector": self.pipeline.l2_detector if self.config.enable_l2 else None,
+            "rules": self.get_all_rules(),
         }
 
     def get_pipeline_stats(self) -> dict[str, Any]:
@@ -1385,19 +1627,19 @@ class Raxe:
             print(f"Rules: {stats['rules_loaded']}, L2: {stats['l2_enabled']}")
         """
         stats = {
-            'rules_loaded': len(self.get_all_rules()),
-            'packs_loaded': len(self.list_rule_packs()),
-            'telemetry_enabled': self.get_telemetry_enabled(),
-            'has_api_key': self.has_api_key(),
-            'l2_enabled': self.config.enable_l2
+            "rules_loaded": len(self.get_all_rules()),
+            "packs_loaded": len(self.list_rule_packs()),
+            "telemetry_enabled": self.get_telemetry_enabled(),
+            "has_api_key": self.has_api_key(),
+            "l2_enabled": self.config.enable_l2,
         }
 
         # Add preload stats if available
-        if hasattr(self, 'preload_stats'):
-            stats['preload_time_ms'] = self.preload_stats.duration_ms
-            stats['patterns_compiled'] = self.preload_stats.patterns_compiled
-            stats['l2_init_time_ms'] = self.preload_stats.l2_init_time_ms
-            stats['l2_model_type'] = self.preload_stats.l2_model_type
+        if hasattr(self, "preload_stats"):
+            stats["preload_time_ms"] = self.preload_stats.duration_ms
+            stats["patterns_compiled"] = self.preload_stats.patterns_compiled
+            stats["l2_init_time_ms"] = self.preload_stats.l2_init_time_ms
+            stats["l2_model_type"] = self.preload_stats.l2_model_type
 
         return stats
 
@@ -1421,26 +1663,22 @@ class Raxe:
             if validation['warnings']:
                 print(f"Warnings: {validation['warnings']}")
         """
-        validation = {
-            'config_valid': True,
-            'errors': [],
-            'warnings': []
-        }
+        validation = {"config_valid": True, "errors": [], "warnings": []}
 
         # Check API key format if present
         if self.config.api_key:
-            if not self.config.api_key.startswith('raxe_'):
-                validation['warnings'].append("API key should start with 'raxe_'")
+            if not self.config.api_key.startswith("raxe_"):
+                validation["warnings"].append("API key should start with 'raxe_'")
             if len(self.config.api_key) < 20:
-                validation['warnings'].append("API key seems too short")
+                validation["warnings"].append("API key seems too short")
 
         # Check rule loading
         if len(self.get_all_rules()) == 0:
-            validation['warnings'].append("No detection rules loaded")
+            validation["warnings"].append("No detection rules loaded")
 
         # Check pack loading
         if len(self.list_rule_packs()) == 0:
-            validation['warnings'].append("No rule packs loaded")
+            validation["warnings"].append("No rule packs loaded")
 
         return validation
 
@@ -1530,6 +1768,7 @@ class Raxe:
                 from raxe.infrastructure.telemetry.flush_helper import (
                     ensure_telemetry_flushed,
                 )
+
                 ensure_telemetry_flushed(
                     timeout_seconds=2.0,
                     max_batches=50,
@@ -1550,6 +1789,7 @@ class Raxe:
                 from raxe.infrastructure.telemetry.flush_helper import (
                     ensure_telemetry_flushed,
                 )
+
                 ensure_telemetry_flushed(
                     timeout_seconds=2.0,
                     max_batches=50,

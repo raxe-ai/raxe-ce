@@ -32,6 +32,7 @@ Usage:
         task_callback=guard.task_callback,
     )
 """
+
 from __future__ import annotations
 
 import functools
@@ -141,7 +142,11 @@ class CrewGuardConfig:
         """
         if self.mode == ScanMode.LOG_ONLY:
             return "log"
-        elif self.mode in (ScanMode.BLOCK_ON_THREAT, ScanMode.BLOCK_ON_HIGH, ScanMode.BLOCK_ON_CRITICAL):
+        elif self.mode in (
+            ScanMode.BLOCK_ON_THREAT,
+            ScanMode.BLOCK_ON_HIGH,
+            ScanMode.BLOCK_ON_CRITICAL,
+        ):
             return "block"
         return "log"
 
@@ -285,7 +290,8 @@ class CrewScanStats:
                 "highest_severity": self.highest_severity,
                 "average_scan_duration_ms": (
                     sum(self.scan_durations_ms) / len(self.scan_durations_ms)
-                    if self.scan_durations_ms else 0.0
+                    if self.scan_durations_ms
+                    else 0.0
                 ),
             }
 
@@ -413,8 +419,7 @@ class RaxeCrewGuard:
             detection_count=result.detection_count,
         )
         message = (
-            f"Security threat detected: {result.severity} "
-            f"({result.detection_count} detection(s))"
+            f"Security threat detected: {result.severity} ({result.detection_count} detection(s))"
         )
         exc = SecurityException.__new__(SecurityException)
         exc.result = None
@@ -522,9 +527,7 @@ class RaxeCrewGuard:
                 sender_name=agent_name,
                 metadata={
                     "source": "task_callback",
-                    "task_description": (
-                        task_description[:200] if task_description else None
-                    ),
+                    "task_description": (task_description[:200] if task_description else None),
                 },
             )
 
@@ -816,9 +819,7 @@ class RaxeCrewGuard:
         """
         try:
             message_type = (
-                MessageType.FUNCTION_CALL
-                if io_type == "input"
-                else MessageType.FUNCTION_RESULT
+                MessageType.FUNCTION_CALL if io_type == "input" else MessageType.FUNCTION_RESULT
             )
 
             context = ScanContext(
@@ -942,9 +943,7 @@ class RaxeCrewGuard:
 
         # Handle dict using unified extractor
         if isinstance(task_output, dict):
-            return extract_text_from_dict(
-                task_output, ("raw", "output", "result", "text")
-            )
+            return extract_text_from_dict(task_output, ("raw", "output", "result", "text"))
 
         return None
 
@@ -1045,9 +1044,7 @@ class RaxeCrewGuard:
 
         # Handle dict using unified extractor
         if isinstance(output, dict):
-            return extract_text_from_dict(
-                output, ("raw", "result", "output", "text")
-            )
+            return extract_text_from_dict(output, ("raw", "result", "output", "text"))
 
         return None
 
@@ -1180,9 +1177,7 @@ class RaxeCrewGuard:
                 sender_name=agent_name,
                 metadata={
                     "source": "task_callback_async",
-                    "task_description": (
-                        task_description[:200] if task_description else None
-                    ),
+                    "task_description": (task_description[:200] if task_description else None),
                 },
             )
 
@@ -1209,9 +1204,7 @@ class RaxeCrewGuard:
                 extra={"error": str(e), "error_type": type(e).__name__},
             )
 
-    async def before_kickoff_async(
-        self, inputs: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def before_kickoff_async(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """Async callback for before crew kickoff.
 
         Async version of before_kickoff for use in async contexts.

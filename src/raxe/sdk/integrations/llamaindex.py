@@ -42,6 +42,7 @@ Usage (Instrumentation - v0.10.20+):
     # All operations automatically traced and scanned
     response = index.as_query_engine().query("What is AI?")
 """
+
 from __future__ import annotations
 
 import logging
@@ -53,7 +54,6 @@ from raxe.sdk.agent_scanner import (
     create_agent_scanner,
 )
 from raxe.sdk.client import Raxe
-from raxe.sdk.exceptions import SecurityException
 from raxe.sdk.integrations.extractors import (
     extract_text_from_message,
     extract_text_from_response,
@@ -85,6 +85,7 @@ def _get_base_callback_handler():
     """Get BaseCallbackHandler class from llama_index."""
     try:
         from llama_index.core.callbacks.base import BaseCallbackHandler
+
         return BaseCallbackHandler
     except ImportError:
         # Return object as fallback if llama_index not installed
@@ -451,9 +452,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
                 )
 
         except ThreatDetectedError:
-            logger.error(
-                f"Blocked LlamaIndex {context} due to security threat"
-            )
+            logger.error(f"Blocked LlamaIndex {context} due to security threat")
             raise
 
     def _get_event_type_name(self, event_type: Any) -> str:
@@ -559,7 +558,6 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
         Raises:
             SecurityException: If threat detected and blocking enabled
         """
-        import asyncio
 
         payload = payload or {}
 
@@ -645,7 +643,6 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
         Raises:
             SecurityException: If threat detected and blocking enabled
         """
-        import asyncio
 
         payload = payload or {}
         event_name = self._get_event_type_name(event_type)
@@ -746,9 +743,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
                 )
 
         except ThreatDetectedError:
-            logger.error(
-                f"Blocked LlamaIndex {context} due to security threat (async)"
-            )
+            logger.error(f"Blocked LlamaIndex {context} due to security threat (async)")
             raise
 
 
@@ -909,9 +904,7 @@ class RaxeSpanHandler:
                         )
 
                 except ThreatDetectedError:
-                    logger.error(
-                        f"Blocked LlamaIndex {context} due to security threat"
-                    )
+                    logger.error(f"Blocked LlamaIndex {context} due to security threat")
                     raise
 
     def _extract_texts(self, value: Any) -> list[str]:

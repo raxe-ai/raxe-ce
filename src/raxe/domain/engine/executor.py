@@ -7,6 +7,7 @@ Performance targets:
 - <5ms P95 for 10KB text with 15 L1 rules
 - <1ms average for typical prompts
 """
+
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -39,6 +40,7 @@ class Detection:
         is_flagged: True if detection was matched by a FLAG suppression
         suppression_reason: Reason for suppression (if flagged or logged)
     """
+
     rule_id: str
     rule_version: str
     severity: Severity
@@ -63,7 +65,9 @@ class Detection:
         if not self.matches:
             raise ValueError("Detection must have at least one match")
         if self.detection_layer not in ("L1", "L2", "PLUGIN"):
-            raise ValueError(f"detection_layer must be L1, L2, or PLUGIN, got {self.detection_layer}")
+            raise ValueError(
+                f"detection_layer must be L1, L2, or PLUGIN, got {self.detection_layer}"
+            )
         if self.layer_latency_ms < 0:
             raise ValueError(f"layer_latency_ms cannot be negative: {self.layer_latency_ms}")
 
@@ -163,12 +167,20 @@ class ScanResult:
         text_length: Length of scanned text in characters
         rules_checked: Number of rules evaluated
         scan_duration_ms: Time taken to scan in milliseconds
+        effective_policy_id: ID of policy that was applied (multi-tenant)
+        effective_policy_mode: Mode of policy (monitor/balanced/strict)
+        resolution_path: Chain showing how policy was resolved
     """
+
     detections: list[Detection]
     scanned_at: str
     text_length: int
     rules_checked: int
     scan_duration_ms: float
+    # Policy attribution (optional for backward compatibility)
+    effective_policy_id: str | None = None
+    effective_policy_mode: str | None = None
+    resolution_path: list[str] | None = None
 
     def __post_init__(self) -> None:
         """Validate scan result."""
@@ -234,6 +246,10 @@ class ScanResult:
             "scan_duration_ms": self.scan_duration_ms,
             "scanned_at": self.scanned_at,
             "detections": [d.to_dict() for d in self.detections],
+            # Policy attribution (multi-tenant)
+            "effective_policy_id": self.effective_policy_id,
+            "effective_policy_mode": self.effective_policy_mode,
+            "resolution_path": self.resolution_path,
         }
 
 
@@ -273,7 +289,9 @@ class RuleExecutor:
         confidence = self._calculate_confidence(rule, matches)
 
         # Derive category from rule family
-        category = rule.family.value.lower() if hasattr(rule.family, 'value') else str(rule.family).lower()
+        category = (
+            rule.family.value.lower() if hasattr(rule.family, "value") else str(rule.family).lower()
+        )
 
         # Create message from rule
         message = f"{rule.name}: {rule.description[:100]}"  # Truncate long descriptions
@@ -374,11 +392,7 @@ class RuleExecutor:
         length_factor = min(avg_match_length / 20.0, 1.0)  # 20+ chars = 100%
 
         # Combined quality (weighted average)
-        quality = (
-            0.4 * match_count_factor +
-            0.4 * pattern_diversity_factor +
-            0.2 * length_factor
-        )
+        quality = 0.4 * match_count_factor + 0.4 * pattern_diversity_factor + 0.2 * length_factor
 
         # Final confidence: base * (0.7 + 0.3 * quality)
         # This means:

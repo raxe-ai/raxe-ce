@@ -57,19 +57,20 @@ For Portkey configuration, add RAXE as a webhook guardrail:
         }]
     }
 """
+
 from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from raxe.sdk.agent_scanner import (
     AgentScannerConfig,
     ThreatDetectedError,
     create_agent_scanner,
 )
-from raxe.sdk.exceptions import SecurityException
 
 if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
@@ -155,7 +156,7 @@ class RaxePortkeyWebhook:
 
     def __init__(
         self,
-        raxe: "Raxe | None" = None,
+        raxe: Raxe | None = None,
         config: PortkeyGuardConfig | None = None,
     ) -> None:
         """Initialize webhook handler.
@@ -419,7 +420,9 @@ class RaxePortkeyWebhook:
 
         # Pass verdict
         return self._make_pass_verdict(
-            reason="No threats detected" if not result.has_threats else "Threat logged (non-blocking)",
+            reason="No threats detected"
+            if not result.has_threats
+            else "Threat logged (non-blocking)",
             severity=result.severity if result.has_threats else None,
             detections=result.total_detections,
             duration_ms=duration_ms,
@@ -552,7 +555,7 @@ class RaxePortkeyGuard:
 
     def __init__(
         self,
-        raxe: "Raxe | None" = None,
+        raxe: Raxe | None = None,
         config: PortkeyGuardConfig | None = None,
         *,
         block_on_threats: bool | None = None,
@@ -660,7 +663,9 @@ class RaxePortkeyGuard:
                     )
 
                     # Check severity threshold for blocking
-                    if self.config.block_on_threats and self._severity_meets_threshold(result.severity):
+                    if self.config.block_on_threats and self._severity_meets_threshold(
+                        result.severity
+                    ):
                         self._stats["threats_blocked"] += 1
                         raise ThreatDetectedError(result)
 
@@ -786,7 +791,7 @@ class _CompletionsWrapper:
 
 
 def create_portkey_guard(
-    raxe: "Raxe | None" = None,
+    raxe: Raxe | None = None,
     *,
     block_on_threats: bool = False,
     block_severity_threshold: str = "HIGH",
@@ -809,7 +814,7 @@ def create_portkey_guard(
 
 
 def create_portkey_webhook(
-    raxe: "Raxe | None" = None,
+    raxe: Raxe | None = None,
     *,
     block_on_threats: bool = False,
     block_severity_threshold: str = "HIGH",

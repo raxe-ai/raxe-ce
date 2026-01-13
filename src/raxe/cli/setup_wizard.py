@@ -284,7 +284,7 @@ def run_test_scan(console: Console) -> TestScanResult:
         if result.scan_result.has_threats:
             console.print("[green]Test scan completed successfully![/green]")
             console.print(
-                f"  [dim]Detected {threat_count} threat(s) " f"in {result.duration_ms:.2f}ms[/dim]"
+                f"  [dim]Detected {threat_count} threat(s) in {result.duration_ms:.2f}ms[/dim]"
             )
         else:
             # Still successful, just no detection (might be using different rules)

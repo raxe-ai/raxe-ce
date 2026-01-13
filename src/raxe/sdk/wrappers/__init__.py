@@ -12,6 +12,7 @@ Integrations are available via raxe.sdk.integrations:
     - LangChain callback handler (RaxeCallbackHandler)
     - Hugging Face pipeline wrapper (RaxePipeline)
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -60,12 +61,12 @@ def __getattr__(name: str):
         if RaxeOpenAI is None:
             try:
                 from raxe.sdk.wrappers.openai import RaxeOpenAI as _RaxeOpenAI
+
                 RaxeOpenAI = _RaxeOpenAI
                 _OPENAI_AVAILABLE = True
             except ImportError as e:
                 raise ImportError(
-                    "OpenAI wrapper requires openai package. "
-                    "Install with: pip install openai"
+                    "OpenAI wrapper requires openai package. Install with: pip install openai"
                 ) from e
         return RaxeOpenAI
 
@@ -73,6 +74,7 @@ def __getattr__(name: str):
         if RaxeAnthropic is None:
             try:
                 from raxe.sdk.wrappers.anthropic import RaxeAnthropic as _RaxeAnthropic
+
                 RaxeAnthropic = _RaxeAnthropic
                 _ANTHROPIC_AVAILABLE = True
             except ImportError as e:
@@ -86,6 +88,7 @@ def __getattr__(name: str):
         if RaxeVertexAI is None:
             try:
                 from raxe.sdk.wrappers.vertexai import RaxeVertexAI as _RaxeVertexAI
+
                 RaxeVertexAI = _RaxeVertexAI
                 _VERTEXAI_AVAILABLE = True
             except ImportError as e:
@@ -158,6 +161,5 @@ def wrap_client(raxe_client: Raxe, client: Any) -> Any:
 
     else:
         raise NotImplementedError(
-            f"Wrapper for {client_type} not implemented yet. "
-            f"Supported: OpenAI, Anthropic"
+            f"Wrapper for {client_type} not implemented yet. Supported: OpenAI, Anthropic"
         )

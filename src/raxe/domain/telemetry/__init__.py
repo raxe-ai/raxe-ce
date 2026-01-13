@@ -49,18 +49,18 @@ from .events import (
     generate_installation_id,
     generate_session_id,
 )
-from .scan_telemetry_builder import (
-    SCHEMA_VERSION,
-    ScanTelemetryBuilder,
-    build_scan_telemetry,
-    get_scan_telemetry_builder,
-)
 from .priority import (
     DEFAULT_PRIORITY_CONFIG,
     PriorityConfig,
     classify_priority,
     is_critical_event_type,
     is_standard_event_type,
+)
+from .scan_telemetry_builder import (
+    SCHEMA_VERSION,
+    ScanTelemetryBuilder,
+    build_scan_telemetry,
+    get_scan_telemetry_builder,
 )
 
 __all__ = [

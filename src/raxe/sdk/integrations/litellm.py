@@ -42,6 +42,7 @@ For Proxy Configuration:
       callbacks: ["path/to/raxe_callback.py"]
     ```
 """
+
 from __future__ import annotations
 
 import logging
@@ -64,12 +65,9 @@ except ImportError:
 
 from raxe.sdk.agent_scanner import (
     AgentScannerConfig,
-    MessageType,
-    ScanContext,
     ThreatDetectedError,
     create_agent_scanner,
 )
-from raxe.sdk.exceptions import SecurityException
 
 if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
@@ -144,7 +142,7 @@ class RaxeLiteLLMCallback(CustomLogger):
 
     def __init__(
         self,
-        raxe: "Raxe | None" = None,
+        raxe: Raxe | None = None,
         config: LiteLLMConfig | None = None,
     ) -> None:
         """Initialize LiteLLM callback handler.
@@ -215,15 +213,6 @@ class RaxeLiteLLMCallback(CustomLogger):
                     if role == "user" and content:
                         text = self._extract_text(content)
                         if text.strip():
-                            context = ScanContext(
-                                message_type=MessageType.HUMAN_INPUT,
-                                metadata={
-                                    "source": "litellm",
-                                    "model": model,
-                                    "hook": "pre_api_call",
-                                },
-                            )
-
                             result = self._scanner.scan_prompt(text)
 
                             if result.has_threats:
@@ -450,7 +439,7 @@ class RaxeLiteLLMCallback(CustomLogger):
 
 
 def create_litellm_handler(
-    raxe: "Raxe | None" = None,
+    raxe: Raxe | None = None,
     *,
     block_on_threats: bool = False,
     scan_inputs: bool = True,

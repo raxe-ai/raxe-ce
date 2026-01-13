@@ -184,6 +184,37 @@ class TestBatchCommand:
             # Should succeed or fail gracefully
             assert result.exit_code in [0, 1]
 
+    def test_batch_accepts_tenant_option(self, runner):
+        """Test batch accepts --tenant option."""
+        result = runner.invoke(cli, ["batch", "--help"])
+        assert "--tenant" in result.output or "-t" in result.output
+        assert "Tenant ID" in result.output
+
+    def test_batch_accepts_app_option(self, runner):
+        """Test batch accepts --app option."""
+        result = runner.invoke(cli, ["batch", "--help"])
+        assert "--app" in result.output or "-a" in result.output
+        assert "App ID" in result.output
+
+    def test_batch_accepts_policy_option(self, runner):
+        """Test batch accepts --policy option."""
+        result = runner.invoke(cli, ["batch", "--help"])
+        assert "--policy" in result.output or "-p" in result.output
+        assert "policy" in result.output.lower()
+
+    def test_batch_with_tenant_options(self, runner):
+        """Test batch with multi-tenant options."""
+        with runner.isolated_filesystem():
+            with open("prompts.txt", "w") as f:
+                f.write("test prompt\n")
+
+            result = runner.invoke(
+                cli,
+                ["batch", "prompts.txt", "--tenant", "acme", "--app", "chatbot"],
+            )
+            # Should succeed or fail gracefully (not crash on invalid tenant)
+            assert result.exit_code in [0, 1]
+
 
 class TestRulesCommands:
     """Test suite for rules commands."""

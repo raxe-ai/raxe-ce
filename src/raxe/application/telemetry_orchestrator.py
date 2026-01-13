@@ -49,8 +49,7 @@ from raxe.domain.telemetry.events import (
     generate_installation_id,
 )
 from raxe.infrastructure.config.yaml_config import TelemetryConfig
-from raxe.infrastructure.telemetry.credential_store import CredentialStore
-from raxe.infrastructure.telemetry.credential_store import compute_key_id
+from raxe.infrastructure.telemetry.credential_store import CredentialStore, compute_key_id
 from raxe.infrastructure.telemetry.dual_queue import DualQueue, StateKey
 from raxe.infrastructure.telemetry.flush_scheduler import (
     FlushConfig,
@@ -89,6 +88,7 @@ def _get_install_method() -> Literal["pip", "uv", "pipx", "poetry", "conda", "so
     # Check if running from source (editable install)
     try:
         import raxe
+
         raxe_path = Path(raxe.__file__).parent
         # If there's a pyproject.toml nearby, likely source install
         if (raxe_path.parent.parent / "pyproject.toml").exists():
@@ -127,6 +127,7 @@ def _check_ml_available() -> bool:
     """
     try:
         import onnxruntime  # noqa: F401
+
         return True
     except ImportError:
         return False
@@ -148,6 +149,7 @@ def _get_installed_extras() -> list[str]:
     # Check OpenAI wrapper
     try:
         import openai  # noqa: F401
+
         extras.append("openai")
     except ImportError:
         pass
@@ -155,6 +157,7 @@ def _get_installed_extras() -> list[str]:
     # Check Anthropic wrapper
     try:
         import anthropic  # noqa: F401
+
         extras.append("anthropic")
     except ImportError:
         pass
@@ -162,6 +165,7 @@ def _get_installed_extras() -> list[str]:
     # Check LangChain integration
     try:
         import langchain  # noqa: F401
+
         extras.append("langchain")
     except ImportError:
         pass
@@ -435,6 +439,7 @@ class TelemetryOrchestrator:
             endpoint = self._config.endpoint
             if not endpoint:
                 from raxe.infrastructure.config.endpoints import get_telemetry_endpoint
+
                 endpoint = get_telemetry_endpoint()
 
             # Skip flush scheduler if no API key or endpoint
@@ -498,6 +503,7 @@ class TelemetryOrchestrator:
             Tuple of (api_key, installation_id)
         """
         import os
+
         api_key: str | None = None
         installation_id: str | None = None
 
@@ -537,6 +543,7 @@ class TelemetryOrchestrator:
         # Priority 3: config.yaml
         try:
             from raxe.infrastructure.config.yaml_config import RaxeConfig
+
             config = RaxeConfig.load()
             if config.core.api_key:
                 api_key = config.core.api_key
@@ -1143,9 +1150,7 @@ class TelemetryOrchestrator:
         # Apply sampling if needed
         if decision.sample_rate < 1.0:
             if not should_sample_event(decision.sample_rate, event.event_id):
-                logger.debug(
-                    f"Event sampled out at rate {decision.sample_rate}: {event.event_id}"
-                )
+                logger.debug(f"Event sampled out at rate {decision.sample_rate}: {event.event_id}")
                 return False
 
         return True

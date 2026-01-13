@@ -61,9 +61,7 @@ def test() -> None:
             success_count += 1
         else:
             console.print("[red]✗ No rules loaded[/red]")
-            console.print(
-                "   [dim]Check that rule packs are installed in src/raxe/packs/[/dim]"
-            )
+            console.print("   [dim]Check that rule packs are installed in src/raxe/packs/[/dim]")
 
     except Exception as e:
         console.print(f"[red]✗ Failed: {e}[/red]")

@@ -27,7 +27,9 @@ def privacy_command():
     console.print("  [green]✓[/green] Prompts hashed with SHA-256 (never stored as plaintext)")
     console.print("  [green]✓[/green] Only hashes and metadata logged locally")
     console.print("  [green]✓[/green] No data transmitted to external servers")
-    console.print("  [green]✓[/green] Telemetry sends: rule IDs, timings, severity (NO prompt content)")
+    console.print(
+        "  [green]✓[/green] Telemetry sends: rule IDs, timings, severity (NO prompt content)"
+    )
     console.print()
 
     # Local Storage Section

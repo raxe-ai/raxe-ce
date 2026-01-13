@@ -20,6 +20,7 @@ Usage:
         model="text-bison"
     )
 """
+
 from __future__ import annotations
 
 import logging
@@ -131,6 +132,7 @@ class RaxeVertexAI:
         # Create or use provided Raxe client
         if raxe is None:
             from raxe.sdk.client import Raxe
+
             raxe = Raxe()
 
         self.raxe = raxe
@@ -154,7 +156,7 @@ class RaxeVertexAI:
         max_output_tokens: int = 1024,
         top_p: float = 0.95,
         top_k: int = 40,
-        **kwargs
+        **kwargs,
     ) -> str:
         """Generate text with automatic scanning.
 
@@ -192,7 +194,7 @@ class RaxeVertexAI:
                 model=model,
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,
-                **kwargs
+                **kwargs,
             )
         else:
             response_text = self._generate_palm(
@@ -202,7 +204,7 @@ class RaxeVertexAI:
                 max_output_tokens=max_output_tokens,
                 top_p=top_p,
                 top_k=top_k,
-                **kwargs
+                **kwargs,
             )
 
         # Scan response
@@ -221,7 +223,7 @@ class RaxeVertexAI:
         max_output_tokens: int = 1024,
         top_p: float = 0.95,
         top_k: int = 40,
-        **kwargs
+        **kwargs,
     ) -> RaxeVertexAIChat:
         """Start a chat session with automatic scanning.
 
@@ -253,7 +255,7 @@ class RaxeVertexAI:
             max_output_tokens=max_output_tokens,
             top_p=top_p,
             top_k=top_k,
-            **kwargs
+            **kwargs,
         )
 
     def _generate_palm(
@@ -264,7 +266,7 @@ class RaxeVertexAI:
         max_output_tokens: int,
         top_p: float,
         top_k: int,
-        **kwargs
+        **kwargs,
     ) -> str:
         """Generate with PaLM models.
 
@@ -290,18 +292,13 @@ class RaxeVertexAI:
             max_output_tokens=max_output_tokens,
             top_p=top_p,
             top_k=top_k,
-            **kwargs
+            **kwargs,
         )
 
         return response.text if hasattr(response, "text") else str(response)
 
     def _generate_gemini(
-        self,
-        prompt: str,
-        model: str,
-        temperature: float,
-        max_output_tokens: int,
-        **kwargs
+        self, prompt: str, model: str, temperature: float, max_output_tokens: int, **kwargs
     ) -> str:
         """Generate with Gemini models.
 
@@ -324,8 +321,8 @@ class RaxeVertexAI:
             generation_config={
                 "temperature": temperature,
                 "max_output_tokens": max_output_tokens,
-                **kwargs
-            }
+                **kwargs,
+            },
         )
 
         return response.text if hasattr(response, "text") else str(response)
@@ -339,10 +336,7 @@ class RaxeVertexAI:
         Raises:
             RaxeBlockedError: If threat detected and blocking enabled
         """
-        result = self.raxe.scan(
-            prompt,
-            block_on_threat=self.raxe_block_on_threat
-        )
+        result = self.raxe.scan(prompt, block_on_threat=self.raxe_block_on_threat)
 
         if result.has_threats:
             logger.warning(
@@ -359,9 +353,7 @@ class RaxeVertexAI:
         try:
             result = self.raxe.scan(response, block_on_threat=False)
             if result.has_threats:
-                logger.info(
-                    f"Threat detected in Vertex AI response: {result.severity}"
-                )
+                logger.info(f"Threat detected in Vertex AI response: {result.severity}")
         except Exception as e:
             logger.error(f"Failed to scan response: {e}")
 
@@ -404,7 +396,7 @@ class RaxeVertexAIChat:
         max_output_tokens: int,
         top_p: float,
         top_k: int,
-        **kwargs
+        **kwargs,
     ):
         """Initialize chat session.
 
@@ -426,10 +418,12 @@ class RaxeVertexAIChat:
         # Initialize appropriate chat model
         if model.startswith("gemini"):
             from vertexai.generative_models import GenerativeModel
+
             model_instance = GenerativeModel(model)
             self._chat = model_instance.start_chat()
         else:
             from vertexai.language_models import ChatModel
+
             model_instance = ChatModel.from_pretrained(model)
             self._chat = model_instance.start_chat(
                 context=context,
@@ -438,7 +432,7 @@ class RaxeVertexAIChat:
                 max_output_tokens=max_output_tokens,
                 top_p=top_p,
                 top_k=top_k,
-                **kwargs
+                **kwargs,
             )
 
     def send_message(self, message: str) -> str:

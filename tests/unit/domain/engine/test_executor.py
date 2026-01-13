@@ -2,6 +2,7 @@
 
 Pure domain layer tests with real rule from registry.
 """
+
 from pathlib import Path
 
 import pytest
@@ -396,6 +397,72 @@ class TestScanResult:
         assert data["text_length"] == 100
         assert data["rules_checked"] == 15
 
+    def test_policy_attribution_fields_optional(self) -> None:
+        """New policy attribution fields default to None for backward compatibility."""
+        result = ScanResult(
+            detections=[],
+            scanned_at="2025-11-15T00:00:00Z",
+            text_length=100,
+            rules_checked=15,
+            scan_duration_ms=4.5,
+        )
+
+        assert result.effective_policy_id is None
+        assert result.effective_policy_mode is None
+        assert result.resolution_path is None
+
+    def test_policy_attribution_fields_set(self) -> None:
+        """Policy attribution fields can be set explicitly."""
+        result = ScanResult(
+            detections=[],
+            scanned_at="2025-11-15T00:00:00Z",
+            text_length=100,
+            rules_checked=15,
+            scan_duration_ms=4.5,
+            effective_policy_id="balanced",
+            effective_policy_mode="balanced",
+            resolution_path=["request:None", "app:chatbot", "tenant:acme"],
+        )
+
+        assert result.effective_policy_id == "balanced"
+        assert result.effective_policy_mode == "balanced"
+        assert result.resolution_path == ["request:None", "app:chatbot", "tenant:acme"]
+
+    def test_to_dict_includes_policy_attribution(self) -> None:
+        """to_dict() includes policy attribution fields."""
+        result = ScanResult(
+            detections=[],
+            scanned_at="2025-11-15T00:00:00Z",
+            text_length=100,
+            rules_checked=15,
+            scan_duration_ms=4.5,
+            effective_policy_id="strict",
+            effective_policy_mode="strict",
+            resolution_path=["tenant:acme"],
+        )
+
+        data = result.to_dict()
+
+        assert data["effective_policy_id"] == "strict"
+        assert data["effective_policy_mode"] == "strict"
+        assert data["resolution_path"] == ["tenant:acme"]
+
+    def test_to_dict_with_none_policy(self) -> None:
+        """to_dict() handles None policy attribution gracefully."""
+        result = ScanResult(
+            detections=[],
+            scanned_at="2025-11-15T00:00:00Z",
+            text_length=100,
+            rules_checked=15,
+            scan_duration_ms=4.5,
+        )
+
+        data = result.to_dict()
+
+        assert data["effective_policy_id"] is None
+        assert data["effective_policy_mode"] is None
+        assert data["resolution_path"] is None
+
 
 class TestRuleExecutor:
     """Tests for RuleExecutor."""
@@ -472,9 +539,7 @@ class TestRuleExecutor:
             description="Test",
             severity=Severity.HIGH,
             confidence=0.9,
-            patterns=[
-                Pattern(pattern=r"test", flags=[])
-            ],
+            patterns=[Pattern(pattern=r"test", flags=[])],
             examples=RuleExamples(),
             metrics=RuleMetrics(),
         )
@@ -500,9 +565,7 @@ class TestRuleExecutor:
             description="Test",
             severity=Severity.HIGH,
             confidence=0.9,
-            patterns=[
-                Pattern(pattern=r"nonexistent", flags=[])
-            ],
+            patterns=[Pattern(pattern=r"nonexistent", flags=[])],
             examples=RuleExamples(),
             metrics=RuleMetrics(),
         )
@@ -561,9 +624,7 @@ class TestRuleExecutor:
             description="Test",
             severity=Severity.HIGH,
             confidence=0.9,  # Base confidence
-            patterns=[
-                Pattern(pattern=r"test", flags=[])
-            ],
+            patterns=[Pattern(pattern=r"test", flags=[])],
             examples=RuleExamples(),
             metrics=RuleMetrics(),
         )
@@ -686,19 +747,21 @@ class TestRuleExecutorPerformance:
         # Create 15 simple rules
         rules = []
         for i in range(15):
-            rules.append(Rule(
-                rule_id=f"test-{i:03d}",
-                version="0.0.1",
-                family=RuleFamily.PI,
-                sub_family="test",
-                name=f"Test Rule {i}",
-                description="Test",
-                severity=Severity.MEDIUM,
-                confidence=0.8,
-                patterns=[Pattern(pattern=rf"pattern{i}", flags=[])],
-                examples=RuleExamples(),
-                metrics=RuleMetrics(),
-            ))
+            rules.append(
+                Rule(
+                    rule_id=f"test-{i:03d}",
+                    version="0.0.1",
+                    family=RuleFamily.PI,
+                    sub_family="test",
+                    name=f"Test Rule {i}",
+                    description="Test",
+                    severity=Severity.MEDIUM,
+                    confidence=0.8,
+                    patterns=[Pattern(pattern=rf"pattern{i}", flags=[])],
+                    examples=RuleExamples(),
+                    metrics=RuleMetrics(),
+                )
+            )
 
         executor = RuleExecutor()
         text = "Normal text " * 100  # 1KB

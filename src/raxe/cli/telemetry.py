@@ -360,6 +360,7 @@ def status(output_format: str, verbose: bool) -> None:
     if api_key_source == "credentials":
         try:
             from raxe.infrastructure.telemetry.credential_store import CredentialStore
+
             credential_store = CredentialStore()
             credentials = credential_store.load()
             if credentials:
@@ -375,6 +376,7 @@ def status(output_format: str, verbose: bool) -> None:
     endpoint = config.telemetry.endpoint
     if not endpoint:
         from raxe.infrastructure.config.endpoints import get_telemetry_endpoint
+
         endpoint = get_telemetry_endpoint()
 
     # Get circuit breaker state
@@ -879,6 +881,7 @@ def flush(output_format: str) -> None:
     endpoint = config.telemetry.endpoint
     if not endpoint:
         from raxe.infrastructure.config.endpoints import get_telemetry_endpoint
+
         endpoint = get_telemetry_endpoint()
 
     # Process critical events
@@ -1017,6 +1020,7 @@ def disable() -> None:
         )
         console.print()
         from raxe.infrastructure.config.endpoints import get_console_url
+
         console_url = get_console_url()
         console.print(
             "[cyan]Upgrade to Pro at:[/cyan] "
@@ -1215,7 +1219,9 @@ def endpoint_set(url: str) -> None:
         display_success(f"Telemetry endpoint set to: {url}")
         console.print()
         console.print("[dim]Note: This override is session-only.[/dim]")
-        console.print("[dim]For persistent changes, set RAXE_TELEMETRY_ENDPOINT environment variable.[/dim]")
+        console.print(
+            "[dim]For persistent changes, set RAXE_TELEMETRY_ENDPOINT environment variable.[/dim]"
+        )
         console.print()
     except ValueError as e:
         display_error("Invalid URL", str(e))
@@ -1317,7 +1323,11 @@ def endpoint_test(timeout: float, output_format: str) -> None:
             else:
                 status_str = f"[red]{status.http_status}[/red]"
         elif status.error:
-            status_str = f"[red]{status.error[:30]}...[/red]" if len(status.error) > 30 else f"[red]{status.error}[/red]"
+            status_str = (
+                f"[red]{status.error[:30]}...[/red]"
+                if len(status.error) > 30
+                else f"[red]{status.error}[/red]"
+            )
         else:
             status_str = "[dim]-[/dim]"
 

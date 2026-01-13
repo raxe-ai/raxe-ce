@@ -3,6 +3,7 @@
 Provides commands to look up scan events by ID and display detailed information
 with rich formatting. Events are retrieved from the RAXE console API.
 """
+
 from __future__ import annotations
 
 import json
@@ -291,7 +292,9 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
     if detection_count == 0:
         console.print("[bold]  Detections:[/bold]   [green]No threats found[/green]")
     else:
-        console.print(f"[bold]  Detections:[/bold]   [yellow]{detection_count} threat{'s' if detection_count != 1 else ''} found[/yellow]")
+        console.print(
+            f"[bold]  Detections:[/bold]   [yellow]{detection_count} threat{'s' if detection_count != 1 else ''} found[/yellow]"
+        )
 
     if event.scan_duration_ms is not None:
         console.print(f"[bold]  Scan Time:[/bold]    [white]{event.scan_duration_ms:.1f}ms[/white]")
@@ -304,7 +307,9 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
 
     # L1 Detections table
     if l1_detections:
-        console.print(f"[bold blue]  L1 RULE-BASED DETECTIONS[/bold blue] [dim]({len(l1_detections)} rules matched)[/dim]")
+        console.print(
+            f"[bold blue]  L1 RULE-BASED DETECTIONS[/bold blue] [dim]({len(l1_detections)} rules matched)[/dim]"
+        )
         console.print("  " + "-" * 70)
 
         table = Table(
@@ -324,7 +329,9 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
             severity_text = Text(det_severity.upper(), style=det_color)
 
             confidence = detection.get("confidence", 0)
-            confidence_str = f"{confidence * 100:.1f}%" if isinstance(confidence, float) else str(confidence)
+            confidence_str = (
+                f"{confidence * 100:.1f}%" if isinstance(confidence, float) else str(confidence)
+            )
 
             description = detection.get("description", detection.get("message", "-"))
             if len(description) > 60:
@@ -352,7 +359,9 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
             det_color = SEVERITY_COLORS.get(det_severity, "white")
 
             confidence = detection.get("confidence", 0)
-            confidence_pct = f"{confidence * 100:.0f}%" if isinstance(confidence, float) else str(confidence)
+            confidence_pct = (
+                f"{confidence * 100:.0f}%" if isinstance(confidence, float) else str(confidence)
+            )
 
             # Extract threat type from rule_id (e.g., "L2-context_manipulation" -> "Context Manipulation")
             rule_id = detection.get("rule_id", "-")
@@ -387,11 +396,13 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
             l2_content.append("  •  Severity: ", style="white")
             l2_content.append(f"{det_severity.upper()}", style=det_color)
 
-            console.print(Panel(
-                l2_content,
-                border_style="magenta",
-                padding=(0, 2),
-            ))
+            console.print(
+                Panel(
+                    l2_content,
+                    border_style="magenta",
+                    padding=(0, 2),
+                )
+            )
         console.print()
 
     # Handle case with no detections
@@ -406,8 +417,14 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
     console.print("  " + "-" * 70)
 
     # Show prompt length if available
-    length_info = f"Length: {event.prompt_length} chars" if event.prompt_length else "Length: unknown"
-    hash_info = f"Hash: {event.prompt_hash[:20]}..." if len(event.prompt_hash) > 20 else f"Hash: {event.prompt_hash}"
+    length_info = (
+        f"Length: {event.prompt_length} chars" if event.prompt_length else "Length: unknown"
+    )
+    hash_info = (
+        f"Hash: {event.prompt_hash[:20]}..."
+        if len(event.prompt_hash) > 20
+        else f"Hash: {event.prompt_hash}"
+    )
 
     console.print(f"  [dim]{length_info} | {hash_info}[/dim]")
 
@@ -416,14 +433,18 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
         console.print("[yellow]  WARNING: Displaying sensitive prompt content[/yellow]")
         console.print()
         # Display prompt in a box for clarity
-        console.print(Panel(
-            event.prompt_text,
-            border_style="yellow",
-            title="[yellow]Prompt Content[/yellow]",
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                event.prompt_text,
+                border_style="yellow",
+                title="[yellow]Prompt Content[/yellow]",
+                padding=(1, 2),
+            )
+        )
     elif show_prompt and not event.prompt_text:
-        console.print("  [yellow]Prompt text not available (may not be stored for privacy)[/yellow]")
+        console.print(
+            "  [yellow]Prompt text not available (may not be stored for privacy)[/yellow]"
+        )
     else:
         console.print("  [dim]Use --show-prompt to reveal (contains sensitive content)[/dim]")
 
@@ -439,7 +460,9 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
     # Show suppress command suggestion for detected threats
     if event.detections:
         first_rule_id = event.detections[0].get("rule_id", "RULE_ID")
-        console.print(f'  [bold]Suppress:[/bold]  [cyan]raxe suppress add {first_rule_id} --reason "..."[/cyan]')
+        console.print(
+            f'  [bold]Suppress:[/bold]  [cyan]raxe suppress add {first_rule_id} --reason "..."[/cyan]'
+        )
 
     console.print()
 
@@ -457,11 +480,13 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
         next_steps.append("  4. ", style="white")
         next_steps.append("If legitimate threat, investigate the source\n", style="dim")
 
-        console.print(Panel(
-            next_steps,
-            border_style="yellow",
-            padding=(0, 2),
-        ))
+        console.print(
+            Panel(
+                next_steps,
+                border_style="yellow",
+                padding=(0, 2),
+            )
+        )
 
 
 def display_event_json(event: EventData) -> None:
@@ -539,7 +564,7 @@ def show_event(event_id: str, show_prompt: bool, output_format: str) -> None:
             "Invalid event ID format",
             f"Expected format: evt_{{16 hex chars}}\n"
             f"Example: evt_ae041c39a67744fd\n"
-            f"Received: {event_id}"
+            f"Received: {event_id}",
         )
         console.print()
         console.print("[dim]Hint: Event IDs are shown in scan output and the portal.[/dim]")
@@ -549,7 +574,7 @@ def show_event(event_id: str, show_prompt: bool, output_format: str) -> None:
     if show_prompt:
         display_warning(
             "Prompt reveal requested",
-            "Full prompt content will be displayed. This may contain sensitive information."
+            "Full prompt content will be displayed. This may contain sensitive information.",
         )
         console.print()
 
@@ -568,13 +593,11 @@ def show_event(event_id: str, show_prompt: bool, output_format: str) -> None:
             if "Authentication" in error_msg or "401" in error_msg:
                 display_error(
                     "Authentication required",
-                    "You need to be logged in to view events.\n"
-                    "Run: raxe auth login"
+                    "You need to be logged in to view events.\nRun: raxe auth login",
                 )
             elif "network" in error_msg.lower() or "url" in error_msg.lower():
                 display_error(
-                    "Network error",
-                    f"Could not connect to the RAXE portal.\n{error_msg}"
+                    "Network error", f"Could not connect to the RAXE portal.\n{error_msg}"
                 )
             else:
                 display_error("Failed to fetch event", error_msg)
@@ -603,9 +626,7 @@ def _display_privacy_footer(source: str) -> None:
     """
     console.print("[dim]" + "-" * 74 + "[/dim]")
     if source == "local":
-        console.print(
-            "[dim]  Privacy: Prompt text is stored locally on this device only.[/dim]"
-        )
+        console.print("[dim]  Privacy: Prompt text is stored locally on this device only.[/dim]")
         console.print(
             "[dim]  Use [cyan]raxe event show <event_id> --show-prompt[/cyan] to view it.[/dim]"
         )
@@ -613,9 +634,7 @@ def _display_privacy_footer(source: str) -> None:
         console.print(
             "[dim]  Privacy: Prompt text is not available - only metadata is sent to the cloud.[/dim]"
         )
-        console.print(
-            "[dim]  Run the scan locally to store prompts for later retrieval.[/dim]"
-        )
+        console.print("[dim]  Run the scan locally to store prompts for later retrieval.[/dim]")
     console.print()
 
 
@@ -627,8 +646,7 @@ def _display_event_not_found(event_id: str) -> None:
     """
     console.print()
     display_error(
-        f"Event not found: {event_id}",
-        "The event could not be found. This may be because:"
+        f"Event not found: {event_id}", "The event could not be found. This may be because:"
     )
     console.print()
     console.print("  [dim]1.[/dim] The event ID is incorrect")
@@ -640,7 +658,7 @@ def _display_event_not_found(event_id: str) -> None:
     console.print("  - Check scan output for the correct event ID")
     console.print("  - View recent events in the portal: ", end="")
     console.print(f"[blue underline]{get_console_url()}/portal/events[/blue underline]")
-    console.print("  - Run a new scan: [cyan]raxe scan \"your text\"[/cyan]")
+    console.print('  - Run a new scan: [cyan]raxe scan "your text"[/cyan]')
     console.print()
 
 

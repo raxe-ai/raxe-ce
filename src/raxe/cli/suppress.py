@@ -1,13 +1,18 @@
 """CLI commands for managing suppressions.
 
 Commands:
-- raxe suppress add <pattern> --reason <reason>
-- raxe suppress list
-- raxe suppress remove <pattern>
-- raxe suppress show <pattern>
-- raxe suppress clear
-- raxe suppress audit [--limit N]
+- raxe suppress add <pattern> --reason <reason> [--tenant <id>]
+- raxe suppress list [--tenant <id>]
+- raxe suppress remove <pattern> [--tenant <id>]
+- raxe suppress show <pattern> [--tenant <id>]
+- raxe suppress clear [--tenant <id>]
+- raxe suppress audit [--limit N] [--tenant <id>]
+
+Tenant-scoped suppressions:
+- Without --tenant: Uses project-local .raxe/suppressions.yaml
+- With --tenant: Uses tenant-scoped ~/.raxe/tenants/{tenant_id}/suppressions.yaml
 """
+
 import sys
 from pathlib import Path
 
@@ -22,6 +27,57 @@ from raxe.domain.suppression_factory import (
 )
 
 console = Console()
+
+
+def _get_tenant_suppression_path(tenant_id: str) -> Path:
+    """Get the suppression file path for a tenant.
+
+    Args:
+        tenant_id: Tenant identifier
+
+    Returns:
+        Path to ~/.raxe/tenants/{tenant_id}/suppressions.yaml
+    """
+    return Path.home() / ".raxe" / "tenants" / tenant_id / "suppressions.yaml"
+
+
+def _verify_tenant_exists(tenant_id: str) -> bool:
+    """Verify that a tenant exists.
+
+    Args:
+        tenant_id: Tenant identifier
+
+    Returns:
+        True if tenant exists, False otherwise
+    """
+    from raxe.infrastructure.tenants import YamlTenantRepository
+
+    base_path = Path.home() / ".raxe" / "tenants"
+    repo = YamlTenantRepository(base_path)
+    return repo.get_tenant(tenant_id) is not None
+
+
+def _get_suppression_config_path(config: str | None, tenant_id: str | None) -> Path | None:
+    """Determine the suppression config path based on options.
+
+    Args:
+        config: Explicit config path (if provided)
+        tenant_id: Tenant ID for tenant-scoped suppressions
+
+    Returns:
+        Path to suppression config file, or None for default
+    """
+    if config:
+        return Path(config)
+    if tenant_id:
+        if not _verify_tenant_exists(tenant_id):
+            console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
+            console.print()
+            console.print("Create a tenant first with:")
+            console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
+            sys.exit(1)
+        return _get_tenant_suppression_path(tenant_id)
+    return None
 
 
 # Valid pattern examples for error messages
@@ -43,15 +99,23 @@ def suppress():
 @suppress.command("add")
 @click.argument("pattern")
 @click.option(
-    "--reason", "-r",
+    "--reason",
+    "-r",
     required=True,
     help="Reason for suppression (required for audit trail)",
 )
 @click.option(
-    "--action", "-a",
+    "--action",
+    "-a",
     type=click.Choice(["SUPPRESS", "FLAG", "LOG"], case_sensitive=False),
     default="SUPPRESS",
     help="Action to take when matched (default: SUPPRESS)",
+)
+@click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppression (stores in ~/.raxe/tenants/<id>/)",
 )
 @click.option(
     "--config",
@@ -66,12 +130,13 @@ def add_suppression(
     pattern: str,
     reason: str,
     action: str,
+    tenant_id: str | None,
     config: str | None,
     expires: str | None,
 ):
     """Add a suppression rule to configuration.
 
-    Creates or updates .raxe/suppressions.yaml with the new suppression.
+    Creates or updates suppressions.yaml with the new suppression.
     The config file is automatically created if it doesn't exist.
 
     \b
@@ -81,13 +146,17 @@ def add_suppression(
         raxe suppress add jb-001 --reason "Temp fix" --expires 2025-12-31
 
     \b
+    Tenant-scoped suppressions:
+        raxe suppress add pi-001 --tenant acme --reason "False positive in auth"
+
+    \b
     Actions:
         SUPPRESS  Remove detection from results entirely (default)
         FLAG      Keep detection but mark for review
         LOG       Keep detection for logging/metrics only
     """
-    # Initialize manager with YAML format (creates config dir if needed)
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager_with_yaml(yaml_path=config_path)
 
     try:
@@ -129,26 +198,36 @@ def add_suppression(
 
 @suppress.command("list")
 @click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppressions",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to suppressions.yaml (default: ./.raxe/suppressions.yaml)",
 )
 @click.option(
-    "--format", "output_format",
-    type=click.Choice(["table", "json", "text"]),
+    "--output",
+    "-o",
+    "output_format",
+    type=click.Choice(["table", "json"]),
     default="table",
     help="Output format (default: table)",
 )
-def list_suppressions(config: str | None, output_format: str):
+def list_suppressions(tenant_id: str | None, config: str | None, output_format: str):
     """List all active suppressions from config.
 
     \b
     Examples:
         raxe suppress list
-        raxe suppress list --format json
+        raxe suppress list --output json
+        raxe suppress list --tenant acme
+        raxe suppress list --tenant acme --output json
     """
-    # Initialize manager with YAML format
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager_with_yaml(yaml_path=config_path)
 
     suppressions = manager.get_suppressions()
@@ -157,13 +236,14 @@ def list_suppressions(config: str | None, output_format: str):
         console.print("[yellow]No active suppressions found[/yellow]")
         console.print()
         console.print(
-            "Add suppressions with: [cyan]raxe suppress add <pattern> --reason \"...\"[/cyan]"
+            'Add suppressions with: [cyan]raxe suppress add <pattern> --reason "..."[/cyan]'
         )
         console.print(f"Or create {manager.config_path}")
         return
 
     if output_format == "json":
         import json
+
         output = [
             {
                 "pattern": s.pattern,
@@ -176,11 +256,6 @@ def list_suppressions(config: str | None, output_format: str):
             for s in suppressions
         ]
         console.print(json.dumps(output, indent=2))
-
-    elif output_format == "text":
-        for s in suppressions:
-            action_suffix = f" [{s.action.value}]" if s.action != SuppressionAction.SUPPRESS else ""
-            console.print(f"{s.pattern}{action_suffix}  # {s.reason}")
 
     else:  # table
         table = Table(title=f"Active Suppressions ({len(suppressions)})", show_header=True)
@@ -212,20 +287,27 @@ def list_suppressions(config: str | None, output_format: str):
 @suppress.command("remove")
 @click.argument("pattern")
 @click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppressions",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to suppressions.yaml (default: ./.raxe/suppressions.yaml)",
 )
-def remove_suppression(pattern: str, config: str | None):
+def remove_suppression(pattern: str, tenant_id: str | None, config: str | None):
     """Remove a suppression rule from config.
 
     \b
     Examples:
         raxe suppress remove pi-001
         raxe suppress remove "pi-*"
+        raxe suppress remove pi-001 --tenant acme
     """
-    # Initialize manager with YAML format
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager_with_yaml(yaml_path=config_path)
 
     # Remove suppression
@@ -255,20 +337,27 @@ def remove_suppression(pattern: str, config: str | None):
 @suppress.command("show")
 @click.argument("pattern")
 @click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppressions",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to suppressions.yaml (default: ./.raxe/suppressions.yaml)",
 )
-def show_suppression(pattern: str, config: str | None):
+def show_suppression(pattern: str, tenant_id: str | None, config: str | None):
     """Show details of a specific suppression.
 
     \b
     Examples:
         raxe suppress show pi-001
         raxe suppress show "pi-*"
+        raxe suppress show pi-001 --tenant acme
     """
-    # Initialize manager with YAML format
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager_with_yaml(yaml_path=config_path)
 
     suppression = manager.get_suppression(pattern)
@@ -325,22 +414,27 @@ def show_suppression(pattern: str, config: str | None):
 
 @suppress.command("clear")
 @click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppressions",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to suppressions.yaml (default: ./.raxe/suppressions.yaml)",
 )
-@click.confirmation_option(
-    prompt="Are you sure you want to clear all suppressions?"
-)
-def clear_suppressions(config: str | None):
+@click.confirmation_option(prompt="Are you sure you want to clear all suppressions?")
+def clear_suppressions(tenant_id: str | None, config: str | None):
     """Clear all suppressions from config.
 
     \b
     Examples:
         raxe suppress clear
+        raxe suppress clear --tenant acme
     """
-    # Initialize manager with YAML format
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager_with_yaml(yaml_path=config_path)
 
     # Clear all
@@ -353,6 +447,12 @@ def clear_suppressions(config: str | None):
 
 
 @suppress.command("audit")
+@click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppressions",
+)
 @click.option(
     "--config",
     type=click.Path(),
@@ -373,7 +473,13 @@ def clear_suppressions(config: str | None):
     type=click.Choice(["added", "removed", "applied"]),
     help="Filter by action type",
 )
-def audit_log(config: str | None, limit: int, pattern: str | None, action: str | None):
+def audit_log(
+    tenant_id: str | None,
+    config: str | None,
+    limit: int,
+    pattern: str | None,
+    action: str | None,
+):
     """Show suppression audit log.
 
     Note: Audit logging requires SQLite database (automatically used with YAML config).
@@ -384,9 +490,10 @@ def audit_log(config: str | None, limit: int, pattern: str | None, action: str |
         raxe suppress audit --limit 50
         raxe suppress audit --pattern "pi-*"
         raxe suppress audit --action applied
+        raxe suppress audit --tenant acme
     """
-    # Initialize manager (uses CompositeRepository with SQLite for audit)
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager(config_path=config_path)
 
     # Get audit log
@@ -395,9 +502,7 @@ def audit_log(config: str | None, limit: int, pattern: str | None, action: str |
     if not entries:
         console.print("[yellow]No audit entries found[/yellow]")
         console.print()
-        console.print(
-            "[dim]Note: Audit log tracks add/remove operations and applications.[/dim]"
-        )
+        console.print("[dim]Note: Audit log tracks add/remove operations and applications.[/dim]")
         return
 
     # Create table
@@ -447,19 +552,26 @@ def audit_log(config: str | None, limit: int, pattern: str | None, action: str |
 
 @suppress.command("stats")
 @click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for tenant-scoped suppressions",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to suppressions.yaml (default: ./.raxe/suppressions.yaml)",
 )
-def suppression_stats(config: str | None):
+def suppression_stats(tenant_id: str | None, config: str | None):
     """Show suppression statistics.
 
     \b
     Examples:
         raxe suppress stats
+        raxe suppress stats --tenant acme
     """
-    # Initialize manager
-    config_path = Path(config) if config else None
+    # Determine config path (handles tenant-scoping)
+    config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager(config_path=config_path)
 
     stats = manager.get_statistics()

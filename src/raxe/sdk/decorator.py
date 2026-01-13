@@ -15,6 +15,7 @@ Usage:
         # Handle threat appropriately
         pass
 """
+
 from __future__ import annotations
 
 import inspect
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
     from raxe.sdk.client import Raxe
 
 # Type variable for generic function
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 def protect_function(
@@ -35,7 +36,10 @@ def protect_function(
     *,
     block_on_threat: bool = False,
     on_threat: Callable | None = None,
-    allow_severity: list[str] | None = None
+    allow_severity: list[str] | None = None,
+    tenant_id: str | None = None,
+    app_id: str | None = None,
+    policy_id: str | None = None,
 ) -> F:
     """
     Protect a function by scanning inputs before execution.
@@ -46,6 +50,9 @@ def protect_function(
         block_on_threat: Raise SecurityException if threat detected (default: False)
         on_threat: Optional callback to invoke when threat detected
         allow_severity: Optional list of severities to allow (e.g., ["LOW"])
+        tenant_id: Tenant ID for multi-tenant policy resolution
+        app_id: App ID within tenant for app-level policy override
+        policy_id: Explicit policy ID override (highest priority)
 
     Returns:
         Wrapped function that scans inputs before calling original
@@ -61,11 +68,17 @@ def protect_function(
         @raxe.protect(block_on_threat=True)
         def strict_function(prompt: str) -> str:
             return process(prompt)
+
+        # Multi-tenant mode
+        @raxe.protect(tenant_id="acme", app_id="chatbot")
+        def tenant_function(prompt: str) -> str:
+            return process(prompt)
     """
     # Check if function is async
     is_async = inspect.iscoroutinefunction(func)
 
     if is_async:
+
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             # Extract text from arguments
@@ -73,7 +86,13 @@ def protect_function(
 
             if text:
                 # Scan using Raxe client
-                result = raxe_client.scan(text, block_on_threat=block_on_threat)
+                result = raxe_client.scan(
+                    text,
+                    block_on_threat=block_on_threat,
+                    tenant_id=tenant_id,
+                    app_id=app_id,
+                    policy_id=policy_id,
+                )
 
                 # Handle threat detection
                 if result.has_threats:
@@ -91,6 +110,7 @@ def protect_function(
 
         return async_wrapper  # type: ignore
     else:
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             # Extract text from arguments
@@ -98,7 +118,13 @@ def protect_function(
 
             if text:
                 # Scan using Raxe client (will raise if block_on_threat=True)
-                result = raxe_client.scan(text, block_on_threat=block_on_threat)
+                result = raxe_client.scan(
+                    text,
+                    block_on_threat=block_on_threat,
+                    tenant_id=tenant_id,
+                    app_id=app_id,
+                    policy_id=policy_id,
+                )
 
                 # Handle threat detection
                 if result.has_threats:
@@ -169,6 +195,7 @@ def protect(raxe_client: Raxe):
         def my_func(prompt: str) -> str:
             return process(prompt)
     """
+
     def decorator(func: F) -> F:
         return protect_function(raxe_client, func)
 

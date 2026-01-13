@@ -6,6 +6,7 @@ exposing threat detection capabilities to AI assistants.
 
 The server is sync-first and uses the MCP SDK's synchronous APIs.
 """
+
 from __future__ import annotations
 
 import sys
@@ -174,7 +175,11 @@ class RaxeMCPServer:
         # Rate limiting
         if not self.rate_limiter.allow():
             return CallToolResult(
-                content=[TextContent(type="text", text="Error: Rate limit exceeded. Please try again later.")]
+                content=[
+                    TextContent(
+                        type="text", text="Error: Rate limit exceeded. Please try again later."
+                    )
+                ]
             )
 
         # Input validation
@@ -185,25 +190,29 @@ class RaxeMCPServer:
 
         if len(text) > MAX_TEXT_LENGTH:
             return CallToolResult(
-                content=[TextContent(
-                    type="text",
-                    text=f"Error: Input too large. Maximum {MAX_TEXT_LENGTH:,} characters allowed."
-                )]
+                content=[
+                    TextContent(
+                        type="text",
+                        text=f"Error: Input too large. Maximum {MAX_TEXT_LENGTH:,} characters allowed.",
+                    )
+                ]
             )
 
         if context and len(context) > MAX_CONTEXT_LENGTH:
             return CallToolResult(
-                content=[TextContent(
-                    type="text",
-                    text=f"Error: Context too large. Maximum {MAX_CONTEXT_LENGTH:,} characters allowed."
-                )]
+                content=[
+                    TextContent(
+                        type="text",
+                        text=f"Error: Context too large. Maximum {MAX_CONTEXT_LENGTH:,} characters allowed.",
+                    )
+                ]
             )
 
         try:
             result = self.raxe.scan(text)
 
             if result.is_safe:
-                response = f"SAFE: No threats detected in the provided text."
+                response = "SAFE: No threats detected in the provided text."
             else:
                 threats = []
                 for detection in result.detections:
@@ -216,13 +225,9 @@ class RaxeMCPServer:
             if context:
                 response = f"Context: {context}\n\n{response}"
 
-            return CallToolResult(
-                content=[TextContent(type="text", text=response)]
-            )
+            return CallToolResult(content=[TextContent(type="text", text=response)])
         except Exception as e:
-            return CallToolResult(
-                content=[TextContent(type="text", text=f"Scan error: {e}")]
-            )
+            return CallToolResult(content=[TextContent(type="text", text=f"Scan error: {e}")])
 
     async def _handle_list_families(self) -> CallToolResult:
         """Handle list_threat_families tool call."""
@@ -241,9 +246,7 @@ class RaxeMCPServer:
         for code, desc in families.items():
             lines.append(f"- {code}: {desc}")
 
-        return CallToolResult(
-            content=[TextContent(type="text", text="\n".join(lines))]
-        )
+        return CallToolResult(content=[TextContent(type="text", text="\n".join(lines))])
 
     async def _handle_rule_info(self, arguments: dict[str, Any]) -> CallToolResult:
         """Handle get_rule_info tool call."""
@@ -269,17 +272,13 @@ class RaxeMCPServer:
                         f"Severity: {rule.severity}",
                         f"Description: {rule.description}",
                     ]
-                    return CallToolResult(
-                        content=[TextContent(type="text", text="\n".join(info))]
-                    )
+                    return CallToolResult(content=[TextContent(type="text", text="\n".join(info))])
 
             return CallToolResult(
                 content=[TextContent(type="text", text=f"Rule not found: {rule_id}")]
             )
         except Exception as e:
-            return CallToolResult(
-                content=[TextContent(type="text", text=f"Error: {e}")]
-            )
+            return CallToolResult(content=[TextContent(type="text", text=f"Error: {e}")])
 
     def _register_resources(self) -> None:
         """Register MCP resources for RAXE data."""

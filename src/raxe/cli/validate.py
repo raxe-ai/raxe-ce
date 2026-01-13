@@ -2,6 +2,7 @@
 
 Provides the 'raxe validate-rule' command for community rule authors.
 """
+
 from pathlib import Path
 
 import click
@@ -86,13 +87,15 @@ def _output_human(result, rule_path: str) -> None:
         header_style = "bold red"
         header_text = "✗ VALIDATION FAILED"
 
-    console.print(Panel(
-        f"[{header_style}]{header_text}[/{header_style}]\n"
-        f"Rule: [cyan]{Path(rule_path).name}[/cyan]"
-        + (f"\nID: [cyan]{result.rule_id}[/cyan]" if result.rule_id else ""),
-        title="Rule Validation",
-        border_style=header_style,
-    ))
+    console.print(
+        Panel(
+            f"[{header_style}]{header_text}[/{header_style}]\n"
+            f"Rule: [cyan]{Path(rule_path).name}[/cyan]"
+            + (f"\nID: [cyan]{result.rule_id}[/cyan]" if result.rule_id else ""),
+            title="Rule Validation",
+            border_style=header_style,
+        )
+    )
 
     # Summary
     if result.issues:
@@ -102,7 +105,7 @@ def _output_human(result, rule_path: str) -> None:
         if result.warnings_count > 0:
             summary_parts.append(f"[yellow]{result.warnings_count} warning(s)[/yellow]")
 
-        info_count = len([i for i in result.issues if i.severity == 'info'])
+        info_count = len([i for i in result.issues if i.severity == "info"])
         if info_count > 0:
             summary_parts.append(f"[blue]{info_count} info[/blue]")
 
@@ -142,29 +145,33 @@ def _output_human(result, rule_path: str) -> None:
 
     # Next steps
     if result.valid:
-        console.print(Panel(
-            "[green]✓[/green] Your rule is ready for submission!\n\n"
-            "[bold]Next steps:[/bold]\n"
-            "1. Review the validation results above\n"
-            "2. Read CONTRIBUTING_RULES.md for submission guidelines\n"
-            "3. Submit a pull request with label 'new-rule'\n"
-            "4. Our team will review your contribution\n\n"
-            "[dim]Thank you for contributing to RAXE! 🎉[/dim]",
-            title="Ready to Submit",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                "[green]✓[/green] Your rule is ready for submission!\n\n"
+                "[bold]Next steps:[/bold]\n"
+                "1. Review the validation results above\n"
+                "2. Read CONTRIBUTING_RULES.md for submission guidelines\n"
+                "3. Submit a pull request with label 'new-rule'\n"
+                "4. Our team will review your contribution\n\n"
+                "[dim]Thank you for contributing to RAXE! 🎉[/dim]",
+                title="Ready to Submit",
+                border_style="green",
+            )
+        )
     else:
-        console.print(Panel(
-            "[red]✗[/red] Please fix the errors above before submitting.\n\n"
-            "[bold]Tips:[/bold]\n"
-            "• Fix all ERROR-level issues first\n"
-            "• Address WARNING-level issues for better quality\n"
-            "• Review INFO suggestions for best practices\n"
-            "• Run validation again after fixes\n\n"
-            "[dim]Need help? See CONTRIBUTING_RULES.md or open a discussion.[/dim]",
-            title="Action Required",
-            border_style="red",
-        ))
+        console.print(
+            Panel(
+                "[red]✗[/red] Please fix the errors above before submitting.\n\n"
+                "[bold]Tips:[/bold]\n"
+                "• Fix all ERROR-level issues first\n"
+                "• Address WARNING-level issues for better quality\n"
+                "• Review INFO suggestions for best practices\n"
+                "• Run validation again after fixes\n\n"
+                "[dim]Need help? See CONTRIBUTING_RULES.md or open a discussion.[/dim]",
+                title="Action Required",
+                border_style="red",
+            )
+        )
 
     console.print()
 
@@ -185,7 +192,7 @@ def _output_json(result, rule_path: str) -> None:
         "summary": {
             "errors": result.errors_count,
             "warnings": result.warnings_count,
-            "info": len([i for i in result.issues if i.severity == 'info']),
+            "info": len([i for i in result.issues if i.severity == "info"]),
         },
         "issues": [
             {
@@ -211,8 +218,8 @@ def _get_severity_style(severity: str) -> str:
         Rich style string
     """
     styles = {
-        'error': 'red',
-        'warning': 'yellow',
-        'info': 'blue',
+        "error": "red",
+        "warning": "yellow",
+        "info": "blue",
     }
-    return styles.get(severity, 'white')
+    return styles.get(severity, "white")

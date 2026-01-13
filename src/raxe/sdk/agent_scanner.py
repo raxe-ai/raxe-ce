@@ -623,6 +623,11 @@ class AgentScannerConfig:
     fail_open: bool = True
     max_prompt_length: int = 50000
 
+    # Multi-tenant policy context
+    tenant_id: str | None = None
+    app_id: str | None = None
+    policy_id: str | None = None
+
     def should_scan(self, scan_type: ScanType) -> bool:
         """Check if a specific scan type should be enabled.
 
@@ -765,6 +770,7 @@ class AgentScanner:
         timeout_ms: float = 100.0,
         fail_open: bool = True,
         integration_type: str | None = None,
+        config: AgentScannerConfig | None = None,
     ) -> None:
         """Initialize AgentScanner.
 
@@ -809,6 +815,7 @@ class AgentScanner:
         self.timeout_ms = timeout_ms
         self.fail_open = fail_open
         self.integration_type = integration_type
+        self.config = config or AgentScannerConfig()
 
         # Initialize default scan configs
         self._scan_configs: dict[ScanType, ScanConfig] = {
@@ -974,6 +981,9 @@ class AgentScanner:
                     text,
                     block_on_threat=block_on_threat,
                     integration_type=self.integration_type,
+                    tenant_id=self.config.tenant_id,
+                    app_id=self.config.app_id,
+                    policy_id=self.config.policy_id,
                 )
                 try:
                     result = future.result(timeout=timeout_seconds)
@@ -1294,6 +1304,9 @@ class AgentScanner:
             result = self.raxe.scan(
                 args_text,
                 block_on_threat=config.block_on_threat,
+                tenant_id=self.config.tenant_id,
+                app_id=self.config.app_id,
+                policy_id=self.config.policy_id,
             )
 
             duration_ms = (time.perf_counter() - start) * 1000
@@ -1363,6 +1376,9 @@ class AgentScanner:
             scan_result = self.raxe.scan(
                 result,
                 block_on_threat=config.block_on_threat,
+                tenant_id=self.config.tenant_id,
+                app_id=self.config.app_id,
+                policy_id=self.config.policy_id,
             )
 
             duration_ms = (time.perf_counter() - start) * 1000
@@ -1445,6 +1461,9 @@ class AgentScanner:
             result = self.raxe.scan(
                 input_text,
                 block_on_threat=config.block_on_threat,
+                tenant_id=self.config.tenant_id,
+                app_id=self.config.app_id,
+                policy_id=self.config.policy_id,
             )
 
             duration_ms = (time.perf_counter() - start) * 1000
@@ -2127,6 +2146,9 @@ class AgentScanner:
                 content,
                 block_on_threat=config.block_on_threat,
                 integration_type=self.integration_type,
+                tenant_id=self.config.tenant_id,
+                app_id=self.config.app_id,
+                policy_id=self.config.policy_id,
             )
 
             duration_ms = (time.perf_counter() - start) * 1000
@@ -2365,7 +2387,12 @@ class AgentScanner:
             if doc and doc.strip():
                 start = time.perf_counter()
                 try:
-                    scan_result = self.raxe.scan(doc)
+                    scan_result = self.raxe.scan(
+                        doc,
+                        tenant_id=self.config.tenant_id,
+                        app_id=self.config.app_id,
+                        policy_id=self.config.policy_id,
+                    )
                     duration_ms = (time.perf_counter() - start) * 1000
                     result = self._build_result(
                         scan_type=ScanType.RAG_CONTEXT,
@@ -2544,6 +2571,7 @@ def create_agent_scanner(
         timeout_ms=config.timeout_ms,
         fail_open=config.fail_open,
         integration_type=integration_type,
+        config=config,
     )
 
 

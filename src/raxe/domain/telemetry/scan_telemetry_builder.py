@@ -130,6 +130,13 @@ class ScanTelemetryBuilder:
         action_taken: Literal["allow", "block", "warn", "redact"] = "allow",
         l2_enabled: bool = True,
         integration_type: str | None = None,
+        # Multi-tenant policy fields (configuration identifiers, not PII)
+        tenant_id: str | None = None,
+        app_id: str | None = None,
+        policy_id: str | None = None,
+        policy_name: str | None = None,
+        policy_mode: str | None = None,
+        policy_version: int | None = None,
     ) -> dict[str, Any]:
         """Build complete scan telemetry payload.
 
@@ -147,6 +154,12 @@ class ScanTelemetryBuilder:
             action_taken: Policy action taken
             l2_enabled: Whether L2 was enabled for this scan
             integration_type: Agentic framework if applicable (langchain, crewai, etc.)
+            tenant_id: Tenant identifier for multi-tenant deployments (not PII)
+            app_id: Application identifier within tenant (not PII)
+            policy_id: Policy identifier applied to this scan (not PII)
+            policy_name: Human-readable policy name (not PII)
+            policy_mode: Policy mode (monitor/balanced/strict/custom)
+            policy_version: Policy version number
 
         Returns:
             Complete telemetry payload dict matching schema v2.0
@@ -196,6 +209,20 @@ class ScanTelemetryBuilder:
         # Optional integration type (langchain, crewai, llamaindex, autogen, mcp)
         if integration_type:
             payload["integration_type"] = integration_type
+
+        # Multi-tenant context (configuration identifiers, not PII)
+        if tenant_id:
+            payload["tenant_id"] = tenant_id
+        if app_id:
+            payload["app_id"] = app_id
+        if policy_id:
+            payload["policy_id"] = policy_id
+        if policy_name:
+            payload["policy_name"] = policy_name
+        if policy_mode:
+            payload["policy_mode"] = policy_mode
+        if policy_version is not None:
+            payload["policy_version"] = policy_version
 
         # Add L1 block if available
         if l1_block:
@@ -682,6 +709,12 @@ def build_scan_telemetry(
     prompt: str | None = None,
     prompt_hash: str | None = None,
     prompt_length: int | None = None,
+    tenant_id: str | None = None,
+    app_id: str | None = None,
+    policy_id: str | None = None,
+    policy_name: str | None = None,
+    policy_mode: str | None = None,
+    policy_version: int | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Convenience function to build scan telemetry.
@@ -696,6 +729,12 @@ def build_scan_telemetry(
         prompt: Original prompt text (preferred)
         prompt_hash: Pre-computed SHA-256 hash
         prompt_length: Pre-computed prompt length
+        tenant_id: Tenant identifier for multi-tenant deployments
+        app_id: Application identifier within tenant
+        policy_id: Policy identifier applied to this scan
+        policy_name: Human-readable policy name
+        policy_mode: Policy mode (monitor/balanced/strict/custom)
+        policy_version: Policy version number
         **kwargs: Additional arguments passed to builder
 
     Returns:
@@ -710,5 +749,11 @@ def build_scan_telemetry(
         prompt=prompt,
         prompt_hash=prompt_hash,
         prompt_length=prompt_length,
+        tenant_id=tenant_id,
+        app_id=app_id,
+        policy_id=policy_id,
+        policy_name=policy_name,
+        policy_mode=policy_mode,
+        policy_version=policy_version,
         **kwargs,
     )

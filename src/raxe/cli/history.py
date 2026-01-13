@@ -1,4 +1,5 @@
 """CLI commands for scan history management."""
+
 import json
 from pathlib import Path
 
@@ -220,7 +221,7 @@ def export(scan_id: int, output: Path | None, output_format: str) -> None:
             else:
                 console.print(csv_str)
 
-        logger.info("history_export_completed", scan_id=scan_id, output_format =format)
+        logger.info("history_export_completed", scan_id=scan_id, output_format=format)
 
     except Exception as e:
         console.print(f"[red]Error exporting scan:[/red] {e}")

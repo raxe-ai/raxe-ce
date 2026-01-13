@@ -11,6 +11,7 @@ from pathlib import Path
 import click
 
 from raxe import __version__
+from raxe.cli.app import app
 from raxe.cli.auth import auth, auth_link
 from raxe.cli.config import config
 from raxe.cli.doctor import doctor
@@ -31,6 +32,7 @@ from raxe.cli.help import help_command
 from raxe.cli.history import history
 from raxe.cli.models import models
 from raxe.cli.output import console, display_error, display_scan_result, display_success
+from raxe.cli.policy import policy
 from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
 from raxe.cli.repl import repl
@@ -38,6 +40,7 @@ from raxe.cli.rules import rules
 from raxe.cli.stats import stats
 from raxe.cli.suppress import suppress
 from raxe.cli.telemetry import telemetry
+from raxe.cli.tenant import tenant
 from raxe.cli.test import test
 from raxe.cli.tune import tune
 from raxe.cli.validate import validate_rule_command
@@ -509,6 +512,24 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
     multiple=True,
     help="Suppress rule(s) for this scan. Supports wildcards and action override (e.g., pi-001, jb-*, pi-001:FLAG)",
 )
+@click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for multi-tenant policy resolution",
+)
+@click.option(
+    "--app",
+    "-a",
+    "app_id",
+    help="App ID within tenant for app-level policy override",
+)
+@click.option(
+    "--policy",
+    "-p",
+    "policy_id",
+    help="Explicit policy ID override (highest priority)",
+)
 @click.pass_context
 def scan(
     ctx,
@@ -524,6 +545,9 @@ def scan(
     explain: bool,
     dry_run: bool,
     suppress_patterns: tuple[str, ...],
+    tenant_id: str | None,
+    app_id: str | None,
+    policy_id: str | None,
 ):
     """
     Scan text for security threats.
@@ -543,6 +567,12 @@ def scan(
       raxe scan "text" --suppress pi-001                  # Suppress single rule
       raxe scan "text" --suppress pi-001 --suppress jb-*  # Multiple suppressions
       raxe scan "text" --suppress "pi-001:FLAG"           # Flag instead of suppress
+
+    \b
+    Multi-Tenant Examples:
+      raxe scan "text" --tenant acme                      # Use tenant's default policy
+      raxe scan "text" --tenant acme --app chatbot        # Use app's policy override
+      raxe scan "text" --tenant acme --policy strict      # Override with specific policy
 
     \b
     Exit Codes (for CI/CD integration):
@@ -654,6 +684,9 @@ def scan(
                     explain=explain,
                     dry_run=dry_run,
                     entry_point="cli",
+                    tenant_id=tenant_id,
+                    app_id=app_id,
+                    policy_id=policy_id,
                 )
 
                 # Show scan result first
@@ -682,6 +715,9 @@ def scan(
                         explain=explain,
                         dry_run=dry_run,
                         entry_point="cli",
+                        tenant_id=tenant_id,
+                        app_id=app_id,
+                        policy_id=policy_id,
                     )
             except ImportError:
                 console.print("[yellow]Warning: Profiling not available[/yellow]")
@@ -694,6 +730,9 @@ def scan(
                     explain=explain,
                     dry_run=dry_run,
                     entry_point="cli",
+                    tenant_id=tenant_id,
+                    app_id=app_id,
+                    policy_id=policy_id,
                 )
         else:
             result = raxe.scan(
@@ -705,6 +744,9 @@ def scan(
                 explain=explain,
                 dry_run=dry_run,
                 entry_point="cli",
+                tenant_id=tenant_id,
+                app_id=app_id,
+                policy_id=policy_id,
             )
     except Exception as e:
         display_error("Scan execution failed", str(e))
@@ -882,8 +924,34 @@ def scan(
     is_flag=True,
     help="Stop on first critical threat",
 )
+@click.option(
+    "--tenant",
+    "-t",
+    "tenant_id",
+    help="Tenant ID for multi-tenant policy resolution",
+)
+@click.option(
+    "--app",
+    "-a",
+    "app_id",
+    help="App ID within tenant for app-level policy override",
+)
+@click.option(
+    "--policy",
+    "-p",
+    "policy_id",
+    help="Explicit policy ID override (highest priority)",
+)
 @handle_cli_error
-def batch_scan(file: str, output_format: str, output: str | None, fail_fast: bool) -> None:
+def batch_scan(
+    file: str,
+    output_format: str,
+    output: str | None,
+    fail_fast: bool,
+    tenant_id: str | None,
+    app_id: str | None,
+    policy_id: str | None,
+) -> None:
     """
     Batch scan prompts from a file.
 
@@ -894,6 +962,12 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
       raxe batch prompts.txt
       raxe batch prompts.txt --format json --output results.json
       raxe batch prompts.txt --fail-fast
+
+    \b
+    Multi-Tenant Examples:
+      raxe batch prompts.txt --tenant acme
+      raxe batch prompts.txt --tenant acme --app chatbot
+      raxe batch prompts.txt --tenant acme --policy strict
     """
     import csv as csv_module
     from pathlib import Path
@@ -961,7 +1035,12 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
 
         for i, prompt in enumerate(prompts):
             try:
-                result = raxe.scan(prompt)
+                result = raxe.scan(
+                    prompt,
+                    tenant_id=tenant_id,
+                    app_id=app_id,
+                    policy_id=policy_id,
+                )
                 results.append(
                     {
                         "line": i + 1,
@@ -990,7 +1069,7 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
                         if fail_fast:
                             console.print()
                             console.print(
-                                f"[red bold]Critical threat found at line {i+1}. Stopping.[/red bold]"
+                                f"[red bold]Critical threat found at line {i + 1}. Stopping.[/red bold]"
                             )
                             break
 
@@ -998,7 +1077,7 @@ def batch_scan(file: str, output_format: str, output: str | None, fail_fast: boo
 
             except Exception as e:
                 console.print()
-                display_error(f"Error scanning line {i+1}", str(e))
+                display_error(f"Error scanning line {i + 1}", str(e))
                 if fail_fast:
                     break
 
@@ -1320,6 +1399,9 @@ cli.add_command(models)
 cli.add_command(profile_command)
 cli.add_command(privacy_command)
 cli.add_command(suppress)
+cli.add_command(tenant)
+cli.add_command(app)
+cli.add_command(policy)
 cli.add_command(tune)
 cli.add_command(validate_rule_command)
 cli.add_command(config)

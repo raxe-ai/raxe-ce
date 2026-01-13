@@ -236,9 +236,7 @@ class InteractiveProgress(ProgressIndicator):
                 content.append("✓ ", style="green")
                 label = self._get_label(name, "complete")
                 content.append(label, style="green")
-                content.append(
-                    f" ({data['duration_ms']:.0f}ms)", style="dim white"
-                )
+                content.append(f" ({data['duration_ms']:.0f}ms)", style="dim white")
                 content.append("\n")
 
             elif data["status"] == "error":
@@ -254,9 +252,7 @@ class InteractiveProgress(ProgressIndicator):
         content = Text()
         content.append("✓ ", style="green bold")
         content.append("Ready to scan", style="green bold")
-        content.append(
-            f" (Total: {total_ms:.0f}ms, one-time)", style="dim white"
-        )
+        content.append(f" (Total: {total_ms:.0f}ms, one-time)", style="dim white")
 
         return Panel(content, border_style="green", padding=(0, 1))
 
@@ -303,9 +299,7 @@ class SimpleProgress(ProgressIndicator):
 
     def complete(self, total_duration_ms: float) -> None:
         """Print completion message."""
-        self._log(
-            f"Initialization complete ({total_duration_ms:.0f}ms, one-time)"
-        )
+        self._log(f"Initialization complete ({total_duration_ms:.0f}ms, one-time)")
 
     def error(self, component: str, message: str) -> None:
         """Print error message."""

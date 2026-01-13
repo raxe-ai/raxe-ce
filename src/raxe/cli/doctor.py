@@ -26,6 +26,7 @@ class HealthCheck:
         details: Optional additional details
         fix_available: Whether auto-fix is available
     """
+
     name: str
     status: str  # "ok", "warning", "error"
     message: str
@@ -131,34 +132,43 @@ def _check_installation() -> list[HealthCheck]:
     required_major, required_minor = 3, 10
 
     if py_version.major == required_major and py_version.minor >= required_minor:
-        checks.append(HealthCheck(
-            name="Python Version",
-            status="ok",
-            message=f"{py_version.major}.{py_version.minor}.{py_version.micro} (supported)",
-        ))
+        checks.append(
+            HealthCheck(
+                name="Python Version",
+                status="ok",
+                message=f"{py_version.major}.{py_version.minor}.{py_version.micro} (supported)",
+            )
+        )
     else:
         version_str = f"{py_version.major}.{py_version.minor}.{py_version.micro}"
-        checks.append(HealthCheck(
-            name="Python Version",
-            status="error",
-            message=f"{version_str} (requires >= {required_major}.{required_minor})",
-            details="Upgrade Python to 3.10 or higher",
-        ))
+        checks.append(
+            HealthCheck(
+                name="Python Version",
+                status="error",
+                message=f"{version_str} (requires >= {required_major}.{required_minor})",
+                details="Upgrade Python to 3.10 or higher",
+            )
+        )
 
     # RAXE version
     try:
         from raxe import __version__
-        checks.append(HealthCheck(
-            name="RAXE Version",
-            status="ok",
-            message=f"{__version__}",
-        ))
+
+        checks.append(
+            HealthCheck(
+                name="RAXE Version",
+                status="ok",
+                message=f"{__version__}",
+            )
+        )
     except ImportError:
-        checks.append(HealthCheck(
-            name="RAXE Version",
-            status="warning",
-            message="Version not found",
-        ))
+        checks.append(
+            HealthCheck(
+                name="RAXE Version",
+                status="warning",
+                message="Version not found",
+            )
+        )
 
     # Dependencies
     missing_deps = []
@@ -179,19 +189,23 @@ def _check_installation() -> list[HealthCheck]:
             missing_deps.append(display_name)
 
     if not missing_deps:
-        checks.append(HealthCheck(
-            name="Dependencies",
-            status="ok",
-            message="All required dependencies installed",
-        ))
+        checks.append(
+            HealthCheck(
+                name="Dependencies",
+                status="ok",
+                message="All required dependencies installed",
+            )
+        )
     else:
-        checks.append(HealthCheck(
-            name="Dependencies",
-            status="error",
-            message=f"Missing: {', '.join(missing_deps)}",
-            details="Run: pip install raxe[dev]",
-            fix_available=True,
-        ))
+        checks.append(
+            HealthCheck(
+                name="Dependencies",
+                status="error",
+                message=f"Missing: {', '.join(missing_deps)}",
+                details="Run: pip install raxe[dev]",
+                fix_available=True,
+            )
+        )
 
     return checks
 
@@ -225,21 +239,25 @@ def _check_api_key() -> list[HealthCheck]:
             elif status["status"] == "warning":
                 details = f"Consider getting a permanent key: {CONSOLE_KEYS_URL}"
 
-        checks.append(HealthCheck(
-            name="API Key Status",
-            status=check_status,
-            message=status["message"],
-            details=details,
-            fix_available=status["status"] != "pass",
-        ))
+        checks.append(
+            HealthCheck(
+                name="API Key Status",
+                status=check_status,
+                message=status["message"],
+                details=details,
+                fix_available=status["status"] != "pass",
+            )
+        )
 
     except Exception as e:
-        checks.append(HealthCheck(
-            name="API Key Status",
-            status="warning",
-            message="Could not check API key status",
-            details=sanitize_error_message(e),
-        ))
+        checks.append(
+            HealthCheck(
+                name="API Key Status",
+                status="warning",
+                message="Could not check API key status",
+                details=sanitize_error_message(e),
+            )
+        )
 
     return checks
 
@@ -252,63 +270,78 @@ def _check_configuration() -> list[HealthCheck]:
 
     # Config file exists
     if config_file.exists():
-        checks.append(HealthCheck(
-            name="Config File",
-            status="ok",
-            message=f"Found at {config_file}",
-        ))
+        checks.append(
+            HealthCheck(
+                name="Config File",
+                status="ok",
+                message=f"Found at {config_file}",
+            )
+        )
 
         # Try to parse config
         try:
             import yaml
+
             with open(config_file) as f:
                 config = yaml.safe_load(f)
 
             if config:
-                checks.append(HealthCheck(
-                    name="Config Valid",
-                    status="ok",
-                    message="Valid YAML format",
-                ))
+                checks.append(
+                    HealthCheck(
+                        name="Config Valid",
+                        status="ok",
+                        message="Valid YAML format",
+                    )
+                )
             else:
-                checks.append(HealthCheck(
-                    name="Config Valid",
-                    status="warning",
-                    message="Config file is empty",
-                    fix_available=True,
-                ))
+                checks.append(
+                    HealthCheck(
+                        name="Config Valid",
+                        status="warning",
+                        message="Config file is empty",
+                        fix_available=True,
+                    )
+                )
         except Exception as e:
-            checks.append(HealthCheck(
-                name="Config Valid",
-                status="error",
-                message="Invalid YAML format",
-                details=sanitize_error_message(e),
-                fix_available=True,
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Config Valid",
+                    status="error",
+                    message="Invalid YAML format",
+                    details=sanitize_error_message(e),
+                    fix_available=True,
+                )
+            )
 
         # Check permissions
         if config_file.stat().st_mode & 0o600:
-            checks.append(HealthCheck(
-                name="Permissions",
-                status="ok",
-                message="Read/write OK",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Permissions",
+                    status="ok",
+                    message="Read/write OK",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="Permissions",
-                status="warning",
-                message="Incorrect permissions",
-                details=f"Current: {oct(config_file.stat().st_mode)[-3:]}",
-                fix_available=True,
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Permissions",
+                    status="warning",
+                    message="Incorrect permissions",
+                    details=f"Current: {oct(config_file.stat().st_mode)[-3:]}",
+                    fix_available=True,
+                )
+            )
     else:
-        checks.append(HealthCheck(
-            name="Config File",
-            status="warning",
-            message="Not found",
-            details="Run 'raxe init' to create configuration",
-            fix_available=True,
-        ))
+        checks.append(
+            HealthCheck(
+                name="Config File",
+                status="warning",
+                message="Not found",
+                details="Run 'raxe init' to create configuration",
+                fix_available=True,
+            )
+        )
 
     return checks
 
@@ -321,43 +354,53 @@ def _check_database() -> list[HealthCheck]:
 
     # Database exists
     if db_path.exists():
-        checks.append(HealthCheck(
-            name="Database File",
-            status="ok",
-            message=f"Found at {db_path}",
-        ))
+        checks.append(
+            HealthCheck(
+                name="Database File",
+                status="ok",
+                message=f"Found at {db_path}",
+            )
+        )
 
         # SQLite version
         sqlite_version = sqlite3.sqlite_version
         min_version = "3.35.0"
         if sqlite_version >= min_version:
-            checks.append(HealthCheck(
-                name="SQLite Version",
-                status="ok",
-                message=f"{sqlite_version}",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="SQLite Version",
+                    status="ok",
+                    message=f"{sqlite_version}",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="SQLite Version",
-                status="warning",
-                message=f"{sqlite_version} (recommend >= {min_version})",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="SQLite Version",
+                    status="warning",
+                    message=f"{sqlite_version} (recommend >= {min_version})",
+                )
+            )
 
         # Database size
         size_mb = db_path.stat().st_size / (1024 * 1024)
         if size_mb < 100:
-            checks.append(HealthCheck(
-                name="Database Size",
-                status="ok",
-                message=f"{size_mb:.1f} MB",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Database Size",
+                    status="ok",
+                    message=f"{size_mb:.1f} MB",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="Database Size",
-                status="warning",
-                message=f"{size_mb:.1f} MB (consider cleanup)",
-                details="Run cleanup script to reduce size",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Database Size",
+                    status="warning",
+                    message=f"{size_mb:.1f} MB (consider cleanup)",
+                    details="Run cleanup script to reduce size",
+                )
+            )
 
         # Try to query database
         try:
@@ -367,26 +410,32 @@ def _check_database() -> list[HealthCheck]:
             table_count = cursor.fetchone()[0]
             conn.close()
 
-            checks.append(HealthCheck(
-                name="Database Integrity",
-                status="ok",
-                message=f"{table_count} tables",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Database Integrity",
+                    status="ok",
+                    message=f"{table_count} tables",
+                )
+            )
         except Exception as e:
-            checks.append(HealthCheck(
-                name="Database Integrity",
-                status="error",
-                message="Corruption detected",
-                details=sanitize_error_message(e),
-                fix_available=True,
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Database Integrity",
+                    status="error",
+                    message="Corruption detected",
+                    details=sanitize_error_message(e),
+                    fix_available=True,
+                )
+            )
     else:
-        checks.append(HealthCheck(
-            name="Database File",
-            status="warning",
-            message="Not created yet",
-            details="Will be created on first scan",
-        ))
+        checks.append(
+            HealthCheck(
+                name="Database File",
+                status="warning",
+                message="Not created yet",
+                details="Will be created on first scan",
+            )
+        )
 
     return checks
 
@@ -403,44 +452,55 @@ def _check_rule_packs() -> list[HealthCheck]:
         packs = raxe.list_rule_packs()
 
         if rules:
-            checks.append(HealthCheck(
-                name="Rules Loaded",
-                status="ok",
-                message=f"{len(rules)} rules from {len(packs)} packs",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Rules Loaded",
+                    status="ok",
+                    message=f"{len(rules)} rules from {len(packs)} packs",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="Rules Loaded",
-                status="warning",
-                message="No rules loaded",
-                details="Check pack configuration",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Rules Loaded",
+                    status="warning",
+                    message="No rules loaded",
+                    details="Check pack configuration",
+                )
+            )
 
         # Check for bundled packs
         from raxe.application.preloader import get_bundled_packs_root
+
         bundled_packs = get_bundled_packs_root()
 
         if bundled_packs.exists():
-            checks.append(HealthCheck(
-                name="Bundled Packs",
-                status="ok",
-                message=f"Available at {bundled_packs}",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Bundled Packs",
+                    status="ok",
+                    message=f"Available at {bundled_packs}",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="Bundled Packs",
-                status="error",
-                message="Bundled packs not found",
-                details="Reinstall RAXE to restore bundled packs",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Bundled Packs",
+                    status="error",
+                    message="Bundled packs not found",
+                    details="Reinstall RAXE to restore bundled packs",
+                )
+            )
 
     except Exception as e:
-        checks.append(HealthCheck(
-            name="Rule Packs",
-            status="error",
-            message="Failed to load rule packs",
-            details=sanitize_error_message(e),
-        ))
+        checks.append(
+            HealthCheck(
+                name="Rule Packs",
+                status="error",
+                message="Failed to load rule packs",
+                details=sanitize_error_message(e),
+            )
+        )
 
     return checks
 
@@ -476,45 +536,57 @@ def _check_performance() -> list[HealthCheck]:
 
         # Check against targets
         if avg_latency < 50.0:
-            checks.append(HealthCheck(
-                name="Avg Scan Time",
-                status="ok",
-                message=f"{avg_latency:.2f}ms (target: <50ms)",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Avg Scan Time",
+                    status="ok",
+                    message=f"{avg_latency:.2f}ms (target: <50ms)",
+                )
+            )
         elif avg_latency < 100.0:
-            checks.append(HealthCheck(
-                name="Avg Scan Time",
-                status="warning",
-                message=f"{avg_latency:.2f}ms (target: <50ms)",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Avg Scan Time",
+                    status="warning",
+                    message=f"{avg_latency:.2f}ms (target: <50ms)",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="Avg Scan Time",
-                status="error",
-                message=f"{avg_latency:.2f}ms (target: <50ms)",
-                details="Performance degraded - check system resources",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="Avg Scan Time",
+                    status="error",
+                    message=f"{avg_latency:.2f}ms (target: <50ms)",
+                    details="Performance degraded - check system resources",
+                )
+            )
 
         if p95_latency < 100.0:
-            checks.append(HealthCheck(
-                name="P95 Latency",
-                status="ok",
-                message=f"{p95_latency:.2f}ms (target: <100ms)",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="P95 Latency",
+                    status="ok",
+                    message=f"{p95_latency:.2f}ms (target: <100ms)",
+                )
+            )
         else:
-            checks.append(HealthCheck(
-                name="P95 Latency",
-                status="warning",
-                message=f"{p95_latency:.2f}ms (target: <100ms)",
-            ))
+            checks.append(
+                HealthCheck(
+                    name="P95 Latency",
+                    status="warning",
+                    message=f"{p95_latency:.2f}ms (target: <100ms)",
+                )
+            )
 
     except Exception as e:
-        checks.append(HealthCheck(
-            name="Performance",
-            status="error",
-            message="Failed to measure performance",
-            details=sanitize_error_message(e),
-        ))
+        checks.append(
+            HealthCheck(
+                name="Performance",
+                status="error",
+                message="Failed to measure performance",
+                details=sanitize_error_message(e),
+            )
+        )
 
     return checks
 

@@ -10,6 +10,7 @@ Migration:
     # New (recommended)
     from raxe.sdk.agent_scanner import AgentScanner, ScanMode
 """
+
 from __future__ import annotations
 
 import warnings

@@ -73,7 +73,11 @@ class TestPolicyList:
             result = runner.invoke(policy, ["list", "--tenant", "acme"])
 
         assert result.exit_code == 0
-        assert "no custom" in result.output.lower() or "no policies" in result.output.lower()
+        # Now shows available policies (presets + any custom)
+        assert "available policies" in result.output.lower()
+        # Should show preset policies
+        assert "preset" in result.output.lower()
+        assert "balanced" in result.output.lower()
 
     def test_list_with_tenant_has_policies(self, runner, temp_tenant_dir):
         """Test listing tenant policies when policies exist."""

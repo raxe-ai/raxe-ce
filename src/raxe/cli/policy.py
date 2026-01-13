@@ -192,43 +192,55 @@ def list_policies(tenant_id: str | None, output: str):
 
     policies = policy_repo.list_policies(tenant_id)
 
-    if not policies:
-        if output == "json":
-            console.print("[]")
-        else:
-            console.print(f"[yellow]No custom policies for tenant '{tenant_id}'[/yellow]")
-            console.print()
-            console.print(f"  Current default: [cyan]{tenant.default_policy_id}[/cyan]")
-            console.print()
-            console.print("Create a custom policy with:")
-            cmd = f"raxe policy create --tenant {tenant_id} --mode strict --name 'My Policy'"
-            console.print(f"  [cyan]{cmd}[/cyan]")
-            console.print()
-        return
+    # Combine global presets with custom policies
+    all_policies = list(GLOBAL_PRESETS.values()) + policies
 
     if output == "json":
-        data = [_policy_to_dict(p) for p in policies]
+        data = [_policy_to_dict(p) for p in all_policies]
         console.print(json.dumps(data, indent=2))
     else:
-        table = Table(title=f"Policies for {tenant_id} ({len(policies)})", show_header=True)
+        # Show available policies (presets + custom)
+        table = Table(
+            title=f"Available Policies for {tenant_id}", show_header=True
+        )
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Name", style="white")
         table.add_column("Mode", style="yellow")
         table.add_column("Blocking", style="green")
-        table.add_column("Severity Threshold", style="dim")
+        table.add_column("Type", style="dim")
+        table.add_column("Default", style="magenta")
 
-        for p in sorted(policies, key=lambda x: x.policy_id):
+        # Show global presets first
+        for p in sorted(GLOBAL_PRESETS.values(), key=lambda x: x.policy_id):
             blocking = "[green]Yes[/green]" if p.blocking_enabled else "[yellow]No[/yellow]"
+            is_default = "✓" if p.policy_id == tenant.default_policy_id else ""
             table.add_row(
                 p.policy_id,
                 p.name,
                 p.mode.value,
                 blocking,
-                p.block_severity_threshold,
+                "[dim]preset[/dim]",
+                f"[magenta]{is_default}[/magenta]",
+            )
+
+        # Then custom policies
+        for p in sorted(policies, key=lambda x: x.policy_id):
+            blocking = "[green]Yes[/green]" if p.blocking_enabled else "[yellow]No[/yellow]"
+            is_default = "✓" if p.policy_id == tenant.default_policy_id else ""
+            table.add_row(
+                p.policy_id,
+                p.name,
+                p.mode.value,
+                blocking,
+                "[cyan]custom[/cyan]",
+                f"[magenta]{is_default}[/magenta]",
             )
 
         console.print(table)
         console.print()
+        if not policies:
+            console.print("[dim]Create custom policies with: raxe policy create --tenant ...[/dim]")
+            console.print()
 
 
 @policy.command("show")

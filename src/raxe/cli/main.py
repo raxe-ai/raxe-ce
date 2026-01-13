@@ -819,6 +819,22 @@ def scan(
             "l1_count": len(l1_detections),
             "l2_count": len(l2_detections),
         }
+
+        # Add policy attribution if available (multi-tenant mode)
+        if result.metadata:
+            if result.metadata.get("effective_policy_id"):
+                output["policy"] = {
+                    "effective_policy_id": result.metadata.get("effective_policy_id"),
+                    "effective_policy_mode": result.metadata.get("effective_policy_mode"),
+                    "resolution_source": result.metadata.get("resolution_source"),
+                }
+            if result.metadata.get("tenant_id"):
+                output["tenant_id"] = result.metadata.get("tenant_id")
+            if result.metadata.get("app_id"):
+                output["app_id"] = result.metadata.get("app_id")
+            if result.metadata.get("event_id"):
+                output["event_id"] = result.metadata.get("event_id")
+
         click.echo(json.dumps(output, indent=2))
 
     elif format == "yaml" and not profile:
@@ -871,6 +887,20 @@ def scan(
                 "l1_count": len(l1_detections),
                 "l2_count": len(l2_detections),
             }
+
+            # Add policy attribution if available (multi-tenant mode)
+            if result.metadata:
+                if result.metadata.get("effective_policy_id"):
+                    output["policy"] = {
+                        "effective_policy_id": result.metadata.get("effective_policy_id"),
+                        "effective_policy_mode": result.metadata.get("effective_policy_mode"),
+                        "resolution_source": result.metadata.get("resolution_source"),
+                    }
+                if result.metadata.get("tenant_id"):
+                    output["tenant_id"] = result.metadata.get("tenant_id")
+                if result.metadata.get("app_id"):
+                    output["app_id"] = result.metadata.get("app_id")
+
             click.echo(yaml.dump(output))
         except ImportError:
             display_error("PyYAML not installed", "Use --format json instead")

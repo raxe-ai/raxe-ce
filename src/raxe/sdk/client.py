@@ -840,9 +840,9 @@ class Raxe:
             # Check each detection against policy thresholds
             for detection in result.detections:
                 detection_severity = detection.severity
-                # Handle severity enum
+                # Handle severity enum - always uppercase for lookup
                 if hasattr(detection_severity, "value"):
-                    severity_str = detection_severity.value
+                    severity_str = detection_severity.value.upper()
                 else:
                     severity_str = str(detection_severity).upper()
 

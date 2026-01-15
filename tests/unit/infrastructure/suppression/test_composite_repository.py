@@ -2,11 +2,10 @@
 
 Tests the composite repository that combines YAML storage with SQLite audit logging.
 """
+
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-
-import pytest
 
 from raxe.domain.suppression import AuditEntry, Suppression
 from raxe.infrastructure.suppression.composite_repository import (

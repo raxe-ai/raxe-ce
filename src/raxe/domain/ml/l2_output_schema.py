@@ -25,6 +25,7 @@ Field Naming Conventions:
 - Probability distributions are tuples/lists of floats summing to 1.0 (softmax)
 - Multilabel probabilities are independent 0.0-1.0 values (sigmoid)
 """
+
 from dataclasses import dataclass
 from typing import Any
 

@@ -2,6 +2,7 @@
 
 Tests the custom exception hierarchy used by the SDK.
 """
+
 from unittest.mock import Mock
 
 import pytest

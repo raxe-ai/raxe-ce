@@ -5,6 +5,7 @@ Tests that the scoring system integrates properly with the scan pipeline:
 - Scorer creation
 - Integration with folder detector
 """
+
 import pytest
 
 from raxe.domain.ml.scoring_models import (

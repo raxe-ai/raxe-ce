@@ -241,6 +241,11 @@ class ScanTelemetryBuilder:
     def _compute_prompt_hash(self, prompt: str) -> str:
         """Compute SHA-256 hash of prompt with prefix.
 
+        SECURITY NOTE: SHA-256 is the appropriate algorithm for this use case.
+        This is privacy fingerprinting (creating irreversible identifiers), NOT
+        password hashing (which would require bcrypt/argon2). The hash enables
+        backend event correlation without transmitting actual prompt content.
+
         Args:
             prompt: Text to hash
 

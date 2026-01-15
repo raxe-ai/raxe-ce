@@ -50,7 +50,9 @@ class TestModelDiscovery:
         models_dir.mkdir()
 
         # Copy bundle file only (no ONNX)
-        real_models_dir = Path(__file__).parent.parent.parent / "src" / "raxe" / "domain" / "ml" / "models"
+        real_models_dir = (
+            Path(__file__).parent.parent.parent / "src" / "raxe" / "domain" / "ml" / "models"
+        )
         bundle_files = list(real_models_dir.glob("*.raxe"))
 
         if bundle_files:
@@ -191,6 +193,7 @@ class TestEagerL2Detector:
 
         # Create dummy L1 results
         from datetime import datetime
+
         l1_results = ScanResult(
             detections=[],
             scanned_at=datetime.utcnow().isoformat(),
@@ -200,10 +203,7 @@ class TestEagerL2Detector:
         )
 
         # Test inference
-        result = detector.analyze(
-            "What is the capital of France?",
-            l1_results
-        )
+        result = detector.analyze("What is the capital of France?", l1_results)
 
         assert result is not None
         assert result.processing_time_ms >= 0
@@ -216,9 +216,7 @@ class TestEagerL2Detector:
 
         if stats.get("has_onnx"):
             # ONNX should load in <1s
-            assert stats["load_time_ms"] < 1500, (
-                f"ONNX loading too slow: {stats['load_time_ms']}ms"
-            )
+            assert stats["load_time_ms"] < 1500, f"ONNX loading too slow: {stats['load_time_ms']}ms"
 
             # Should be significantly faster than bundle estimate (5s)
             estimated_bundle_time = 5000
@@ -236,16 +234,14 @@ class TestFallbackScenarios:
         models_dir.mkdir()
 
         # Should fall back to stub without crashing
-        detector = EagerL2Detector(
-            use_production=True,
-            models_dir=str(models_dir)
-        )
+        detector = EagerL2Detector(use_production=True, models_dir=str(models_dir))
 
         stats = detector.initialization_stats
         assert stats["is_stub"] is True
 
         # Should still be usable (just returns empty predictions)
         from datetime import datetime
+
         l1_results = ScanResult(
             detections=[],
             scanned_at=datetime.utcnow().isoformat(),
@@ -336,6 +332,7 @@ class TestEndToEnd:
 
             # Test inference
             from datetime import datetime
+
             l1_results = ScanResult(
                 detections=[],
                 scanned_at=datetime.utcnow().isoformat(),

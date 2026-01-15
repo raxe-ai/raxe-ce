@@ -1,4 +1,5 @@
 """Unit tests for async LRU cache."""
+
 import asyncio
 
 import pytest
@@ -157,7 +158,7 @@ class TestAsyncLRUCache:
         stats = cache.stats()
         assert stats["hits"] == 2
         assert stats["misses"] == 1
-        assert stats["hit_rate"] == pytest.approx(2/3, rel=0.01)
+        assert stats["hit_rate"] == pytest.approx(2 / 3, rel=0.01)
 
     async def test_concurrent_access(self):
         """Test thread safety with concurrent access."""

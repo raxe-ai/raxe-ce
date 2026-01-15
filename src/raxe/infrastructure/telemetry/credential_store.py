@@ -67,6 +67,12 @@ def compute_key_id(api_key: str) -> str:
     This allows the server to link historical events across key upgrades
     without storing the actual API key values.
 
+    SECURITY NOTE: SHA-256 is appropriate here for identifier derivation.
+    The truncation to 12 hex chars (48 bits) is sufficient for identification
+    while being computationally infeasible to reverse. This is NOT password
+    hashing - it's creating a non-reversible identifier for audit trails.
+    The actual API key is NEVER logged or transmitted in telemetry.
+
     Args:
         api_key: The full API key (e.g., "raxe_temp_b32a43d2...")
 

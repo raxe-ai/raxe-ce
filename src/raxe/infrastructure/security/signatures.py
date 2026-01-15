@@ -2,6 +2,7 @@
 
 Uses Ed25519 for fast, secure signatures.
 """
+
 import base64
 import hashlib
 from pathlib import Path
@@ -63,9 +64,7 @@ MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZuE=
 
         return public_key
 
-    def verify_pack(
-        self, pack_dir: Path, signature: str, signature_algorithm: str
-    ) -> bool:
+    def verify_pack(self, pack_dir: Path, signature: str, signature_algorithm: str) -> bool:
         """
         Verify pack signature.
 
@@ -81,9 +80,7 @@ MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZuE=
             SignatureError: If verification fails
         """
         if signature_algorithm != "ed25519":
-            raise SignatureError(
-                f"Unsupported signature algorithm: {signature_algorithm}"
-            )
+            raise SignatureError(f"Unsupported signature algorithm: {signature_algorithm}")
 
         # Parse signature
         if not signature.startswith("ed25519:"):
@@ -152,9 +149,7 @@ MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZuE=
             Signature in format "ed25519:<base64>"
         """
         # Load private key
-        private_key = serialization.load_pem_private_key(
-            private_key_pem.encode(), password=None
-        )
+        private_key = serialization.load_pem_private_key(private_key_pem.encode(), password=None)
 
         if not isinstance(private_key, ed25519.Ed25519PrivateKey):
             raise ValueError("Key must be Ed25519")

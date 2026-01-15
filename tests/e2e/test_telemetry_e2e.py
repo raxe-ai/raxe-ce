@@ -31,13 +31,13 @@ class TestTelemetryWithRealScanner:
     def temp_raxe_home(self):
         """Create temporary RAXE home directory for isolated testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            original_home = os.environ.get('RAXE_HOME')
-            os.environ['RAXE_HOME'] = tmpdir
+            original_home = os.environ.get("RAXE_HOME")
+            os.environ["RAXE_HOME"] = tmpdir
             yield Path(tmpdir)
             if original_home:
-                os.environ['RAXE_HOME'] = original_home
+                os.environ["RAXE_HOME"] = original_home
             else:
-                os.environ.pop('RAXE_HOME', None)
+                os.environ.pop("RAXE_HOME", None)
 
     def test_real_scan_creates_telemetry(self, temp_raxe_home):
         """Test that real scans create telemetry events."""
@@ -89,58 +89,60 @@ class TestTelemetryCLICommands:
     def temp_raxe_home(self):
         """Create temporary RAXE home directory for isolated testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            original_home = os.environ.get('RAXE_HOME')
-            os.environ['RAXE_HOME'] = tmpdir
+            original_home = os.environ.get("RAXE_HOME")
+            os.environ["RAXE_HOME"] = tmpdir
             yield Path(tmpdir)
             if original_home:
-                os.environ['RAXE_HOME'] = original_home
+                os.environ["RAXE_HOME"] = original_home
             else:
-                os.environ.pop('RAXE_HOME', None)
+                os.environ.pop("RAXE_HOME", None)
 
     def test_status_command_output(self, temp_raxe_home):
         """Test status command provides useful information."""
         runner = CliRunner()
 
-        with patch.dict(os.environ, {'RAXE_HOME': str(temp_raxe_home)}):
-            result = runner.invoke(cli, ['telemetry', 'status'])
+        with patch.dict(os.environ, {"RAXE_HOME": str(temp_raxe_home)}):
+            result = runner.invoke(cli, ["telemetry", "status"])
 
         assert result.exit_code == 0
         # Should contain status information
         output = result.output.lower()
-        assert 'telemetry' in output or 'status' in output or 'queue' in output or 'enabled' in output
+        assert (
+            "telemetry" in output or "status" in output or "queue" in output or "enabled" in output
+        )
 
     def test_dlq_list_empty(self, temp_raxe_home):
         """Test DLQ list command with empty DLQ."""
         runner = CliRunner()
 
-        with patch.dict(os.environ, {'RAXE_HOME': str(temp_raxe_home)}):
-            result = runner.invoke(cli, ['telemetry', 'dlq', 'list'])
+        with patch.dict(os.environ, {"RAXE_HOME": str(temp_raxe_home)}):
+            result = runner.invoke(cli, ["telemetry", "dlq", "list"])
 
         assert result.exit_code == 0
         # Should indicate empty or show no items
         output = result.output.lower()
-        assert 'empty' in output or 'no' in output or '0' in output
+        assert "empty" in output or "no" in output or "0" in output
 
     def test_enable_disable_commands(self, temp_raxe_home):
         """Test enable and disable commands."""
         runner = CliRunner()
 
-        with patch.dict(os.environ, {'RAXE_HOME': str(temp_raxe_home)}):
+        with patch.dict(os.environ, {"RAXE_HOME": str(temp_raxe_home)}):
             # Test disable (may fail if license doesn't allow)
-            disable_result = runner.invoke(cli, ['telemetry', 'disable'])
+            disable_result = runner.invoke(cli, ["telemetry", "disable"])
             # Exit code 0 = success, 1 = not allowed (free tier)
             assert disable_result.exit_code in [0, 1]
 
             # Test enable (should always work)
-            enable_result = runner.invoke(cli, ['telemetry', 'enable'])
+            enable_result = runner.invoke(cli, ["telemetry", "enable"])
             assert enable_result.exit_code == 0
 
     def test_flush_command(self, temp_raxe_home):
         """Test flush command."""
         runner = CliRunner()
 
-        with patch.dict(os.environ, {'RAXE_HOME': str(temp_raxe_home)}):
-            result = runner.invoke(cli, ['telemetry', 'flush'])
+        with patch.dict(os.environ, {"RAXE_HOME": str(temp_raxe_home)}):
+            result = runner.invoke(cli, ["telemetry", "flush"])
 
         # Should complete without crashing (may exit 0 or 1 depending on queue state)
         assert result.exit_code in [0, 1]
@@ -149,9 +151,9 @@ class TestTelemetryCLICommands:
         """Test DLQ clear command."""
         runner = CliRunner()
 
-        with patch.dict(os.environ, {'RAXE_HOME': str(temp_raxe_home)}):
+        with patch.dict(os.environ, {"RAXE_HOME": str(temp_raxe_home)}):
             # Clear should work even if empty (--force skips confirmation)
-            result = runner.invoke(cli, ['telemetry', 'dlq', 'clear', '--force'])
+            result = runner.invoke(cli, ["telemetry", "dlq", "clear", "--force"])
 
         assert result.exit_code == 0
 
@@ -165,13 +167,13 @@ class TestTelemetryPrivacy:
     def temp_raxe_home(self):
         """Create temporary RAXE home directory for isolated testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            original_home = os.environ.get('RAXE_HOME')
-            os.environ['RAXE_HOME'] = tmpdir
+            original_home = os.environ.get("RAXE_HOME")
+            os.environ["RAXE_HOME"] = tmpdir
             yield Path(tmpdir)
             if original_home:
-                os.environ['RAXE_HOME'] = original_home
+                os.environ["RAXE_HOME"] = original_home
             else:
-                os.environ.pop('RAXE_HOME', None)
+                os.environ.pop("RAXE_HOME", None)
 
     def test_sensitive_prompt_not_in_db(self, temp_raxe_home):
         """Test that sensitive prompt text doesn't appear in telemetry database."""
@@ -227,13 +229,13 @@ class TestTelemetryGracefulDegradation:
     def temp_raxe_home(self):
         """Create temporary RAXE home directory for isolated testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            original_home = os.environ.get('RAXE_HOME')
-            os.environ['RAXE_HOME'] = tmpdir
+            original_home = os.environ.get("RAXE_HOME")
+            os.environ["RAXE_HOME"] = tmpdir
             yield Path(tmpdir)
             if original_home:
-                os.environ['RAXE_HOME'] = original_home
+                os.environ["RAXE_HOME"] = original_home
             else:
-                os.environ.pop('RAXE_HOME', None)
+                os.environ.pop("RAXE_HOME", None)
 
     def test_scan_works_with_readonly_home(self, temp_raxe_home):
         """Test that scans work even if home directory is read-only."""
@@ -262,9 +264,9 @@ class TestTelemetryGracefulDegradation:
         corrupted_db = temp_raxe_home / "telemetry.db"
         corrupted_db.write_text("not a valid sqlite database")
 
-        with patch.dict(os.environ, {'RAXE_HOME': str(temp_raxe_home)}):
+        with patch.dict(os.environ, {"RAXE_HOME": str(temp_raxe_home)}):
             # Status should handle this gracefully
-            result = runner.invoke(cli, ['telemetry', 'status'])
+            result = runner.invoke(cli, ["telemetry", "status"])
 
         # Should not crash (may exit with error code but not exception)
         assert result.exception is None or isinstance(result.exception, SystemExit)

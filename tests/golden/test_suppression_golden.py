@@ -8,17 +8,16 @@ These tests ensure suppression behavior is deterministic and consistent:
 When suppression logic changes intentionally, update golden files with:
     pytest tests/golden/test_suppression_golden.py --update-golden
 """
+
 import json
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from raxe.domain.suppression import Suppression
 from raxe.domain.suppression_factory import create_suppression_manager
-
 
 # ============================================================================
 # Golden Test Fixtures
@@ -36,14 +35,26 @@ PATTERN_TEST_CASES = [
     ("pi-001", ["pi-001", "pi-002", "pi-001a", "jb-001"], [True, False, False, False]),
     ("jb-regex-basic", ["jb-regex-basic", "jb-regex", "jb-basic"], [True, False, False]),
     # Prefix wildcards (valid family prefixes)
-    ("pi-*", ["pi-001", "pi-002", "pi-advanced", "jb-001", "pii-email"], [True, True, True, False, False]),
+    (
+        "pi-*",
+        ["pi-001", "pi-002", "pi-advanced", "jb-001", "pii-email"],
+        [True, True, True, False, False],
+    ),
     ("jb-*", ["jb-001", "jb-regex-basic", "pi-001"], [True, True, False]),
     ("cmd-*", ["cmd-001", "cmd-injection", "pi-001"], [True, True, False]),
     # Middle wildcards (with valid prefixes)
-    ("jb-*-basic", ["jb-regex-basic", "jb-pattern-basic", "jb-basic", "jb-advanced"], [True, True, False, False]),
+    (
+        "jb-*-basic",
+        ["jb-regex-basic", "jb-pattern-basic", "jb-basic", "jb-advanced"],
+        [True, True, False, False],
+    ),
     ("pi-*-v2", ["pi-001-v2", "pi-advanced-v2", "pi-v2", "pi-001"], [True, True, False, False]),
     # Question mark wildcards
-    ("pi-00?", ["pi-001", "pi-002", "pi-009", "pi-010", "pi-0001"], [True, True, True, False, False]),
+    (
+        "pi-00?",
+        ["pi-001", "pi-002", "pi-009", "pi-010", "pi-0001"],
+        [True, True, True, False, False],
+    ),
     # Character classes
     ("pi-[0-9]*", ["pi-001", "pi-999", "pi-1abc", "pi-abc"], [True, True, True, False]),
     # Multiple wildcards (with valid prefix)
@@ -77,7 +88,10 @@ class TestSuppressionPatternGolden:
     @pytest.mark.parametrize(
         "pattern,rule_ids,expected",
         PATTERN_TEST_CASES,
-        ids=[f"pattern_{tc[0].replace('*', 'star').replace('?', 'q').replace('[', 'b')}" for tc in PATTERN_TEST_CASES],
+        ids=[
+            f"pattern_{tc[0].replace('*', 'star').replace('?', 'q').replace('[', 'b')}"
+            for tc in PATTERN_TEST_CASES
+        ],
     )
     def test_pattern_matching(
         self,
@@ -106,7 +120,7 @@ class TestSuppressionPatternGolden:
             "pattern": pattern,
             "test_cases": [
                 {"rule_id": rule_id, "matches": match}
-                for rule_id, match in zip(rule_ids, actual_matches)
+                for rule_id, match in zip(rule_ids, actual_matches, strict=False)
             ],
         }
 
@@ -127,9 +141,7 @@ class TestSuppressionManagerGolden:
         """Ensure golden directory exists."""
         ensure_golden_dir_exists()
 
-    def test_is_suppressed_deterministic(
-        self, request: pytest.FixtureRequest
-    ) -> None:
+    def test_is_suppressed_deterministic(self, request: pytest.FixtureRequest) -> None:
         """Test that is_suppressed behavior is deterministic."""
         update_golden = request.config.getoption("--update-golden", default=False)
 
@@ -165,11 +177,13 @@ class TestSuppressionManagerGolden:
             results = []
             for rule_id in test_rule_ids:
                 is_suppressed, reason = manager.is_suppressed(rule_id)
-                results.append({
-                    "rule_id": rule_id,
-                    "is_suppressed": is_suppressed,
-                    "reason": reason if is_suppressed else None,
-                })
+                results.append(
+                    {
+                        "rule_id": rule_id,
+                        "is_suppressed": is_suppressed,
+                        "reason": reason if is_suppressed else None,
+                    }
+                )
 
             golden_file = get_golden_file_path("manager_is_suppressed")
 
@@ -194,9 +208,7 @@ class TestSuppressionManagerGolden:
                     second = manager.is_suppressed(rule_id)
                     assert first == second, f"Non-deterministic for {rule_id}"
 
-    def test_wildcard_priority_deterministic(
-        self, request: pytest.FixtureRequest
-    ) -> None:
+    def test_wildcard_priority_deterministic(self, request: pytest.FixtureRequest) -> None:
         """Test that wildcard priority is deterministic."""
         update_golden = request.config.getoption("--update-golden", default=False)
 
@@ -239,9 +251,7 @@ class TestSuppressionFileLoadingGolden:
         """Ensure golden directory exists."""
         ensure_golden_dir_exists()
 
-    def test_file_loading_deterministic(
-        self, request: pytest.FixtureRequest
-    ) -> None:
+    def test_file_loading_deterministic(self, request: pytest.FixtureRequest) -> None:
         """Test that file loading produces deterministic results."""
         update_golden = request.config.getoption("--update-golden", default=False)
 
@@ -304,9 +314,7 @@ suppressions:
 class TestSuppressionExpirationGolden:
     """Golden tests for expiration behavior."""
 
-    def test_expiration_boundary_conditions(
-        self, request: pytest.FixtureRequest
-    ) -> None:
+    def test_expiration_boundary_conditions(self, request: pytest.FixtureRequest) -> None:
         """Test expiration at boundary conditions."""
         update_golden = request.config.getoption("--update-golden", default=False)
 
@@ -333,12 +341,14 @@ class TestSuppressionExpirationGolden:
             )
 
             is_expired = suppression.is_expired(current_time=reference_time)
-            results.append({
-                "name": name,
-                "expires_at": expires_at,
-                "is_expired": is_expired,
-                "expected": expected_expired,
-            })
+            results.append(
+                {
+                    "name": name,
+                    "expires_at": expires_at,
+                    "is_expired": is_expired,
+                    "expected": expected_expired,
+                }
+            )
 
             # Verify matches expected
             assert is_expired == expected_expired, f"Expiration mismatch for {name}"

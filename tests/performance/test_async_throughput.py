@@ -10,6 +10,7 @@ Performance targets:
 Run with:
     pytest tests/performance/test_async_throughput.py --benchmark-only
 """
+
 import asyncio
 import time
 
@@ -74,7 +75,7 @@ class TestAsyncThroughput:
         await asyncio.gather(*warmup_tasks)
 
         # Reset cache stats after warmup to get accurate measurement
-        if hasattr(raxe._cache, 'reset_stats'):
+        if hasattr(raxe._cache, "reset_stats"):
             raxe._cache.reset_stats()
 
         # Benchmark async function
@@ -90,7 +91,9 @@ class TestAsyncThroughput:
 
         # Verify cache hit rate target - with benchmark warmup, expect >50% hit rate minimum
         # (benchmark may run function multiple times, but at least some should hit cache)
-        assert cache_stats["hit_rate"] > 0.50, f"Cache hit rate should be >50%, got {cache_stats['hit_rate']:.2%}"
+        assert (
+            cache_stats["hit_rate"] > 0.50
+        ), f"Cache hit rate should be >50%, got {cache_stats['hit_rate']:.2%}"
 
     @pytest.mark.benchmark
     @pytest.mark.asyncio
@@ -124,7 +127,7 @@ class TestAsyncLatency:
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         # Just report the max time as a proxy for P95
         stats = benchmark.stats
-        max_time = stats.get('max', 0)
+        max_time = stats.get("max", 0)
         print(f"\nSync max latency: {max_time * 1000:.2f}ms")
 
     @pytest.mark.benchmark
@@ -136,6 +139,7 @@ class TestAsyncLatency:
         async def scan():
             # Use unique prompt each time to force cache miss
             import random
+
             return await raxe.scan(f"test prompt {random.random()}")
 
         result = await benchmark(scan)
@@ -143,7 +147,7 @@ class TestAsyncLatency:
         assert result is not None
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         stats = benchmark.stats
-        max_time = stats.get('max', 0)
+        max_time = stats.get("max", 0)
         print(f"\nAsync (cache miss) max latency: {max_time * 1000:.2f}ms")
 
     @pytest.mark.benchmark
@@ -163,7 +167,7 @@ class TestAsyncLatency:
         assert result is not None
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         stats = benchmark.stats
-        max_time = stats.get('max', 0)
+        max_time = stats.get("max", 0)
         print(f"\nAsync (cache hit) max latency: {max_time * 1000:.2f}ms")
 
 
@@ -173,9 +177,9 @@ async def test_comparative_throughput():
 
     This is not a benchmark test but a direct measurement for reporting.
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("COMPARATIVE THROUGHPUT TEST")
-    print("="*70)
+    print("=" * 70)
 
     # Sync client
     print("\n1. Sync Client (baseline):")
@@ -209,7 +213,7 @@ async def test_comparative_throughput():
     await asyncio.gather(*warmup_tasks)
 
     # Reset stats after warmup
-    if hasattr(raxe_cached._cache, 'reset_stats'):
+    if hasattr(raxe_cached._cache, "reset_stats"):
         raxe_cached._cache.reset_stats()
 
     start = time.perf_counter()
@@ -225,17 +229,23 @@ async def test_comparative_throughput():
     print(f"   Cache hits: {cache_stats['hits']}, misses: {cache_stats['misses']}")
     print(f"   Improvement: {cached_throughput / sync_throughput:.1f}x over sync")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SUMMARY")
-    print("="*70)
+    print("=" * 70)
     print(f"Sync baseline:        {sync_throughput:>6.0f} req/sec")
-    print(f"Async (no cache):     {async_throughput:>6.0f} req/sec ({async_throughput/sync_throughput:>4.1f}x)")
-    print(f"Async (with cache):   {cached_throughput:>6.0f} req/sec ({cached_throughput/sync_throughput:>4.1f}x)")
+    print(
+        f"Async (no cache):     {async_throughput:>6.0f} req/sec ({async_throughput / sync_throughput:>4.1f}x)"
+    )
+    print(
+        f"Async (with cache):   {cached_throughput:>6.0f} req/sec ({cached_throughput / sync_throughput:>4.1f}x)"
+    )
     print(f"Cache hit rate:       {cache_stats['hit_rate']:>6.1%}")
-    print("="*70)
+    print("=" * 70)
 
     # Verify targets met
     assert async_throughput > sync_throughput, "Async should be faster than sync"
     assert cached_throughput > 1000, "Cached async should exceed 1000 req/sec target"
     # After warmup, we should get very high cache hit rate
-    assert cache_stats["hit_rate"] > 0.95, f"Cache hit rate should exceed 95% after warmup, got {cache_stats['hit_rate']:.2%}"
+    assert (
+        cache_stats["hit_rate"] > 0.95
+    ), f"Cache hit rate should exceed 95% after warmup, got {cache_stats['hit_rate']:.2%}"

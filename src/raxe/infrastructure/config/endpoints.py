@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 class Environment(Enum):
     """RAXE deployment environments."""
+
     PRODUCTION = "production"
     STAGING = "staging"
     DEVELOPMENT = "development"
@@ -51,6 +52,7 @@ class Environment(Enum):
 
 class Endpoint(Enum):
     """Available API endpoints."""
+
     API_BASE = "api_base"
     TELEMETRY = "telemetry"
     HEALTH = "health"
@@ -128,9 +130,11 @@ _ENV_VAR_MAPPING: dict[Endpoint, str] = {
 # Runtime State
 # ============================================================================
 
+
 @dataclass
 class _EndpointState:
     """Internal state for endpoint configuration."""
+
     overrides: dict[Endpoint, str]
     detected_environment: Environment | None
     config_file_path: Path | None
@@ -147,6 +151,7 @@ _state = _EndpointState()
 # ============================================================================
 # Environment Detection
 # ============================================================================
+
 
 def detect_environment() -> Environment:
     """
@@ -189,12 +194,15 @@ def detect_environment() -> Environment:
     if config_path.exists():
         try:
             import yaml
+
             with open(config_path) as f:
                 config = yaml.safe_load(f) or {}
             config_env = config.get("core", {}).get("environment", "").lower()
             if config_env and config_env in env_map:
                 _state.detected_environment = env_map[config_env]
-                logger.debug(f"Environment detected from config file: {_state.detected_environment.value}")
+                logger.debug(
+                    f"Environment detected from config file: {_state.detected_environment.value}"
+                )
                 return _state.detected_environment
         except Exception:
             pass
@@ -207,6 +215,7 @@ def detect_environment() -> Environment:
         if creds_path.exists():
             try:
                 import json
+
                 with open(creds_path) as f:
                     creds = json.load(f)
                     api_key = creds.get("api_key", "")
@@ -294,6 +303,7 @@ def get_environment() -> Environment:
 # ============================================================================
 # Endpoint Resolution
 # ============================================================================
+
 
 def get_endpoint(
     endpoint: Endpoint,
@@ -388,6 +398,7 @@ def reset_all() -> None:
 # Convenience Functions
 # ============================================================================
 
+
 def get_api_base(environment: Environment | None = None) -> str:
     """Get the API base URL."""
     return get_endpoint(Endpoint.API_BASE, environment)
@@ -417,9 +428,11 @@ def get_cli_session_endpoint(environment: Environment | None = None) -> str:
 # Endpoint Testing
 # ============================================================================
 
+
 @dataclass
 class EndpointStatus:
     """Status of an endpoint connectivity test."""
+
     endpoint: Endpoint
     url: str
     reachable: bool
@@ -546,6 +559,7 @@ def test_all_endpoints(
 # Configuration Display
 # ============================================================================
 
+
 def get_all_endpoints(environment: Environment | None = None) -> dict[str, str]:
     """
     Get all endpoint URLs for display purposes.
@@ -557,10 +571,7 @@ def get_all_endpoints(environment: Environment | None = None) -> dict[str, str]:
         Dictionary of endpoint name to URL
     """
     env = environment or detect_environment()
-    return {
-        endpoint.value: get_endpoint(endpoint, env)
-        for endpoint in Endpoint
-    }
+    return {endpoint.value: get_endpoint(endpoint, env) for endpoint in Endpoint}
 
 
 def get_endpoint_info() -> dict[str, Any]:
@@ -575,10 +586,7 @@ def get_endpoint_info() -> dict[str, Any]:
         "environment": env.value,
         "environment_source": _get_environment_source(),
         "endpoints": get_all_endpoints(env),
-        "overrides": {
-            ep.value: url
-            for ep, url in _state.overrides.items()
-        },
+        "overrides": {ep.value: url for ep, url in _state.overrides.items()},
         "env_vars": {
             ep.value: os.environ.get(env_var, "")
             for ep, env_var in _ENV_VAR_MAPPING.items()
@@ -598,6 +606,7 @@ def _get_environment_source() -> str:
     if config_path.exists():
         try:
             import yaml
+
             with open(config_path) as f:
                 config = yaml.safe_load(f) or {}
             config_env = config.get("core", {}).get("environment", "")
@@ -620,6 +629,7 @@ def _get_environment_source() -> str:
 # ============================================================================
 # Environment Presets
 # ============================================================================
+
 
 def use_production() -> None:
     """Switch to production endpoints."""

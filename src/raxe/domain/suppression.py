@@ -12,6 +12,7 @@ NO I/O operations in this layer:
 - NO network requests
 - NO logging (pass results up to application layer)
 """
+
 import fnmatch
 import re
 from dataclasses import dataclass, field
@@ -60,18 +61,20 @@ class SuppressionAction(Enum):
 
 # Known valid family prefixes for wildcard validation
 # These match the RuleFamily enum values (case-insensitive)
-VALID_FAMILY_PREFIXES = frozenset({
-    "pi",     # Prompt Injection
-    "jb",     # Jailbreak
-    "pii",    # PII/Data Leak
-    "cmd",    # Command Injection
-    "enc",    # Encoding/Obfuscation Attacks
-    "rag",    # RAG-specific Attacks
-    "hc",     # Harmful Content
-    "sec",    # Security
-    "qual",   # Quality
-    "custom", # User-defined
-})
+VALID_FAMILY_PREFIXES = frozenset(
+    {
+        "pi",  # Prompt Injection
+        "jb",  # Jailbreak
+        "pii",  # PII/Data Leak
+        "cmd",  # Command Injection
+        "enc",  # Encoding/Obfuscation Attacks
+        "rag",  # RAG-specific Attacks
+        "hc",  # Harmful Content
+        "sec",  # Security
+        "qual",  # Quality
+        "custom",  # User-defined
+    }
+)
 
 
 class SuppressionValidationError(ValueError):
@@ -505,9 +508,7 @@ class SuppressionManager:
         """
         # Security: Check maximum suppressions limit (only for new patterns)
         if pattern not in self._suppressions and len(self._suppressions) >= MAX_SUPPRESSIONS:
-            raise ValueError(
-                f"Maximum suppression limit ({MAX_SUPPRESSIONS}) reached"
-            )
+            raise ValueError(f"Maximum suppression limit ({MAX_SUPPRESSIONS}) reached")
 
         suppression = Suppression(
             pattern=pattern,
@@ -644,9 +645,7 @@ class SuppressionManager:
         )
         self._repository.log_audit(audit_entry)
 
-    def get_suppressions(
-        self, *, current_time: datetime | None = None
-    ) -> list[Suppression]:
+    def get_suppressions(self, *, current_time: datetime | None = None) -> list[Suppression]:
         """Get all active suppressions (PURE LOGIC).
 
         Args:
@@ -656,9 +655,7 @@ class SuppressionManager:
             List of Suppression objects (excluding expired ones)
         """
         return [
-            s
-            for s in self._suppressions.values()
-            if not s.is_expired(current_time=current_time)
+            s for s in self._suppressions.values() if not s.is_expired(current_time=current_time)
         ]
 
     def get_suppression(self, pattern: str) -> Suppression | None:
@@ -694,9 +691,7 @@ class SuppressionManager:
             action=action,
         )
 
-    def get_statistics(
-        self, *, current_time: datetime | None = None
-    ) -> dict[str, Any]:
+    def get_statistics(self, *, current_time: datetime | None = None) -> dict[str, Any]:
         """Get suppression statistics (delegates to repository + pure logic).
 
         Args:
@@ -727,9 +722,7 @@ class SuppressionManager:
         # Count by suppression action type
         by_action_type: dict[str, int] = {}
         for supp in active_suppressions:
-            by_action_type[supp.action.value] = (
-                by_action_type.get(supp.action.value, 0) + 1
-            )
+            by_action_type[supp.action.value] = by_action_type.get(supp.action.value, 0) + 1
 
         return {
             "total_active": len(active_suppressions),

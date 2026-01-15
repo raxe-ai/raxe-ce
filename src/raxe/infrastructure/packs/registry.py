@@ -3,6 +3,7 @@
 Manages multiple loaded packs and resolves rule conflicts based on precedence.
 Infrastructure layer - coordinates pack loading and rule resolution.
 """
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,6 +27,7 @@ class RegistryConfig:
                    Custom rules override community, community overrides core.
         strict: If True, fail on first error. If False, log warnings and continue.
     """
+
     packs_root: Path
     precedence: list[str] = field(default_factory=lambda: ["custom", "community", "core"])
     strict: bool = False
@@ -82,9 +84,7 @@ class PackRegistry:
         Logs summary of loaded packs.
         """
         if not self.config.packs_root.exists():
-            logger.warning(
-                f"Packs root directory does not exist: {self.config.packs_root}"
-            )
+            logger.warning(f"Packs root directory does not exist: {self.config.packs_root}")
             return
 
         loaded_count = 0
@@ -116,9 +116,7 @@ class PackRegistry:
                 if self.config.strict:
                     raise
 
-        logger.info(
-            f"Pack registry loaded {loaded_count} packs from {self.config.packs_root}"
-        )
+        logger.info(f"Pack registry loaded {loaded_count} packs from {self.config.packs_root}")
 
     def load_pack_type(self, pack_type: str) -> RulePack | None:
         """Load or reload a specific pack type.
@@ -143,9 +141,7 @@ class PackRegistry:
 
             if latest_pack:
                 self.packs[pack_type] = latest_pack
-                logger.info(
-                    f"Loaded {pack_type} pack: {latest_pack.manifest.versioned_id}"
-                )
+                logger.info(f"Loaded {pack_type} pack: {latest_pack.manifest.versioned_id}")
                 return latest_pack
             else:
                 logger.warning(f"No valid pack found in {pack_type_dir}")
@@ -182,10 +178,7 @@ class PackRegistry:
 
             rule = pack.get_rule(rule_id)
             if rule:
-                logger.debug(
-                    f"Found rule {rule_id} in {pack_type} pack "
-                    f"(version {rule.version})"
-                )
+                logger.debug(f"Found rule {rule_id} in {pack_type} pack (version {rule.version})")
                 return rule
 
         logger.debug(f"Rule {rule_id} not found in any loaded pack")
@@ -211,9 +204,7 @@ class PackRegistry:
 
             rule = pack.get_rule_versioned(rule_id, version)
             if rule:
-                logger.debug(
-                    f"Found rule {rule_id}@{version} in {pack_type} pack"
-                )
+                logger.debug(f"Found rule {rule_id}@{version} in {pack_type} pack")
                 return rule
 
         logger.debug(f"Rule {rule_id}@{version} not found in any loaded pack")
@@ -253,9 +244,7 @@ class PackRegistry:
                         f"(already loaded from higher precedence pack)"
                     )
 
-        logger.debug(
-            f"Collected {len(rules)} unique rules from {len(self.packs)} packs"
-        )
+        logger.debug(f"Collected {len(rules)} unique rules from {len(self.packs)} packs")
         return rules
 
     def get_all_rules_with_versions(self) -> list[Rule]:
@@ -320,9 +309,7 @@ class PackRegistry:
             List of loaded packs in precedence order
         """
         return [
-            self.packs[pack_type]
-            for pack_type in self.config.precedence
-            if pack_type in self.packs
+            self.packs[pack_type] for pack_type in self.config.precedence if pack_type in self.packs
         ]
 
     def get_pack(self, pack_type: str) -> RulePack | None:
@@ -360,12 +347,12 @@ class PackRegistry:
 
         for pack_type, pack in self.packs.items():
             info[pack_type] = {
-                'id': pack.manifest.id,
-                'version': pack.manifest.version,
-                'name': pack.manifest.name,
-                'pack_type': pack.manifest.pack_type.value,
-                'rule_count': len(pack.rules),
-                'schema_version': pack.manifest.schema_version,
+                "id": pack.manifest.id,
+                "version": pack.manifest.version,
+                "name": pack.manifest.name,
+                "pack_type": pack.manifest.pack_type.value,
+                "rule_count": len(pack.rules),
+                "schema_version": pack.manifest.schema_version,
             }
 
         return info

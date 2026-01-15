@@ -2,6 +2,7 @@
 
 Tests infrastructure layer - file I/O and parsing.
 """
+
 from pathlib import Path
 from textwrap import dedent
 
@@ -116,7 +117,8 @@ class TestYAMLPolicyLoader:
     def test_load_from_file(self, tmp_path: Path):
         """Load policies from file."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: test-001
@@ -126,7 +128,8 @@ class TestYAMLPolicyLoader:
                 conditions:
                   - severity: high
                 action: BLOCK
-        """))
+        """)
+        )
 
         loader = YAMLPolicyLoader()
         policies = loader.load_from_file(policy_file)

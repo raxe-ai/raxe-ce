@@ -118,14 +118,14 @@ class TestProductionL2Integration:
             detector = create_production_l2_detector()
 
             # Check that it has required methods
-            assert hasattr(detector, 'analyze')
+            assert hasattr(detector, "analyze")
             assert callable(detector.analyze)
 
             # Check model info
             model_info = detector.model_info
-            assert 'name' in model_info
-            assert 'version' in model_info
-            assert model_info['is_stub'] is False
+            assert "name" in model_info
+            assert "version" in model_info
+            assert model_info["is_stub"] is False
 
         except Exception as e:
             pytest.skip(f"Production L2 model not available: {e}")

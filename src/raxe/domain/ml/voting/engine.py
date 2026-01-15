@@ -273,8 +273,7 @@ class VotingEngine:
             ):
                 # Count other THREAT votes
                 other_threat_count = sum(
-                    1 for name, v in votes.items()
-                    if name != head_name and v.vote == Vote.THREAT
+                    1 for name, v in votes.items() if name != head_name and v.vote == Vote.THREAT
                 )
                 if other_threat_count >= 1:
                     return (
@@ -290,8 +289,7 @@ class VotingEngine:
             # Severity says SAFE (severity=none)
             # Count non-severity THREAT votes
             non_severity_threat_count = sum(
-                1 for name, v in votes.items()
-                if name != "severity" and v.vote == Vote.THREAT
+                1 for name, v in votes.items() if name != "severity" and v.vote == Vote.THREAT
             )
             if non_severity_threat_count < cfg.severity_veto_override_votes:
                 # Not enough THREAT votes to override severity veto
@@ -306,10 +304,7 @@ class VotingEngine:
         if threat_count < cfg.min_threat_votes:
             # Not enough THREAT votes
             # But check if we're in review zone
-            if (
-                threat_count >= 1
-                and weighted_ratio >= cfg.review_ratio_min
-            ):
+            if threat_count >= 1 and weighted_ratio >= cfg.review_ratio_min:
                 # Some threat signals but below threshold -> REVIEW
                 avg_threat_confidence = (
                     sum(v.confidence for v in votes.values() if v.vote == Vote.THREAT)
@@ -325,8 +320,7 @@ class VotingEngine:
 
             # No significant threat signals -> SAFE
             avg_safe_confidence = (
-                sum(v.confidence for v in votes.values() if v.vote == Vote.SAFE)
-                / safe_count
+                sum(v.confidence for v in votes.values() if v.vote == Vote.SAFE) / safe_count
                 if safe_count > 0
                 else 0.5
             )
@@ -340,8 +334,7 @@ class VotingEngine:
         # threat_weight / safe_weight >= threat_ratio -> THREAT
         if weighted_ratio >= cfg.threat_ratio:
             avg_threat_confidence = (
-                sum(v.confidence for v in votes.values() if v.vote == Vote.THREAT)
-                / threat_count
+                sum(v.confidence for v in votes.values() if v.vote == Vote.THREAT) / threat_count
             )
             return (
                 Decision.THREAT,
@@ -364,8 +357,7 @@ class VotingEngine:
         # Ties favor SAFE to reduce false positives
         if threat_count == safe_count:
             avg_safe_confidence = (
-                sum(v.confidence for v in votes.values() if v.vote == Vote.SAFE)
-                / safe_count
+                sum(v.confidence for v in votes.values() if v.vote == Vote.SAFE) / safe_count
                 if safe_count > 0
                 else 0.5
             )
@@ -378,8 +370,7 @@ class VotingEngine:
         # Default: Check majority
         if threat_count > safe_count:
             avg_threat_confidence = (
-                sum(v.confidence for v in votes.values() if v.vote == Vote.THREAT)
-                / threat_count
+                sum(v.confidence for v in votes.values() if v.vote == Vote.THREAT) / threat_count
             )
             # But ratio didn't meet threshold, so REVIEW
             return (
@@ -389,8 +380,7 @@ class VotingEngine:
             )
         else:
             avg_safe_confidence = (
-                sum(v.confidence for v in votes.values() if v.vote == Vote.SAFE)
-                / safe_count
+                sum(v.confidence for v in votes.values() if v.vote == Vote.SAFE) / safe_count
                 if safe_count > 0
                 else 0.5
             )
@@ -420,9 +410,7 @@ class VotingEngine:
         harm_active_labels: list[str] = []
         if classification_result.harm_types is not None:
             harm_max_prob = classification_result.harm_types.max_probability
-            harm_active_labels = [
-                h.value for h in classification_result.harm_types.active_labels
-            ]
+            harm_active_labels = [h.value for h in classification_result.harm_types.active_labels]
 
         # Build HeadOutputs from classification result
         outputs = HeadOutputs(

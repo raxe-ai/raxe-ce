@@ -2,6 +2,7 @@
 
 Pure domain layer tests - fast, no I/O, no mocks.
 """
+
 import pytest
 
 from raxe.domain.engine.matcher import Match, PatternMatcher

@@ -1,4 +1,5 @@
 """Tests for scan history database."""
+
 from datetime import datetime, timezone
 from pathlib import Path
 

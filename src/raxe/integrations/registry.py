@@ -4,6 +4,7 @@ Integration registry for runtime discovery and configuration.
 This module provides metadata about available integrations
 and utilities for listing/discovering them.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -3,13 +3,13 @@
 Tests the RaxeDSPyCallback and RaxeModuleGuard for automatic scanning
 of DSPy module execution.
 """
-from unittest.mock import Mock, MagicMock
+
+from unittest.mock import Mock
 
 import pytest
 
 from raxe.sdk.agent_scanner import AgentScanResult, ScanType, ThreatDetectedError
 from raxe.sdk.client import Raxe
-
 
 # =============================================================================
 # Helper functions for AgentScanResult
@@ -119,16 +119,19 @@ class TestModuleImports:
     def test_import_callback_handler(self):
         """Test RaxeDSPyCallback is importable."""
         from raxe.sdk.integrations.dspy import RaxeDSPyCallback
+
         assert RaxeDSPyCallback is not None
 
     def test_import_module_guard(self):
         """Test RaxeModuleGuard is importable."""
         from raxe.sdk.integrations.dspy import RaxeModuleGuard
+
         assert RaxeModuleGuard is not None
 
     def test_import_config(self):
         """Test DSPyConfig is importable."""
         from raxe.sdk.integrations.dspy import DSPyConfig
+
         assert DSPyConfig is not None
 
     def test_import_factory_functions(self):
@@ -137,18 +140,20 @@ class TestModuleImports:
             create_dspy_callback,
             create_module_guard,
         )
+
         assert create_dspy_callback is not None
         assert create_module_guard is not None
 
     def test_import_from_integrations_module(self):
         """Test imports from main integrations module."""
         from raxe.sdk.integrations import (
+            DSPyConfig,
             RaxeDSPyCallback,
             RaxeModuleGuard,
-            DSPyConfig,
             create_dspy_callback,
             create_module_guard,
         )
+
         assert RaxeDSPyCallback is not None
         assert RaxeModuleGuard is not None
         assert DSPyConfig is not None
@@ -215,7 +220,7 @@ class TestRaxeDSPyCallbackInit:
 
     def test_init_with_custom_config(self, mock_raxe):
         """Test initialization with custom config."""
-        from raxe.sdk.integrations.dspy import RaxeDSPyCallback, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeDSPyCallback
 
         config = DSPyConfig(block_on_threats=True)
         callback = RaxeDSPyCallback(mock_raxe, config=config)
@@ -224,8 +229,9 @@ class TestRaxeDSPyCallbackInit:
 
     def test_init_creates_raxe_if_none(self):
         """Test that Raxe client is created if not provided."""
-        from raxe.sdk.integrations.dspy import RaxeDSPyCallback
         from unittest.mock import patch
+
+        from raxe.sdk.integrations.dspy import RaxeDSPyCallback
 
         with patch("raxe.sdk.client.Raxe") as MockRaxe:
             MockRaxe.return_value = Mock(spec=Raxe)
@@ -261,7 +267,7 @@ class TestModuleEvents:
 
     def test_on_module_start_blocks_on_threat(self, mock_raxe):
         """Test that module input threats block when configured."""
-        from raxe.sdk.integrations.dspy import RaxeDSPyCallback, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeDSPyCallback
 
         config = DSPyConfig(block_on_threats=True)
         callback = RaxeDSPyCallback(mock_raxe, config=config)
@@ -277,7 +283,7 @@ class TestModuleEvents:
 
     def test_on_module_start_skips_when_disabled(self, mock_raxe):
         """Test that module input scanning is skipped when disabled."""
-        from raxe.sdk.integrations.dspy import RaxeDSPyCallback, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeDSPyCallback
 
         config = DSPyConfig(scan_module_inputs=False)
         callback = RaxeDSPyCallback(mock_raxe, config=config)
@@ -376,7 +382,7 @@ class TestLMEvents:
 
     def test_on_lm_start_blocks_on_threat(self, mock_raxe):
         """Test that LM prompt threats block when configured."""
-        from raxe.sdk.integrations.dspy import RaxeDSPyCallback, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeDSPyCallback
 
         config = DSPyConfig(block_on_threats=True)
         callback = RaxeDSPyCallback(mock_raxe, config=config)
@@ -448,7 +454,7 @@ class TestToolEvents:
 
     def test_on_tool_start_blocks_on_threat(self, mock_raxe):
         """Test that tool input threats block when configured."""
-        from raxe.sdk.integrations.dspy import RaxeDSPyCallback, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeDSPyCallback
 
         config = DSPyConfig(block_on_threats=True)
         callback = RaxeDSPyCallback(mock_raxe, config=config)
@@ -629,7 +635,7 @@ class TestRaxeModuleGuardInit:
 
     def test_init_with_custom_config(self, mock_raxe):
         """Test initialization with custom config."""
-        from raxe.sdk.integrations.dspy import RaxeModuleGuard, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeModuleGuard
 
         config = DSPyConfig(block_on_threats=True)
         guard = RaxeModuleGuard(mock_raxe, config=config)
@@ -712,7 +718,7 @@ class TestWrapModule:
 
     def test_wrapped_module_blocks_on_input_threat(self, mock_raxe):
         """Test that wrapped module blocks on input threat."""
-        from raxe.sdk.integrations.dspy import RaxeModuleGuard, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeModuleGuard
 
         config = DSPyConfig(block_on_threats=True)
         guard = RaxeModuleGuard(mock_raxe, config=config)
@@ -757,7 +763,7 @@ class TestGuardScanning:
 
     def test_scan_inputs_detects_threat(self, mock_raxe):
         """Test that scan_inputs detects threats."""
-        from raxe.sdk.integrations.dspy import RaxeModuleGuard, DSPyConfig
+        from raxe.sdk.integrations.dspy import DSPyConfig, RaxeModuleGuard
 
         config = DSPyConfig(block_on_threats=True)
         guard = RaxeModuleGuard(mock_raxe, config=config)

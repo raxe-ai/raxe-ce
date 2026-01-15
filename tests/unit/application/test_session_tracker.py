@@ -11,16 +11,11 @@ This module tests the SessionTracker class which handles:
 
 from __future__ import annotations
 
-import json
-import subprocess
 import sys
 import time
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 from raxe.domain.telemetry.events import (
     EventType,
@@ -32,7 +27,7 @@ from raxe.domain.telemetry.events import (
 from raxe.infrastructure.telemetry.dual_queue import DualQueue, StateKey
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    pass
 
 
 # =============================================================================
@@ -317,9 +312,7 @@ class SessionTracker:
 class TestSessionId:
     """Tests for session ID management."""
 
-    def test_session_id_consistent_within_process(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_session_id_consistent_within_process(self, mock_queue: DualQueue) -> None:
         """Session ID remains consistent within the same process."""
         SessionTracker.reset_session_id()
 
@@ -345,9 +338,7 @@ class TestSessionId:
         hex_part = session_id[5:]
         int(hex_part, 16)  # Should not raise
 
-    def test_session_id_persists_across_calls(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_session_id_persists_across_calls(self, mock_queue: DualQueue) -> None:
         """Session ID is cached and reused."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -358,9 +349,7 @@ class TestSessionId:
 
         assert id1 == id2 == id3
 
-    def test_session_id_different_after_reset(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_session_id_different_after_reset(self, mock_queue: DualQueue) -> None:
         """New session ID generated after reset."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -380,16 +369,12 @@ class TestSessionId:
 class TestSessionNumber:
     """Tests for session number tracking."""
 
-    def test_session_number_starts_at_zero(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_session_number_starts_at_zero(self, mock_queue: DualQueue) -> None:
         """Session number starts at 0 for new installation."""
         tracker = SessionTracker(mock_queue)
         assert tracker.get_session_number() == 0
 
-    def test_session_number_increments_on_start(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_session_number_increments_on_start(self, mock_queue: DualQueue) -> None:
         """Session number increments when session starts."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -399,17 +384,13 @@ class TestSessionNumber:
         tracker.start_session()
         assert tracker.get_session_number() == 1
 
-    def test_session_number_persists(
-        self, queue_with_state: DualQueue
-    ) -> None:
+    def test_session_number_persists(self, queue_with_state: DualQueue) -> None:
         """Session number persists across tracker instances."""
         # queue_with_state has SESSION_COUNT = 5
         tracker = SessionTracker(queue_with_state)
         assert tracker.get_session_number() == 5
 
-    def test_multiple_sessions_increment_correctly(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_multiple_sessions_increment_correctly(self, mock_queue: DualQueue) -> None:
         """Multiple session starts increment correctly."""
         tracker = SessionTracker(mock_queue)
 
@@ -428,9 +409,7 @@ class TestSessionNumber:
 class TestSessionStart:
     """Tests for session start functionality."""
 
-    def test_start_session_creates_event(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_start_session_creates_event(self, mock_queue: DualQueue) -> None:
         """Starting session creates session_start event."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -444,9 +423,7 @@ class TestSessionStart:
         assert "session_number" in event.payload
         assert event.payload["entry_point"] == "cli"
 
-    def test_start_session_only_once(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_start_session_only_once(self, mock_queue: DualQueue) -> None:
         """Starting session twice returns None on second call."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -457,9 +434,7 @@ class TestSessionStart:
         assert event1 is not None
         assert event2 is None
 
-    def test_start_session_enqueues_event(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_start_session_enqueues_event(self, mock_queue: DualQueue) -> None:
         """Session start event is enqueued."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -469,9 +444,7 @@ class TestSessionStart:
         stats = mock_queue.get_stats()
         assert stats["standard_count"] >= 1
 
-    def test_start_session_includes_environment(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_start_session_includes_environment(self, mock_queue: DualQueue) -> None:
         """Session start includes environment detection."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -484,9 +457,7 @@ class TestSessionStart:
         assert "is_interactive" in env
         assert "is_notebook" in env
 
-    def test_start_session_calculates_gap(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_start_session_calculates_gap(self, mock_queue: DualQueue) -> None:
         """Session start calculates gap since last session."""
         SessionTracker.reset_session_id()
 
@@ -510,9 +481,7 @@ class TestSessionStart:
 class TestSessionEnd:
     """Tests for session end functionality."""
 
-    def test_end_session_creates_event(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_creates_event(self, mock_queue: DualQueue) -> None:
         """Ending session creates session_end event."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -528,9 +497,7 @@ class TestSessionEnd:
         assert "scans_in_session" in event.payload
         assert "threats_in_session" in event.payload
 
-    def test_end_session_requires_start(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_requires_start(self, mock_queue: DualQueue) -> None:
         """Ending session without start returns None."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -539,9 +506,7 @@ class TestSessionEnd:
 
         assert event is None
 
-    def test_end_session_is_critical_priority(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_is_critical_priority(self, mock_queue: DualQueue) -> None:
         """Session end event has critical priority."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -551,9 +516,7 @@ class TestSessionEnd:
 
         assert event.priority == "critical"
 
-    def test_end_session_tracks_duration(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_tracks_duration(self, mock_queue: DualQueue) -> None:
         """Session end calculates correct duration."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -565,9 +528,7 @@ class TestSessionEnd:
 
         assert event.payload["duration_seconds"] >= 0.1
 
-    def test_end_session_includes_scan_counts(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_includes_scan_counts(self, mock_queue: DualQueue) -> None:
         """Session end includes scan and threat counts."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -583,9 +544,7 @@ class TestSessionEnd:
         assert event.payload["scans_in_session"] == 3
         assert event.payload["threats_in_session"] == 2
 
-    def test_end_session_includes_features_used(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_includes_features_used(self, mock_queue: DualQueue) -> None:
         """Session end includes list of features used."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -602,9 +561,7 @@ class TestSessionEnd:
         assert "cli_scan" in features
         assert "cli_explain" in features
 
-    def test_end_session_stores_timestamp(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_stores_timestamp(self, mock_queue: DualQueue) -> None:
         """Session end stores timestamp for gap calculation."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -627,9 +584,7 @@ class TestSessionEnd:
 class TestActivationTracking:
     """Tests for first-time feature activation tracking."""
 
-    def test_track_activation_fires_once(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_track_activation_fires_once(self, mock_queue: DualQueue) -> None:
         """Activation only fires once per feature."""
         tracker = SessionTracker(mock_queue)
 
@@ -639,9 +594,7 @@ class TestActivationTracking:
         assert event1 is not None
         assert event2 is None
 
-    def test_track_activation_returns_none_on_second_call(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_track_activation_returns_none_on_second_call(self, mock_queue: DualQueue) -> None:
         """Second activation call returns None."""
         tracker = SessionTracker(mock_queue)
 
@@ -650,9 +603,7 @@ class TestActivationTracking:
 
         assert result is None
 
-    def test_different_features_fire_independently(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_different_features_fire_independently(self, mock_queue: DualQueue) -> None:
         """Different features can each be activated once."""
         tracker = SessionTracker(mock_queue)
 
@@ -669,9 +620,7 @@ class TestActivationTracking:
         assert tracker.track_activation("first_cli") is None
         assert tracker.track_activation("first_sdk") is None
 
-    def test_activation_event_structure(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_activation_event_structure(self, mock_queue: DualQueue) -> None:
         """Activation event has correct structure."""
         # Set install time for seconds_since_install
         mock_queue.set_state(
@@ -691,9 +640,7 @@ class TestActivationTracking:
         assert "seconds_since_install" in event.payload
         assert event.payload["activation_context"]["rule_id"] == "pi-001"
 
-    def test_activation_calculates_time_since_install(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_activation_calculates_time_since_install(self, mock_queue: DualQueue) -> None:
         """Activation calculates seconds since install."""
         # Set install time 2 minutes ago
         install_time = datetime.now(timezone.utc) - timedelta(minutes=2)
@@ -705,9 +652,7 @@ class TestActivationTracking:
         seconds = event.payload["seconds_since_install"]
         assert 110 < seconds < 130  # Approximately 2 minutes
 
-    def test_activation_persists_across_instances(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_activation_persists_across_instances(self, mock_queue: DualQueue) -> None:
         """Activation state persists across tracker instances."""
         tracker1 = SessionTracker(mock_queue)
         tracker1.track_activation("first_scan")
@@ -718,9 +663,7 @@ class TestActivationTracking:
 
         assert result is None  # Already activated
 
-    def test_all_activation_features(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_all_activation_features(self, mock_queue: DualQueue) -> None:
         """All activation features can be tracked (canonical backend values)."""
         tracker = SessionTracker(mock_queue)
 
@@ -751,9 +694,7 @@ class TestActivationTracking:
 class TestSecondsSinceInstall:
     """Tests for install time tracking."""
 
-    def test_seconds_since_install_with_timestamp(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_seconds_since_install_with_timestamp(self, mock_queue: DualQueue) -> None:
         """Calculates seconds since install correctly."""
         install_time = datetime.now(timezone.utc) - timedelta(hours=1)
         mock_queue.set_state(StateKey.INSTALL_TIMESTAMP, install_time.isoformat())
@@ -764,18 +705,14 @@ class TestSecondsSinceInstall:
         # Should be approximately 3600 seconds (1 hour)
         assert 3500 < seconds < 3700
 
-    def test_seconds_since_install_no_timestamp(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_seconds_since_install_no_timestamp(self, mock_queue: DualQueue) -> None:
         """Returns 0 when no install timestamp."""
         tracker = SessionTracker(mock_queue)
         seconds = tracker.seconds_since_install()
 
         assert seconds == 0.0
 
-    def test_seconds_since_install_invalid_timestamp(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_seconds_since_install_invalid_timestamp(self, mock_queue: DualQueue) -> None:
         """Returns 0 for invalid timestamp."""
         mock_queue.set_state(StateKey.INSTALL_TIMESTAMP, "invalid-date")
 
@@ -793,16 +730,12 @@ class TestSecondsSinceInstall:
 class TestFirstSessionDetection:
     """Tests for first session detection."""
 
-    def test_is_first_session_true_initially(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_is_first_session_true_initially(self, mock_queue: DualQueue) -> None:
         """is_first_session returns True before any session."""
         tracker = SessionTracker(mock_queue)
         assert tracker.is_first_session() is True
 
-    def test_is_first_session_true_after_first_start(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_is_first_session_true_after_first_start(self, mock_queue: DualQueue) -> None:
         """is_first_session returns True during first session."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -810,9 +743,7 @@ class TestFirstSessionDetection:
 
         assert tracker.is_first_session() is True
 
-    def test_is_first_session_false_after_second_start(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_is_first_session_false_after_second_start(self, mock_queue: DualQueue) -> None:
         """is_first_session returns False after second session starts."""
         tracker = SessionTracker(mock_queue)
 
@@ -837,9 +768,7 @@ class TestFirstSessionDetection:
 class TestStatePersistence:
     """Tests for state persistence via DualQueue."""
 
-    def test_session_count_persists(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_session_count_persists(self, mock_queue: DualQueue) -> None:
         """Session count persists in queue state."""
         tracker = SessionTracker(mock_queue)
         SessionTracker.reset_session_id()
@@ -849,9 +778,7 @@ class TestStatePersistence:
         count = mock_queue.get_state(StateKey.SESSION_COUNT)
         assert int(count) == 1
 
-    def test_activation_state_persists(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_activation_state_persists(self, mock_queue: DualQueue) -> None:
         """Activation state persists in queue state."""
         tracker = SessionTracker(mock_queue)
         tracker.track_activation("first_scan")
@@ -868,9 +795,7 @@ class TestStatePersistence:
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
-    def test_end_session_twice(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_end_session_twice(self, mock_queue: DualQueue) -> None:
         """Ending session twice returns None second time."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -882,9 +807,7 @@ class TestEdgeCases:
         assert event1 is not None
         assert event2 is None
 
-    def test_record_scan_without_session(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_record_scan_without_session(self, mock_queue: DualQueue) -> None:
         """Recording scan without session doesn't crash."""
         tracker = SessionTracker(mock_queue)
 
@@ -892,9 +815,7 @@ class TestEdgeCases:
         tracker.record_scan(threat_detected=True)
         tracker.record_feature_used("cli_scan")
 
-    def test_multiple_trackers_share_session_id(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_multiple_trackers_share_session_id(self, mock_queue: DualQueue) -> None:
         """Multiple tracker instances share the same session ID."""
         SessionTracker.reset_session_id()
 
@@ -903,9 +824,7 @@ class TestEdgeCases:
 
         assert tracker1.get_session_id() == tracker2.get_session_id()
 
-    def test_closed_queue_graceful_handling(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_closed_queue_graceful_handling(self, mock_queue: DualQueue) -> None:
         """Tracker handles closed queue gracefully."""
         tracker = SessionTracker(mock_queue)
         mock_queue.close()
@@ -917,9 +836,7 @@ class TestEdgeCases:
         result = tracker.track_activation("first_scan")
         # May return None due to closed queue
 
-    def test_environment_detection(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_environment_detection(self, mock_queue: DualQueue) -> None:
         """Environment detection works correctly."""
         SessionTracker.reset_session_id()
         tracker = SessionTracker(mock_queue)
@@ -934,9 +851,7 @@ class TestEdgeCases:
         assert isinstance(env["is_notebook"], bool)
 
     @patch.dict("os.environ", {"CI": "true"})
-    def test_ci_environment_detection(
-        self, mock_queue: DualQueue
-    ) -> None:
+    def test_ci_environment_detection(self, mock_queue: DualQueue) -> None:
         """CI environment is detected from environment variable."""
         tracker = SessionTracker(mock_queue)
         env = tracker._detect_environment()

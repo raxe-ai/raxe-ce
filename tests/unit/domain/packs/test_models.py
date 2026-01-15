@@ -2,6 +2,7 @@
 
 Pure domain layer tests - fast, no I/O, no mocks needed.
 """
+
 import pytest
 
 from raxe.domain.packs.models import (
@@ -62,11 +63,7 @@ class TestPackRule:
 
     def test_pack_rule_creation(self):
         """Test creating a pack rule."""
-        pack_rule = PackRule(
-            id="pi-001",
-            version="1.0.0",
-            path="rules/PI/pi-001@1.0.0.yaml"
-        )
+        pack_rule = PackRule(id="pi-001", version="1.0.0", path="rules/PI/pi-001@1.0.0.yaml")
 
         assert pack_rule.id == "pi-001"
         assert pack_rule.version == "1.0.0"
@@ -74,11 +71,7 @@ class TestPackRule:
 
     def test_pack_rule_versioned_id(self):
         """Test versioned_id property."""
-        pack_rule = PackRule(
-            id="pi-001",
-            version="1.0.0",
-            path="rules/PI/pi-001@1.0.0.yaml"
-        )
+        pack_rule = PackRule(id="pi-001", version="1.0.0", path="rules/PI/pi-001@1.0.0.yaml")
 
         assert pack_rule.versioned_id == "pi-001@1.0.0"
 
@@ -99,11 +92,7 @@ class TestPackRule:
 
     def test_pack_rule_immutable(self):
         """Test pack rule is immutable."""
-        pack_rule = PackRule(
-            id="pi-001",
-            version="0.0.1",
-            path="rules/pi-001.yaml"
-        )
+        pack_rule = PackRule(id="pi-001", version="0.0.1", path="rules/pi-001.yaml")
 
         with pytest.raises(AttributeError):
             pack_rule.id = "pi-002"
@@ -114,9 +103,7 @@ class TestPackManifest:
 
     def test_pack_manifest_creation(self):
         """Test creating a pack manifest."""
-        pack_rules = [
-            PackRule(id="pi-001", version="0.0.1", path="rules/pi-001.yaml")
-        ]
+        pack_rules = [PackRule(id="pi-001", version="0.0.1", path="rules/pi-001.yaml")]
 
         manifest = PackManifest(
             id="core",

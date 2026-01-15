@@ -8,6 +8,7 @@ SQLite-based storage for:
 
 Database: ~/.raxe/scan_history.db
 """
+
 import hashlib
 import sqlite3
 from contextlib import contextmanager
@@ -39,6 +40,7 @@ class ScanRecord:
         event_id: Portal event ID (evt_xxx) for portal correlation
             NOTE: This is the SAME event_id used in telemetry for portal-CLI correlation.
     """
+
     timestamp: datetime
     prompt_hash: str
     threats_found: int
@@ -68,6 +70,7 @@ class DetectionRecord:
         category: Threat category
         description: Human-readable description of the detection
     """
+
     scan_id: int
     rule_id: str
     severity: str
@@ -160,7 +163,7 @@ class ScanHistoryDB:
                 self._create_tables(conn)
                 cursor.execute(
                     "INSERT INTO _metadata (key, value) VALUES ('schema_version', ?)",
-                    (str(self.SCHEMA_VERSION),)
+                    (str(self.SCHEMA_VERSION),),
                 )
                 conn.commit()
             else:
@@ -229,8 +232,12 @@ class ScanHistoryDB:
         cursor.execute("CREATE INDEX idx_scans_severity ON scans(highest_severity)")
         cursor.execute("CREATE INDEX idx_detections_scan_id ON detections(scan_id)")
         cursor.execute("CREATE INDEX idx_detections_severity ON detections(severity)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_scan_id ON suppressions(scan_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_rule_id ON suppressions(rule_id)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_suppressions_scan_id ON suppressions(scan_id)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_suppressions_rule_id ON suppressions(rule_id)"
+        )
         # Unique index for event_id lookup (partial index - only non-null values)
         cursor.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_scans_event_id "
@@ -267,8 +274,12 @@ class ScanHistoryDB:
                     FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE
                 )
             """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_scan_id ON suppressions(scan_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_suppressions_rule_id ON suppressions(rule_id)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_suppressions_scan_id ON suppressions(scan_id)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_suppressions_rule_id ON suppressions(rule_id)"
+            )
 
             # Update schema version
             cursor.execute("UPDATE _metadata SET value = '2' WHERE key = 'schema_version'")
@@ -380,46 +391,52 @@ class ScanHistoryDB:
         with self._get_connection() as conn:
             cursor = conn.cursor()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO scans (
                     timestamp, prompt_hash, threats_found, highest_severity,
                     l1_duration_ms, l2_duration_ms, total_duration_ms,
                     l1_detections, l2_detections, version, event_id,
                     prompt_text
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                int(datetime.now(timezone.utc).timestamp()),
-                prompt_hash,
-                threats_found,
-                highest_severity,
-                l1_duration_ms,
-                l2_duration_ms,
-                total_duration_ms,
-                l1_detections,
-                l2_detections,
-                version,
-                event_id,
-                prompt_text,
-            ))
+            """,
+                (
+                    int(datetime.now(timezone.utc).timestamp()),
+                    prompt_hash,
+                    threats_found,
+                    highest_severity,
+                    l1_duration_ms,
+                    l2_duration_ms,
+                    total_duration_ms,
+                    l1_detections,
+                    l2_detections,
+                    version,
+                    event_id,
+                    prompt_text,
+                ),
+            )
 
             db_scan_id = cursor.lastrowid
 
             # Insert detection records
             for detection in detections:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO detections (
                         scan_id, rule_id, severity, confidence,
                         detection_layer, category, description
                     ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    db_scan_id,
-                    detection.rule_id,
-                    detection.severity.value,
-                    detection.confidence,
-                    detection.detection_layer,
-                    detection.category,
-                    detection.message,  # Human-readable description
-                ))
+                """,
+                    (
+                        db_scan_id,
+                        detection.rule_id,
+                        detection.severity.value,
+                        detection.confidence,
+                        detection.detection_layer,
+                        detection.category,
+                        detection.message,  # Human-readable description
+                    ),
+                )
 
             conn.commit()
 
@@ -521,18 +538,24 @@ class ScanHistoryDB:
             cursor = conn.cursor()
 
             if severity_filter:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM scans
                     WHERE highest_severity = ?
                     ORDER BY timestamp DESC
                     LIMIT ? OFFSET ?
-                """, (severity_filter, limit, offset))
+                """,
+                    (severity_filter, limit, offset),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM scans
                     ORDER BY timestamp DESC
                     LIMIT ? OFFSET ?
-                """, (limit, offset))
+                """,
+                    (limit, offset),
+                )
 
             rows = cursor.fetchall()
             return [self._row_to_scan_record(row) for row in rows]
@@ -548,11 +571,14 @@ class ScanHistoryDB:
         """
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM detections
                 WHERE scan_id = ?
                 ORDER BY severity DESC, confidence DESC
-            """, (scan_id,))
+            """,
+                (scan_id,),
+            )
 
             rows = cursor.fetchall()
             return [
@@ -584,38 +610,41 @@ class ScanHistoryDB:
             cursor = conn.cursor()
 
             # Total scans
-            cursor.execute(
-                "SELECT COUNT(*) as count FROM scans WHERE timestamp >= ?",
-                (cutoff,)
-            )
+            cursor.execute("SELECT COUNT(*) as count FROM scans WHERE timestamp >= ?", (cutoff,))
             total_scans = cursor.fetchone()["count"]
 
             # Scans with threats
             cursor.execute(
                 "SELECT COUNT(*) as count FROM scans WHERE timestamp >= ? AND threats_found > 0",
-                (cutoff,)
+                (cutoff,),
             )
             scans_with_threats = cursor.fetchone()["count"]
 
             # Threats by severity
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT highest_severity, COUNT(*) as count
                 FROM scans
                 WHERE timestamp >= ? AND highest_severity IS NOT NULL
                 GROUP BY highest_severity
-            """, (cutoff,))
+            """,
+                (cutoff,),
+            )
 
             severity_counts = {row["highest_severity"]: row["count"] for row in cursor.fetchall()}
 
             # Average latencies
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     AVG(l1_duration_ms) as avg_l1,
                     AVG(l2_duration_ms) as avg_l2,
                     AVG(total_duration_ms) as avg_total
                 FROM scans
                 WHERE timestamp >= ?
-            """, (cutoff,))
+            """,
+                (cutoff,),
+            )
 
             latencies = cursor.fetchone()
 
@@ -642,9 +671,7 @@ class ScanHistoryDB:
         if retention_days is None:
             retention_days = self.RETENTION_DAYS
 
-        cutoff = int(
-            (datetime.now(timezone.utc) - timedelta(days=retention_days)).timestamp()
-        )
+        cutoff = int((datetime.now(timezone.utc) - timedelta(days=retention_days)).timestamp())
 
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -680,17 +707,20 @@ class ScanHistoryDB:
         with self._get_connection() as conn:
             cursor = conn.cursor()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO suppressions (
                     scan_id, rule_id, reason, timestamp, suppression_pattern
                 ) VALUES (?, ?, ?, ?, ?)
-            """, (
-                scan_id,
-                rule_id,
-                reason,
-                datetime.now(timezone.utc).isoformat(),
-                suppression_pattern,
-            ))
+            """,
+                (
+                    scan_id,
+                    rule_id,
+                    reason,
+                    datetime.now(timezone.utc).isoformat(),
+                    suppression_pattern,
+                ),
+            )
 
             conn.commit()
 
@@ -712,18 +742,24 @@ class ScanHistoryDB:
             cursor = conn.cursor()
 
             if scan_id is not None:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM suppressions
                     WHERE scan_id = ?
                     ORDER BY timestamp DESC
                     LIMIT ?
-                """, (scan_id, limit))
+                """,
+                    (scan_id, limit),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM suppressions
                     ORDER BY timestamp DESC
                     LIMIT ?
-                """, (limit,))
+                """,
+                    (limit,),
+                )
 
             rows = cursor.fetchall()
             return [

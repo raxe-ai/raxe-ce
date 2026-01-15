@@ -13,6 +13,7 @@ Performance impact:
 - Startup time: +100-200ms (one-time cost)
 - Per-scan latency: -5-10ms (recurring benefit)
 """
+
 import logging
 import time
 from dataclasses import dataclass
@@ -54,6 +55,7 @@ class PreloadStats:
         l2_init_time_ms: L2 model initialization time (separate from preload)
         l2_model_type: Type of L2 model loaded (onnx_int8, sentence_transformers, stub)
     """
+
     duration_ms: float
     packs_loaded: int
     rules_loaded: int
@@ -99,7 +101,7 @@ class PipelinePreloader:
         config_path: Path | None = None,
         config: ScanConfig | None = None,
         suppression_manager: object | None = None,
-        progress_callback = None,
+        progress_callback=None,
         voting_preset: str | None = None,
     ):
         """Initialize preloader.
@@ -118,6 +120,7 @@ class PipelinePreloader:
 
         # Store progress callback (use NullProgress if none provided)
         from raxe.cli.progress import NullProgress
+
         self._progress = progress_callback or NullProgress()
 
     def preload(self) -> tuple[ScanPipeline, PreloadStats]:
@@ -179,15 +182,10 @@ class PipelinePreloader:
 
             # Report rules loading completion
             self._progress.update_component(
-                "rules",
-                "complete",
-                rules_time,
-                metadata={"count": rules_loaded}
+                "rules", "complete", rules_time, metadata={"count": rules_loaded}
             )
 
-            logger.info(
-                f"Loaded {rules_loaded} rules from {packs_loaded} packs"
-            )
+            logger.info(f"Loaded {rules_loaded} rules from {packs_loaded} packs")
         except Exception as e:
             logger.error(f"Failed to load packs: {e}")
             # Continue with empty registry (degraded mode)
@@ -234,11 +232,7 @@ class PipelinePreloader:
         l2_model_type = l2_init_stats.get("model_type", "unknown")
 
         # Report ML model loading completion
-        self._progress.update_component(
-            "ml_model",
-            "complete",
-            l2_init_time_ms
-        )
+        self._progress.update_component("ml_model", "complete", l2_init_time_ms)
 
         logger.info(
             f"L2 detector initialized: {l2_model_type} in {l2_init_time_ms:.1f}ms "
@@ -327,7 +321,7 @@ def preload_pipeline(
     config_path: Path | None = None,
     config: ScanConfig | None = None,
     suppression_manager: object | None = None,
-    progress_callback = None,
+    progress_callback=None,
     voting_preset: str | None = None,
 ) -> tuple[ScanPipeline, PreloadStats]:
     """Convenience function to preload pipeline.

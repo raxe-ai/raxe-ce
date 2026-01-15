@@ -9,11 +9,9 @@ These tests ensure that:
 4. Confidence thresholds are respected for L2 predictions
 """
 
-import pytest
-
 from raxe.application.apply_policy import ApplyPolicyUseCase, PolicySource
 from raxe.application.scan_merger import ScanMerger
-from raxe.application.scan_pipeline import BlockAction, ScanPipeline
+from raxe.application.scan_pipeline import ScanPipeline
 from raxe.domain.engine.executor import RuleExecutor
 from raxe.domain.ml.protocol import L2Prediction, L2Result, L2ThreatType
 from raxe.domain.policies.models import Policy, PolicyAction, PolicyCondition
@@ -319,13 +317,13 @@ class TestL2OnlyBlocking:
         """Policy uses correct confidence thresholds for L2 severity mapping."""
         test_cases = [
             # (confidence, expected_severity, expected_should_block)
-            (0.96, Severity.CRITICAL, True),   # CRITICAL (>= 0.95) - should block
-            (0.95, Severity.CRITICAL, True),   # CRITICAL (>= 0.95) - should block
-            (0.94, Severity.HIGH, False),      # HIGH (>= 0.85, < 0.95) - should not block
-            (0.85, Severity.HIGH, False),      # HIGH (>= 0.85) - should not block
-            (0.70, Severity.MEDIUM, False),    # MEDIUM (>= 0.70) - should not block
-            (0.50, Severity.LOW, False),       # LOW (>= 0.50) - should not block
-            (0.30, Severity.INFO, False),      # INFO (>= 0.30) - should not block
+            (0.96, Severity.CRITICAL, True),  # CRITICAL (>= 0.95) - should block
+            (0.95, Severity.CRITICAL, True),  # CRITICAL (>= 0.95) - should block
+            (0.94, Severity.HIGH, False),  # HIGH (>= 0.85, < 0.95) - should not block
+            (0.85, Severity.HIGH, False),  # HIGH (>= 0.85) - should not block
+            (0.70, Severity.MEDIUM, False),  # MEDIUM (>= 0.70) - should not block
+            (0.50, Severity.LOW, False),  # LOW (>= 0.50) - should not block
+            (0.30, Severity.INFO, False),  # INFO (>= 0.30) - should not block
         ]
 
         # Policy that blocks only CRITICAL severity
@@ -539,9 +537,9 @@ class TestL2PolicyWithRealDetector:
                         policy_source=PolicySource.INLINE,
                         inline_policies=[block_critical_policy],
                     )
-                    assert decision.should_block, (
-                        "L2 detected CRITICAL threat but policy didn't block"
-                    )
+                    assert (
+                        decision.should_block
+                    ), "L2 detected CRITICAL threat but policy didn't block"
                     assert decision.action == PolicyAction.BLOCK
 
 

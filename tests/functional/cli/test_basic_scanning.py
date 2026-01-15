@@ -1,4 +1,5 @@
 """Test basic CLI scanning functionality."""
+
 import subprocess
 import sys
 
@@ -16,11 +17,7 @@ class TestCLIBasicScanning:
     def test_single_prompt_safe(self, safe_prompts):
         """Test scanning single safe prompt."""
         prompt = safe_prompts[0]
-        result = subprocess.run(
-            [*self.raxe_cmd, "scan", prompt],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run([*self.raxe_cmd, "scan", prompt], capture_output=True, text=True)
 
         assert result.returncode == 0, f"Safe prompt failed: {result.stderr}"
         assert "safe" in result.stdout.lower() or "✓" in result.stdout
@@ -28,14 +25,12 @@ class TestCLIBasicScanning:
     def test_single_prompt_threat(self, threat_prompts):
         """Test scanning single threat prompt."""
         prompt = threat_prompts[0]
-        result = subprocess.run(
-            [*self.raxe_cmd, "scan", prompt],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run([*self.raxe_cmd, "scan", prompt], capture_output=True, text=True)
 
         assert result.returncode == 1, "Threat should return exit code 1"
-        assert any(word in result.stdout.lower() for word in ["threat", "dangerous", "blocked", "✗"])
+        assert any(
+            word in result.stdout.lower() for word in ["threat", "dangerous", "blocked", "✗"]
+        )
 
     def test_multiple_prompts_from_file(self, tmp_path, safe_prompts, threat_prompts):
         """Test scanning multiple prompts from file."""
@@ -45,9 +40,7 @@ class TestCLIBasicScanning:
         test_file.write_text("\n".join(prompts))
 
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", "-f", str(test_file)],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", "-f", str(test_file)], capture_output=True, text=True
         )
 
         # Should fail if any threat found
@@ -59,10 +52,7 @@ class TestCLIBasicScanning:
         """Test reading prompt from stdin."""
         prompt = safe_prompts[0]
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", "-"],
-            input=prompt,
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", "-"], input=prompt, capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -72,34 +62,26 @@ class TestCLIBasicScanning:
         """Verify correct exit codes for different scenarios."""
         # Safe prompt -> 0
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", safe_prompts[0]], capture_output=True, text=True
         )
         assert result.returncode == 0
 
         # Threat prompt -> 1
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", threat_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", threat_prompts[0]], capture_output=True, text=True
         )
         assert result.returncode == 1
 
         # Invalid command -> 2
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", "--invalid-flag"],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", "--invalid-flag"], capture_output=True, text=True
         )
         assert result.returncode == 2
 
     def test_quiet_mode(self, safe_prompts):
         """Test quiet mode suppresses output."""
         result = subprocess.run(
-            [*self.raxe_cmd, "--quiet", "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "--quiet", "scan", safe_prompts[0]], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -109,9 +91,7 @@ class TestCLIBasicScanning:
     def test_verbose_mode(self, safe_prompts):
         """Test verbose mode shows detailed output."""
         result = subprocess.run(
-            [*self.raxe_cmd, "--verbose", "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "--verbose", "scan", safe_prompts[0]], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -126,9 +106,7 @@ class TestCLIBasicScanning:
 
         with performance_tracker.track("batch_scan"):
             result = subprocess.run(
-                [*self.raxe_cmd, "scan", *prompts],
-                capture_output=True,
-                text=True
+                [*self.raxe_cmd, "scan", *prompts], capture_output=True, text=True
             )
 
         assert result.returncode == 0
@@ -143,7 +121,7 @@ class TestCLIBasicScanning:
             [*self.raxe_cmd, "scan", "--no-l2", safe_prompts[0]],
             capture_output=True,
             text=True,
-            env={**subprocess.os.environ, "RAXE_VERBOSE": "true"}
+            env={**subprocess.os.environ, "RAXE_VERBOSE": "true"},
         )
 
         assert result.returncode == 0
@@ -157,14 +135,14 @@ class TestCLIBasicScanning:
         subprocess.run(
             [*self.raxe_cmd, "scan", "--confidence", "0.9", threat_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Low confidence - should catch more
         result_low = subprocess.run(
             [*self.raxe_cmd, "scan", "--confidence", "0.1", threat_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Low confidence should be more likely to flag as threat

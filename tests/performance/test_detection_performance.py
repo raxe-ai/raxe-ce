@@ -11,6 +11,7 @@ Performance Targets:
 - Memory: <100MB for 104 rules
 - No memory leaks over 10k scans
 """
+
 import statistics
 import time
 
@@ -52,9 +53,9 @@ class TestScanLatency:
 
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         stats = benchmark.stats
-        mean = stats.get('mean', 0)
-        median = stats.get('median', 0)
-        stddev = stats.get('stddev', 0)
+        mean = stats.get("mean", 0)
+        median = stats.get("median", 0)
+        stddev = stats.get("stddev", 0)
 
         print("\nBenign Scan Latency:")
         print(f"  Mean: {mean * 1000:.2f}ms")
@@ -76,8 +77,8 @@ class TestScanLatency:
 
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         stats = benchmark.stats
-        mean = stats.get('mean', 0)
-        median = stats.get('median', 0)
+        mean = stats.get("mean", 0)
+        median = stats.get("median", 0)
 
         print("\nMalicious Scan Latency:")
         print(f"  Mean: {mean * 1000:.2f}ms")
@@ -98,8 +99,8 @@ class TestScanLatency:
 
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         stats = benchmark.stats
-        mean = stats.get('mean', 0)
-        median = stats.get('median', 0)
+        mean = stats.get("mean", 0)
+        median = stats.get("median", 0)
 
         print("\nLong Prompt (1000 words) Latency:")
         print(f"  Mean: {mean * 1000:.2f}ms")
@@ -120,7 +121,7 @@ class TestScanLatency:
 
         # Note: benchmark.stats is a dict in pytest-benchmark 5.x
         stats = benchmark.stats
-        mean = stats.get('mean', 0)
+        mean = stats.get("mean", 0)
 
         print("\nEmpty Prompt Latency:")
         print(f"  Mean: {mean * 1000:.2f}ms")
@@ -412,8 +413,10 @@ class TestRegressionDetection:
 
             # If baseline is from old version (>2000 scans/sec), update it
             if baseline_throughput > 2000:
-                print(f"\n  Updating baseline from old version ({baseline_throughput:.0f} -> {scans_per_second:.0f})")
-                with open(baseline_file, 'w') as f:
+                print(
+                    f"\n  Updating baseline from old version ({baseline_throughput:.0f} -> {scans_per_second:.0f})"
+                )
+                with open(baseline_file, "w") as f:
                     f.write(str(scans_per_second))
                 print(f"  New baseline recorded: {scans_per_second:.0f} scans/sec")
             else:
@@ -430,8 +433,9 @@ class TestRegressionDetection:
         except FileNotFoundError:
             # No baseline yet, create one
             import os
+
             os.makedirs(os.path.dirname(baseline_file), exist_ok=True)
-            with open(baseline_file, 'w') as f:
+            with open(baseline_file, "w") as f:
                 f.write(str(scans_per_second))
             print(f"\nBaseline recorded: {scans_per_second:.0f} scans/sec")
 
@@ -447,8 +451,8 @@ class TestRegressionDetection:
         compilation_time = (time.perf_counter() - start) * 1000
 
         # metadata is a PreloadStats object, access attributes directly
-        rule_count = getattr(metadata, 'rule_count', 'unknown')
-        pattern_count = getattr(metadata, 'pattern_count', 'unknown')
+        rule_count = getattr(metadata, "rule_count", "unknown")
+        pattern_count = getattr(metadata, "pattern_count", "unknown")
 
         print("\nPattern Compilation:")
         print(f"  Rules loaded: {rule_count}")

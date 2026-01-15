@@ -5,6 +5,7 @@ All functions are stateless and side-effect free (NO I/O).
 
 Performance target: <1ms policy evaluation per detection.
 """
+
 from raxe.domain.engine.executor import Detection
 from raxe.domain.policies.models import (
     Policy,
@@ -83,10 +84,7 @@ def _matches_policy(detection: Detection, policy: Policy) -> bool:
         return False
 
     # OR logic: any condition matching triggers policy
-    return any(
-        _matches_condition(detection, condition)
-        for condition in policy.conditions
-    )
+    return any(_matches_condition(detection, condition) for condition in policy.conditions)
 
 
 def evaluate_policies(
@@ -114,10 +112,7 @@ def evaluate_policies(
         Pure function - no I/O, no side effects.
     """
     # Find matching policies
-    matched_policies = [
-        policy for policy in policies
-        if _matches_policy(detection, policy)
-    ]
+    matched_policies = [policy for policy in policies if _matches_policy(detection, policy)]
 
     # If no policies match, return default decision
     if not matched_policies:
@@ -130,9 +125,7 @@ def evaluate_policies(
         )
 
     # Sort by priority (highest first, then by policy_id for determinism)
-    matched_policies.sort(
-        key=lambda p: (-p.priority, p.policy_id)
-    )
+    matched_policies.sort(key=lambda p: (-p.priority, p.policy_id))
 
     # Highest priority policy determines action
     primary_policy = matched_policies[0]
@@ -206,7 +199,4 @@ def filter_policies_by_customer(
     Note:
         Pure function for use in application layer.
     """
-    return [
-        policy for policy in policies
-        if policy.customer_id == customer_id
-    ]
+    return [policy for policy in policies if policy.customer_id == customer_id]

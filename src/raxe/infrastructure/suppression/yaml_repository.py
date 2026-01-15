@@ -103,9 +103,7 @@ class YamlSuppressionRepository:
         except ImportError:
             logger.warning(
                 "yaml_module_not_available",
-                extra={
-                    "message": "PyYAML not installed, cannot load suppressions.yaml"
-                },
+                extra={"message": "PyYAML not installed, cannot load suppressions.yaml"},
             )
             return []
 
@@ -399,9 +397,7 @@ class YamlSuppressionRepository:
         except ImportError:
             logger.error(
                 "yaml_module_not_available",
-                extra={
-                    "message": "PyYAML not installed, cannot save suppressions.yaml"
-                },
+                extra={"message": "PyYAML not installed, cannot save suppressions.yaml"},
             )
             return
 

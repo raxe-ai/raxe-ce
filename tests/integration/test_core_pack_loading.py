@@ -3,6 +3,7 @@
 This test validates the actual pack distribution system works with the
 real core pack from src/raxe/packs/core/v1.0.0/.
 """
+
 from pathlib import Path
 
 import pytest
@@ -54,10 +55,7 @@ class TestCorePackLoading:
     def test_load_core_pack_via_registry(self, registry_root):
         """Test loading core pack through PackRegistry."""
         # Simulate ~/.raxe/packs structure by using registry directly
-        config = RegistryConfig(
-            packs_root=registry_root,
-            precedence=["core"]
-        )
+        config = RegistryConfig(packs_root=registry_root, precedence=["core"])
 
         registry = PackRegistry(config)
         registry.load_all_packs()
@@ -112,7 +110,9 @@ class TestCorePackLoading:
         # Verify all manifest rules are loaded
         for pack_rule in pack.manifest.rules:
             rule = pack.get_rule_versioned(pack_rule.id, pack_rule.version)
-            assert rule is not None, f"Rule {pack_rule.versioned_id} declared in manifest but not loaded"
+            assert (
+                rule is not None
+            ), f"Rule {pack_rule.versioned_id} declared in manifest but not loaded"
 
         # Verify metadata
         assert "maintainer" in pack.manifest.metadata
@@ -122,10 +122,7 @@ class TestCorePackLoading:
 
     def test_registry_get_all_rules_from_core(self, registry_root):
         """Test getting all rules from registry."""
-        config = RegistryConfig(
-            packs_root=registry_root,
-            precedence=["core"]
-        )
+        config = RegistryConfig(packs_root=registry_root, precedence=["core"])
 
         registry = PackRegistry(config)
         registry.load_all_packs()
@@ -138,10 +135,7 @@ class TestCorePackLoading:
 
     def test_registry_get_rules_by_family(self, registry_root):
         """Test getting rules by family from registry."""
-        config = RegistryConfig(
-            packs_root=registry_root,
-            precedence=["core"]
-        )
+        config = RegistryConfig(packs_root=registry_root, precedence=["core"])
 
         registry = PackRegistry(config)
         registry.load_all_packs()

@@ -3,11 +3,10 @@
 Tests the infrastructure layer file I/O operations for .raxe/suppressions.yaml files.
 This tests YAML loading, parsing, validation, and saving functionality.
 """
+
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-
-import pytest
 
 from raxe.domain.suppression import AuditEntry, Suppression, SuppressionAction
 from raxe.infrastructure.suppression.yaml_repository import (
@@ -510,7 +509,7 @@ class TestYamlRepositorySaving:
 
             content = config_path.read_text()
             # YAML may use single or double quotes
-            assert f"version:" in content
+            assert "version:" in content
             assert SUPPORTED_SCHEMA_VERSION in content
 
     def test_save_all_includes_action_only_for_non_default(self) -> None:
@@ -796,12 +795,15 @@ class TestYamlRepositoryEdgeCases:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / ".raxe" / "suppressions.yaml"
             config_path.parent.mkdir(parents=True)
-            config_path.write_text("""
+            config_path.write_text(
+                """
 version: "1.0"
 suppressions:
   - pattern: "pi-001"
     reason: "Unicode test"
-""", encoding="utf-8")
+""",
+                encoding="utf-8",
+            )
 
             repo = YamlSuppressionRepository(config_path=config_path)
             suppressions = repo.load_suppressions()

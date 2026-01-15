@@ -10,6 +10,7 @@ This follows Clean Architecture principles:
 - Type hints everywhere
 - Clear validation rules
 """
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -27,6 +28,7 @@ class ThreatLevel(Enum):
     - THREAT: Confident threat detection (strong signals)
     - HIGH_THREAT: Very confident threat (all signals very strong)
     """
+
     SAFE = "SAFE"
     FP_LIKELY = "FP_LIKELY"
     REVIEW = "REVIEW"
@@ -47,6 +49,7 @@ class ActionType(Enum):
     - BLOCK: Block the request (THREAT classification)
     - BLOCK_ALERT: Block and send alert to security team (HIGH_THREAT classification)
     """
+
     ALLOW = "ALLOW"
     ALLOW_WITH_LOG = "ALLOW_WITH_LOG"
     MANUAL_REVIEW = "MANUAL_REVIEW"
@@ -69,6 +72,7 @@ class ScoringMode(Enum):
     - LOW_FP: Minimize false positives (block less, accept some FNs)
       Use for: Educational platforms, creative tools, low-risk applications
     """
+
     HIGH_SECURITY = "high_security"
     BALANCED = "balanced"
     LOW_FP = "low_fp"
@@ -116,6 +120,7 @@ class ThreatScore:
         ...     harm_types_active_count=2,
         ... )
     """
+
     binary_threat_score: float
     binary_safe_score: float
     family_confidence: float
@@ -150,16 +155,22 @@ class ThreatScore:
         if not 0.0 <= self.severity_confidence <= 1.0:
             raise ValueError(f"severity_confidence must be 0-1, got {self.severity_confidence}")
         if not 0.0 <= self.harm_types_max_confidence <= 1.0:
-            raise ValueError(f"harm_types_max_confidence must be 0-1, got {self.harm_types_max_confidence}")
+            raise ValueError(
+                f"harm_types_max_confidence must be 0-1, got {self.harm_types_max_confidence}"
+            )
 
         # Validate probability distributions
         if len(self.binary_proba) < 2:
-            raise ValueError(f"binary_proba must have at least 2 elements, got {len(self.binary_proba)}")
+            raise ValueError(
+                f"binary_proba must have at least 2 elements, got {len(self.binary_proba)}"
+            )
         if not all(0.0 <= p <= 1.0 for p in self.binary_proba):
             raise ValueError("All binary_proba values must be 0-1")
 
         if len(self.family_proba) < 2:
-            raise ValueError(f"family_proba must have at least 2 elements, got {len(self.family_proba)}")
+            raise ValueError(
+                f"family_proba must have at least 2 elements, got {len(self.family_proba)}"
+            )
         if not all(0.0 <= p <= 1.0 for p in self.family_proba):
             raise ValueError("All family_proba values must be 0-1")
 
@@ -206,6 +217,7 @@ class ScoringResult:
         ...     metadata={"mode": "balanced", "family_name": "PI"}
         ... )
     """
+
     classification: ThreatLevel
     action: ActionType
     risk_score: float
@@ -248,22 +260,22 @@ class ScoringResult:
             Dictionary with all result fields, formatted for logging/API responses
         """
         return {
-            'classification': self.classification.value,
-            'action': self.action.value,
-            'risk_score': round(self.risk_score, 2),
-            'scores': {
-                'threat': round(self.threat_score, 4),
-                'family': round(self.family_confidence, 4),
-                'subfamily': round(self.subfamily_confidence, 4),
-                'hierarchical': round(self.hierarchical_score, 4)
+            "classification": self.classification.value,
+            "action": self.action.value,
+            "risk_score": round(self.risk_score, 2),
+            "scores": {
+                "threat": round(self.threat_score, 4),
+                "family": round(self.family_confidence, 4),
+                "subfamily": round(self.subfamily_confidence, 4),
+                "hierarchical": round(self.hierarchical_score, 4),
             },
-            'signals': {
-                'is_consistent': self.is_consistent,
-                'variance': round(self.variance, 4),
-                'weak_margins_count': self.weak_margins_count
+            "signals": {
+                "is_consistent": self.is_consistent,
+                "variance": round(self.variance, 4),
+                "weak_margins_count": self.weak_margins_count,
             },
-            'reason': self.reason,
-            'metadata': self.metadata
+            "reason": self.reason,
+            "metadata": self.metadata,
         }
 
     def to_summary(self) -> str:
@@ -312,6 +324,7 @@ class ScoringThresholds:
         ...     weak_subfamily=0.3
         ... )
     """
+
     safe: float
     fp_likely: float
     review: float
@@ -326,13 +339,13 @@ class ScoringThresholds:
         """Validate thresholds."""
         # Validate all thresholds are in valid range
         thresholds = [
-            ('safe', self.safe),
-            ('fp_likely', self.fp_likely),
-            ('review', self.review),
-            ('threat', self.threat),
-            ('high_threat', self.high_threat),
-            ('weak_family', self.weak_family),
-            ('weak_subfamily', self.weak_subfamily)
+            ("safe", self.safe),
+            ("fp_likely", self.fp_likely),
+            ("review", self.review),
+            ("threat", self.threat),
+            ("high_threat", self.high_threat),
+            ("weak_family", self.weak_family),
+            ("weak_subfamily", self.weak_subfamily),
         ]
 
         for name, value in thresholds:
@@ -345,13 +358,22 @@ class ScoringThresholds:
                 raise ValueError(f"likely_threat threshold must be 0-1, got {self.likely_threat}")
 
         if not 0.0 <= self.inconsistency_threshold <= 1.0:
-            raise ValueError(f"inconsistency_threshold must be 0-1, got {self.inconsistency_threshold}")
+            raise ValueError(
+                f"inconsistency_threshold must be 0-1, got {self.inconsistency_threshold}"
+            )
 
         # Validate threshold ordering
         # If likely_threat is enabled: safe < fp_likely < review < likely_threat < threat < high_threat
         # If likely_threat is disabled: safe < fp_likely < review < threat < high_threat
         if self.likely_threat is not None:
-            if not (self.safe < self.fp_likely < self.review < self.likely_threat < self.threat < self.high_threat):
+            if not (
+                self.safe
+                < self.fp_likely
+                < self.review
+                < self.likely_threat
+                < self.threat
+                < self.high_threat
+            ):
                 raise ValueError(
                     "Thresholds must be ordered: safe < fp_likely < review < likely_threat < threat < high_threat. "
                     f"Got: {self.safe} < {self.fp_likely} < {self.review} < {self.likely_threat} < {self.threat} < {self.high_threat}"
@@ -389,7 +411,7 @@ class ScoringThresholds:
                 high_threat=0.85,
                 inconsistency_threshold=0.05,
                 weak_family=0.5,
-                weak_subfamily=0.4
+                weak_subfamily=0.4,
             )
         elif mode == ScoringMode.BALANCED:
             return cls(
@@ -401,7 +423,7 @@ class ScoringThresholds:
                 high_threat=0.95,
                 inconsistency_threshold=0.05,
                 weak_family=0.4,
-                weak_subfamily=0.3
+                weak_subfamily=0.3,
             )
         elif mode == ScoringMode.LOW_FP:
             return cls(
@@ -413,7 +435,7 @@ class ScoringThresholds:
                 high_threat=0.97,
                 inconsistency_threshold=0.05,
                 weak_family=0.3,
-                weak_subfamily=0.2
+                weak_subfamily=0.2,
             )
         else:
             raise ValueError(f"Unknown scoring mode: {mode}")

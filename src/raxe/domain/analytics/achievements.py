@@ -15,70 +15,70 @@ ACHIEVEMENTS: list[Achievement] = [
         name="First Scan",
         description="Completed your first scan",
         points=10,
-        unlock_condition="scan_count >= 1"
+        unlock_condition="scan_count >= 1",
     ),
     Achievement(
         id="getting_started",
         name="Getting Started",
         description="Completed 10 scans",
         points=25,
-        unlock_condition="scan_count >= 10"
+        unlock_condition="scan_count >= 10",
     ),
     Achievement(
         id="power_user",
         name="Power User",
         description="Completed 100 scans",
         points=100,
-        unlock_condition="scan_count >= 100"
+        unlock_condition="scan_count >= 100",
     ),
     Achievement(
         id="super_user",
         name="Super User",
         description="Completed 1,000 scans",
         points=500,
-        unlock_condition="scan_count >= 1000"
+        unlock_condition="scan_count >= 1000",
     ),
     Achievement(
         id="mega_user",
         name="Mega User",
         description="Completed 10,000 scans",
         points=2000,
-        unlock_condition="scan_count >= 10000"
+        unlock_condition="scan_count >= 10000",
     ),
     Achievement(
         id="streak_3",
         name="Three Day Streak",
         description="3-day scan streak",
         points=20,
-        unlock_condition="streak_count >= 3"
+        unlock_condition="streak_count >= 3",
     ),
     Achievement(
         id="streak_7",
         name="Week Warrior",
         description="7-day scan streak",
         points=50,
-        unlock_condition="streak_count >= 7"
+        unlock_condition="streak_count >= 7",
     ),
     Achievement(
         id="streak_30",
         name="Monthly Master",
         description="30-day scan streak",
         points=200,
-        unlock_condition="streak_count >= 30"
+        unlock_condition="streak_count >= 30",
     ),
     Achievement(
         id="streak_100",
         name="Century Streak",
         description="100-day scan streak",
         points=1000,
-        unlock_condition="streak_count >= 100"
+        unlock_condition="streak_count >= 100",
     ),
     Achievement(
         id="streak_365",
         name="Year Legend",
         description="365-day scan streak",
         points=5000,
-        unlock_condition="streak_count >= 365"
+        unlock_condition="streak_count >= 365",
     ),
 ]
 
@@ -186,11 +186,7 @@ def calculate_user_achievements(
         )
     ]
 
-    total_points = sum(
-        ach.points
-        for ach in ACHIEVEMENTS
-        if ach.id in unlocked
-    )
+    total_points = sum(ach.points for ach in ACHIEVEMENTS if ach.id in unlocked)
 
     return UserAchievements(
         installation_id=installation_id,
@@ -224,10 +220,7 @@ def find_next_achievements(
         True
     """
     unlocked_set = set(current_achievements.unlocked_achievements)
-    locked_achievements = [
-        ach for ach in ACHIEVEMENTS
-        if ach.id not in unlocked_set
-    ]
+    locked_achievements = [ach for ach in ACHIEVEMENTS if ach.id not in unlocked_set]
 
     # Calculate progress needed for each locked achievement
     achievements_with_progress = []
@@ -273,9 +266,7 @@ def _calculate_progress_needed(
     return 0
 
 
-def get_leaderboard_points(
-    user_achievements: dict[str, UserAchievements]
-) -> list[tuple[str, int]]:
+def get_leaderboard_points(user_achievements: dict[str, UserAchievements]) -> list[tuple[str, int]]:
     """Generate leaderboard sorted by total points.
 
     Pure function - aggregates and sorts achievement data.

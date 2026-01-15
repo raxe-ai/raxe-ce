@@ -83,20 +83,20 @@ class TestDatabaseIndexes:
         """Verify all required indexes exist."""
         engine, _ = engine_with_data
         inspector = inspect(engine)
-        indexes = inspector.get_indexes('telemetry_events')
+        indexes = inspector.get_indexes("telemetry_events")
 
         # Convert to set of index names
-        index_names = {idx['name'] for idx in indexes}
+        index_names = {idx["name"] for idx in indexes}
 
         # Required indexes from Phase 3B
         required_indexes = {
-            'idx_priority_processed',
-            'idx_timestamp_processed',
-            'idx_customer_timestamp',
-            'ix_telemetry_customer_type',
-            'ix_telemetry_type_created',
-            'ix_telemetry_severity_timestamp',
-            'ix_telemetry_detection_customer',
+            "idx_priority_processed",
+            "idx_timestamp_processed",
+            "idx_customer_timestamp",
+            "ix_telemetry_customer_type",
+            "ix_telemetry_type_created",
+            "ix_telemetry_severity_timestamp",
+            "ix_telemetry_detection_customer",
         }
 
         # Verify all required indexes exist
@@ -107,16 +107,15 @@ class TestDatabaseIndexes:
         """Verify indexes are on correct columns."""
         engine, _ = engine_with_data
         inspector = inspect(engine)
-        indexes = inspector.get_indexes('telemetry_events')
+        indexes = inspector.get_indexes("telemetry_events")
 
         # Find customer_timestamp index
         customer_timestamp_idx = next(
-            (idx for idx in indexes if idx['name'] == 'idx_customer_timestamp'),
-            None
+            (idx for idx in indexes if idx["name"] == "idx_customer_timestamp"), None
         )
         assert customer_timestamp_idx is not None
-        assert 'customer_id' in customer_timestamp_idx['column_names']
-        assert 'timestamp' in customer_timestamp_idx['column_names']
+        assert "customer_id" in customer_timestamp_idx["column_names"]
+        assert "timestamp" in customer_timestamp_idx["column_names"]
 
 
 class TestQueryPerformance:
@@ -140,7 +139,7 @@ class TestQueryPerformance:
         assert stats.installation_id == customer_id
 
         # Performance requirement: <100ms
-        assert elapsed < 0.1, f"Query took {elapsed*1000:.2f}ms (requirement: <100ms)"
+        assert elapsed < 0.1, f"Query took {elapsed * 1000:.2f}ms (requirement: <100ms)"
 
         analytics_engine.close()
 
@@ -185,7 +184,7 @@ class TestQueryPerformance:
         assert len(rollups) == 31  # 30 days + 1
 
         # Performance requirement: <100ms
-        assert elapsed < 0.1, f"Query took {elapsed*1000:.2f}ms (requirement: <100ms)"
+        assert elapsed < 0.1, f"Query took {elapsed * 1000:.2f}ms (requirement: <100ms)"
 
         aggregator.close()
 
@@ -204,7 +203,7 @@ class TestQueryPerformance:
         assert len(breakdowns) > 0
 
         # Performance requirement: <50ms (single query should be fast)
-        assert elapsed < 0.05, f"Query took {elapsed*1000:.2f}ms (requirement: <50ms)"
+        assert elapsed < 0.05, f"Query took {elapsed * 1000:.2f}ms (requirement: <50ms)"
 
         aggregator.close()
 
@@ -219,19 +218,11 @@ class TestPagination:
         analytics_engine = AnalyticsEngine(db_path=temp_db)
 
         # Get first page
-        page_1 = analytics_engine.get_user_events_paginated(
-            customer_id,
-            limit=100,
-            offset=0
-        )
+        page_1 = analytics_engine.get_user_events_paginated(customer_id, limit=100, offset=0)
         assert len(page_1) == 100
 
         # Get second page
-        page_2 = analytics_engine.get_user_events_paginated(
-            customer_id,
-            limit=100,
-            offset=100
-        )
+        page_2 = analytics_engine.get_user_events_paginated(customer_id, limit=100, offset=100)
         assert len(page_2) == 100
 
         # Pages should be different
@@ -250,11 +241,7 @@ class TestPagination:
         start_memory = tracemalloc.get_traced_memory()[0]
 
         # Get only 100 events instead of all 10K
-        analytics_engine.get_user_events_paginated(
-            customer_id,
-            limit=100,
-            offset=0
-        )
+        analytics_engine.get_user_events_paginated(customer_id, limit=100, offset=0)
 
         _current_memory, peak_memory = tracemalloc.get_traced_memory()
         tracemalloc.stop()
@@ -285,7 +272,7 @@ class TestBatchOperations:
         assert len(scan_dates) > 0
 
         # Performance requirement: <50ms
-        assert elapsed < 0.05, f"Query took {elapsed*1000:.2f}ms (requirement: <50ms)"
+        assert elapsed < 0.05, f"Query took {elapsed * 1000:.2f}ms (requirement: <50ms)"
 
         analytics_engine.close()
 
@@ -300,10 +287,7 @@ class TestBatchOperations:
         cohort_date = date.today() - timedelta(days=7)
 
         start = time.perf_counter()
-        results = analytics_engine.calculate_retention_batch(
-            user_ids,
-            cohort_date
-        )
+        results = analytics_engine.calculate_retention_batch(user_ids, cohort_date)
         elapsed = time.perf_counter() - start
 
         # Verify results
@@ -311,7 +295,7 @@ class TestBatchOperations:
 
         # Performance requirement: <120ms for 3 users (adjusted for larger dataset)
         # (avoids 3 separate queries)
-        assert elapsed < 0.12, f"Query took {elapsed*1000:.2f}ms (requirement: <120ms)"
+        assert elapsed < 0.12, f"Query took {elapsed * 1000:.2f}ms (requirement: <120ms)"
 
         analytics_engine.close()
 
@@ -332,16 +316,13 @@ class TestPerformanceRegression:
         # Load all dashboard metrics
         analytics_engine.get_user_stats(customer_id)
         analytics_engine.get_global_stats()
-        aggregator.get_daily_rollup(
-            date.today() - timedelta(days=7),
-            date.today()
-        )
+        aggregator.get_daily_rollup(date.today() - timedelta(days=7), date.today())
         aggregator.get_detection_breakdown(days=7)
 
         elapsed = time.perf_counter() - start
 
         # Performance requirement: Full dashboard load <500ms
-        assert elapsed < 0.5, f"Dashboard load took {elapsed*1000:.2f}ms (requirement: <500ms)"
+        assert elapsed < 0.5, f"Dashboard load took {elapsed * 1000:.2f}ms (requirement: <500ms)"
 
         analytics_engine.close()
         aggregator.close()

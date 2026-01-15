@@ -46,9 +46,7 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
 
         # Create database engine
         self.engine = create_engine(
-            f"sqlite:///{db_path}",
-            echo=False,
-            connect_args={"check_same_thread": False}
+            f"sqlite:///{db_path}", echo=False, connect_args={"check_same_thread": False}
         )
 
         # Create tables if they don't exist
@@ -68,10 +66,7 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
         return self.SessionLocal()
 
     def get_scan_events(
-        self,
-        start_date: date,
-        end_date: date,
-        installation_id: str | None = None
+        self, start_date: date, end_date: date, installation_id: str | None = None
     ) -> list[ScanEvent]:
         """Get scan events within date range.
 
@@ -88,21 +83,17 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
         session = self._get_session()
         try:
             # Convert dates to datetime with timezone
-            start_dt = datetime.combine(
-                start_date,
-                datetime.min.time()
-            ).replace(tzinfo=timezone.utc)
-            end_dt = datetime.combine(
-                end_date,
-                datetime.max.time()
-            ).replace(tzinfo=timezone.utc)
+            start_dt = datetime.combine(start_date, datetime.min.time()).replace(
+                tzinfo=timezone.utc
+            )
+            end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
 
             # Build query with filters
             query = session.query(TelemetryEvent).filter(
                 and_(
                     TelemetryEvent.timestamp >= start_dt,
                     TelemetryEvent.timestamp <= end_dt,
-                    TelemetryEvent.event_type == "scan_completed"
+                    TelemetryEvent.event_type == "scan_completed",
                 )
             )
 
@@ -119,19 +110,18 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
                     except json.JSONDecodeError:
                         logger.warning(f"Failed to parse event_data for event {row.id}")
 
-                events.append(ScanEvent(
-                    installation_id=row.customer_id,
-                    timestamp=row.timestamp,
-                    event_type=row.event_type,
-                    has_threats=row.detection_count > 0,
-                    severity=row.highest_severity,
-                    scan_duration_ms=row.total_latency_ms
-                ))
+                events.append(
+                    ScanEvent(
+                        installation_id=row.customer_id,
+                        timestamp=row.timestamp,
+                        event_type=row.event_type,
+                        has_threats=row.detection_count > 0,
+                        severity=row.highest_severity,
+                        scan_duration_ms=row.total_latency_ms,
+                    )
+                )
 
-            logger.debug(
-                f"Loaded {len(events)} scan events for period "
-                f"{start_date} to {end_date}"
-            )
+            logger.debug(f"Loaded {len(events)} scan events for period {start_date} to {end_date}")
 
             return events
 
@@ -139,10 +129,7 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
             session.close()
 
     def get_user_activity(
-        self,
-        installation_id: str,
-        start_date: date | None = None,
-        end_date: date | None = None
+        self, installation_id: str, start_date: date | None = None, end_date: date | None = None
     ) -> UserActivity | None:
         """Get user activity summary.
 
@@ -164,17 +151,15 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
             )
 
             if start_date:
-                start_dt = datetime.combine(
-                    start_date,
-                    datetime.min.time()
-                ).replace(tzinfo=timezone.utc)
+                start_dt = datetime.combine(start_date, datetime.min.time()).replace(
+                    tzinfo=timezone.utc
+                )
                 query = query.filter(TelemetryEvent.timestamp >= start_dt)
 
             if end_date:
-                end_dt = datetime.combine(
-                    end_date,
-                    datetime.max.time()
-                ).replace(tzinfo=timezone.utc)
+                end_dt = datetime.combine(end_date, datetime.max.time()).replace(
+                    tzinfo=timezone.utc
+                )
                 query = query.filter(TelemetryEvent.timestamp <= end_dt)
 
             events = query.all()
@@ -187,21 +172,15 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
             last_seen = max(e.timestamp for e in events)
 
             # Get unique scan dates (for streak calculation)
-            scan_dates = list({
-                e.timestamp.date()
-                for e in events
-                if e.event_type == "scan_completed"
-            })
-
-            # Count scans and threats
-            total_scans = sum(
-                1 for e in events
-                if e.event_type == "scan_completed"
+            scan_dates = list(
+                {e.timestamp.date() for e in events if e.event_type == "scan_completed"}
             )
 
+            # Count scans and threats
+            total_scans = sum(1 for e in events if e.event_type == "scan_completed")
+
             total_threats = sum(
-                1 for e in events
-                if e.event_type == "scan_completed" and e.detection_count > 0
+                1 for e in events if e.event_type == "scan_completed" and e.detection_count > 0
             )
 
             return UserActivity(
@@ -210,7 +189,7 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
                 last_seen=last_seen,
                 total_scans=total_scans,
                 total_threats=total_threats,
-                scan_dates=sorted(scan_dates)
+                scan_dates=sorted(scan_dates),
             )
 
         finally:
@@ -229,42 +208,38 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
         """
         session = self._get_session()
         try:
-            start_dt = datetime.combine(
-                cohort_date,
-                datetime.min.time()
-            ).replace(tzinfo=timezone.utc)
+            start_dt = datetime.combine(cohort_date, datetime.min.time()).replace(
+                tzinfo=timezone.utc
+            )
             end_dt = start_dt + timedelta(days=1)
 
             # Find users whose first event was on cohort_date
             # Using subquery to find first timestamp per user
-            subquery = session.query(
-                TelemetryEvent.customer_id,
-                func.min(TelemetryEvent.timestamp).label('first_seen')
-            ).group_by(TelemetryEvent.customer_id).subquery()
-
-            cohort_users = session.query(subquery.c.customer_id).filter(
-                and_(
-                    subquery.c.first_seen >= start_dt,
-                    subquery.c.first_seen < end_dt
+            subquery = (
+                session.query(
+                    TelemetryEvent.customer_id,
+                    func.min(TelemetryEvent.timestamp).label("first_seen"),
                 )
-            ).all()
+                .group_by(TelemetryEvent.customer_id)
+                .subquery()
+            )
+
+            cohort_users = (
+                session.query(subquery.c.customer_id)
+                .filter(and_(subquery.c.first_seen >= start_dt, subquery.c.first_seen < end_dt))
+                .all()
+            )
 
             user_ids = [user[0] for user in cohort_users]
 
-            logger.debug(
-                f"Found {len(user_ids)} users in cohort {cohort_date}"
-            )
+            logger.debug(f"Found {len(user_ids)} users in cohort {cohort_date}")
 
             return user_ids
 
         finally:
             session.close()
 
-    def get_active_users(
-        self,
-        target_date: date,
-        window_days: int = 1
-    ) -> list[str]:
+    def get_active_users(self, target_date: date, window_days: int = 1) -> list[str]:
         """Get active users within window of target date.
 
         Args:
@@ -277,25 +252,23 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
         session = self._get_session()
         try:
             # Calculate window boundaries
-            end_dt = datetime.combine(
-                target_date,
-                datetime.max.time()
-            ).replace(tzinfo=timezone.utc)
+            end_dt = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
             start_dt = end_dt - timedelta(days=window_days - 1)
-            start_dt = start_dt.replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
+            start_dt = start_dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
             # Query for distinct users in window
-            active_users = session.query(
-                TelemetryEvent.customer_id
-            ).filter(
-                and_(
-                    TelemetryEvent.timestamp >= start_dt,
-                    TelemetryEvent.timestamp <= end_dt,
-                    TelemetryEvent.event_type == "scan_completed"
+            active_users = (
+                session.query(TelemetryEvent.customer_id)
+                .filter(
+                    and_(
+                        TelemetryEvent.timestamp >= start_dt,
+                        TelemetryEvent.timestamp <= end_dt,
+                        TelemetryEvent.event_type == "scan_completed",
+                    )
                 )
-            ).distinct().all()
+                .distinct()
+                .all()
+            )
 
             user_ids = [user[0] for user in active_users]
 
@@ -314,7 +287,7 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
         installation_id: str,
         achievement_id: str,
         earned_at: datetime,
-        metadata: dict[str, Any]
+        metadata: dict[str, Any],
     ) -> None:
         """Save achievement earned by user.
 
@@ -340,36 +313,25 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
                 with open(user_file) as f:
                     achievements = json.load(f)
             except (OSError, json.JSONDecodeError) as e:
-                logger.warning(
-                    f"Failed to load existing achievements for {installation_id}: {e}"
-                )
+                logger.warning(f"Failed to load existing achievements for {installation_id}: {e}")
 
         # Add new achievement
-        achievements.append({
-            'achievement_id': achievement_id,
-            'earned_at': earned_at.isoformat(),
-            **metadata
-        })
+        achievements.append(
+            {"achievement_id": achievement_id, "earned_at": earned_at.isoformat(), **metadata}
+        )
 
         # Save back
         try:
-            with open(user_file, 'w') as f:
+            with open(user_file, "w") as f:
                 json.dump(achievements, f, indent=2)
 
-            logger.debug(
-                f"Saved achievement {achievement_id} for {installation_id}"
-            )
+            logger.debug(f"Saved achievement {achievement_id} for {installation_id}")
 
         except OSError as e:
-            logger.error(
-                f"Failed to save achievement for {installation_id}: {e}"
-            )
+            logger.error(f"Failed to save achievement for {installation_id}: {e}")
             raise
 
-    def get_achievements(
-        self,
-        installation_id: str
-    ) -> list[dict[str, Any]]:
+    def get_achievements(self, installation_id: str) -> list[dict[str, Any]]:
         """Get all achievements for user.
 
         Args:
@@ -388,16 +350,12 @@ class SQLiteAnalyticsRepository(AnalyticsRepository):
             with open(user_file) as f:
                 achievements = json.load(f)
 
-            logger.debug(
-                f"Loaded {len(achievements)} achievements for {installation_id}"
-            )
+            logger.debug(f"Loaded {len(achievements)} achievements for {installation_id}")
 
             return achievements
 
         except (OSError, json.JSONDecodeError) as e:
-            logger.warning(
-                f"Failed to load achievements for {installation_id}: {e}"
-            )
+            logger.warning(f"Failed to load achievements for {installation_id}: {e}")
             return []
 
     def close(self) -> None:

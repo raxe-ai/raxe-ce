@@ -18,7 +18,6 @@ import pytest
 
 from raxe.infrastructure.telemetry.health_client import (
     AuthenticationError,
-    HealthCheckError,
     HealthResponse,
     NetworkError,
     ServerError,
@@ -221,7 +220,10 @@ class TestCheckHealth:
         mock_client.get.assert_called_once()
         call_args = mock_client.get.call_args
         assert "/v1/health" in call_args[0][0]
-        assert "Bearer raxe_live_abc123def456ghi789jkl012mno345" in call_args[1]["headers"]["Authorization"]
+        assert (
+            "Bearer raxe_live_abc123def456ghi789jkl012mno345"
+            in call_args[1]["headers"]["Authorization"]
+        )
 
     @patch("raxe.infrastructure.telemetry.health_client.httpx.Client")
     def test_check_health_401_unauthorized(self, mock_client_class):

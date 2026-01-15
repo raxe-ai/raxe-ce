@@ -2,20 +2,20 @@
 
 Tests the AgentScanner class for agentic AI system scanning.
 """
-from unittest.mock import Mock, patch
+
+from unittest.mock import Mock
 
 import pytest
 
 from raxe.sdk.agent_scanner import (
-    AgentScanResult,
     AgentScanner,
+    AgentScanResult,
     ScanConfig,
     ScanType,
     ToolPolicy,
     ToolValidationMode,
 )
 from raxe.sdk.client import Raxe
-from raxe.sdk.exceptions import SecurityException
 
 
 @pytest.fixture

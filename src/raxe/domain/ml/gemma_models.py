@@ -10,6 +10,7 @@ Model Architecture:
 - primary_technique: 22-class multiclass (threats only)
 - harm_types: 10-class MULTILABEL (threats only)
 """
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -17,6 +18,7 @@ from typing import Any
 
 class ThreatFamily(Enum):
     """Threat family classifications from Gemma model (9 classes)."""
+
     BENIGN = "benign"
     DATA_EXFILTRATION = "data_exfiltration"
     ENCODING_OR_OBFUSCATION_ATTACK = "encoding_or_obfuscation_attack"
@@ -48,6 +50,7 @@ class ThreatFamily(Enum):
 
 class Severity(Enum):
     """Severity levels from Gemma model (5 classes)."""
+
     NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
@@ -69,6 +72,7 @@ class PrimaryTechnique(Enum):
     These represent specific attack vectors detected by the model.
     Only populated when is_threat=True.
     """
+
     CHAIN_OF_THOUGHT_OR_INTERNAL_STATE_LEAK = "chain_of_thought_or_internal_state_leak"
     CONTEXT_OR_DELIMITER_INJECTION = "context_or_delimiter_injection"
     DATA_EXFIL_SYSTEM_PROMPT_OR_CONFIG = "data_exfil_system_prompt_or_config"
@@ -130,6 +134,7 @@ class HarmType(Enum):
     Multiple harm types can be active for a single detection.
     Only populated when is_threat=True.
     """
+
     CBRN_OR_WEAPONS = "cbrn_or_weapons"
     CRIME_OR_FRAUD = "crime_or_fraud"
     CYBERSECURITY_OR_MALWARE = "cybersecurity_or_malware"
@@ -189,6 +194,7 @@ class MultilabelResult:
         probabilities: All label probabilities (0.0-1.0 each)
         thresholds_used: Threshold used per label for decision
     """
+
     active_labels: tuple[HarmType, ...]
     probabilities: dict[str, float]  # HarmType.value -> probability
     thresholds_used: dict[str, float]  # HarmType.value -> threshold
@@ -254,6 +260,7 @@ class GemmaClassificationResult:
         technique_probabilities: Full technique probability distribution
         harm_types: Multilabel harm types result (if threat)
     """
+
     # Binary head
     is_threat: bool
     threat_probability: float
@@ -284,25 +291,15 @@ class GemmaClassificationResult:
     def __post_init__(self) -> None:
         """Validate classification result."""
         if not 0.0 <= self.threat_probability <= 1.0:
-            raise ValueError(
-                f"threat_probability must be 0-1, got {self.threat_probability}"
-            )
+            raise ValueError(f"threat_probability must be 0-1, got {self.threat_probability}")
         if not 0.0 <= self.safe_probability <= 1.0:
-            raise ValueError(
-                f"safe_probability must be 0-1, got {self.safe_probability}"
-            )
+            raise ValueError(f"safe_probability must be 0-1, got {self.safe_probability}")
         if not 0.0 <= self.family_confidence <= 1.0:
-            raise ValueError(
-                f"family_confidence must be 0-1, got {self.family_confidence}"
-            )
+            raise ValueError(f"family_confidence must be 0-1, got {self.family_confidence}")
         if not 0.0 <= self.severity_confidence <= 1.0:
-            raise ValueError(
-                f"severity_confidence must be 0-1, got {self.severity_confidence}"
-            )
+            raise ValueError(f"severity_confidence must be 0-1, got {self.severity_confidence}")
         if not 0.0 <= self.technique_confidence <= 1.0:
-            raise ValueError(
-                f"technique_confidence must be 0-1, got {self.technique_confidence}"
-            )
+            raise ValueError(f"technique_confidence must be 0-1, got {self.technique_confidence}")
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to JSON-serializable dict for telemetry/logging."""

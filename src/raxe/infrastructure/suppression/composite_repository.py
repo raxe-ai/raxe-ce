@@ -7,6 +7,7 @@ This infrastructure layer module combines:
 Note: The legacy .raxeignore file format has been deprecated in v1.0.
 Use .raxe/suppressions.yaml instead. See UPDATE.md for migration guide.
 """
+
 import logging
 from pathlib import Path
 from typing import Any

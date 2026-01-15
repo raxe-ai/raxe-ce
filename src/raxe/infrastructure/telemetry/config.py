@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RetryPolicyConfig:
     """Retry policy configuration."""
+
     max_retries: int = 10
     initial_delay_ms: int = 1000
     max_delay_ms: int = 512000  # 512s max per specification
@@ -32,6 +33,7 @@ class TelemetryConfig:
 
     All fields match schemas/v1.0.0/config/telemetry_config.json
     """
+
     # Core settings
     enabled: bool = True
     endpoint: str = ""  # Will be resolved from centralized endpoints
@@ -129,7 +131,10 @@ class TelemetryConfig:
             "RAXE_TELEMETRY_ENABLED": ("enabled", lambda x: x.lower() == "true"),
             "RAXE_TELEMETRY_ENDPOINT": ("endpoint", str),
             "RAXE_TELEMETRY_PRIVACY_MODE": ("privacy_mode", str),
-            "RAXE_TELEMETRY_INCLUDE_PROMPTS": ("include_full_prompts", lambda x: x.lower() == "true"),
+            "RAXE_TELEMETRY_INCLUDE_PROMPTS": (
+                "include_full_prompts",
+                lambda x: x.lower() == "true",
+            ),
             "RAXE_TELEMETRY_INCLUDE_CONTEXT": ("include_context", lambda x: x.lower() == "true"),
             "RAXE_TELEMETRY_HASH_ALGORITHM": ("hash_algorithm", str),
             "RAXE_TELEMETRY_BATCH_SIZE": ("batch_size", int),
@@ -137,7 +142,10 @@ class TelemetryConfig:
             "RAXE_TELEMETRY_MAX_QUEUE_SIZE": ("max_queue_size", int),
             "RAXE_TELEMETRY_SAMPLE_RATE": ("sample_rate", float),
             "RAXE_TELEMETRY_COMPRESSION": ("compression", str),
-            "RAXE_TELEMETRY_SEND_METRICS": ("send_performance_metrics", lambda x: x.lower() == "true"),
+            "RAXE_TELEMETRY_SEND_METRICS": (
+                "send_performance_metrics",
+                lambda x: x.lower() == "true",
+            ),
             "RAXE_TELEMETRY_SEND_ERRORS": ("send_error_reports", lambda x: x.lower() == "true"),
         }
 
@@ -251,4 +259,5 @@ class TelemetryConfig:
             return False
 
         import random
+
         return random.random() < self.sample_rate

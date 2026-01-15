@@ -17,7 +17,6 @@ from raxe.infrastructure.telemetry.acquisition import (
     detect_acquisition_source,
 )
 
-
 # =============================================================================
 # Test Markers
 # =============================================================================
@@ -92,9 +91,7 @@ class TestExplicitAcquisitionSource:
             "unknown",
         ],
     )
-    def test_explicit_source_accepts_all_valid_values(
-        self, clean_env: None, source: str
-    ) -> None:
+    def test_explicit_source_accepts_all_valid_values(self, clean_env: None, source: str) -> None:
         """Should accept all valid acquisition source values."""
         os.environ["RAXE_ACQUISITION_SOURCE"] = source
 

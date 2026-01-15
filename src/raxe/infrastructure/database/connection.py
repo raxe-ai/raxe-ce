@@ -3,6 +3,7 @@
 This module provides connection pooling for SQLite databases,
 ensuring thread-safety and efficient resource usage.
 """
+
 from contextlib import contextmanager
 from pathlib import Path
 

@@ -9,6 +9,7 @@ Performance targets:
 - Cache overhead: <1ms per lookup
 - Memory overhead: <100MB for default cache size
 """
+
 import asyncio
 import hashlib
 import time
@@ -28,6 +29,7 @@ class CacheEntry(Generic[T]):
         expires_at: Timestamp when entry expires (None for no expiration)
         created_at: Timestamp when entry was created
     """
+
     value: T
     expires_at: float | None
     created_at: float

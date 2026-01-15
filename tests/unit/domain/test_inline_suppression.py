@@ -3,15 +3,16 @@
 Tests the PURE domain logic for parsing and merging inline suppressions.
 No I/O, no mocks needed.
 """
+
 from datetime import datetime, timezone
 
 import pytest
 
 from raxe.domain.inline_suppression import (
     InlineSuppressionSpec,
+    merge_suppressions,
     parse_inline_suppression,
     parse_inline_suppressions,
-    merge_suppressions,
 )
 from raxe.domain.suppression import (
     Suppression,
@@ -88,33 +89,27 @@ class TestParseInlineSuppressionDictPatterns:
 
     def test_dict_with_suppress_action(self):
         """Test dict with SUPPRESS action."""
-        supp = parse_inline_suppression({
-            "pattern": "pi-001",
-            "action": "SUPPRESS",
-            "reason": "Known FP"
-        })
+        supp = parse_inline_suppression(
+            {"pattern": "pi-001", "action": "SUPPRESS", "reason": "Known FP"}
+        )
 
         assert supp.action == SuppressionAction.SUPPRESS
         assert supp.reason == "Known FP"
 
     def test_dict_with_flag_action(self):
         """Test dict with FLAG action."""
-        supp = parse_inline_suppression({
-            "pattern": "jb-*",
-            "action": "FLAG",
-            "reason": "Under investigation"
-        })
+        supp = parse_inline_suppression(
+            {"pattern": "jb-*", "action": "FLAG", "reason": "Under investigation"}
+        )
 
         assert supp.action == SuppressionAction.FLAG
         assert supp.reason == "Under investigation"
 
     def test_dict_with_log_action(self):
         """Test dict with LOG action."""
-        supp = parse_inline_suppression({
-            "pattern": "enc-*",
-            "action": "LOG",
-            "reason": "Monitoring FP rate"
-        })
+        supp = parse_inline_suppression(
+            {"pattern": "enc-*", "action": "LOG", "reason": "Monitoring FP rate"}
+        )
 
         assert supp.action == SuppressionAction.LOG
         assert supp.reason == "Monitoring FP rate"
@@ -131,19 +126,13 @@ class TestParseInlineSuppressionDictPatterns:
 
     def test_dict_with_enum_action(self):
         """Test dict accepts SuppressionAction enum directly."""
-        supp = parse_inline_suppression({
-            "pattern": "pi-001",
-            "action": SuppressionAction.FLAG
-        })
+        supp = parse_inline_suppression({"pattern": "pi-001", "action": SuppressionAction.FLAG})
 
         assert supp.action == SuppressionAction.FLAG
 
     def test_dict_empty_reason_uses_default(self):
         """Test dict with empty reason uses default."""
-        supp = parse_inline_suppression({
-            "pattern": "pi-001",
-            "reason": ""
-        })
+        supp = parse_inline_suppression({"pattern": "pi-001", "reason": ""})
 
         assert supp.reason == "Inline suppression"
 
@@ -160,10 +149,12 @@ class TestParseInlineSuppressionDictPatterns:
     def test_dict_invalid_action_raises(self):
         """Test dict with invalid action raises error."""
         with pytest.raises(SuppressionValidationError, match="Invalid action"):
-            parse_inline_suppression({
-                "pattern": "pi-001",
-                "action": "BLOCK"  # Not a valid action
-            })
+            parse_inline_suppression(
+                {
+                    "pattern": "pi-001",
+                    "action": "BLOCK",  # Not a valid action
+                }
+            )
 
 
 class TestParseInlineSuppressionInvalidTypes:
@@ -215,9 +206,7 @@ class TestParseInlineSuppressions:
 
     def test_single_dict(self):
         """Test single dict in list."""
-        result = parse_inline_suppressions([
-            {"pattern": "pi-001", "action": "FLAG"}
-        ])
+        result = parse_inline_suppressions([{"pattern": "pi-001", "action": "FLAG"}])
 
         assert len(result) == 1
         assert result[0].action == SuppressionAction.FLAG
@@ -282,12 +271,8 @@ class TestMergeSuppressions:
 
     def test_inline_overrides_config_same_pattern(self):
         """Test inline suppression overrides config for same pattern."""
-        config = [
-            Suppression(pattern="pi-001", reason="Config", action=SuppressionAction.SUPPRESS)
-        ]
-        inline = [
-            Suppression(pattern="pi-001", reason="Inline", action=SuppressionAction.FLAG)
-        ]
+        config = [Suppression(pattern="pi-001", reason="Config", action=SuppressionAction.SUPPRESS)]
+        inline = [Suppression(pattern="pi-001", reason="Inline", action=SuppressionAction.FLAG)]
 
         result = merge_suppressions(config, inline)
 

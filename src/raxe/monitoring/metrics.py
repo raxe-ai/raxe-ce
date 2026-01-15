@@ -269,14 +269,18 @@ class MetricsCollector:
         for detection in result.detections:
             detections_total.labels(
                 rule_id=detection.rule_id,
-                severity=detection.severity.value if hasattr(detection.severity, "value") else str(detection.severity),
+                severity=detection.severity.value
+                if hasattr(detection.severity, "value")
+                else str(detection.severity),
                 category=getattr(detection, "category", "unknown"),
             ).inc()
 
             # Count rule matches
             rule_matches.labels(
                 rule_id=detection.rule_id,
-                severity=detection.severity.value if hasattr(detection.severity, "value") else str(detection.severity),
+                severity=detection.severity.value
+                if hasattr(detection.severity, "value")
+                else str(detection.severity),
             ).inc()
 
     def record_scan_simple(

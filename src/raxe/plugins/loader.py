@@ -149,9 +149,7 @@ class PluginLoader:
                     # Check for plugin.py
                     plugin_file = plugin_dir / "plugin.py"
                     if not plugin_file.exists():
-                        logger.debug(
-                            f"Skipping {plugin_dir.name}: no plugin.py found"
-                        )
+                        logger.debug(f"Skipping {plugin_dir.name}: no plugin.py found")
                         continue
 
                     # Create plugin info
@@ -169,9 +167,7 @@ class PluginLoader:
         logger.info(f"Discovered {len(plugins)} plugins")
         return plugins
 
-    def load_plugin(
-        self, plugin_path: Path, config: dict[str, Any]
-    ) -> RaxePlugin | None:
+    def load_plugin(self, plugin_path: Path, config: dict[str, Any]) -> RaxePlugin | None:
         """Load a single plugin safely.
 
         Dynamically loads a plugin module, validates it implements the
@@ -209,9 +205,7 @@ class PluginLoader:
 
         try:
             # Create module spec
-            spec = importlib.util.spec_from_file_location(
-                f"raxe_plugin_{plugin_name}", plugin_file
-            )
+            spec = importlib.util.spec_from_file_location(f"raxe_plugin_{plugin_name}", plugin_file)
 
             if not spec or not spec.loader:
                 raise ImportError(f"Cannot create module spec for {plugin_file}")
@@ -232,9 +226,7 @@ class PluginLoader:
 
             # Validate plugin implements protocol
             if not hasattr(plugin, "metadata"):
-                raise TypeError(
-                    "Plugin must have 'metadata' property implementing PluginMetadata"
-                )
+                raise TypeError("Plugin must have 'metadata' property implementing PluginMetadata")
 
             if not hasattr(plugin, "on_init"):
                 raise TypeError("Plugin must implement 'on_init' method")
@@ -249,15 +241,11 @@ class PluginLoader:
             try:
                 plugin.on_init(config)
             except Exception as init_error:
-                raise RuntimeError(
-                    f"Plugin initialization failed: {init_error}"
-                ) from init_error
+                raise RuntimeError(f"Plugin initialization failed: {init_error}") from init_error
 
             # Store successfully loaded plugin
             self.loaded_plugins[plugin_name] = plugin
-            logger.info(
-                f"Successfully loaded plugin: {metadata.name} v{metadata.version}"
-            )
+            logger.info(f"Successfully loaded plugin: {metadata.name} v{metadata.version}")
 
             return plugin
 
@@ -315,9 +303,7 @@ class PluginLoader:
             else:
                 logger.warning(f"Failed to load enabled plugin: {plugin_info.name}")
 
-        logger.info(
-            f"Loaded {len(loaded)}/{len(enabled_plugins)} enabled plugins"
-        )
+        logger.info(f"Loaded {len(loaded)}/{len(enabled_plugins)} enabled plugins")
         return loaded
 
     def unload_plugin(self, plugin_name: str) -> bool:

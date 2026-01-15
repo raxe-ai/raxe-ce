@@ -6,6 +6,7 @@ Manages configuration for the scan pipeline:
 - Performance tuning options
 - Policy configuration
 """
+
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,6 +41,7 @@ class L2ScoringConfig:
         enable_margin_analysis: Analyze decision margins (default: True)
         enable_entropy: Enable entropy-based uncertainty (future feature, default: False)
     """
+
     mode: str = "balanced"
     custom_thresholds: dict[str, float] | None = None
     weights: dict[str, float] | None = None
@@ -52,31 +54,24 @@ class L2ScoringConfig:
         """Validate scoring configuration."""
         valid_modes = ("high_security", "balanced", "low_fp")
         if self.mode not in valid_modes:
-            raise ValueError(
-                f"mode must be one of {valid_modes}, got '{self.mode}'"
-            )
+            raise ValueError(f"mode must be one of {valid_modes}, got '{self.mode}'")
 
         # Validate custom thresholds if provided
         if self.custom_thresholds:
             for key, value in self.custom_thresholds.items():
                 if not (0.0 <= value <= 1.0):
-                    raise ValueError(
-                        f"custom_thresholds['{key}'] must be 0-1, got {value}"
-                    )
+                    raise ValueError(f"custom_thresholds['{key}'] must be 0-1, got {value}")
 
         # Validate weights if provided
         if self.weights:
             expected_keys = {"binary", "family", "subfamily"}
             if not set(self.weights.keys()).issubset(expected_keys):
                 raise ValueError(
-                    f"weights must only contain {expected_keys}, "
-                    f"got {set(self.weights.keys())}"
+                    f"weights must only contain {expected_keys}, got {set(self.weights.keys())}"
                 )
             for key, value in self.weights.items():
                 if not (0.0 <= value <= 1.0):
-                    raise ValueError(
-                        f"weights['{key}'] must be 0-1, got {value}"
-                    )
+                    raise ValueError(f"weights['{key}'] must be 0-1, got {value}")
 
     def to_dict(self) -> dict[str, object]:
         """Convert to dictionary for serialization."""
@@ -110,6 +105,7 @@ class ScanConfig:
         api_key: Optional RAXE API key
         customer_id: Optional customer ID override
     """
+
     packs_root: Path = field(default_factory=lambda: Path.home() / ".raxe" / "packs")
     enable_l2: bool = True
     use_production_l2: bool = True
@@ -132,9 +128,13 @@ class ScanConfig:
 
         # Validate confidence thresholds
         if not (0.0 <= self.l2_confidence_threshold <= 1.0):
-            raise ValueError(f"l2_confidence_threshold must be 0-1, got {self.l2_confidence_threshold}")
+            raise ValueError(
+                f"l2_confidence_threshold must be 0-1, got {self.l2_confidence_threshold}"
+            )
         if not (0.0 <= self.min_confidence_for_skip <= 1.0):
-            raise ValueError(f"min_confidence_for_skip must be 0-1, got {self.min_confidence_for_skip}")
+            raise ValueError(
+                f"min_confidence_for_skip must be 0-1, got {self.min_confidence_for_skip}"
+            )
 
     @classmethod
     def from_file(cls, config_path: Path) -> "ScanConfig":
@@ -178,6 +178,7 @@ class ScanConfig:
 
         # Build telemetry config - endpoint uses centralized config if not specified
         from raxe.infrastructure.config.endpoints import get_telemetry_endpoint
+
         telemetry = TelemetryConfig(
             enabled=telemetry_data.get("enabled", False),
             api_key=telemetry_data.get("api_key"),
@@ -206,7 +207,9 @@ class ScanConfig:
             enable_l2=scan_data.get("enable_l2", True),
             use_production_l2=scan_data.get("use_production_l2", True),
             l2_confidence_threshold=scan_data.get("l2_confidence_threshold", 0.5),
-            fail_fast_on_critical=scan_data.get("fail_fast_on_critical", False),  # Changed default to False
+            fail_fast_on_critical=scan_data.get(
+                "fail_fast_on_critical", False
+            ),  # Changed default to False
             min_confidence_for_skip=scan_data.get("min_confidence_for_skip", 0.7),
             enable_schema_validation=scan_data.get("enable_schema_validation", False),
             schema_validation_mode=scan_data.get("schema_validation_mode", "log_only"),
@@ -238,9 +241,13 @@ class ScanConfig:
         enable_l2 = os.getenv("RAXE_ENABLE_L2", "true").lower() == "true"
         use_production_l2 = os.getenv("RAXE_USE_PRODUCTION_L2", "true").lower() == "true"
         l2_confidence_threshold = float(os.getenv("RAXE_L2_CONFIDENCE_THRESHOLD", "0.5"))
-        fail_fast = os.getenv("RAXE_FAIL_FAST_ON_CRITICAL", "false").lower() == "true"  # Changed default to false
+        fail_fast = (
+            os.getenv("RAXE_FAIL_FAST_ON_CRITICAL", "false").lower() == "true"
+        )  # Changed default to false
         min_confidence_for_skip = float(os.getenv("RAXE_MIN_CONFIDENCE_FOR_SKIP", "0.7"))
-        enable_schema_validation = os.getenv("RAXE_ENABLE_SCHEMA_VALIDATION", "false").lower() == "true"
+        enable_schema_validation = (
+            os.getenv("RAXE_ENABLE_SCHEMA_VALIDATION", "false").lower() == "true"
+        )
         schema_validation_mode = os.getenv("RAXE_SCHEMA_VALIDATION_MODE", "log_only")
         api_key = os.getenv("RAXE_API_KEY")
         customer_id = os.getenv("RAXE_CUSTOMER_ID")

@@ -3,6 +3,7 @@
 Loads policies from local .raxe/policies.yaml files.
 Validates schema and converts to domain models.
 """
+
 from pathlib import Path
 
 import yaml
@@ -17,6 +18,7 @@ from raxe.domain.rules.models import Severity
 
 class PolicyLoadError(Exception):
     """Error loading or parsing policy file."""
+
     pass
 
 
@@ -124,9 +126,7 @@ class YAMLPolicyLoader:
 
         # Currently only support v1.0.0
         if not version.startswith("1."):
-            raise PolicyLoadError(
-                f"Unsupported policy version {version} (expected 1.x.x)"
-            )
+            raise PolicyLoadError(f"Unsupported policy version {version} (expected 1.x.x)")
 
         # Parse policies
         policies_data = data.get("policies")
@@ -134,9 +134,7 @@ class YAMLPolicyLoader:
             raise PolicyLoadError(f"Missing 'policies' field in {source}")
 
         if not isinstance(policies_data, list):
-            raise PolicyLoadError(
-                f"'policies' must be a list, got {type(policies_data)}"
-            )
+            raise PolicyLoadError(f"'policies' must be a list, got {type(policies_data)}")
 
         policies: list[Policy] = []
         for idx, policy_data in enumerate(policies_data):
@@ -144,12 +142,11 @@ class YAMLPolicyLoader:
                 policy = self._parse_policy(policy_data)
                 policies.append(policy)
             except (ValueError, KeyError) as e:
-                raise PolicyLoadError(
-                    f"Invalid policy at index {idx} in {source}: {e}"
-                ) from e
+                raise PolicyLoadError(f"Invalid policy at index {idx} in {source}: {e}") from e
 
         # Validate policy count using PolicySet (enforces max 100 policies)
         from raxe.domain.policies.models import PolicySet
+
         try:
             PolicySet(policies=policies)  # Validates count in __post_init__
         except ValueError as e:
@@ -175,10 +172,7 @@ class YAMLPolicyLoader:
         if not isinstance(conditions_data, list) or not conditions_data:
             raise ValueError("'conditions' must be non-empty list")
 
-        conditions = [
-            self._parse_condition(cond_data)
-            for cond_data in conditions_data
-        ]
+        conditions = [self._parse_condition(cond_data) for cond_data in conditions_data]
 
         # Parse action
         action_str = data["action"].upper()

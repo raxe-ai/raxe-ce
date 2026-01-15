@@ -2,12 +2,12 @@
 
 Provides benchmark utilities and performance baselines.
 """
+
 import json
 from pathlib import Path
 from typing import Any
 
 import pytest
-
 
 # Performance baseline file
 BASELINE_FILE = Path(__file__).parent / ".agentic_baseline.json"

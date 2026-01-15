@@ -4,10 +4,6 @@ Validates that the @raxe.protect decorator correctly blocks requests
 when L2 detects threats even if L1 doesn't.
 """
 
-import pytest
-
-from raxe.domain.policies.models import Policy, PolicyAction, PolicyCondition
-from raxe.domain.rules.models import Severity
 from raxe.infrastructure.config.scan_config import ScanConfig
 from raxe.sdk.client import Raxe
 from raxe.sdk.decorator import protect_function
@@ -24,8 +20,12 @@ def test_decorator_blocks_on_l2_only_threat(tmp_path, monkeypatch):
     # Prevent any file creation during test
     monkeypatch.setattr("raxe.sdk.client.UsageTracker", lambda: None)
     monkeypatch.setattr("raxe.sdk.client.ScanHistoryDB", lambda: None)
-    monkeypatch.setattr("raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None)
-    monkeypatch.setattr("raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None)
+    monkeypatch.setattr(
+        "raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None
+    )
+    monkeypatch.setattr(
+        "raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None
+    )
 
     raxe = Raxe(
         config_path=None,
@@ -67,8 +67,12 @@ def test_decorator_respects_l2_severity(tmp_path, monkeypatch):
     # Prevent file creation
     monkeypatch.setattr("raxe.sdk.client.UsageTracker", lambda: None)
     monkeypatch.setattr("raxe.sdk.client.ScanHistoryDB", lambda: None)
-    monkeypatch.setattr("raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None)
-    monkeypatch.setattr("raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None)
+    monkeypatch.setattr(
+        "raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None
+    )
+    monkeypatch.setattr(
+        "raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None
+    )
 
     raxe = Raxe(
         config_path=None,
@@ -101,8 +105,12 @@ def test_decorator_with_l2_disabled(tmp_path, monkeypatch):
     # Prevent file creation
     monkeypatch.setattr("raxe.sdk.client.UsageTracker", lambda: None)
     monkeypatch.setattr("raxe.sdk.client.ScanHistoryDB", lambda: None)
-    monkeypatch.setattr("raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None)
-    monkeypatch.setattr("raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None)
+    monkeypatch.setattr(
+        "raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None
+    )
+    monkeypatch.setattr(
+        "raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None
+    )
 
     raxe = Raxe(
         config_path=None,
@@ -135,8 +143,12 @@ def test_decorator_non_blocking_mode_with_l2(tmp_path, monkeypatch):
     # Prevent file creation
     monkeypatch.setattr("raxe.sdk.client.UsageTracker", lambda: None)
     monkeypatch.setattr("raxe.sdk.client.ScanHistoryDB", lambda: None)
-    monkeypatch.setattr("raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None)
-    monkeypatch.setattr("raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None)
+    monkeypatch.setattr(
+        "raxe.infrastructure.tracking.usage.UsageTracker.__init__", lambda self: None
+    )
+    monkeypatch.setattr(
+        "raxe.infrastructure.database.scan_history.ScanHistoryDB.__init__", lambda self: None
+    )
 
     raxe = Raxe(
         config_path=None,

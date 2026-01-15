@@ -23,6 +23,7 @@ from sqlalchemy.sql import func
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
+
     pass
 
 
@@ -52,8 +53,7 @@ class TelemetryEvent(Base):
     text_length = Column(Integer, nullable=False)
     detection_count = Column(Integer, nullable=False, default=0)
     highest_severity = Column(
-        Enum("critical", "high", "medium", "low", "info", name="severity_enum"),
-        nullable=True
+        Enum("critical", "high", "medium", "low", "info", name="severity_enum"), nullable=True
     )
 
     # Performance metrics
@@ -64,13 +64,11 @@ class TelemetryEvent(Base):
 
     # Policy outcome
     policy_action = Column(
-        Enum("allow", "block", "flag", name="policy_action_enum"),
-        nullable=False,
-        default="allow"
+        Enum("allow", "block", "flag", name="policy_action_enum"), nullable=False, default="allow"
     )
     severity_override = Column(
         Enum("critical", "high", "medium", "low", "info", name="severity_override_enum"),
-        nullable=True
+        nullable=True,
     )
 
     # Environment info
@@ -78,13 +76,12 @@ class TelemetryEvent(Base):
     environment = Column(
         Enum("production", "staging", "development", "testing", name="environment_enum"),
         nullable=False,
-        default="production"
+        default="production",
     )
 
     # Circuit breaker status
     circuit_breaker_status = Column(
-        Enum("closed", "open", "half_open", name="circuit_status_enum"),
-        nullable=True
+        Enum("closed", "open", "half_open", name="circuit_status_enum"), nullable=True
     )
 
     # A/B test cohort
@@ -95,7 +92,7 @@ class TelemetryEvent(Base):
         Enum("critical", "high", "medium", "low", name="priority_enum"),
         nullable=False,
         default="low",
-        index=True
+        index=True,
     )
 
     # Processing status
@@ -114,20 +111,15 @@ class TelemetryEvent(Base):
         Index("idx_priority_processed", "priority", "processed"),
         Index("idx_timestamp_processed", "timestamp", "processed"),
         Index("idx_customer_timestamp", "customer_id", "timestamp"),
-
         # Performance optimization indexes (Phase 3B)
         # For customer queries by event type
         Index("ix_telemetry_customer_type", "customer_id", "event_type"),
-
         # For event type filtering with time ordering
         Index("ix_telemetry_type_created", "event_type", "timestamp"),
-
         # For severity-based queries
         Index("ix_telemetry_severity_timestamp", "highest_severity", "timestamp"),
-
         # For detection count queries
         Index("ix_telemetry_detection_customer", "detection_count", "customer_id"),
-
         # Constraints
         CheckConstraint("text_length >= 0", name="check_text_length_positive"),
         CheckConstraint("detection_count >= 0", name="check_detection_count_positive"),
@@ -193,14 +185,14 @@ class RuleCache(Base):
     severity = Column(
         Enum("critical", "high", "medium", "low", "info", name="rule_severity_enum"),
         nullable=False,
-        index=True
+        index=True,
     )
     confidence = Column(Float, nullable=False)
 
     # Rule content (stored as JSON)
     patterns = Column(JSON, nullable=False)  # List of pattern dicts
-    examples = Column(JSON, nullable=True)   # Match/no-match examples
-    metrics = Column(JSON, nullable=True)    # Performance metrics
+    examples = Column(JSON, nullable=True)  # Match/no-match examples
+    metrics = Column(JSON, nullable=True)  # Performance metrics
 
     # Caching metadata
     loaded_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -247,9 +239,7 @@ class MLModelCache(Base):
 
     # Model configuration
     device = Column(
-        Enum("cpu", "cuda", "mps", "tpu", name="device_enum"),
-        nullable=False,
-        default="cpu"
+        Enum("cpu", "cuda", "mps", "tpu", name="device_enum"), nullable=False, default="cpu"
     )
     batch_size = Column(Integer, nullable=False, default=1)
     optimization = Column(JSON, nullable=True)  # Quantization, pruning settings
@@ -264,8 +254,7 @@ class MLModelCache(Base):
         Index("idx_model_version", "model_name", "model_version"),
         CheckConstraint("batch_size > 0", name="check_batch_size_positive"),
         CheckConstraint(
-            "avg_inference_ms IS NULL OR avg_inference_ms >= 0",
-            name="check_inference_ms_positive"
+            "avg_inference_ms IS NULL OR avg_inference_ms >= 0", name="check_inference_ms_positive"
         ),
     )
 
@@ -305,9 +294,7 @@ class APIUsageMetrics(Base):
 
     # Billing tier
     tier = Column(
-        Enum("free", "pro", "enterprise", name="billing_tier_enum"),
-        nullable=False,
-        default="free"
+        Enum("free", "pro", "enterprise", name="billing_tier_enum"), nullable=False, default="free"
     )
 
     __table_args__ = (

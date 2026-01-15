@@ -217,9 +217,7 @@ class SessionTracker:
         # Enqueue the event
         self._queue.enqueue(event)
 
-        logger.info(
-            f"Session started: {self.session_id} (session #{self._session_number})"
-        )
+        logger.info(f"Session started: {self.session_id} (session #{self._session_number})")
 
         return event
 
@@ -264,6 +262,7 @@ class SessionTracker:
         peak_memory_mb: float | None = None
         try:
             import resource
+
             # getrusage returns memory in kilobytes on some systems
             usage = resource.getrusage(resource.RUSAGE_SELF)
             peak_memory_mb = usage.ru_maxrss / 1024.0  # Convert to MB
@@ -353,10 +352,7 @@ class SessionTracker:
         # Enqueue the event (critical priority)
         self._queue.enqueue(event)
 
-        logger.info(
-            f"Activation event: {feature} "
-            f"(time_to_value={seconds_since_install:.1f}s)"
-        )
+        logger.info(f"Activation event: {feature} (time_to_value={seconds_since_install:.1f}s)")
 
         return event
 
@@ -437,6 +433,7 @@ class SessionTracker:
         # Detect Jupyter notebook
         try:
             from IPython import get_ipython
+
             ipython = get_ipython()
             environment["is_notebook"] = ipython is not None and "IPKernelApp" in str(type(ipython))
         except (ImportError, NameError):

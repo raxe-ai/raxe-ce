@@ -6,6 +6,7 @@ These tests are PURE - no mocks, no I/O, no database.
 
 Coverage target: >95%
 """
+
 import pytest
 
 from raxe.domain.telemetry.backpressure import (
@@ -17,7 +18,6 @@ from raxe.domain.telemetry.backpressure import (
     calculate_effective_sample_rate,
     should_sample_event,
 )
-
 
 # =============================================================================
 # Test Markers
@@ -142,9 +142,7 @@ class TestQueueMetrics:
             (15000, 10000, 1.5),  # Over capacity
         ],
     )
-    def test_fill_ratio_calculations(
-        self, size: int, max_size: int, expected_ratio: float
-    ) -> None:
+    def test_fill_ratio_calculations(self, size: int, max_size: int, expected_ratio: float) -> None:
         """Test fill ratio calculations at various levels."""
         metrics = QueueMetrics(
             critical_queue_size=size,
@@ -189,37 +187,27 @@ class TestBackpressureThresholds:
 
     def test_rejects_elevated_threshold_zero(self) -> None:
         """Should reject elevated_threshold of 0."""
-        with pytest.raises(
-            ValueError, match="elevated_threshold must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="elevated_threshold must be between 0 and 1"):
             BackpressureThresholds(elevated_threshold=0.0)
 
     def test_rejects_elevated_threshold_one(self) -> None:
         """Should reject elevated_threshold of 1."""
-        with pytest.raises(
-            ValueError, match="elevated_threshold must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="elevated_threshold must be between 0 and 1"):
             BackpressureThresholds(elevated_threshold=1.0)
 
     def test_rejects_elevated_threshold_negative(self) -> None:
         """Should reject negative elevated_threshold."""
-        with pytest.raises(
-            ValueError, match="elevated_threshold must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="elevated_threshold must be between 0 and 1"):
             BackpressureThresholds(elevated_threshold=-0.1)
 
     def test_rejects_critical_threshold_zero(self) -> None:
         """Should reject critical_threshold of 0."""
-        with pytest.raises(
-            ValueError, match="critical_threshold must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="critical_threshold must be between 0 and 1"):
             BackpressureThresholds(elevated_threshold=0.5, critical_threshold=0.0)
 
     def test_rejects_critical_threshold_over_one(self) -> None:
         """Should reject critical_threshold over 1."""
-        with pytest.raises(
-            ValueError, match="critical_threshold must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="critical_threshold must be between 0 and 1"):
             BackpressureThresholds(critical_threshold=1.1)
 
     def test_rejects_elevated_greater_than_critical(self) -> None:
@@ -238,30 +226,22 @@ class TestBackpressureThresholds:
 
     def test_rejects_elevated_sample_rate_zero(self) -> None:
         """Should reject elevated_sample_rate of 0."""
-        with pytest.raises(
-            ValueError, match="elevated_sample_rate must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="elevated_sample_rate must be between 0 and 1"):
             BackpressureThresholds(elevated_sample_rate=0.0)
 
     def test_rejects_elevated_sample_rate_over_one(self) -> None:
         """Should reject elevated_sample_rate over 1."""
-        with pytest.raises(
-            ValueError, match="elevated_sample_rate must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="elevated_sample_rate must be between 0 and 1"):
             BackpressureThresholds(elevated_sample_rate=1.1)
 
     def test_rejects_critical_sample_rate_zero(self) -> None:
         """Should reject critical_sample_rate of 0."""
-        with pytest.raises(
-            ValueError, match="critical_sample_rate must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="critical_sample_rate must be between 0 and 1"):
             BackpressureThresholds(critical_sample_rate=0.0)
 
     def test_rejects_critical_sample_rate_over_one(self) -> None:
         """Should reject critical_sample_rate over 1."""
-        with pytest.raises(
-            ValueError, match="critical_sample_rate must be between 0 and 1"
-        ):
+        with pytest.raises(ValueError, match="critical_sample_rate must be between 0 and 1"):
             BackpressureThresholds(critical_sample_rate=1.1)
 
     def test_default_thresholds_constant(self) -> None:
@@ -562,9 +542,7 @@ class TestCalculateBackpressureCustomThresholds:
             standard_queue_size=30000,  # 60% - above custom elevated
             standard_queue_max=50000,
         )
-        decision = calculate_backpressure(
-            metrics, is_critical_event=False, thresholds=thresholds
-        )
+        decision = calculate_backpressure(metrics, is_critical_event=False, thresholds=thresholds)
 
         assert decision.pressure_level == "elevated"
         assert decision.sample_rate == 0.5
@@ -580,9 +558,7 @@ class TestCalculateBackpressureCustomThresholds:
             standard_queue_size=40000,  # 80% - above custom critical
             standard_queue_max=50000,
         )
-        decision = calculate_backpressure(
-            metrics, is_critical_event=False, thresholds=thresholds
-        )
+        decision = calculate_backpressure(metrics, is_critical_event=False, thresholds=thresholds)
 
         assert decision.pressure_level == "critical"
         assert decision.sample_rate == 0.2
@@ -692,9 +668,7 @@ class TestShouldSampleEvent:
     )
     def test_sampling_roughly_matches_rate(self, sample_rate: float) -> None:
         """Sampling should roughly match the sample rate."""
-        results = [
-            should_sample_event(sample_rate, f"hash_{i:016x}") for i in range(1000)
-        ]
+        results = [should_sample_event(sample_rate, f"hash_{i:016x}") for i in range(1000)]
         actual_rate = sum(results) / len(results)
         # Allow 10% tolerance
         assert abs(actual_rate - sample_rate) < 0.1
@@ -810,9 +784,7 @@ class TestBackpressureCriticalVsStandard:
             (150, False),  # Dropped
         ],
     )
-    def test_standard_event_queuing(
-        self, fill_percent: int, expected_queued: bool
-    ) -> None:
+    def test_standard_event_queuing(self, fill_percent: int, expected_queued: bool) -> None:
         """Standard events should be queued/dropped based on fill level."""
         size = (fill_percent * 50000) // 100
         metrics = QueueMetrics(

@@ -90,7 +90,7 @@ def sample_events(analytics_engine):
             policy_action="allow",
             sdk_version="0.0.1",
             environment="production",
-            timestamp=now - timedelta(days=30-i)
+            timestamp=now - timedelta(days=30 - i),
         )
         events.append(event)
 
@@ -111,7 +111,7 @@ def sample_events(analytics_engine):
             policy_action="allow",
             sdk_version="0.0.1",
             environment="production",
-            timestamp=now - timedelta(days=30-i*3)
+            timestamp=now - timedelta(days=30 - i * 3),
         )
         events.append(event)
 
@@ -132,7 +132,7 @@ def sample_events(analytics_engine):
             policy_action="allow",
             sdk_version="0.0.1",
             environment="production",
-            timestamp=now - timedelta(days=30-i*10)
+            timestamp=now - timedelta(days=30 - i * 10),
         )
         events.append(event)
 
@@ -274,10 +274,7 @@ class TestUserStats:
     def test_user_stats_creation(self):
         """Test creating UserStats object."""
         stats = UserStats(
-            installation_id="test_id",
-            total_scans=100,
-            threats_detected=10,
-            detection_rate=10.0
+            installation_id="test_id", total_scans=100, threats_detected=10, detection_rate=10.0
         )
 
         assert stats.installation_id == "test_id"
@@ -292,8 +289,7 @@ class TestMetricsDataclasses:
     def test_installation_metrics(self):
         """Test InstallationMetrics creation."""
         metrics = InstallationMetrics(
-            total_installations=100,
-            installations_by_os={"linux": 50, "darwin": 30, "windows": 20}
+            total_installations=100, installations_by_os={"linux": 50, "darwin": 30, "windows": 20}
         )
 
         assert metrics.total_installations == 100
@@ -306,7 +302,7 @@ class TestMetricsDataclasses:
             scans_per_user_p50=10.0,
             scans_per_user_p95=50.0,
             threats_detected=100,
-            detection_rate=10.0
+            detection_rate=10.0,
         )
 
         assert metrics.total_scans == 1000
@@ -321,7 +317,7 @@ class TestMetricsDataclasses:
             mau=1000,
             day1_retention=80.0,
             day7_retention=50.0,
-            day30_retention=30.0
+            day30_retention=30.0,
         )
 
         assert metrics.dau == 100
@@ -335,7 +331,7 @@ class TestMetricsDataclasses:
             p95_latency_ms=10.0,
             p99_latency_ms=15.0,
             avg_l1_latency_ms=4.0,
-            avg_l2_latency_ms=12.0
+            avg_l2_latency_ms=12.0,
         )
 
         assert metrics.p50_latency_ms == 5.0

@@ -2,6 +2,7 @@
 
 Allows gradual rollout and comparison of L1-only vs L1+L2 detection modes.
 """
+
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -32,7 +33,7 @@ class ABTestConfig:
 
         # Handle frozen dataclass field initialization
         if self.customer_overrides is None:
-            object.__setattr__(self, 'customer_overrides', {})
+            object.__setattr__(self, "customer_overrides", {})
 
 
 class ABTestManager:
@@ -46,14 +47,10 @@ class ABTestManager:
         """
         self.config = config or ABTestConfig()
         self._cohort_cache = {}
-        logger.info(
-            f"AB test manager initialized: L2 rollout={self.config.l2_rollout_percentage}%"
-        )
+        logger.info(f"AB test manager initialized: L2 rollout={self.config.l2_rollout_percentage}%")
 
     def get_detector_mode(
-        self,
-        customer_id: str | None = None,
-        session_id: str | None = None
+        self, customer_id: str | None = None, session_id: str | None = None
     ) -> DetectorMode:
         """Determine which detector mode to use.
 
@@ -120,7 +117,7 @@ class ABTestManager:
         mode: DetectorMode,
         customer_id: str | None,
         detected_threat: bool,
-        processing_time_ms: float
+        processing_time_ms: float,
     ) -> None:
         """Record A/B test outcome for analysis.
 
@@ -145,12 +142,10 @@ class ABTestManager:
             Statistics about cohort assignments
         """
         l1_only_count = sum(
-            1 for mode in self._cohort_cache.values()
-            if mode == DetectorMode.L1_ONLY
+            1 for mode in self._cohort_cache.values() if mode == DetectorMode.L1_ONLY
         )
         l1_l2_count = sum(
-            1 for mode in self._cohort_cache.values()
-            if mode == DetectorMode.L1_AND_L2
+            1 for mode in self._cohort_cache.values() if mode == DetectorMode.L1_AND_L2
         )
 
         total = len(self._cohort_cache)

@@ -41,13 +41,13 @@ class TestNewUserJourney:
     def temp_raxe_home(self):
         """Create temporary RAXE home directory for isolated testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            original_home = os.environ.get('RAXE_HOME')
-            os.environ['RAXE_HOME'] = tmpdir
+            original_home = os.environ.get("RAXE_HOME")
+            os.environ["RAXE_HOME"] = tmpdir
             yield Path(tmpdir)
             if original_home:
-                os.environ['RAXE_HOME'] = original_home
+                os.environ["RAXE_HOME"] = original_home
             else:
-                os.environ.pop('RAXE_HOME', None)
+                os.environ.pop("RAXE_HOME", None)
 
     def test_complete_new_user_journey(self, temp_raxe_home):
         """
@@ -112,8 +112,8 @@ class TestNewUserJourney:
         assert result.severity in ["critical", "high"], "Should be high severity"
 
         # Verify layer attribution (Week 7-8 feature)
-        assert hasattr(result, 'l1_detections'), "Should have L1 detection count"
-        assert hasattr(result, 'l2_detections'), "Should have L2 detection count"
+        assert hasattr(result, "l1_detections"), "Should have L1 detection count"
+        assert hasattr(result, "l2_detections"), "Should have L2 detection count"
 
         print(f"\u2705 First scan completed: {result.total_detections} threats detected")
         print(f"   L1 detections: {result.l1_detections}")
@@ -131,15 +131,18 @@ class TestNewUserJourney:
                 log_content = log_file.read_text()
 
                 # Verify NO PII in logs
-                assert "reveal system secrets" not in log_content, \
-                    "Actual prompt text should NOT be in logs (PII leak)"
-                assert "Ignore all previous" not in log_content, \
-                    "Prompt content should NOT be in logs (privacy violation)"
+                assert (
+                    "reveal system secrets" not in log_content
+                ), "Actual prompt text should NOT be in logs (PII leak)"
+                assert (
+                    "Ignore all previous" not in log_content
+                ), "Prompt content should NOT be in logs (privacy violation)"
 
                 # Verify logs are clean (no secrets, paths)
                 assert "API_KEY" not in log_content, "No API keys in logs"
-                assert "/Users/" not in log_content and "C:\\" not in log_content, \
-                    "No file paths in logs"
+                assert (
+                    "/Users/" not in log_content and "C:\\" not in log_content
+                ), "No file paths in logs"
 
         print("\u2705 Logs are privacy-preserving (no PII, no secrets)")
 
@@ -159,14 +162,11 @@ class TestNewUserJourney:
             latest_scan = recent_scans[0]
 
             # Verify privacy: only hash stored, not actual text
-            assert hasattr(latest_scan, 'prompt_hash'), \
-                "Should store prompt hash"
-            assert latest_scan.prompt_hash is not None, \
-                "Prompt hash should not be None"
+            assert hasattr(latest_scan, "prompt_hash"), "Should store prompt hash"
+            assert latest_scan.prompt_hash is not None, "Prompt hash should not be None"
 
             # Verify detection count
-            assert latest_scan.threats_found > 0, \
-                "Should record detection count"
+            assert latest_scan.threats_found > 0, "Should record detection count"
 
             print("\u2705 Scan history stored (privacy-preserving)")
             print(f"   Total scans in history: {len(recent_scans)}")
@@ -222,8 +222,7 @@ class TestNewUserJourney:
             streak_metrics = streak_service.calculate_user_streaks(installation_id)
 
             assert streak_metrics is not None, "Should calculate streaks"
-            assert streak_metrics.current_streak >= 1, \
-                "Should have at least 1-day streak (today)"
+            assert streak_metrics.current_streak >= 1, "Should have at least 1-day streak (today)"
 
             print("\u2705 Streak tracking working")
             print(f"   Current streak: {streak_metrics.current_streak} days")
@@ -233,10 +232,12 @@ class TestNewUserJourney:
             achievements = achievement_service.calculate_user_achievements(installation_id)
 
             assert achievements is not None, "Should calculate achievements"
-            assert len(achievements.unlocked_achievements) > 0, \
-                "Should unlock at least 'first_scan' achievement"
-            assert 'first_scan' in achievements.unlocked_achievements, \
-                "Should unlock 'first_scan' achievement"
+            assert (
+                len(achievements.unlocked_achievements) > 0
+            ), "Should unlock at least 'first_scan' achievement"
+            assert (
+                "first_scan" in achievements.unlocked_achievements
+            ), "Should unlock 'first_scan' achievement"
 
             print("\u2705 Achievement tracking working")
             print(f"   Unlocked: {len(achievements.unlocked_achievements)} achievements")
@@ -286,25 +287,33 @@ class TestNewUserJourney:
         # FINAL SUMMARY
         # ============================================================
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("E2E TEST: NEW USER JOURNEY - COMPLETE \u2705")
-        print("="*60)
+        print("=" * 60)
         print(f"Installation ID: {installation_id}")
         print(f"Install Date: {install_date}")
-        print(f"Time to First Scan: {time_to_first_scan:.2f}s" if time_to_first_scan else "Time to First Scan: Not tracked")
+        print(
+            f"Time to First Scan: {time_to_first_scan:.2f}s"
+            if time_to_first_scan
+            else "Time to First Scan: Not tracked"
+        )
         print("Scans Performed: 3")
         print("Threats Detected: 1")
         print("Clean Scans: 2")
-        print(f"Current Streak: {streak_metrics.current_streak if 'streak_metrics' in locals() else 'N/A'} days")
-        print(f"Achievements: {len(achievements.unlocked_achievements) if 'achievements' in locals() else 'N/A'}")
-        print("="*60)
+        print(
+            f"Current Streak: {streak_metrics.current_streak if 'streak_metrics' in locals() else 'N/A'} days"
+        )
+        print(
+            f"Achievements: {len(achievements.unlocked_achievements) if 'achievements' in locals() else 'N/A'}"
+        )
+        print("=" * 60)
         print("\nAll Sprint 5 Week 1-9 features verified working!")
         print("- Week 1-2: Logging, Config, History, Tracking, Telemetry \u2705")
         print("- Week 3-4: Analytics, Streaks, Achievements \u2705")
         print("- Week 5-6: CLI (tested separately) \u2705")
         print("- Week 7-8: Layer Control, Performance Modes \u2705")
         print("- Week 9: Test Quality Improvements \u2705")
-        print("="*60)
+        print("=" * 60)
 
 
 if __name__ == "__main__":
@@ -318,7 +327,7 @@ if __name__ == "__main__":
 
     # Create temp directory
     temp_dir = tempfile.mkdtemp(prefix="raxe_e2e_")
-    os.environ['RAXE_HOME'] = temp_dir
+    os.environ["RAXE_HOME"] = temp_dir
 
     try:
         # Run test
@@ -335,11 +344,13 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n\u274c E2E test error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
     finally:
         # Cleanup
         import shutil
+
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)

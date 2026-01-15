@@ -53,10 +53,7 @@ class AchievementService:
         """
         self._streak_service = streak_service
 
-    def evaluate_user_achievements(
-        self,
-        installation_id: str
-    ) -> list[Achievement]:
+    def evaluate_user_achievements(self, installation_id: str) -> list[Achievement]:
         """Evaluate all potential achievements for a user.
 
         This checks which achievements the user has earned and saves any
@@ -79,16 +76,13 @@ class AchievementService:
             activity = self.repository.get_user_activity(installation_id)
 
             if not activity:
-                logger.info(
-                    f"No activity for achievement evaluation: {installation_id}"
-                )
+                logger.info(f"No activity for achievement evaluation: {installation_id}")
                 return []
 
             # Step 2: Get streak info if streak service available
             from datetime import date
 
             from raxe.domain.analytics import StreakMetrics
-
 
             if self._streak_service:
                 streak_metrics = self._streak_service.get_user_streak(installation_id)
@@ -99,23 +93,24 @@ class AchievementService:
                     current_streak=0,
                     longest_streak=0,
                     total_scan_days=len(activity.scan_dates),
-                    last_scan_date=date.today()
+                    last_scan_date=date.today(),
                 )
 
             # Step 3: Calculate all unlocked achievements using domain (pure logic)
             user_achievements = calculate_user_achievements(
                 installation_id=installation_id,
                 scan_count=activity.total_scans,
-                streak_metrics=streak_metrics
+                streak_metrics=streak_metrics,
             )
 
             # Step 4: Get existing achievements from repository (I/O)
             existing = self.repository.get_achievements(installation_id)
-            existing_ids = {a['achievement_id'] for a in existing}
+            existing_ids = {a["achievement_id"] for a in existing}
 
             # Step 5: Filter to only new achievements
             new_achievement_ids = [
-                ach_id for ach_id in user_achievements.unlocked_achievements
+                ach_id
+                for ach_id in user_achievements.unlocked_achievements
                 if ach_id not in existing_ids
             ]
 
@@ -132,13 +127,13 @@ class AchievementService:
                     achievement_id=achievement.id,
                     earned_at=datetime.now(timezone.utc),
                     metadata={
-                        'name': achievement.name,
-                        'description': achievement.description,
-                        'points': achievement.points,
-                        'unlock_condition': achievement.unlock_condition,
-                        'scan_count': activity.total_scans,
-                        'streak_count': streak_metrics.longest_streak
-                    }
+                        "name": achievement.name,
+                        "description": achievement.description,
+                        "points": achievement.points,
+                        "unlock_condition": achievement.unlock_condition,
+                        "scan_count": activity.total_scans,
+                        "streak_count": streak_metrics.longest_streak,
+                    },
                 )
 
                 logger.info(
@@ -149,15 +144,10 @@ class AchievementService:
             return new_achievements
 
         except Exception as e:
-            logger.error(
-                f"Failed to evaluate achievements for {installation_id}: {e}"
-            )
+            logger.error(f"Failed to evaluate achievements for {installation_id}: {e}")
             raise
 
-    def get_user_achievement_summary(
-        self,
-        installation_id: str
-    ) -> dict[str, Any]:
+    def get_user_achievement_summary(self, installation_id: str) -> dict[str, Any]:
         """Get complete achievement summary for a user.
 
         Args:
@@ -183,14 +173,13 @@ class AchievementService:
                     "unlocked_count": 0,
                     "total_count": len(ACHIEVEMENTS),
                     "unlocked_achievements": [],
-                    "next_achievements": []
+                    "next_achievements": [],
                 }
 
             # Step 2: Get streak metrics
             from datetime import date
 
             from raxe.domain.analytics import StreakMetrics
-
 
             if self._streak_service:
                 streak_metrics = self._streak_service.get_user_streak(installation_id)
@@ -200,21 +189,18 @@ class AchievementService:
                     current_streak=0,
                     longest_streak=0,
                     total_scan_days=len(activity.scan_dates),
-                    last_scan_date=date.today()
+                    last_scan_date=date.today(),
                 )
 
             # Step 3: Calculate user achievements using domain (pure logic)
             user_achievements = calculate_user_achievements(
                 installation_id=installation_id,
                 scan_count=activity.total_scans,
-                streak_metrics=streak_metrics
+                streak_metrics=streak_metrics,
             )
 
             # Step 4: Find next achievements to unlock (pure logic)
-            next_achievements = find_next_achievements(
-                user_achievements,
-                max_results=3
-            )
+            next_achievements = find_next_achievements(user_achievements, max_results=3)
 
             # Step 5: Build response
             result = {
@@ -226,7 +212,7 @@ class AchievementService:
                     {
                         "id": ach_id,
                         "name": get_achievement_by_id(ach_id).name,
-                        "points": get_achievement_by_id(ach_id).points
+                        "points": get_achievement_by_id(ach_id).points,
                     }
                     for ach_id in user_achievements.unlocked_achievements
                     if get_achievement_by_id(ach_id)
@@ -237,10 +223,10 @@ class AchievementService:
                         "name": ach.name,
                         "description": ach.description,
                         "points": ach.points,
-                        "progress_needed": progress
+                        "progress_needed": progress,
                     }
                     for ach, progress in next_achievements
-                ]
+                ],
             }
 
             logger.info(
@@ -252,14 +238,10 @@ class AchievementService:
             return result
 
         except Exception as e:
-            logger.error(
-                f"Failed to get achievement summary for {installation_id}: {e}"
-            )
+            logger.error(f"Failed to get achievement summary for {installation_id}: {e}")
             raise
 
-    def get_recent_unlocks(
-        self
-    ) -> list[dict[str, Any]]:
+    def get_recent_unlocks(self) -> list[dict[str, Any]]:
         """Get recently unlocked achievements across all users.
 
         Returns:
@@ -291,9 +273,7 @@ class AchievementService:
             logger.error(f"Failed to get recent unlocks: {e}")
             raise
 
-    def get_achievement_leaderboard(
-        self
-    ) -> list[dict[str, Any]]:
+    def get_achievement_leaderboard(self) -> list[dict[str, Any]]:
         """Get top users by achievement points.
 
         Returns:
@@ -325,11 +305,7 @@ class AchievementService:
             logger.error(f"Failed to get achievement leaderboard: {e}")
             raise
 
-    def get_achievement_progress(
-        self,
-        installation_id: str,
-        achievement_id: str
-    ) -> dict[str, Any]:
+    def get_achievement_progress(self, installation_id: str, achievement_id: str) -> dict[str, Any]:
         """Get user's progress toward a specific achievement.
 
         Args:
@@ -364,14 +340,13 @@ class AchievementService:
                     "unlocked": False,
                     "current": 0,
                     "required": self._extract_threshold(achievement.unlock_condition),
-                    "progress_percentage": 0.0
+                    "progress_percentage": 0.0,
                 }
 
             # Step 3: Get streak metrics
             from datetime import date
 
             from raxe.domain.analytics import StreakMetrics
-
 
             if self._streak_service:
                 streak_metrics = self._streak_service.get_user_streak(installation_id)
@@ -381,14 +356,14 @@ class AchievementService:
                     current_streak=0,
                     longest_streak=0,
                     total_scan_days=len(activity.scan_dates),
-                    last_scan_date=date.today()
+                    last_scan_date=date.today(),
                 )
 
             # Step 4: Check if achievement is unlocked (pure logic)
             is_unlocked = check_achievement_unlocked(
                 achievement,
                 scan_count=activity.total_scans,
-                streak_count=streak_metrics.longest_streak
+                streak_count=streak_metrics.longest_streak,
             )
 
             # Step 5: Calculate progress
@@ -411,7 +386,7 @@ class AchievementService:
                 "unlocked": is_unlocked,
                 "current": current,
                 "required": required,
-                "progress_percentage": round(progress_percentage, 1)
+                "progress_percentage": round(progress_percentage, 1),
             }
 
             logger.info(

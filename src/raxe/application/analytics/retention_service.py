@@ -42,10 +42,7 @@ class RetentionService:
         """
         self.repository = repository
 
-    def calculate_user_retention(
-        self,
-        installation_id: str
-    ) -> RetentionMetrics:
+    def calculate_user_retention(self, installation_id: str) -> RetentionMetrics:
         """Calculate retention for a specific user.
 
         Args:
@@ -73,14 +70,14 @@ class RetentionService:
                     day7_retained=False,
                     day30_retained=False,
                     total_scans=0,
-                    last_scan_date=None
+                    last_scan_date=None,
                 )
 
             # Step 2: Calculate retention using domain function (pure logic)
             metrics = calculate_retention(
                 installation_id=installation_id,
                 install_date=activity.first_seen.date(),
-                scan_dates=activity.scan_dates
+                scan_dates=activity.scan_dates,
             )
 
             logger.info(
@@ -96,10 +93,7 @@ class RetentionService:
             raise
 
     def calculate_cohort_retention_metrics(
-        self,
-        cohort_date: date,
-        *,
-        days_to_check: list[int] | None = None
+        self, cohort_date: date, *, days_to_check: list[int] | None = None
     ) -> dict[str, Any]:
         """Calculate retention for installation cohort.
 
@@ -131,7 +125,7 @@ class RetentionService:
                     "day1_retention_rate": 0.0,
                     "day7_retention_rate": 0.0,
                     "day30_retention_rate": 0.0,
-                    "users": {}
+                    "users": {},
                 }
 
             # Step 2: Build cohort data structure for domain function
@@ -139,10 +133,7 @@ class RetentionService:
             for user_id in cohort_user_ids:
                 activity = self.repository.get_user_activity(user_id)
                 if activity:
-                    cohort_data[user_id] = (
-                        activity.first_seen.date(),
-                        activity.scan_dates
-                    )
+                    cohort_data[user_id] = (activity.first_seen.date(), activity.scan_dates)
 
             # Step 3: Calculate retention using domain function (pure logic)
             retention_by_user = calculate_cohort_retention(cohort_data)
@@ -164,10 +155,10 @@ class RetentionService:
                         "day1_retained": m.day1_retained,
                         "day7_retained": m.day7_retained,
                         "day30_retained": m.day30_retained,
-                        "total_scans": m.total_scans
+                        "total_scans": m.total_scans,
                     }
                     for user_id, m in retention_by_user.items()
-                }
+                },
             }
 
             logger.info(
@@ -183,11 +174,7 @@ class RetentionService:
             logger.error(f"Failed to calculate cohort retention: {e}")
             raise
 
-    def calculate_rolling_retention(
-        self,
-        end_date: date,
-        window_days: int = 30
-    ) -> dict[str, Any]:
+    def calculate_rolling_retention(self, end_date: date, window_days: int = 30) -> dict[str, Any]:
         """Calculate rolling retention over a time window.
 
         Rolling retention = % of users active in window who return.
@@ -208,21 +195,16 @@ class RetentionService:
 
         try:
             # Step 1: Get all scan events in window (I/O)
-            events = self.repository.get_scan_events(
-                start_date=start_date,
-                end_date=end_date
-            )
+            events = self.repository.get_scan_events(start_date=start_date, end_date=end_date)
 
             if not events:
-                logger.info(
-                    f"No events found for rolling retention {start_date} to {end_date}"
-                )
+                logger.info(f"No events found for rolling retention {start_date} to {end_date}")
                 return {
                     "start_date": start_date.isoformat(),
                     "end_date": end_date.isoformat(),
                     "total_users": 0,
                     "returning_users": 0,
-                    "retention_rate": 0.0
+                    "retention_rate": 0.0,
                 }
 
             # Step 2: Group events by user to determine activity patterns
@@ -236,22 +218,19 @@ class RetentionService:
             # Step 3: Calculate retention (users active on 2+ different days)
             total_users = len(user_activity)
             returning_users = sum(
-                1 for dates in user_activity.values()
+                1
+                for dates in user_activity.values()
                 if len(set(dates)) >= 2  # Active on at least 2 different days
             )
 
-            retention_rate = (
-                (returning_users / total_users * 100)
-                if total_users > 0
-                else 0.0
-            )
+            retention_rate = (returning_users / total_users * 100) if total_users > 0 else 0.0
 
             result = {
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
                 "total_users": total_users,
                 "returning_users": returning_users,
-                "retention_rate": round(retention_rate, 2)
+                "retention_rate": round(retention_rate, 2),
             }
 
             logger.info(

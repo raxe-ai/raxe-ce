@@ -1,4 +1,5 @@
 """Tests for installation and usage tracking."""
+
 import json
 from pathlib import Path
 

@@ -2,6 +2,7 @@
 
 Validates RAXE API keys without network calls.
 """
+
 import re
 from dataclasses import dataclass
 from enum import Enum
@@ -58,8 +59,7 @@ class APIKey:
 
         if not match:
             raise AuthError(
-                "Invalid API key format. "
-                "Expected: raxe_{live|test}_{customer_id}_{random}"
+                "Invalid API key format. Expected: raxe_{live|test}_{customer_id}_{random}"
             )
 
         key_type_str, customer_id, random_suffix = match.groups()

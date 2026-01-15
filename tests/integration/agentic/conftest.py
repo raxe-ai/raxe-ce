@@ -2,6 +2,7 @@
 
 Provides conditional skipping and framework detection.
 """
+
 import pytest
 
 
@@ -117,18 +118,14 @@ def llamaindex_version() -> str | None:
         return None
 
 
-def pytest_collection_modifyitems(
-    config: pytest.Config, items: list[pytest.Item]
-) -> None:
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Skip tests based on framework availability."""
     for item in items:
         if "requires_langchain" in item.keywords:
             try:
                 import langchain  # noqa: F401
             except ImportError:
-                item.add_marker(
-                    pytest.mark.skip(reason="LangChain not installed")
-                )
+                item.add_marker(pytest.mark.skip(reason="LangChain not installed"))
 
         if "requires_crewai" in item.keywords:
             try:
@@ -140,22 +137,16 @@ def pytest_collection_modifyitems(
             try:
                 import autogen  # noqa: F401
             except ImportError:
-                item.add_marker(
-                    pytest.mark.skip(reason="AutoGen not installed")
-                )
+                item.add_marker(pytest.mark.skip(reason="AutoGen not installed"))
 
         if "requires_llamaindex" in item.keywords:
             try:
                 import llama_index  # noqa: F401
             except ImportError:
-                item.add_marker(
-                    pytest.mark.skip(reason="LlamaIndex not installed")
-                )
+                item.add_marker(pytest.mark.skip(reason="LlamaIndex not installed"))
 
         if "requires_mcp" in item.keywords:
             try:
                 import mcp  # noqa: F401
             except ImportError:
-                item.add_marker(
-                    pytest.mark.skip(reason="MCP SDK not installed")
-                )
+                item.add_marker(pytest.mark.skip(reason="MCP SDK not installed"))

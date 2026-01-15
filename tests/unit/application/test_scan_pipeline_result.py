@@ -2,6 +2,7 @@
 
 Tests the flattened API for accessing scan results without deep nesting.
 """
+
 import pytest
 
 from raxe.application.scan_merger import CombinedScanResult

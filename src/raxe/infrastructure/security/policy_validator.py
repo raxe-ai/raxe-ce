@@ -2,6 +2,7 @@
 
 Validates customer policies before loading.
 """
+
 import base64
 import hashlib
 import json
@@ -56,8 +57,7 @@ class PolicyValidator:
 
         if policy_customer_id != parsed_key.customer_id:
             raise PolicyValidationError(
-                f"Policy customer_id mismatch: "
-                f"{policy_customer_id} != {parsed_key.customer_id}"
+                f"Policy customer_id mismatch: {policy_customer_id} != {parsed_key.customer_id}"
             )
 
         # Verify signature if present
@@ -80,15 +80,11 @@ class PolicyValidator:
         """Allow setting custom verifier for testing."""
         self._sig_verifier = value
 
-    def _verify_policy_signature(
-        self, policy_data: dict[str, Any], signature: str
-    ) -> None:
+    def _verify_policy_signature(self, policy_data: dict[str, Any], signature: str) -> None:
         """Verify policy signature."""
         # Extract policies content (everything except signature)
         policy_content = {
-            k: v
-            for k, v in policy_data.items()
-            if k not in ["signature", "signature_algorithm"]
+            k: v for k, v in policy_data.items() if k not in ["signature", "signature_algorithm"]
         }
 
         # Hash content
@@ -99,9 +95,7 @@ class PolicyValidator:
         sig_algorithm = policy_data.get("signature_algorithm", "ed25519")
 
         if sig_algorithm != "ed25519":
-            raise PolicyValidationError(
-                f"Unsupported signature algorithm: {sig_algorithm}"
-            )
+            raise PolicyValidationError(f"Unsupported signature algorithm: {sig_algorithm}")
 
         try:
             sig_b64 = signature.split(":", 1)[1]

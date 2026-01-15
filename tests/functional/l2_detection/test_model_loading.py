@@ -1,4 +1,5 @@
 """Test L2 model loading with ONNX/bundle/stub fallback chain."""
+
 import time
 from pathlib import Path
 from unittest.mock import patch
@@ -57,8 +58,10 @@ class TestL2ModelLoading:
     def test_stub_fallback_when_no_models(self):
         """Test fallback to stub when no models available."""
         # Mock both ONNX and bundle unavailable
-        with patch("raxe.infrastructure.models.detector_factory._try_load_onnx") as mock_onnx, \
-             patch("raxe.infrastructure.models.detector_factory._try_load_bundle") as mock_bundle:
+        with (
+            patch("raxe.infrastructure.models.detector_factory._try_load_onnx") as mock_onnx,
+            patch("raxe.infrastructure.models.detector_factory._try_load_bundle") as mock_bundle,
+        ):
             mock_onnx.return_value = None
             mock_bundle.return_value = None
 

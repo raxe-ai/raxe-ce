@@ -3,6 +3,7 @@
 Loads and validates rule definitions from YAML files matching
 the v1.1 specification. Infrastructure layer - handles file I/O.
 """
+
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ from raxe.infrastructure.rules.versioning import VersionChecker, VersionError
 
 class YAMLLoadError(Exception):
     """Exception raised when YAML file cannot be loaded or validated."""
+
     pass
 
 
@@ -71,7 +73,7 @@ class YAMLLoader:
 
         # 2. Read and parse YAML
         try:
-            with open(path, encoding='utf-8') as f:
+            with open(path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise YAMLLoadError(f"Failed to parse YAML from {path}: {e}") from e
@@ -85,7 +87,7 @@ class YAMLLoader:
             raise YAMLLoadError(f"YAML root must be a dictionary, got {type(data)}: {path}")
 
         # 3. Check version compatibility
-        version = data.get('version')
+        version = data.get("version")
         if not version:
             raise YAMLLoadError(f"Missing required 'version' field in {path}")
 
@@ -163,9 +165,7 @@ class YAMLLoader:
                     ) from e
 
         if errors and self.strict:
-            raise YAMLLoadError(
-                f"Failed to load {len(errors)} rule file(s):\n" + "\n".join(errors)
-            )
+            raise YAMLLoadError(f"Failed to load {len(errors)} rule file(s):\n" + "\n".join(errors))
 
         return rules
 
@@ -250,8 +250,8 @@ class YAMLLoader:
         """
         messages = []
         for err in error.errors():
-            loc = " -> ".join(str(item) for item in err['loc'])
-            msg = err['msg']
+            loc = " -> ".join(str(item) for item in err["loc"])
+            msg = err["msg"]
             messages.append(f"  {loc}: {msg}")
         return "\n".join(messages)
 
@@ -266,16 +266,22 @@ class YAMLLoader:
         """
         # Check for required top-level fields
         required_fields = {
-            'version', 'rule_id', 'family', 'sub_family', 'name',
-            'description', 'severity', 'confidence', 'patterns',
-            'examples', 'metrics'
+            "version",
+            "rule_id",
+            "family",
+            "sub_family",
+            "name",
+            "description",
+            "severity",
+            "confidence",
+            "patterns",
+            "examples",
+            "metrics",
         }
 
         missing_fields = required_fields - set(data.keys())
         if missing_fields:
-            raise YAMLLoadError(
-                f"Missing required fields: {', '.join(sorted(missing_fields))}"
-            )
+            raise YAMLLoadError(f"Missing required fields: {', '.join(sorted(missing_fields))}")
 
         # Validate using Pydantic schema
         try:

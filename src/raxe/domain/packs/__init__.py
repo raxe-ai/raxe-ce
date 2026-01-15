@@ -2,6 +2,7 @@
 
 Pure domain layer - NO I/O operations.
 """
+
 from raxe.domain.packs.models import (
     PackManifest,
     PackRule,

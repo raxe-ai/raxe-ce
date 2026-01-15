@@ -30,8 +30,8 @@ class TestRetentionService:
                 date(2025, 1, 1),
                 date(2025, 1, 2),  # Day 1
                 date(2025, 1, 8),  # Day 7
-                date(2025, 1, 10)
-            ]
+                date(2025, 1, 10),
+            ],
         )
 
         service = RetentionService(mock_repo)
@@ -86,7 +86,7 @@ class TestRetentionService:
                         date(2025, 1, 1),
                         date(2025, 1, 2),  # Day 1
                         date(2025, 1, 8),  # Day 7
-                    ]
+                    ],
                 ),
                 "user2": UserActivity(
                     installation_id=user_id,
@@ -94,7 +94,7 @@ class TestRetentionService:
                     last_seen=datetime(2025, 1, 2),
                     total_scans=2,
                     total_threats=0,
-                    scan_dates=[date(2025, 1, 1), date(2025, 1, 2)]
+                    scan_dates=[date(2025, 1, 1), date(2025, 1, 2)],
                 ),
                 "user3": UserActivity(
                     installation_id=user_id,
@@ -102,7 +102,7 @@ class TestRetentionService:
                     last_seen=datetime(2025, 1, 1),
                     total_scans=1,
                     total_threats=0,
-                    scan_dates=[date(2025, 1, 1)]
+                    scan_dates=[date(2025, 1, 1)],
                 ),
             }
             return activities.get(user_id)

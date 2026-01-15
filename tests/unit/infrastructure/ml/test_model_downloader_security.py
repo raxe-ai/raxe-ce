@@ -3,6 +3,7 @@
 Tests path traversal and symlink attack prevention (CVE-2007-4559).
 This verifies the fix for S-002.
 """
+
 import io
 import tarfile
 from pathlib import Path

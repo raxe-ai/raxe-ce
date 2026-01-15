@@ -5,6 +5,7 @@ All functions are stateless and perform no I/O operations.
 
 CRITICAL: This is domain layer - NO database, network, or file operations.
 """
+
 from datetime import date, timedelta
 
 from .models import StreakMetrics

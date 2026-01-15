@@ -2,6 +2,7 @@
 
 Tests validation, building, and conversion of custom rules.
 """
+
 import pytest
 
 from raxe.domain.rules.custom import CustomRuleBuilder, CustomRuleValidator

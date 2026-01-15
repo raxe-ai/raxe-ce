@@ -3,11 +3,12 @@ Pytest fixtures for infrastructure telemetry tests.
 
 These fixtures provide mocks and test doubles for infrastructure components.
 """
+
 import json
-import sqlite3
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -36,14 +37,18 @@ def temp_credentials_file(tmp_path: Path) -> Path:
     expires_at = now + timedelta(days=7)  # Expires in 7 days
 
     creds_file = tmp_path / "credentials.json"
-    creds_file.write_text(json.dumps({
-        "api_key": "raxe_temp_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",  # 32 chars
-        "key_type": "temporary",
-        "installation_id": "inst_abc123def456gh",
-        "created_at": created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "expires_at": expires_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "first_seen_at": None
-    }))
+    creds_file.write_text(
+        json.dumps(
+            {
+                "api_key": "raxe_temp_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",  # 32 chars
+                "key_type": "temporary",
+                "installation_id": "inst_abc123def456gh",
+                "created_at": created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "expires_at": expires_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "first_seen_at": None,
+            }
+        )
+    )
     return creds_file
 
 
@@ -59,7 +64,7 @@ def mock_http_success_response() -> MagicMock:
         "accepted": 1,
         "rejected": 0,
         "duplicates": 0,
-        "processing_time_ms": 45
+        "processing_time_ms": 45,
     }
     mock_response.read.return_value = mock_response.content
     mock_response.__enter__ = lambda s: s
@@ -88,13 +93,13 @@ def mock_http_rate_limited_response() -> MagicMock:
         "Retry-After": "60",
         "X-RateLimit-Limit": "100",
         "X-RateLimit-Remaining": "0",
-        "X-RateLimit-Reset": "1706178660"
+        "X-RateLimit-Reset": "1706178660",
     }
     mock_response.json.return_value = {
         "status": "rate_limited",
         "error": "rate_limit_exceeded",
         "message": "Rate limit exceeded. Retry after 60 seconds.",
-        "retry_after": 60
+        "retry_after": 60,
     }
     return mock_response
 
@@ -109,7 +114,7 @@ def mock_http_validation_error_response() -> MagicMock:
         "status": "error",
         "error": "privacy_violation",
         "message": "Event contains prohibited field: prompt_text",
-        "code": "PRI_002"
+        "code": "PRI_002",
     }
     return mock_response
 
@@ -132,23 +137,15 @@ def sample_events_batch() -> list[dict[str, Any]]:
             "event_type": "scan",
             "timestamp": "2025-01-25T10:30:00.000Z",
             "priority": "critical",
-            "payload": {
-                "prompt_hash": "a" * 64,
-                "threat_detected": True,
-                "scan_duration_ms": 15.5
-            }
+            "payload": {"prompt_hash": "a" * 64, "threat_detected": True, "scan_duration_ms": 15.5},
         },
         {
             "event_id": "evt_def456",
             "event_type": "scan",
             "timestamp": "2025-01-25T10:30:01.000Z",
             "priority": "standard",
-            "payload": {
-                "prompt_hash": "b" * 64,
-                "threat_detected": False,
-                "scan_duration_ms": 8.2
-            }
-        }
+            "payload": {"prompt_hash": "b" * 64, "threat_detected": False, "scan_duration_ms": 8.2},
+        },
     ]
 
 
@@ -164,19 +161,15 @@ def sample_batch_request() -> dict[str, Any]:
         "sent_at": "2025-01-25T10:30:00.000Z",
         "event_count": 2,
         "compression": "gzip",
-        "queue_stats": {
-            "critical_pending": 5,
-            "standard_pending": 120,
-            "dlq_size": 0
-        },
-        "events": []  # To be filled with sample_events_batch
+        "queue_stats": {"critical_pending": 5, "standard_pending": 120, "dlq_size": 0},
+        "events": [],  # To be filled with sample_events_batch
     }
 
 
 @pytest.fixture
 def queue_with_events(temp_db: Path):
     """Create queue pre-populated with events."""
-    from raxe.infrastructure.telemetry.queue import EventQueue, EventPriority
+    from raxe.infrastructure.telemetry.queue import EventPriority, EventQueue
 
     queue = EventQueue(db_path=temp_db)
 
@@ -185,28 +178,22 @@ def queue_with_events(temp_db: Path):
         queue.enqueue(
             event_type="scan",
             payload={"n": i, "priority": "critical"},
-            priority=EventPriority.CRITICAL
+            priority=EventPriority.CRITICAL,
         )
 
     for i in range(10):
         queue.enqueue(
-            event_type="scan",
-            payload={"n": i, "priority": "high"},
-            priority=EventPriority.HIGH
+            event_type="scan", payload={"n": i, "priority": "high"}, priority=EventPriority.HIGH
         )
 
     for i in range(20):
         queue.enqueue(
-            event_type="scan",
-            payload={"n": i, "priority": "medium"},
-            priority=EventPriority.MEDIUM
+            event_type="scan", payload={"n": i, "priority": "medium"}, priority=EventPriority.MEDIUM
         )
 
     for i in range(15):
         queue.enqueue(
-            event_type="heartbeat",
-            payload={"n": i, "priority": "low"},
-            priority=EventPriority.LOW
+            event_type="heartbeat", payload={"n": i, "priority": "low"}, priority=EventPriority.LOW
         )
 
     return queue
@@ -219,7 +206,7 @@ def circuit_breaker_config() -> dict[str, Any]:
         "failure_threshold": 3,
         "reset_timeout_seconds": 1,  # Short for testing
         "half_open_requests": 2,
-        "success_threshold": 2
+        "success_threshold": 2,
     }
 
 
@@ -232,7 +219,7 @@ def retry_policy_config() -> dict[str, Any]:
         "max_delay_ms": 100,
         "backoff_multiplier": 2.0,
         "jitter_factor": 0.1,
-        "retry_on_status": [429, 500, 502, 503, 504]
+        "retry_on_status": [429, 500, 502, 503, 504],
     }
 
 
@@ -255,14 +242,14 @@ def telemetry_config_data() -> dict[str, Any]:
         "max_retry_count": 10,
         "compression": "gzip",
         "dry_run": False,
-        "debug": False
+        "debug": False,
     }
 
 
 @pytest.fixture
 def mock_telemetry_endpoint():
     """Mock the telemetry HTTP endpoint using urllib."""
-    with patch('urllib.request.urlopen') as mock_urlopen:
+    with patch("urllib.request.urlopen") as mock_urlopen:
         mock_response = MagicMock()
         mock_response.read.return_value = b'{"status": "ok", "accepted": 1}'
         mock_response.code = 200
@@ -277,13 +264,9 @@ def mock_telemetry_endpoint_failure():
     """Mock telemetry endpoint that fails."""
     import urllib.error
 
-    with patch('urllib.request.urlopen') as mock_urlopen:
+    with patch("urllib.request.urlopen") as mock_urlopen:
         mock_urlopen.side_effect = urllib.error.HTTPError(
-            url=None,
-            code=503,
-            msg="Service Unavailable",
-            hdrs={},
-            fp=None
+            url=None, code=503, msg="Service Unavailable", hdrs={}, fp=None
         )
         yield mock_urlopen
 
@@ -304,26 +287,20 @@ def health_check_response() -> dict[str, Any]:
             "first_seen_at": "2025-01-25T10:00:00Z",
             "customer_id": "cust_trial_xyz789",
             "tier": "community",
-            "rate_limit": {
-                "requests_per_minute": 100,
-                "events_per_day": 100000
-            },
+            "rate_limit": {"requests_per_minute": 100, "events_per_day": 100000},
             "features": {
                 "can_disable_telemetry": False,
                 "offline_mode": False,
-                "extended_retention": False
+                "extended_retention": False,
             },
-            "usage_today": {
-                "events_sent": 5432,
-                "events_remaining": 94568
-            },
+            "usage_today": {"events_sent": 5432, "events_remaining": 94568},
             "trial_status": {
                 "is_trial": True,
                 "days_remaining": 14,
                 "scans_during_trial": 0,
-                "threats_detected_during_trial": 0
-            }
-        }
+                "threats_detected_during_trial": 0,
+            },
+        },
     }
 
 
@@ -336,7 +313,7 @@ def dry_run_response() -> dict[str, Any]:
         "would_accept": 2,
         "would_reject": 0,
         "validation_errors": [],
-        "note": "No events were stored. This is a validation-only request."
+        "note": "No events were stored. This is a validation-only request.",
     }
 
 
@@ -355,13 +332,13 @@ def partial_success_response() -> dict[str, Any]:
                 "event_id": "evt_bad001",
                 "error": "invalid_schema",
                 "message": "Missing required field: event_type",
-                "code": "EVT_001"
+                "code": "EVT_001",
             },
             {
                 "event_id": "evt_bad002",
                 "error": "privacy_violation",
                 "message": "Event contains prohibited field: prompt_text",
-                "code": "PRI_002"
-            }
-        ]
+                "code": "PRI_002",
+            },
+        ],
     }

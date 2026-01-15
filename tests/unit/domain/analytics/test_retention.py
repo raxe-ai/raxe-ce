@@ -2,6 +2,7 @@
 
 Tests pure domain logic - no mocks needed, no I/O.
 """
+
 from datetime import date
 
 import pytest
@@ -120,8 +121,8 @@ class TestCalculateRetention:
         """User who scans on all retention days."""
         install_date = date(2025, 1, 1)
         scan_dates = [
-            date(2025, 1, 2),   # Day 1
-            date(2025, 1, 8),   # Day 7
+            date(2025, 1, 2),  # Day 1
+            date(2025, 1, 8),  # Day 7
             date(2025, 1, 31),  # Day 30
         ]
 
@@ -171,9 +172,7 @@ class TestCalculateCohortRetention:
 
     def test_single_user_cohort(self):
         """Cohort with one user."""
-        cohort = {
-            "user1": (date(2025, 1, 1), [date(2025, 1, 2)])
-        }
+        cohort = {"user1": (date(2025, 1, 1), [date(2025, 1, 2)])}
 
         result = calculate_cohort_retention(cohort)
 

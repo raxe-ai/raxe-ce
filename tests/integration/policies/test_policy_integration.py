@@ -2,6 +2,7 @@
 
 Tests end-to-end flow: load → validate → evaluate.
 """
+
 from datetime import datetime, timezone
 from pathlib import Path
 from textwrap import dedent
@@ -26,15 +27,17 @@ def make_detection(severity: Severity = Severity.HIGH) -> Detection:
         rule_version="0.0.1",
         severity=severity,
         confidence=0.9,
-        matches=[Match(
-            pattern_index=0,
-            start=0,
-            end=10,
-            matched_text="test match",
-            groups=(),
-            context_before="",
-            context_after="",
-        )],
+        matches=[
+            Match(
+                pattern_index=0,
+                start=0,
+                end=10,
+                matched_text="test match",
+                groups=(),
+                context_before="",
+                context_after="",
+            )
+        ],
         detected_at=datetime.now(timezone.utc).isoformat(),
     )
 
@@ -47,7 +50,8 @@ class TestPolicyPipelineIntegration:
         """Test loading policies from local YAML file."""
         # Create policy file
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: block-critical
@@ -58,7 +62,8 @@ class TestPolicyPipelineIntegration:
                   - severity: critical
                 action: BLOCK
                 priority: 100
-        """))
+        """)
+        )
 
         # Apply policy
         use_case = ApplyPolicyUseCase()
@@ -123,7 +128,8 @@ class TestPolicyPipelineIntegration:
     def test_multiple_policies_priority_order(self, tmp_path: Path):
         """Highest priority policy wins."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: low-priority
@@ -143,7 +149,8 @@ class TestPolicyPipelineIntegration:
                 conditions:
                   - severity: high
                 action: BLOCK
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection(severity=Severity.HIGH)
@@ -162,7 +169,8 @@ class TestPolicyPipelineIntegration:
     def test_customer_filtering_with_api_key(self, tmp_path: Path):
         """Policies filtered by customer ID from API key."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: customer-a-policy
@@ -180,7 +188,8 @@ class TestPolicyPipelineIntegration:
                 conditions:
                   - severity: high
                 action: ALLOW
-        """))
+        """)
+        )
 
         # Customer A should only see their policy
         api_key = APIKey.parse("raxe_test_cust_customer_a_abc123def456")
@@ -201,7 +210,8 @@ class TestPolicyPipelineIntegration:
     def test_severity_override(self, tmp_path: Path):
         """Policy can override detection severity."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: upgrade-severity
@@ -212,7 +222,8 @@ class TestPolicyPipelineIntegration:
                   - severity: medium
                 action: FLAG
                 override_severity: critical
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection(severity=Severity.MEDIUM)
@@ -242,7 +253,8 @@ class TestPhase3PolicyIntegration:
     def test_l2_virtual_rule_matches_policy(self, tmp_path: Path):
         """L2 virtual rule (l2-prompt-injection) matches policy."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: block-l2-pi
@@ -253,7 +265,8 @@ class TestPhase3PolicyIntegration:
                   - rule_ids: ["l2-prompt-injection"]
                 action: BLOCK
                 priority: 100
-        """))
+        """)
+        )
 
         # Create L2 virtual detection
         l2_detection = Detection(
@@ -261,15 +274,17 @@ class TestPhase3PolicyIntegration:
             rule_version="0.0.1",
             severity=Severity.HIGH,
             confidence=0.92,
-            matches=[Match(
-                pattern_index=0,
-                start=0,
-                end=0,
-                matched_text="[L2 ML Detection]",
-                groups=(),
-                context_before="",
-                context_after="",
-            )],
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=0,
+                    matched_text="[L2 ML Detection]",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
             detected_at=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -287,7 +302,8 @@ class TestPhase3PolicyIntegration:
     def test_l2_jailbreak_virtual_rule_matches_policy(self, tmp_path: Path):
         """L2 jailbreak virtual rule (l2-jailbreak) matches policy."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: flag-l2-jb
@@ -298,22 +314,25 @@ class TestPhase3PolicyIntegration:
                   - rule_ids: ["l2-jailbreak"]
                 action: FLAG
                 priority: 50
-        """))
+        """)
+        )
 
         l2_detection = Detection(
             rule_id="l2-jailbreak",
             rule_version="0.0.1",
             severity=Severity.HIGH,
             confidence=0.88,
-            matches=[Match(
-                pattern_index=0,
-                start=0,
-                end=0,
-                matched_text="[L2 ML Detection]",
-                groups=(),
-                context_before="",
-                context_after="",
-            )],
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=0,
+                    matched_text="[L2 ML Detection]",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
             detected_at=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -331,7 +350,8 @@ class TestPhase3PolicyIntegration:
     def test_wildcard_matches_l2_virtual_rules(self, tmp_path: Path):
         """Policy with wildcard pattern matches L2 virtual rules."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: block-all-l2
@@ -342,7 +362,8 @@ class TestPhase3PolicyIntegration:
                   - rule_ids: ["l2-prompt-injection", "l2-jailbreak", "l2-pii"]
                 action: BLOCK
                 priority: 100
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
 
@@ -353,15 +374,17 @@ class TestPhase3PolicyIntegration:
                 rule_version="0.0.1",
                 severity=Severity.HIGH,
                 confidence=0.90,
-                matches=[Match(
-                    pattern_index=0,
-                    start=0,
-                    end=0,
-                    matched_text="[L2 ML Detection]",
-                    groups=(),
-                    context_before="",
-                    context_after="",
-                )],
+                matches=[
+                    Match(
+                        pattern_index=0,
+                        start=0,
+                        end=0,
+                        matched_text="[L2 ML Detection]",
+                        groups=(),
+                        context_before="",
+                        context_after="",
+                    )
+                ],
                 detected_at=datetime.now(timezone.utc).isoformat(),
             )
 
@@ -399,6 +422,7 @@ class TestPhase3PolicyIntegration:
         # Should raise error when trying to load too many policies
         # Infrastructure wraps domain ValueError in PolicyLoadError
         from raxe.infrastructure.policies.yaml_loader import PolicyLoadError
+
         with pytest.raises(PolicyLoadError, match="exceeds maximum"):
             use_case.apply_to_detection(
                 detection,
@@ -409,7 +433,8 @@ class TestPhase3PolicyIntegration:
     def test_policy_priority_cap_enforced(self, tmp_path: Path):
         """Policy priority cannot exceed 1000 (security limit)."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: invalid-priority
@@ -420,7 +445,8 @@ class TestPhase3PolicyIntegration:
                   - severity: high
                 action: BLOCK
                 priority: 9999
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection()
@@ -428,6 +454,7 @@ class TestPhase3PolicyIntegration:
         # Should raise error for priority > 1000
         # Infrastructure wraps domain ValueError in PolicyLoadError
         from raxe.infrastructure.policies.yaml_loader import PolicyLoadError
+
         with pytest.raises(PolicyLoadError, match="priority cannot exceed 1000"):
             use_case.apply_to_detection(
                 detection,
@@ -438,7 +465,8 @@ class TestPhase3PolicyIntegration:
     def test_allow_action_works_correctly(self, tmp_path: Path):
         """ALLOW action allows threat through despite detection."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: allow-known-fp
@@ -449,7 +477,8 @@ class TestPhase3PolicyIntegration:
                   - rule_ids: ["pi-001"]
                 action: ALLOW
                 priority: 100
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection(severity=Severity.HIGH)
@@ -467,7 +496,8 @@ class TestPhase3PolicyIntegration:
     def test_flag_action_allows_but_flags(self, tmp_path: Path):
         """FLAG action allows request but marks for review."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: flag-medium
@@ -478,7 +508,8 @@ class TestPhase3PolicyIntegration:
                   - severity: medium
                 action: FLAG
                 priority: 50
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection(severity=Severity.MEDIUM)
@@ -497,7 +528,8 @@ class TestPhase3PolicyIntegration:
     def test_block_action_blocks_request(self, tmp_path: Path):
         """BLOCK action blocks the request."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: block-high
@@ -508,7 +540,8 @@ class TestPhase3PolicyIntegration:
                   - severity: high
                 action: BLOCK
                 priority: 100
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection(severity=Severity.HIGH)
@@ -527,7 +560,8 @@ class TestPhase3PolicyIntegration:
     def test_disabled_policy_not_applied(self, tmp_path: Path):
         """Disabled policies are not evaluated."""
         policy_file = tmp_path / "policies.yaml"
-        policy_file.write_text(dedent("""
+        policy_file.write_text(
+            dedent("""
             version: 1.0.0
             policies:
               - id: disabled-policy
@@ -539,7 +573,8 @@ class TestPhase3PolicyIntegration:
                 action: BLOCK
                 priority: 100
                 enabled: false
-        """))
+        """)
+        )
 
         use_case = ApplyPolicyUseCase()
         detection = make_detection(severity=Severity.HIGH)

@@ -1,4 +1,5 @@
 """Test SDK initialization and stats."""
+
 import time
 from unittest.mock import patch
 
@@ -62,11 +63,7 @@ class TestSDKInitialization:
 
     def test_initialization_with_explicit_params(self):
         """Test initialization with explicit parameters."""
-        client = Raxe(
-            api_key="explicit_key",
-            telemetry=False,
-            l2_enabled=False
-        )
+        client = Raxe(api_key="explicit_key", telemetry=False, l2_enabled=False)
 
         assert client.config.api_key == "explicit_key"
         assert not client.config.telemetry.enabled
@@ -95,10 +92,12 @@ class TestSDKInitialization:
         scan_time = time.perf_counter() - start_scan
 
         # Init should be slower than scan
-        assert init_time > scan_time, f"Init: {init_time*1000:.1f}ms, Scan: {scan_time*1000:.1f}ms"
+        assert (
+            init_time > scan_time
+        ), f"Init: {init_time * 1000:.1f}ms, Scan: {scan_time * 1000:.1f}ms"
 
         # Scan should be fast (<10ms target)
-        assert scan_time * 1000 < 50, f"Scan took {scan_time*1000:.1f}ms"
+        assert scan_time * 1000 < 50, f"Scan took {scan_time * 1000:.1f}ms"
 
     def test_initialization_caching(self):
         """Test component caching during initialization."""

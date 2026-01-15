@@ -2,6 +2,7 @@
 
 Tests merging L1 and L2 scan results in the application layer.
 """
+
 import pytest
 
 from raxe.application.scan_merger import CombinedScanResult, ScanMerger
@@ -12,57 +13,54 @@ from raxe.domain.rules.models import Severity
 
 
 def create_l1_result(
-    detection_count: int = 0,
-    severity: Severity = Severity.HIGH,
-    scan_time_ms: float = 5.0
+    detection_count: int = 0, severity: Severity = Severity.HIGH, scan_time_ms: float = 5.0
 ) -> ScanResult:
     """Helper to create L1 scan result."""
     detections = []
     for i in range(detection_count):
-        detections.append(Detection(
-            rule_id=f"rule-{i:03d}",
-            rule_version="1.0.0",
-            severity=severity,
-            confidence=0.9,
-            matches=[Match(
-                pattern_index=0,
-                start=0,
-                end=4,
-                matched_text="test",
-                groups=(),
-                context_before="",
-                context_after=""
-            )],
-            detected_at="2024-01-01T00:00:00Z"
-        ))
+        detections.append(
+            Detection(
+                rule_id=f"rule-{i:03d}",
+                rule_version="1.0.0",
+                severity=severity,
+                confidence=0.9,
+                matches=[
+                    Match(
+                        pattern_index=0,
+                        start=0,
+                        end=4,
+                        matched_text="test",
+                        groups=(),
+                        context_before="",
+                        context_after="",
+                    )
+                ],
+                detected_at="2024-01-01T00:00:00Z",
+            )
+        )
 
     return ScanResult(
         detections=detections,
         scanned_at="2024-01-01T00:00:00Z",
         text_length=100,
         rules_checked=10,
-        scan_duration_ms=scan_time_ms
+        scan_duration_ms=scan_time_ms,
     )
 
 
 def create_l2_result(
-    prediction_count: int = 0,
-    confidence: float = 0.8,
-    processing_time_ms: float = 3.0
+    prediction_count: int = 0, confidence: float = 0.8, processing_time_ms: float = 3.0
 ) -> L2Result:
     """Helper to create L2 result."""
     predictions = []
     for _i in range(prediction_count):
-        predictions.append(L2Prediction(
-            threat_type=L2ThreatType.JAILBREAK,
-            confidence=confidence
-        ))
+        predictions.append(L2Prediction(threat_type=L2ThreatType.JAILBREAK, confidence=confidence))
 
     return L2Result(
         predictions=predictions,
         confidence=confidence if prediction_count > 0 else 0.0,
         processing_time_ms=processing_time_ms,
-        model_version="stub-1.0.0"
+        model_version="stub-1.0.0",
     )
 
 
@@ -75,10 +73,7 @@ class TestCombinedScanResult:
         l2 = create_l2_result(prediction_count=1)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=Severity.HIGH,
-            total_processing_ms=8.0
+            l1_result=l1, l2_result=l2, combined_severity=Severity.HIGH, total_processing_ms=8.0
         )
 
         assert combined.l1_result == l1
@@ -92,10 +87,7 @@ class TestCombinedScanResult:
         l2 = None
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=Severity.HIGH,
-            total_processing_ms=5.0
+            l1_result=l1, l2_result=l2, combined_severity=Severity.HIGH, total_processing_ms=5.0
         )
 
         assert combined.has_threats is True
@@ -108,10 +100,7 @@ class TestCombinedScanResult:
         l2 = create_l2_result(prediction_count=1)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=Severity.MEDIUM,
-            total_processing_ms=8.0
+            l1_result=l1, l2_result=l2, combined_severity=Severity.MEDIUM, total_processing_ms=8.0
         )
 
         assert combined.has_threats is True
@@ -124,10 +113,7 @@ class TestCombinedScanResult:
         l2 = create_l2_result(prediction_count=3)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=Severity.HIGH,
-            total_processing_ms=8.0
+            l1_result=l1, l2_result=l2, combined_severity=Severity.HIGH, total_processing_ms=8.0
         )
 
         assert combined.has_threats is True
@@ -139,10 +125,7 @@ class TestCombinedScanResult:
         l2 = create_l2_result(prediction_count=0)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=None,
-            total_processing_ms=8.0
+            l1_result=l1, l2_result=l2, combined_severity=None, total_processing_ms=8.0
         )
 
         assert combined.has_threats is False
@@ -154,10 +137,7 @@ class TestCombinedScanResult:
         l2 = create_l2_result(processing_time_ms=2.3)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=None,
-            total_processing_ms=7.8
+            l1_result=l1, l2_result=l2, combined_severity=None, total_processing_ms=7.8
         )
 
         assert combined.l1_processing_ms == 5.5
@@ -169,10 +149,7 @@ class TestCombinedScanResult:
         l1 = create_l1_result(scan_time_ms=5.0)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=None,
-            combined_severity=None,
-            total_processing_ms=5.0
+            l1_result=l1, l2_result=None, combined_severity=None, total_processing_ms=5.0
         )
 
         assert combined.l1_processing_ms == 5.0
@@ -184,10 +161,7 @@ class TestCombinedScanResult:
         l2 = None
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=None,
-            total_processing_ms=5.0
+            l1_result=l1, l2_result=l2, combined_severity=None, total_processing_ms=5.0
         )
 
         summary = combined.threat_summary
@@ -200,10 +174,7 @@ class TestCombinedScanResult:
         l2 = create_l2_result(prediction_count=1)
 
         combined = CombinedScanResult(
-            l1_result=l1,
-            l2_result=l2,
-            combined_severity=Severity.CRITICAL,
-            total_processing_ms=8.5
+            l1_result=l1, l2_result=l2, combined_severity=Severity.CRITICAL, total_processing_ms=8.5
         )
 
         summary = combined.threat_summary
@@ -222,7 +193,7 @@ class TestCombinedScanResult:
             l2_result=l2,
             combined_severity=Severity.HIGH,
             total_processing_ms=8.0,
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         result_dict = combined.to_dict()
@@ -240,10 +211,7 @@ class TestCombinedScanResult:
 
         with pytest.raises(ValueError, match="total_processing_ms must be non-negative"):
             CombinedScanResult(
-                l1_result=l1,
-                l2_result=None,
-                combined_severity=None,
-                total_processing_ms=-1.0
+                l1_result=l1, l2_result=None, combined_severity=None, total_processing_ms=-1.0
             )
 
 
@@ -381,9 +349,9 @@ class TestScanMerger:
         for confidence, expected_severity in test_cases:
             l2 = create_l2_result(prediction_count=1, confidence=confidence)
             combined = merger.merge(l1, l2)
-            assert combined.combined_severity == expected_severity, (
-                f"Confidence {confidence} should map to {expected_severity.value}"
-            )
+            assert (
+                combined.combined_severity == expected_severity
+            ), f"Confidence {confidence} should map to {expected_severity.value}"
 
     def test_merge_with_metadata(self):
         """Should attach metadata to result."""
@@ -468,7 +436,7 @@ class TestScanMergerEdgeCases:
                 severity=Severity.LOW,
                 confidence=0.8,
                 matches=[Match(0, 0, 4, "test", (), "", "")],
-                detected_at="2024-01-01T00:00:00Z"
+                detected_at="2024-01-01T00:00:00Z",
             ),
             Detection(
                 rule_id="rule-002",
@@ -476,7 +444,7 @@ class TestScanMergerEdgeCases:
                 severity=Severity.CRITICAL,
                 confidence=0.9,
                 matches=[Match(0, 0, 4, "test", (), "", "")],
-                detected_at="2024-01-01T00:00:00Z"
+                detected_at="2024-01-01T00:00:00Z",
             ),
         ]
 
@@ -485,7 +453,7 @@ class TestScanMergerEdgeCases:
             scanned_at="2024-01-01T00:00:00Z",
             text_length=100,
             rules_checked=2,
-            scan_duration_ms=5.0
+            scan_duration_ms=5.0,
         )
 
         merger = ScanMerger()

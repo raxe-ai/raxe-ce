@@ -14,6 +14,7 @@ Performance targets:
 - Average scan: <5ms
 - Circuit breaker response: <1ms
 """
+
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -21,24 +22,24 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Generic, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PerformanceMode(Enum):
     """Performance degradation strategies."""
 
-    FAIL_OPEN = "fail_open"       # Allow through on overload
-    FAIL_CLOSED = "fail_closed"   # Block on overload
-    SAMPLE = "sample"             # Check every Nth request
-    ADAPTIVE = "adaptive"         # Smart sampling
+    FAIL_OPEN = "fail_open"  # Allow through on overload
+    FAIL_CLOSED = "fail_closed"  # Block on overload
+    SAMPLE = "sample"  # Check every Nth request
+    ADAPTIVE = "adaptive"  # Smart sampling
 
 
 class CircuitState(Enum):
     """Circuit breaker states."""
 
-    CLOSED = "closed"         # Normal operation
-    OPEN = "open"             # Failing, reject requests
-    HALF_OPEN = "half_open"   # Testing if recovered
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject requests
+    HALF_OPEN = "half_open"  # Testing if recovered
 
 
 @dataclass
@@ -53,6 +54,7 @@ class PerformanceConfig:
         sample_rate: For SAMPLE mode, check 1 in N requests
         latency_threshold_ms: Max acceptable latency before degradation
     """
+
     mode: PerformanceMode = PerformanceMode.FAIL_OPEN
     failure_threshold: int = 5
     reset_timeout_seconds: float = 30.0
@@ -63,11 +65,13 @@ class PerformanceConfig:
 
 class CircuitBreakerError(Exception):
     """Circuit breaker is open (too many failures)."""
+
     pass
 
 
 class PerformanceDegradedError(Exception):
     """System overloaded, degraded mode activated."""
+
     pass
 
 
@@ -153,9 +157,7 @@ class CircuitBreaker(Generic[T]):
             # Check if we're at capacity in half-open
             if self._state == CircuitState.HALF_OPEN:
                 if self._half_open_attempts >= self.half_open_requests:
-                    raise CircuitBreakerError(
-                        "Circuit breaker HALF_OPEN at capacity"
-                    )
+                    raise CircuitBreakerError("Circuit breaker HALF_OPEN at capacity")
                 self._half_open_attempts += 1
 
         # Execute function (outside lock to avoid deadlock)
@@ -239,8 +241,7 @@ class CircuitBreaker(Generic[T]):
                 "failure_count": self._failure_count,
                 "success_count": self._success_count,
                 "last_failure": (
-                    self._last_failure_time.isoformat()
-                    if self._last_failure_time else None
+                    self._last_failure_time.isoformat() if self._last_failure_time else None
                 ),
                 "time_until_reset": self._time_until_reset(),
             }

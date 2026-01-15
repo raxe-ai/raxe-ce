@@ -3,6 +3,7 @@
 Pure domain layer - immutable value objects for policy evaluation.
 Policies allow customers to override default threat responses.
 """
+
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -14,10 +15,11 @@ class PolicyAction(Enum):
 
     Overrides default detection behavior.
     """
-    ALLOW = "ALLOW"      # Allow through despite detection
-    BLOCK = "BLOCK"      # Block despite low severity
-    FLAG = "FLAG"        # Flag for review but allow
-    LOG = "LOG"          # Log only, no enforcement
+
+    ALLOW = "ALLOW"  # Allow through despite detection
+    BLOCK = "BLOCK"  # Block despite low severity
+    FLAG = "FLAG"  # Flag for review but allow
+    LOG = "LOG"  # Log only, no enforcement
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,7 @@ class PolicyCondition:
         max_confidence: Maximum confidence score (0.0-1.0, None = all)
         custom_filter: JSONPath expression for advanced filtering (None = no filter)
     """
+
     rule_ids: list[str] | None = None
     severity_threshold: Severity | None = None
     threat_types: list[str] | None = None
@@ -46,15 +49,11 @@ class PolicyCondition:
         """Validate condition constraints."""
         if self.min_confidence is not None:
             if not (0.0 <= self.min_confidence <= 1.0):
-                raise ValueError(
-                    f"min_confidence must be 0-1, got {self.min_confidence}"
-                )
+                raise ValueError(f"min_confidence must be 0-1, got {self.min_confidence}")
 
         if self.max_confidence is not None:
             if not (0.0 <= self.max_confidence <= 1.0):
-                raise ValueError(
-                    f"max_confidence must be 0-1, got {self.max_confidence}"
-                )
+                raise ValueError(f"max_confidence must be 0-1, got {self.max_confidence}")
 
         if (
             self.min_confidence is not None
@@ -95,6 +94,7 @@ class Policy:
         enabled: Whether policy is active
         metadata: Additional metadata for tracking/auditing
     """
+
     policy_id: str
     customer_id: str
     name: str
@@ -144,6 +144,7 @@ class PolicyDecision:
         should_flag: True if action is FLAG
         metadata: Combined metadata from matched policies
     """
+
     action: PolicyAction
     original_severity: Severity
     final_severity: Severity
@@ -200,6 +201,7 @@ class PolicySet:
         policies: List of policies in the set
         max_policies: Maximum number of policies allowed (default: 100)
     """
+
     policies: list[Policy]
     max_policies: int = 100
 

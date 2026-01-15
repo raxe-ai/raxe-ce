@@ -3,11 +3,13 @@
 Handles semantic versioning for rule schema and ensures compatibility
 between different schema versions.
 """
+
 from dataclasses import dataclass
 
 
 class VersionError(Exception):
     """Exception raised when version compatibility check fails."""
+
     pass
 
 
@@ -20,6 +22,7 @@ class Version:
         minor: Minor version number (backward compatible features)
         patch: Patch version number (backward compatible fixes)
     """
+
     major: int
     minor: int
     patch: int
@@ -30,7 +33,7 @@ class Version:
             raise ValueError(f"Version numbers must be non-negative: {self}")
 
     @classmethod
-    def parse(cls, version_str: str) -> 'Version':
+    def parse(cls, version_str: str) -> "Version":
         """Parse semver string like '1.2.3'.
 
         Args:
@@ -42,11 +45,9 @@ class Version:
         Raises:
             ValueError: If version string is invalid
         """
-        parts = version_str.split('.')
+        parts = version_str.split(".")
         if len(parts) != 3:
-            raise ValueError(
-                f"Version must be in semver format (X.Y.Z), got '{version_str}'"
-            )
+            raise ValueError(f"Version must be in semver format (X.Y.Z), got '{version_str}'")
 
         try:
             major = int(parts[0])
@@ -54,9 +55,7 @@ class Version:
             patch = int(parts[2])
             return cls(major=major, minor=minor, patch=patch)
         except ValueError as e:
-            raise ValueError(
-                f"Version parts must be integers, got '{version_str}'"
-            ) from e
+            raise ValueError(f"Version parts must be integers, got '{version_str}'") from e
 
     def __str__(self) -> str:
         """Return string representation in semver format.
@@ -66,7 +65,7 @@ class Version:
         """
         return f"{self.major}.{self.minor}.{self.patch}"
 
-    def __lt__(self, other: 'Version') -> bool:
+    def __lt__(self, other: "Version") -> bool:
         """Compare versions for ordering.
 
         Args:
@@ -77,7 +76,7 @@ class Version:
         """
         return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
 
-    def __le__(self, other: 'Version') -> bool:
+    def __le__(self, other: "Version") -> bool:
         """Compare versions for ordering.
 
         Args:
@@ -88,7 +87,7 @@ class Version:
         """
         return (self.major, self.minor, self.patch) <= (other.major, other.minor, other.patch)
 
-    def __gt__(self, other: 'Version') -> bool:
+    def __gt__(self, other: "Version") -> bool:
         """Compare versions for ordering.
 
         Args:
@@ -99,7 +98,7 @@ class Version:
         """
         return (self.major, self.minor, self.patch) > (other.major, other.minor, other.patch)
 
-    def __ge__(self, other: 'Version') -> bool:
+    def __ge__(self, other: "Version") -> bool:
         """Compare versions for ordering.
 
         Args:
@@ -110,7 +109,7 @@ class Version:
         """
         return (self.major, self.minor, self.patch) >= (other.major, other.minor, other.patch)
 
-    def is_compatible_with(self, other: 'Version') -> bool:
+    def is_compatible_with(self, other: "Version") -> bool:
         """Check if this version can load rules from other version.
 
         Compatibility rules:
@@ -189,9 +188,7 @@ class VersionChecker:
             return False
 
     def get_migration_path(
-        self,
-        from_version: str,
-        to_version: str | None = None
+        self, from_version: str, to_version: str | None = None
     ) -> list[tuple[Version, Version]]:
         """Get the migration path between two versions.
 

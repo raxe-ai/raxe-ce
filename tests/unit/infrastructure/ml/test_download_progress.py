@@ -6,12 +6,11 @@ These tests verify the UX for model downloads across different environments:
 - SDK usage: Minimal progress output
 - Quiet mode: Silent (errors only)
 """
+
 import io
 import os
 import sys
 from unittest.mock import patch
-
-import pytest
 
 from raxe.infrastructure.ml.download_progress import (
     MinimalDownloadProgress,
@@ -49,7 +48,9 @@ class TestProgressModeDetection:
     def test_simple_mode_for_dumb_terminal(self):
         """TERM=dumb should trigger simple mode."""
         with patch.object(sys.stderr, "isatty", return_value=True):
-            with patch.dict(os.environ, {"TERM": "dumb", "RAXE_QUIET": "", "RAXE_SIMPLE_PROGRESS": ""}):
+            with patch.dict(
+                os.environ, {"TERM": "dumb", "RAXE_QUIET": "", "RAXE_SIMPLE_PROGRESS": ""}
+            ):
                 os.environ.pop("RAXE_QUIET", None)
                 os.environ.pop("RAXE_SIMPLE_PROGRESS", None)
                 assert detect_download_progress_mode() == "simple"
@@ -57,7 +58,9 @@ class TestProgressModeDetection:
     def test_rich_mode_for_interactive_terminal(self):
         """Interactive terminal should get rich mode."""
         with patch.object(sys.stderr, "isatty", return_value=True):
-            with patch.dict(os.environ, {"TERM": "xterm-256color", "RAXE_QUIET": "", "RAXE_SIMPLE_PROGRESS": ""}):
+            with patch.dict(
+                os.environ, {"TERM": "xterm-256color", "RAXE_QUIET": "", "RAXE_SIMPLE_PROGRESS": ""}
+            ):
                 os.environ.pop("RAXE_QUIET", None)
                 os.environ.pop("RAXE_SIMPLE_PROGRESS", None)
                 assert detect_download_progress_mode() == "rich"
@@ -115,10 +118,10 @@ class TestSimpleDownloadProgress:
             progress.start("Test Model", 100000)
 
             # These should trigger updates
-            progress.update(10000, 100000)   # 10%
-            progress.update(20000, 100000)   # 20%
-            progress.update(25000, 100000)   # 25% - no update (not at 30%)
-            progress.update(30000, 100000)   # 30%
+            progress.update(10000, 100000)  # 10%
+            progress.update(20000, 100000)  # 20%
+            progress.update(25000, 100000)  # 25% - no update (not at 30%)
+            progress.update(30000, 100000)  # 30%
 
         output = stderr.getvalue()
         assert "10%" in output
@@ -180,7 +183,7 @@ class TestMinimalDownloadProgress:
 
         output = stderr.getvalue()
         # Should only have one progress update line (plus start)
-        progress_lines = [l for l in output.split('\n') if 'Progress:' in l]
+        progress_lines = [l for l in output.split("\n") if "Progress:" in l]
         assert len(progress_lines) == 1
 
     def test_complete_shows_raxe_prefix(self):

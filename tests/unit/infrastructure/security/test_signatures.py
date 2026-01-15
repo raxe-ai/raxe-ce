@@ -9,9 +9,7 @@ from raxe.infrastructure.security.signatures import (
 )
 
 # Skip all tests if cryptography not available
-pytestmark = pytest.mark.skipif(
-    not CRYPTO_AVAILABLE, reason="cryptography package not installed"
-)
+pytestmark = pytest.mark.skipif(not CRYPTO_AVAILABLE, reason="cryptography package not installed")
 
 
 class TestSignatureVerifier:

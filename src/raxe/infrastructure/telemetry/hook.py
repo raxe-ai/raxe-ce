@@ -23,6 +23,7 @@ What we NEVER send:
 ❌ PII of any kind
 ❌ User data
 """
+
 import hashlib
 import logging
 import threading
@@ -48,6 +49,7 @@ class TelemetryConfig:
         max_queue_size: Max events to queue before dropping
         async_send: Send in background thread
     """
+
     enabled: bool = False
     api_key: str | None = None
     endpoint: str = ""  # Will use centralized config if empty
@@ -105,9 +107,7 @@ class TelemetryHook:
         self._sender_thread: threading.Thread | None = None
         if config.async_send and config.enabled:
             self._sender_thread = threading.Thread(
-                target=self._background_sender,
-                daemon=True,
-                name="telemetry-sender"
+                target=self._background_sender, daemon=True, name="telemetry-sender"
             )
             self._sender_thread.start()
 
@@ -128,8 +128,7 @@ class TelemetryHook:
         # Validate payload is privacy-safe
         if not self._is_privacy_safe(payload):
             logger.error(
-                "Attempted to send unsafe telemetry payload (contains PII?). "
-                "Payload rejected."
+                "Attempted to send unsafe telemetry payload (contains PII?). Payload rejected."
             )
             return
 
@@ -161,16 +160,22 @@ class TelemetryHook:
         """
         # Forbidden keys that might contain PII
         forbidden_keys = {
-            "text", "prompt", "response", "message", "content",
-            "input", "output", "data", "body", "user_input",
+            "text",
+            "prompt",
+            "response",
+            "message",
+            "content",
+            "input",
+            "output",
+            "data",
+            "body",
+            "user_input",
         }
 
         # Check for forbidden keys
         for key in payload.keys():
             if key.lower() in forbidden_keys:
-                logger.error(
-                    f"Payload contains forbidden key '{key}' that may contain PII"
-                )
+                logger.error(f"Payload contains forbidden key '{key}' that may contain PII")
                 return False
 
         # Check for suspiciously long string values (might be text)
@@ -264,9 +269,7 @@ class TelemetryHook:
         """
         # TODO: Replace with real HTTP client (Phase 3d)
         # For now, just log (MVP behavior)
-        logger.debug(
-            f"[STUB] Would send {len(batch)} telemetry events to {self.config.endpoint}"
-        )
+        logger.debug(f"[STUB] Would send {len(batch)} telemetry events to {self.config.endpoint}")
 
         # Future implementation:
         # import requests

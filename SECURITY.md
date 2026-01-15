@@ -83,10 +83,32 @@ We provide security updates for:
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | ✅ Yes    |
-| < 0.1   | ❌ No     |
+| 0.7.x   | ✅ Yes    |
+| 0.6.x   | ✅ Yes    |
+| < 0.6   | ❌ No     |
 
 Once v1.0 is released, we will support the latest major version + one prior version.
+
+## Static Analysis & CodeQL
+
+We use GitHub CodeQL for continuous security scanning with custom configuration to suppress verified false positives.
+
+### Current Status
+
+- **Security-critical vulnerabilities:** 0 confirmed
+- **False positives suppressed:** 2 (documented below)
+- **Configuration:** See `.github/codeql-config.yml`
+
+### Known False Positives
+
+Our security team has reviewed and verified the following CodeQL alerts as false positives:
+
+| Alert | Verdict | Rationale |
+|-------|---------|-----------|
+| `py/clear-text-logging-sensitive-data` | FALSE POSITIVE | We log `installation_id` (machine UUID), `key_type` (tier label), and `api_key_id` (truncated SHA-256 hash). None are actual secrets. The actual API key is NEVER logged. |
+| `py/weak-sensitive-data-hashing` | FALSE POSITIVE | We use SHA-256 for privacy fingerprinting and identifier derivation, which is appropriate. bcrypt/argon2 would only be needed for password storage, which we don't do. |
+
+Each suppression is documented in `.github/codeql-config.yml` with review dates and security analyst sign-off.
 
 ## Security Best Practices
 

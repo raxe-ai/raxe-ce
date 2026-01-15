@@ -5,6 +5,7 @@ All models are frozen dataclasses to ensure immutability.
 
 CRITICAL: This is domain layer - NO I/O operations allowed.
 """
+
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -27,6 +28,7 @@ class RetentionMetrics:
         total_scans: Total number of scans performed
         last_scan_date: Most recent scan date, if any
     """
+
     installation_id: str
     install_date: date
     day1_retained: bool
@@ -49,6 +51,7 @@ class StreakMetrics:
         total_scan_days: Total unique days with at least one scan
         last_scan_date: Most recent scan date
     """
+
     installation_id: str
     current_streak: int
     longest_streak: int
@@ -71,6 +74,7 @@ class UsageStatistics:
         total_scans: Total scans performed in period
         avg_scans_per_user: Average scans per active user
     """
+
     period_start: date
     period_end: date
     dau: int
@@ -93,6 +97,7 @@ class Achievement:
         points: Points awarded for unlocking
         unlock_condition: Machine-readable condition (e.g., "scan_count >= 100")
     """
+
     id: str
     name: str
     description: str
@@ -113,6 +118,7 @@ class UserAchievements:
         scan_count: Total scans (cached for achievement checking)
         streak_count: Longest streak (cached for achievement checking)
     """
+
     installation_id: str
     unlocked_achievements: list[str] = field(default_factory=list)
     total_points: int = 0

@@ -2,11 +2,10 @@
 
 Tests the infrastructure layer SQLite operations for audit logging.
 """
+
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-
-import pytest
 
 from raxe.domain.suppression import AuditEntry, Suppression
 from raxe.infrastructure.suppression.sqlite_repository import SQLiteSuppressionRepository
@@ -427,7 +426,9 @@ class TestSQLiteRepositoryEdgeCases:
             db_path = Path(tmpdir) / "test.db"
             repo = SQLiteSuppressionRepository(db_path=db_path)
 
-            special_reason = "Test with 'quotes' and \"double quotes\" and special chars: !@#$%^&*()"
+            special_reason = (
+                "Test with 'quotes' and \"double quotes\" and special chars: !@#$%^&*()"
+            )
             entry = AuditEntry(
                 pattern="pi-001",
                 reason=special_reason,
@@ -474,7 +475,13 @@ class TestSQLiteRepositoryEdgeCases:
                 INSERT INTO suppression_audit (pattern, reason, action, created_at, metadata)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-                ("pi-001", "Test", "added", datetime.now(timezone.utc).isoformat(), "not valid json"),
+                (
+                    "pi-001",
+                    "Test",
+                    "added",
+                    datetime.now(timezone.utc).isoformat(),
+                    "not valid json",
+                ),
             )
             conn.commit()
             conn.close()

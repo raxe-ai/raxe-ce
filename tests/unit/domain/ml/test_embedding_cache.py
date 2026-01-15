@@ -10,7 +10,6 @@ Tests the pure domain logic of the EmbeddingCache class:
 These tests use no I/O, no mocks for external systems - just pure function testing.
 """
 
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -410,9 +409,7 @@ class TestEmbeddingCacheThreadSafety:
         def write_cache(thread_id: int):
             try:
                 for i in range(100):
-                    embedding = np.array([[float(thread_id * 100 + i)]]).astype(
-                        np.float32
-                    )
+                    embedding = np.array([[float(thread_id * 100 + i)]]).astype(np.float32)
                     cache.put(f"thread{thread_id}_text{i}", embedding)
             except Exception as e:
                 errors.append(e)
@@ -466,9 +463,7 @@ class TestEmbeddingCacheThreadSafety:
         def cause_evictions(thread_id: int):
             try:
                 for i in range(100):
-                    embedding = np.array([[float(thread_id * 100 + i)]]).astype(
-                        np.float32
-                    )
+                    embedding = np.array([[float(thread_id * 100 + i)]]).astype(np.float32)
                     cache.put(f"thread{thread_id}_text{i}", embedding)
             except Exception as e:
                 errors.append(e)
@@ -621,4 +616,4 @@ class TestEmbeddingCacheEdgeCases:
         for text in special_texts:
             cache.put(text, embedding)
             result = cache.get(text)
-            assert result is not None, f"Failed for text: {repr(text)}"
+            assert result is not None, f"Failed for text: {text!r}"

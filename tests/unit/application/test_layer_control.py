@@ -2,6 +2,7 @@
 
 Tests the new layer control parameters (l1_enabled, l2_enabled, mode, etc.)
 """
+
 from unittest.mock import Mock
 
 import pytest
@@ -157,15 +158,17 @@ def test_confidence_threshold_filtering(scan_pipeline, mock_executor):
             rule_version="1.0.0",
             severity=Severity.HIGH,
             confidence=0.9,
-            matches=[Match(
-                pattern_index=0,
-                start=0,
-                end=4,
-                matched_text="test",
-                groups=(),
-                context_before="",
-                context_after="",
-            )],
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=4,
+                    matched_text="test",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
             detected_at=datetime.now(timezone.utc).isoformat(),
             detection_layer="L1",
             layer_latency_ms=1.0,
@@ -177,15 +180,17 @@ def test_confidence_threshold_filtering(scan_pipeline, mock_executor):
             rule_version="1.0.0",
             severity=Severity.MEDIUM,
             confidence=0.4,  # Below threshold
-            matches=[Match(
-                pattern_index=0,
-                start=0,
-                end=4,
-                matched_text="test",
-                groups=(),
-                context_before="",
-                context_after="",
-            )],
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=4,
+                    matched_text="test",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
             detected_at=datetime.now(timezone.utc).isoformat(),
             detection_layer="L1",
             layer_latency_ms=1.0,
@@ -218,15 +223,17 @@ def test_layer_attribution_in_result(scan_pipeline, mock_executor):
         rule_version="1.0.0",
         severity=Severity.HIGH,
         confidence=0.9,
-        matches=[Match(
-            pattern_index=0,
-            start=0,
-            end=4,
-            matched_text="test",
-            groups=(),
-            context_before="",
-            context_after="",
-        )],
+        matches=[
+            Match(
+                pattern_index=0,
+                start=0,
+                end=4,
+                matched_text="test",
+                groups=(),
+                context_before="",
+                context_after="",
+            )
+        ],
         detected_at=datetime.now(timezone.utc).isoformat(),
         detection_layer="L1",
         layer_latency_ms=1.5,

@@ -1,4 +1,5 @@
 """Test complete user journey scenarios end-to-end."""
+
 import json
 import os
 import subprocess
@@ -25,7 +26,7 @@ class TestUserJourneys:
             [sys.executable, "-m", "raxe.cli.main", "init", "--force"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         assert result.returncode == 0, f"Init failed: {result.stderr}"
 
@@ -37,7 +38,7 @@ class TestUserJourneys:
             [sys.executable, "-m", "raxe.cli.main", "scan", safe_prompts[0]],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         assert result.returncode == 0
         assert "safe" in result.stdout.lower() or "✓" in result.stdout
@@ -47,7 +48,7 @@ class TestUserJourneys:
             [sys.executable, "-m", "raxe.cli.main", "scan", threat_prompts[0]],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         assert result.returncode == 1
         assert "threat" in result.stdout.lower() or "danger" in result.stdout.lower()
@@ -67,11 +68,20 @@ class TestUserJourneys:
 
         # 1. Run in quiet mode with JSON output
         result = subprocess.run(
-            [sys.executable, "-m", "raxe.cli.main",
-             "--quiet", "scan", "-f", str(test_file), "--format", "json"],
+            [
+                sys.executable,
+                "-m",
+                "raxe.cli.main",
+                "--quiet",
+                "scan",
+                "-f",
+                str(test_file),
+                "--format",
+                "json",
+            ],
             capture_output=True,
             text=True,
-            env=env
+            env=env,
         )
 
         # Should fail due to threat
@@ -83,26 +93,23 @@ class TestUserJourneys:
 
         # 2. Test with exit codes
         result_safe = subprocess.run(
-            [sys.executable, "-m", "raxe.cli.main",
-             "--quiet", "scan", safe_prompts[0]],
+            [sys.executable, "-m", "raxe.cli.main", "--quiet", "scan", safe_prompts[0]],
             capture_output=True,
             text=True,
-            env=env
+            env=env,
         )
         assert result_safe.returncode == 0
 
         result_threat = subprocess.run(
-            [sys.executable, "-m", "raxe.cli.main",
-             "--quiet", "scan", threat_prompts[0]],
+            [sys.executable, "-m", "raxe.cli.main", "--quiet", "scan", threat_prompts[0]],
             capture_output=True,
             text=True,
-            env=env
+            env=env,
         )
         assert result_threat.returncode == 1
 
         # 3. Test non-TTY behavior (should not show progress spinners)
-        assert not any(c in result_safe.stdout + result_safe.stderr
-                      for c in ["⠋", "⠙", "⠹", "⠸"])
+        assert not any(c in result_safe.stdout + result_safe.stderr for c in ["⠋", "⠙", "⠹", "⠸"])
 
     def test_production_api_protection(self, safe_prompts, threat_prompts):
         """Test production API protection scenario."""
@@ -128,14 +135,11 @@ class TestUserJourneys:
                     return {
                         "error": "Input validation failed",
                         "status": 400,
-                        "threat_level": result.severity
+                        "threat_level": result.severity,
                     }
 
                 # Process safe request
-                return {
-                    "response": f"Processed: {user_input[:50]}",
-                    "status": 200
-                }
+                return {"response": f"Processed: {user_input[:50]}", "status": 200}
 
         # Create API instance
         api = APIEndpoint(client)
@@ -172,10 +176,18 @@ class TestUserJourneys:
 
         # 1. Scan with verbose output
         result = subprocess.run(
-            [sys.executable, "-m", "raxe.cli.main",
-             "scan", "-f", str(prompts_file), "--format", "verbose"],
+            [
+                sys.executable,
+                "-m",
+                "raxe.cli.main",
+                "scan",
+                "-f",
+                str(prompts_file),
+                "--format",
+                "verbose",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 1  # Should detect threats
@@ -188,10 +200,18 @@ class TestUserJourneys:
 
         # 2. Export results for analysis
         result = subprocess.run(
-            [sys.executable, "-m", "raxe.cli.main",
-             "scan", "-f", str(prompts_file), "--format", "json"],
+            [
+                sys.executable,
+                "-m",
+                "raxe.cli.main",
+                "scan",
+                "-f",
+                str(prompts_file),
+                "--format",
+                "json",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         data = json.loads(result.stdout)
@@ -219,8 +239,7 @@ class TestUserJourneys:
 
         # 1. Initialize in project
         subprocess.run(
-            [sys.executable, "-m", "raxe.cli.main", "init", "--force"],
-            capture_output=True
+            [sys.executable, "-m", "raxe.cli.main", "init", "--force"], capture_output=True
         )
 
         # 2. Create .raxe/suppressions.yaml
@@ -257,10 +276,7 @@ except ValueError as e:
 
         # 4. Run the script
         result = subprocess.run(
-            [sys.executable, str(test_script)],
-            capture_output=True,
-            text=True,
-            timeout=10
+            [sys.executable, str(test_script)], capture_output=True, text=True, timeout=10
         )
 
         assert result.returncode == 0
@@ -294,15 +310,14 @@ except ValueError as e:
                 prompts = threat_prompts[:5]
             else:
                 # Normal user
-                prompts = safe_prompts[i:i+5]
+                prompts = safe_prompts[i : i + 5]
             user_workloads.append((i, prompts))
 
         # Run concurrent user sessions
         all_results = []
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = {
-                executor.submit(simulate_user, uid, prompts): uid
-                for uid, prompts in user_workloads
+                executor.submit(simulate_user, uid, prompts): uid for uid, prompts in user_workloads
             }
 
             for future in as_completed(futures, timeout=30):

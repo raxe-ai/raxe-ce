@@ -3,6 +3,7 @@
 Defines the structure for model metadata files that describe
 available L2 models (ONNX, PyTorch, different versions, etc.).
 """
+
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -10,13 +11,15 @@ from pathlib import Path
 
 class ModelStatus(Enum):
     """Model status for filtering."""
-    ACTIVE = "active"           # Production-ready, recommended
+
+    ACTIVE = "active"  # Production-ready, recommended
     EXPERIMENTAL = "experimental"  # Testing, not for production
-    DEPRECATED = "deprecated"   # Old, being phased out
+    DEPRECATED = "deprecated"  # Old, being phased out
 
 
 class ModelRuntime(Enum):
     """Model runtime type."""
+
     PYTORCH = "pytorch"
     ONNX = "onnx"
     ONNX_INT8 = "onnx_int8"
@@ -28,6 +31,7 @@ class ModelRuntime(Enum):
 @dataclass
 class FileInfo:
     """Model file information."""
+
     filename: str
     size_mb: float = 0.0
     checksum: str | None = None
@@ -37,6 +41,7 @@ class FileInfo:
 @dataclass
 class PerformanceMetrics:
     """Performance characteristics."""
+
     target_latency_ms: float
     p50_latency_ms: float | None = None
     p95_latency_ms: float | None = None
@@ -48,6 +53,7 @@ class PerformanceMetrics:
 @dataclass
 class AccuracyMetrics:
     """Accuracy metrics."""
+
     binary_f1: float | None = None
     family_f1: float | None = None
     subfamily_f1: float | None = None
@@ -58,6 +64,7 @@ class AccuracyMetrics:
 @dataclass
 class Requirements:
     """Runtime requirements."""
+
     runtime: ModelRuntime
     min_runtime_version: str | None = None
     requires_gpu: bool = False
@@ -88,6 +95,7 @@ class ModelMetadata:
             embedding_model_name="all-mpnet-base-v2"
         )
     """
+
     model_id: str
     name: str
     version: str
@@ -200,7 +208,9 @@ class ModelMetadata:
                 "binary_f1": self.accuracy.binary_f1 if self.accuracy else None,
                 "family_f1": self.accuracy.family_f1 if self.accuracy else None,
                 "subfamily_f1": self.accuracy.subfamily_f1 if self.accuracy else None,
-            } if self.accuracy else None,
+            }
+            if self.accuracy
+            else None,
             "requirements": {
                 "runtime": self.runtime_type,
                 "requires_gpu": self.requirements.requires_gpu,
@@ -246,11 +256,15 @@ class ModelMetadata:
                 binary_f1=data["accuracy"]["binary_f1"] if data.get("accuracy") else None,
                 family_f1=data["accuracy"]["family_f1"] if data.get("accuracy") else None,
                 subfamily_f1=data["accuracy"]["subfamily_f1"] if data.get("accuracy") else None,
-            ) if data.get("accuracy") else None,
+            )
+            if data.get("accuracy")
+            else None,
             requirements=Requirements(
                 runtime=ModelRuntime(data["requirements"]["runtime"]),
                 requires_gpu=data["requirements"].get("requires_gpu", False),
-                requires_quantization_support=data["requirements"].get("requires_quantization_support", False),
+                requires_quantization_support=data["requirements"].get(
+                    "requires_quantization_support", False
+                ),
             ),
             status=ModelStatus(data.get("status", "active")),
             tags=data.get("tags", []),

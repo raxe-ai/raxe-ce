@@ -11,6 +11,7 @@ THIS IS A TEMPORARY IMPLEMENTATION:
 
 Performance target: <1ms (should be trivial since it's just string ops)
 """
+
 import base64
 import re
 import time
@@ -62,16 +63,16 @@ class StubL2Detector:
         r"\bb64decode\b",
         r"\bfromhex\b",
         r"\\x[0-9a-fA-F]{2}",  # Hex escapes
-        r"&#x[0-9a-fA-F]+;",   # HTML hex entities
+        r"&#x[0-9a-fA-F]+;",  # HTML hex entities
         r"\\u[0-9a-fA-F]{4}",  # Unicode escapes
-        r"0x[0-9a-fA-F]+",     # Hex literals
+        r"0x[0-9a-fA-F]+",  # Hex literals
     ]
 
     # Obfuscation patterns
     OBFUSCATION_PATTERNS: ClassVar[list] = [
         r"[\u200B-\u200D\uFEFF]",  # Zero-width characters
         r"[\u0000-\u0008\u000B\u000C\u000E-\u001F]",  # Control characters (excluding \t \n \r)
-        r"[^\x00-\x7F]{20,}",       # Long non-ASCII sequences
+        r"[^\x00-\x7F]{20,}",  # Long non-ASCII sequences
     ]
 
     # Role/privilege escalation keywords
@@ -96,10 +97,7 @@ class StubL2Detector:
         self._privilege_re = [re.compile(p, re.IGNORECASE) for p in self.PRIVILEGE_KEYWORDS]
 
     def analyze(
-        self,
-        text: str,
-        l1_results: L1ScanResult,
-        context: dict[str, Any] | None = None
+        self, text: str, l1_results: L1ScanResult, context: dict[str, Any] | None = None
     ) -> L2Result:
         """Analyze text using simple heuristics.
 
@@ -150,16 +148,15 @@ class StubL2Detector:
         duration_ms = (time.perf_counter() - start) * 1000
 
         # Overall confidence is max of individual predictions
-        overall_confidence = (
-            max(p.confidence for p in predictions)
-            if predictions else 0.0
-        )
+        overall_confidence = max(p.confidence for p in predictions) if predictions else 0.0
 
         # Extract features for debugging/logging
         features = {
             "text_length": len(text),
             "l1_detection_count": l1_results.detection_count,
-            "l1_highest_severity": l1_results.highest_severity.value if l1_results.highest_severity else None,
+            "l1_highest_severity": l1_results.highest_severity.value
+            if l1_results.highest_severity
+            else None,
             "has_l1_detections": l1_results.has_detections,
         }
 
@@ -172,7 +169,7 @@ class StubL2Detector:
             metadata={
                 "detector_type": "stub",
                 "is_production_ready": False,
-            }
+            },
         )
 
     @property
@@ -197,7 +194,7 @@ class StubL2Detector:
                 "Low accuracy compared to ML",
                 "High false positive risk",
                 "Cannot detect semantic threats",
-            ]
+            ],
         }
 
     def _check_encoded_content(self, text: str) -> L2Prediction | None:
@@ -226,7 +223,7 @@ class StubL2Detector:
         for candidate in potential_base64:
             # Skip if it's just repeated characters (e.g., "aaaa...")
             # Real base64 has variety
-            unique_chars = len(set(candidate.replace('=', '')))
+            unique_chars = len(set(candidate.replace("=", "")))
             if unique_chars < 4:
                 continue
 
@@ -283,9 +280,7 @@ class StubL2Detector:
         )
 
     def _check_context_manipulation(
-        self,
-        text: str,
-        l1_results: L1ScanResult
+        self, text: str, l1_results: L1ScanResult
     ) -> L2Prediction | None:
         """Check for context manipulation.
 
@@ -313,10 +308,7 @@ class StubL2Detector:
             "override",
         ]
 
-        phrase_count = sum(
-            1 for phrase in manipulation_phrases
-            if phrase in text.lower()
-        )
+        phrase_count = sum(1 for phrase in manipulation_phrases if phrase in text.lower())
 
         if phrase_count == 0:
             return None

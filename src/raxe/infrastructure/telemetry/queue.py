@@ -23,15 +23,17 @@ logger = logging.getLogger(__name__)
 
 class EventPriority(Enum):
     """Event priority levels for queue processing."""
+
     CRITICAL = 0  # Sent immediately
-    HIGH = 1      # Sent in next batch
-    MEDIUM = 2    # Normal batching
-    LOW = 3       # Aggressive batching, first to drop
+    HIGH = 1  # Sent in next batch
+    MEDIUM = 2  # Normal batching
+    LOW = 3  # Aggressive batching, first to drop
 
 
 @dataclass
 class QueuedEvent:
     """Represents an event in the queue."""
+
     event_id: str
     event_type: str
     payload: dict[str, Any]
@@ -51,7 +53,7 @@ class QueuedEvent:
             "created_at": self.created_at.isoformat(),
             "retry_count": self.retry_count,
             "retry_after": self.retry_after.isoformat() if self.retry_after else None,
-            "batch_id": self.batch_id
+            "batch_id": self.batch_id,
         }
 
     @classmethod
@@ -65,7 +67,7 @@ class QueuedEvent:
             created_at=datetime.fromisoformat(row[4]),
             retry_count=row[5],
             retry_after=datetime.fromisoformat(row[6]) if row[6] else None,
-            batch_id=row[7]
+            batch_id=row[7],
         )
 
 
@@ -87,7 +89,7 @@ class EventQueue:
         db_path: Path | None = None,
         max_queue_size: int = 10000,
         max_retry_count: int = 3,
-        enable_wal: bool = True
+        enable_wal: bool = True,
     ):
         """
         Initialize the event queue.
@@ -209,7 +211,7 @@ class EventQueue:
         self,
         event_type: str,
         payload: dict[str, Any],
-        priority: EventPriority = EventPriority.MEDIUM
+        priority: EventPriority = EventPriority.MEDIUM,
     ) -> str:
         """
         Add an event to the queue.
@@ -235,17 +237,20 @@ class EventQueue:
                     self._handle_overflow(conn)
 
                 # Insert new event
-                conn.execute("""
+                conn.execute(
+                    """
                     INSERT INTO events (
                         event_id, event_type, payload, priority, created_at
                     ) VALUES (?, ?, ?, ?, ?)
-                """, (
-                    event_id,
-                    event_type,
-                    json.dumps(payload),
-                    priority.value,
-                    created_at.isoformat()
-                ))
+                """,
+                    (
+                        event_id,
+                        event_type,
+                        json.dumps(payload),
+                        priority.value,
+                        created_at.isoformat(),
+                    ),
+                )
 
                 # Update stats
                 conn.execute("""
@@ -262,12 +267,15 @@ class EventQueue:
     def _handle_overflow(self, conn: sqlite3.Connection) -> None:
         """Handle queue overflow by dropping oldest low-priority events."""
         # Find and remove oldest low priority event
-        result = conn.execute("""
+        result = conn.execute(
+            """
             SELECT event_id FROM events
             WHERE priority = ?
             ORDER BY created_at ASC
             LIMIT 1
-        """, (EventPriority.LOW.value,)).fetchone()
+        """,
+            (EventPriority.LOW.value,),
+        ).fetchone()
 
         if result:
             event_id = result[0]
@@ -279,12 +287,15 @@ class EventQueue:
             logger.warning(f"Dropped low-priority event {event_id} due to queue overflow")
         else:
             # No low priority events, try medium
-            result = conn.execute("""
+            result = conn.execute(
+                """
                 SELECT event_id FROM events
                 WHERE priority = ?
                 ORDER BY created_at ASC
                 LIMIT 1
-            """, (EventPriority.MEDIUM.value,)).fetchone()
+            """,
+                (EventPriority.MEDIUM.value,),
+            ).fetchone()
 
             if result:
                 event_id = result[0]
@@ -296,9 +307,7 @@ class EventQueue:
                 logger.warning(f"Dropped medium-priority event {event_id} due to queue overflow")
 
     def dequeue_batch(
-        self,
-        batch_size: int = 50,
-        max_bytes: int = 100_000
+        self, batch_size: int = 50, max_bytes: int = 100_000
     ) -> tuple[str, list[QueuedEvent]]:
         """
         Dequeue a batch of events for processing.
@@ -320,7 +329,8 @@ class EventQueue:
         with self._lock:
             with self._get_connection() as conn:
                 # Select events ready for processing (not in retry backoff)
-                cursor = conn.execute("""
+                cursor = conn.execute(
+                    """
                     SELECT event_id, event_type, payload, priority, created_at,
                            retry_count, retry_after, batch_id
                     FROM events
@@ -328,13 +338,15 @@ class EventQueue:
                       AND (retry_after IS NULL OR retry_after <= ?)
                     ORDER BY priority ASC, created_at ASC
                     LIMIT ?
-                """, (now.isoformat(), batch_size))
+                """,
+                    (now.isoformat(), batch_size),
+                )
 
                 event_ids = []
                 for row in cursor:
                     event = QueuedEvent.from_row(row)
                     event_json = json.dumps(event.to_dict())
-                    event_bytes = len(event_json.encode('utf-8'))
+                    event_bytes = len(event_json.encode("utf-8"))
 
                     if current_bytes + event_bytes > max_bytes and events:
                         # Stop if adding this event would exceed max bytes
@@ -347,17 +359,23 @@ class EventQueue:
                 if events:
                     # Mark events as part of this batch
                     # Security: Safe - placeholders constructed from fixed '?' list, all values parameterized
-                    placeholders = ','.join(['?'] * len(event_ids))
-                    conn.execute(f"""  # nosec B608 - Safe parameterized query
+                    placeholders = ",".join(["?"] * len(event_ids))
+                    conn.execute(
+                        f"""  # nosec B608 - Safe parameterized query
                         UPDATE events SET batch_id = ?
                         WHERE event_id IN ({placeholders})
-                    """, [batch_id, *event_ids])
+                    """,
+                        [batch_id, *event_ids],
+                    )
 
                     # Create batch record
-                    conn.execute("""
+                    conn.execute(
+                        """
                         INSERT INTO batches (batch_id, created_at, event_count)
                         VALUES (?, ?, ?)
-                    """, (batch_id, now.isoformat(), len(events)))
+                    """,
+                        (batch_id, now.isoformat(), len(events)),
+                    )
 
                     conn.commit()
 
@@ -381,31 +399,37 @@ class EventQueue:
                 conn.execute("DELETE FROM events WHERE batch_id = ?", (batch_id,))
 
                 # Update batch record
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE batches
                     SET status = 'sent', sent_at = ?, response_code = ?
                     WHERE batch_id = ?
-                """, (now.isoformat(), response_code, batch_id))
+                """,
+                    (now.isoformat(), response_code, batch_id),
+                )
 
                 # Update stats
-                event_count = conn.execute("""
+                event_count = conn.execute(
+                    """
                     SELECT event_count FROM batches WHERE batch_id = ?
-                """, (batch_id,)).fetchone()[0]
+                """,
+                    (batch_id,),
+                ).fetchone()[0]
 
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE queue_stats SET stat_value = stat_value + ?
                     WHERE stat_name = 'total_sent'
-                """, (event_count,))
+                """,
+                    (event_count,),
+                )
 
                 conn.commit()
 
                 logger.info(f"Marked batch {batch_id} as sent ({event_count} events)")
 
     def mark_batch_failed(
-        self,
-        batch_id: str,
-        error_message: str,
-        retry_delay_seconds: int = 60
+        self, batch_id: str, error_message: str, retry_delay_seconds: int = 60
     ) -> None:
         """
         Mark a batch as failed and schedule retry.
@@ -418,14 +442,15 @@ class EventQueue:
         with self._lock:
             with self._get_connection() as conn:
                 retry_after = datetime.now(timezone.utc)
-                retry_after = retry_after.replace(
-                    second=retry_after.second + retry_delay_seconds
-                )
+                retry_after = retry_after.replace(second=retry_after.second + retry_delay_seconds)
 
                 # Update events for retry
-                cursor = conn.execute("""
+                cursor = conn.execute(
+                    """
                     SELECT event_id, retry_count FROM events WHERE batch_id = ?
-                """, (batch_id,))
+                """,
+                    (batch_id,),
+                )
 
                 dead_letter_events = []
                 retry_events = []
@@ -439,38 +464,54 @@ class EventQueue:
                 # Move max-retry events to dead letter queue
                 if dead_letter_events:
                     # Security: Safe - placeholders constructed from fixed '?' list, all values parameterized
-                    placeholders = ','.join(['?'] * len(dead_letter_events))
-                    conn.execute(f"""  # nosec B608 - Safe parameterized query
+                    placeholders = ",".join(["?"] * len(dead_letter_events))
+                    conn.execute(
+                        f"""  # nosec B608 - Safe parameterized query
                         INSERT INTO dead_letter_queue
                         SELECT event_id, event_type, payload, priority, created_at,
                                ?, ?, retry_count
                         FROM events WHERE event_id IN ({placeholders})
-                    """, [datetime.now(timezone.utc).isoformat(), error_message, *dead_letter_events])
+                    """,
+                        [
+                            datetime.now(timezone.utc).isoformat(),
+                            error_message,
+                            *dead_letter_events,
+                        ],
+                    )
 
-                    conn.execute(f"""  # nosec B608 - Safe parameterized query
+                    conn.execute(
+                        f"""  # nosec B608 - Safe parameterized query
                         DELETE FROM events WHERE event_id IN ({placeholders})
-                    """, dead_letter_events)
+                    """,
+                        dead_letter_events,
+                    )
 
                     logger.warning(f"Moved {len(dead_letter_events)} events to dead letter queue")
 
                 # Update retry events
                 if retry_events:
                     # Security: Safe - placeholders constructed from fixed '?' list, all values parameterized
-                    placeholders = ','.join(['?'] * len(retry_events))
-                    conn.execute(f"""  # nosec B608 - Safe parameterized query
+                    placeholders = ",".join(["?"] * len(retry_events))
+                    conn.execute(
+                        f"""  # nosec B608 - Safe parameterized query
                         UPDATE events
                         SET batch_id = NULL,
                             retry_count = retry_count + 1,
                             retry_after = ?
                         WHERE event_id IN ({placeholders})
-                    """, [retry_after.isoformat(), *retry_events])
+                    """,
+                        [retry_after.isoformat(), *retry_events],
+                    )
 
                 # Update batch status
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE batches
                     SET status = 'failed', response_message = ?
                     WHERE batch_id = ?
-                """, (error_message, batch_id))
+                """,
+                    (error_message, batch_id),
+                )
 
                 conn.commit()
 
@@ -487,9 +528,12 @@ class EventQueue:
             # Get queue counts by priority
             priority_counts = {}
             for priority in EventPriority:
-                count = conn.execute("""
+                count = conn.execute(
+                    """
                     SELECT COUNT(*) FROM events WHERE priority = ?
-                """, (priority.value,)).fetchone()[0]
+                """,
+                    (priority.value,),
+                ).fetchone()[0]
                 priority_counts[priority.name.lower()] = count
 
             # Get overall stats
@@ -506,7 +550,7 @@ class EventQueue:
                 "queue_depth": queue_depth,
                 "dead_letter_count": dead_letter_count,
                 "priority_breakdown": priority_counts,
-                **stats
+                **stats,
             }
 
     def clear_queue(self) -> None:

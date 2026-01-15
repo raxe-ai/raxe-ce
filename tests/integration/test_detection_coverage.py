@@ -10,6 +10,7 @@ Data sources:
 - tests/fixtures/benign_prompts.jsonl: 1k benign programming prompts
 - tests/fixtures/rule_based_threats.jsonl: ~400 threats derived from rule examples
 """
+
 import json
 from collections import Counter
 from pathlib import Path
@@ -121,7 +122,9 @@ class TestDetectionCoverage:
         print("\nPer-family detection rates:")
         for family in sorted(by_family.keys()):
             family_rate = detected_by_family[family] / by_family[family]
-            print(f"  {family}: {family_rate:.2%} ({detected_by_family[family]}/{by_family[family]})")
+            print(
+                f"  {family}: {family_rate:.2%} ({detected_by_family[family]}/{by_family[family]})"
+            )
 
         if missed_examples:
             print("\nSample misses (first 5):")
@@ -219,7 +222,9 @@ class TestDetectionCoverage:
 
         if total_detected > 0:
             high_severity_rate = critical_and_high / total_detected
-            assert high_severity_rate > 0.70, f"Too few high-severity detections: {high_severity_rate:.2%}"
+            assert (
+                high_severity_rate > 0.70
+            ), f"Too few high-severity detections: {high_severity_rate:.2%}"
 
     @pytest.mark.slow
     def test_performance_on_large_benign_dataset(self, pipeline, benign_data):
@@ -262,10 +267,7 @@ class TestFamilyCoverage:
         if not pi_samples:
             pytest.skip("No PI samples in dataset")
 
-        detected = sum(
-            1 for s in pi_samples
-            if pipeline.scan(s["text"]).scan_result.has_threats
-        )
+        detected = sum(1 for s in pi_samples if pipeline.scan(s["text"]).scan_result.has_threats)
 
         coverage = detected / len(pi_samples)
         print(f"\nPI Coverage: {coverage:.2%} ({detected}/{len(pi_samples)})")
@@ -277,10 +279,7 @@ class TestFamilyCoverage:
         if not jb_samples:
             pytest.skip("No JB samples in dataset")
 
-        detected = sum(
-            1 for s in jb_samples
-            if pipeline.scan(s["text"]).scan_result.has_threats
-        )
+        detected = sum(1 for s in jb_samples if pipeline.scan(s["text"]).scan_result.has_threats)
 
         coverage = detected / len(jb_samples)
         print(f"\nJB Coverage: {coverage:.2%} ({detected}/{len(jb_samples)})")
@@ -292,10 +291,7 @@ class TestFamilyCoverage:
         if not pii_samples:
             pytest.skip("No PII samples in dataset")
 
-        detected = sum(
-            1 for s in pii_samples
-            if pipeline.scan(s["text"]).scan_result.has_threats
-        )
+        detected = sum(1 for s in pii_samples if pipeline.scan(s["text"]).scan_result.has_threats)
 
         coverage = detected / len(pii_samples)
         print(f"\nPII Coverage: {coverage:.2%} ({detected}/{len(pii_samples)})")
@@ -307,10 +303,7 @@ class TestFamilyCoverage:
         if not cmd_samples:
             pytest.skip("No CMD samples in dataset")
 
-        detected = sum(
-            1 for s in cmd_samples
-            if pipeline.scan(s["text"]).scan_result.has_threats
-        )
+        detected = sum(1 for s in cmd_samples if pipeline.scan(s["text"]).scan_result.has_threats)
 
         coverage = detected / len(cmd_samples)
         print(f"\nCMD Coverage: {coverage:.2%} ({detected}/{len(cmd_samples)})")

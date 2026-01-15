@@ -18,6 +18,7 @@ Usage:
         duration_ms=15.2
     )
 """
+
 import logging
 import os
 import sys

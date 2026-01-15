@@ -1,4 +1,5 @@
 """Tests for A/B testing framework."""
+
 import pytest
 
 from raxe.application.ab_testing import ABTestConfig, ABTestManager, DetectorMode
@@ -19,7 +20,7 @@ class TestABTestConfig:
         config = ABTestConfig(
             l2_rollout_percentage=25.0,
             enabled=False,
-            customer_overrides={"customer1": DetectorMode.L1_ONLY}
+            customer_overrides={"customer1": DetectorMode.L1_ONLY},
         )
         assert config.l2_rollout_percentage == 25.0
         assert config.enabled is False
@@ -51,7 +52,7 @@ class TestABTestManager:
         config = ABTestConfig(
             customer_overrides={
                 "premium_customer": DetectorMode.L1_AND_L2,
-                "test_customer": DetectorMode.L1_ONLY
+                "test_customer": DetectorMode.L1_ONLY,
             }
         )
         manager = ABTestManager(config)
@@ -117,7 +118,7 @@ class TestABTestManager:
             mode=DetectorMode.L1_AND_L2,
             customer_id="customer1",
             detected_threat=True,
-            processing_time_ms=15.5
+            processing_time_ms=15.5,
         )
 
     def test_cohort_stats(self):

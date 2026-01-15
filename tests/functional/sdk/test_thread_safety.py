@@ -1,4 +1,5 @@
 """Test SDK thread safety for concurrent operations."""
+
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -35,16 +36,13 @@ class TestSDKThreadSafety:
 
     def test_concurrent_initialization(self, thread_pool):
         """Test multiple threads initializing clients concurrently."""
+
         def create_client(idx):
             client = Raxe()
             assert client._initialized
             return client
 
-        results, errors = thread_pool.run_concurrent(
-            create_client,
-            list(range(5)),
-            num_threads=5
-        )
+        results, errors = thread_pool.run_concurrent(create_client, list(range(5)), num_threads=5)
 
         # All should initialize successfully
         assert len(errors) == 0
@@ -72,10 +70,7 @@ class TestSDKThreadSafety:
         # Start threads
         threads = []
         for i in range(5):
-            t = threading.Thread(
-                target=worker,
-                args=(i, safe_prompts[i % len(safe_prompts)])
-            )
+            t = threading.Thread(target=worker, args=(i, safe_prompts[i % len(safe_prompts)]))
             threads.append(t)
             t.start()
 

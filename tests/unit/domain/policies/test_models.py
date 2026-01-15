@@ -3,6 +3,7 @@
 Tests all value objects and their validation rules.
 Target: >95% coverage for domain layer.
 """
+
 import pytest
 
 from raxe.domain.policies.models import (
@@ -206,7 +207,6 @@ class TestPolicy:
                 priority=-1,
             )
 
-
     def test_immutable(self):
         """Policy is immutable (frozen)."""
         policy = Policy(
@@ -251,62 +251,85 @@ class TestPolicyDecision:
 
     def test_should_block(self):
         """should_block property."""
-        assert PolicyDecision(
-            action=PolicyAction.BLOCK,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).should_block is True
+        assert (
+            PolicyDecision(
+                action=PolicyAction.BLOCK,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).should_block
+            is True
+        )
 
-        assert PolicyDecision(
-            action=PolicyAction.ALLOW,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).should_block is False
+        assert (
+            PolicyDecision(
+                action=PolicyAction.ALLOW,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).should_block
+            is False
+        )
 
     def test_should_allow(self):
         """should_allow property."""
-        assert PolicyDecision(
-            action=PolicyAction.ALLOW,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).should_allow is True
+        assert (
+            PolicyDecision(
+                action=PolicyAction.ALLOW,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).should_allow
+            is True
+        )
 
-        assert PolicyDecision(
-            action=PolicyAction.BLOCK,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).should_allow is False
+        assert (
+            PolicyDecision(
+                action=PolicyAction.BLOCK,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).should_allow
+            is False
+        )
 
     def test_should_flag(self):
         """should_flag property."""
-        assert PolicyDecision(
-            action=PolicyAction.FLAG,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).should_flag is True
+        assert (
+            PolicyDecision(
+                action=PolicyAction.FLAG,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).should_flag
+            is True
+        )
 
-        assert PolicyDecision(
-            action=PolicyAction.ALLOW,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).should_flag is False
+        assert (
+            PolicyDecision(
+                action=PolicyAction.ALLOW,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).should_flag
+            is False
+        )
 
     def test_severity_changed(self):
         """severity_changed property."""
         # Changed
-        assert PolicyDecision(
-            action=PolicyAction.BLOCK,
-            original_severity=Severity.MEDIUM,
-            final_severity=Severity.CRITICAL,
-        ).severity_changed is True
+        assert (
+            PolicyDecision(
+                action=PolicyAction.BLOCK,
+                original_severity=Severity.MEDIUM,
+                final_severity=Severity.CRITICAL,
+            ).severity_changed
+            is True
+        )
 
         # Not changed
-        assert PolicyDecision(
-            action=PolicyAction.BLOCK,
-            original_severity=Severity.HIGH,
-            final_severity=Severity.HIGH,
-        ).severity_changed is False
-
+        assert (
+            PolicyDecision(
+                action=PolicyAction.BLOCK,
+                original_severity=Severity.HIGH,
+                final_severity=Severity.HIGH,
+            ).severity_changed
+            is False
+        )
 
     def test_to_dict(self):
         """to_dict serialization."""

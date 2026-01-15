@@ -28,6 +28,7 @@ class ScanEvent:
         severity: Highest severity level detected (optional)
         scan_duration_ms: Duration of scan in milliseconds (optional)
     """
+
     installation_id: str
     timestamp: datetime
     event_type: str
@@ -50,6 +51,7 @@ class UserActivity:
         total_threats: Total number of threats detected
         scan_dates: List of unique dates with scan activity
     """
+
     installation_id: str
     first_seen: datetime
     last_seen: datetime
@@ -70,10 +72,7 @@ class AnalyticsRepository(ABC):
 
     @abstractmethod
     def get_scan_events(
-        self,
-        start_date: date,
-        end_date: date,
-        installation_id: str | None = None
+        self, start_date: date, end_date: date, installation_id: str | None = None
     ) -> list[ScanEvent]:
         """Get scan events within date range.
 
@@ -89,10 +88,7 @@ class AnalyticsRepository(ABC):
 
     @abstractmethod
     def get_user_activity(
-        self,
-        installation_id: str,
-        start_date: date | None = None,
-        end_date: date | None = None
+        self, installation_id: str, start_date: date | None = None, end_date: date | None = None
     ) -> UserActivity | None:
         """Get user activity summary.
 
@@ -107,10 +103,7 @@ class AnalyticsRepository(ABC):
         pass
 
     @abstractmethod
-    def get_cohort_users(
-        self,
-        cohort_date: date
-    ) -> list[str]:
+    def get_cohort_users(self, cohort_date: date) -> list[str]:
         """Get list of users who joined on specific date.
 
         Args:
@@ -122,11 +115,7 @@ class AnalyticsRepository(ABC):
         pass
 
     @abstractmethod
-    def get_active_users(
-        self,
-        target_date: date,
-        window_days: int = 1
-    ) -> list[str]:
+    def get_active_users(self, target_date: date, window_days: int = 1) -> list[str]:
         """Get active users within window of target date.
 
         Args:
@@ -144,7 +133,7 @@ class AnalyticsRepository(ABC):
         installation_id: str,
         achievement_id: str,
         earned_at: datetime,
-        metadata: dict[str, Any]
+        metadata: dict[str, Any],
     ) -> None:
         """Save achievement earned by user.
 
@@ -157,10 +146,7 @@ class AnalyticsRepository(ABC):
         pass
 
     @abstractmethod
-    def get_achievements(
-        self,
-        installation_id: str
-    ) -> list[dict[str, Any]]:
+    def get_achievements(self, installation_id: str) -> list[dict[str, Any]]:
         """Get all achievements for user.
 
         Args:

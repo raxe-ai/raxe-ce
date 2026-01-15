@@ -13,6 +13,7 @@ Note: The legacy .raxeignore file format was deprecated in v1.0 and has been
 removed in v1.0. Use .raxe/suppressions.yaml instead. See UPDATE.md for
 migration instructions.
 """
+
 import logging
 import warnings
 from pathlib import Path

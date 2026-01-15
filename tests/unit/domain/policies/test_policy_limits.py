@@ -7,6 +7,7 @@ Tests the security boundaries added in Phase 3:
 
 Target: >95% coverage for domain layer.
 """
+
 import pytest
 
 from raxe.domain.policies.models import (

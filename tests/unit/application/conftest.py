@@ -10,22 +10,19 @@ This module provides shared fixtures for testing telemetry components:
 from __future__ import annotations
 
 import json
-import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
-from unittest.mock import MagicMock, Mock, patch
+from typing import TYPE_CHECKING, Any
+from unittest.mock import Mock
 
 import pytest
 
 from raxe.domain.telemetry.events import (
-    EventType,
     TelemetryEvent,
     create_error_event,
     create_scan_event,
     create_session_end_event,
     create_session_start_event,
-    generate_event_id,
     generate_session_id,
 )
 from raxe.infrastructure.telemetry.config import RetryPolicyConfig, TelemetryConfig
@@ -35,7 +32,6 @@ from raxe.infrastructure.telemetry.sender import (
     BatchSender,
     CircuitBreaker,
     CircuitBreakerConfig,
-    CircuitState,
     RetryPolicy,
 )
 

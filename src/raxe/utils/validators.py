@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 class ValidationError(Exception):
     """Raised when input validation fails."""
+
     pass
 
 
@@ -59,8 +60,7 @@ def validate_date_range(
 
     if range_delta > max_range:
         raise ValidationError(
-            f"Date range too large: {range_delta.days} days "
-            f"(maximum allowed: {max_days} days)"
+            f"Date range too large: {range_delta.days} days (maximum allowed: {max_days} days)"
         )
 
     # Future date check
@@ -71,17 +71,13 @@ def validate_date_range(
             now = now.replace(tzinfo=None)
 
         if start_date > now:
-            raise ValidationError(
-                f"start_date cannot be in the future: {start_date.isoformat()}"
-            )
+            raise ValidationError(f"start_date cannot be in the future: {start_date.isoformat()}")
         # For end_date, allow same day (end_date might be 23:59:59.999999 of today)
         # Compare dates only, not full datetime
-        end_date_date = end_date.date() if hasattr(end_date, 'date') else end_date
-        now_date = now.date() if hasattr(now, 'date') else now
+        end_date_date = end_date.date() if hasattr(end_date, "date") else end_date
+        now_date = now.date() if hasattr(now, "date") else now
         if end_date_date > now_date:
-            raise ValidationError(
-                f"end_date cannot be in the future: {end_date.isoformat()}"
-            )
+            raise ValidationError(f"end_date cannot be in the future: {end_date.isoformat()}")
 
 
 def validate_positive_integer(value: int, name: str = "value") -> None:
@@ -125,14 +121,10 @@ def validate_string_length(
         raise ValidationError(f"{name} must be a string, got {type(value).__name__}")
 
     if len(value) < min_length:
-        raise ValidationError(
-            f"{name} must be at least {min_length} characters, got {len(value)}"
-        )
+        raise ValidationError(f"{name} must be at least {min_length} characters, got {len(value)}")
 
     if max_length is not None and len(value) > max_length:
-        raise ValidationError(
-            f"{name} must be at most {max_length} characters, got {len(value)}"
-        )
+        raise ValidationError(f"{name} must be at most {max_length} characters, got {len(value)}")
 
 
 def validate_sql_identifier(identifier: str, name: str = "identifier") -> None:
@@ -159,10 +151,9 @@ def validate_sql_identifier(identifier: str, name: str = "identifier") -> None:
         raise ValidationError(f"{name} cannot be empty")
 
     # Only allow alphanumeric and underscores
-    if not all(c.isalnum() or c == '_' for c in identifier):
+    if not all(c.isalnum() or c == "_" for c in identifier):
         raise ValidationError(
-            f"{name} can only contain alphanumeric characters and underscores, "
-            f"got: {identifier}"
+            f"{name} can only contain alphanumeric characters and underscores, got: {identifier}"
         )
 
     # Don't allow starting with a number

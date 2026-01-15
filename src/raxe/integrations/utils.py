@@ -4,6 +4,7 @@ Utility functions for safe optional imports.
 This module provides patterns for handling optional dependencies
 in a type-safe and user-friendly way.
 """
+
 from __future__ import annotations
 
 from contextlib import contextmanager

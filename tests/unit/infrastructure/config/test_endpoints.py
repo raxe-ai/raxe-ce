@@ -12,8 +12,6 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-import pytest
-
 from raxe.infrastructure.config.endpoints import (
     Endpoint,
     Environment,
@@ -28,7 +26,6 @@ from raxe.infrastructure.config.endpoints import (
     reset_all,
     set_environment,
 )
-
 
 # =============================================================================
 # Environment Detection Tests
@@ -48,7 +45,9 @@ class TestEnvironmentDetection:
     def test_raxe_env_takes_precedence(self) -> None:
         """RAXE_ENV environment variable takes precedence over API key detection."""
         reset_all()  # Clear cached state
-        with patch.dict(os.environ, {"RAXE_ENV": "production", "RAXE_API_KEY": "raxe_temp_xxx"}, clear=True):
+        with patch.dict(
+            os.environ, {"RAXE_ENV": "production", "RAXE_API_KEY": "raxe_temp_xxx"}, clear=True
+        ):
             env = detect_environment()
             assert env == Environment.PRODUCTION
 
@@ -202,20 +201,20 @@ class TestTelemetryEndpointOverride:
         """RAXE_TELEMETRY_ENDPOINT overrides default endpoint."""
         reset_all()  # Clear cached state
         custom_endpoint = "https://custom.example.com/v1/telemetry"
-        with patch.dict(os.environ, {
-            "RAXE_TELEMETRY_ENDPOINT": custom_endpoint,
-            "RAXE_ENV": "production"
-        }, clear=True):
+        with patch.dict(
+            os.environ,
+            {"RAXE_TELEMETRY_ENDPOINT": custom_endpoint, "RAXE_ENV": "production"},
+            clear=True,
+        ):
             telemetry = get_telemetry_endpoint()
             assert telemetry == custom_endpoint
 
     def test_empty_env_var_uses_default(self) -> None:
         """Empty RAXE_TELEMETRY_ENDPOINT uses default."""
         reset_all()  # Clear cached state
-        with patch.dict(os.environ, {
-            "RAXE_TELEMETRY_ENDPOINT": "",
-            "RAXE_ENV": "development"
-        }, clear=True):
+        with patch.dict(
+            os.environ, {"RAXE_TELEMETRY_ENDPOINT": "", "RAXE_ENV": "development"}, clear=True
+        ):
             telemetry = get_telemetry_endpoint()
             assert "api.beta.raxe.ai" in telemetry
 

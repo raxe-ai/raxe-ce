@@ -13,6 +13,7 @@ With:
 The wrapper intercepts chat.completions.create calls, scans user messages
 before sending to OpenAI, and optionally scans responses.
 """
+
 import logging
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -54,7 +55,7 @@ class AsyncRaxeOpenAI:
         raxe_block_on_threat: bool = True,
         raxe_scan_responses: bool = True,
         raxe_cache_size: int = 1000,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         """Initialize AsyncRaxeOpenAI client.
 
@@ -87,8 +88,7 @@ class AsyncRaxeOpenAI:
             from openai import AsyncOpenAI
         except ImportError:
             raise ImportError(
-                "openai package is required for AsyncRaxeOpenAI. "
-                "Install with: pip install openai"
+                "openai package is required for AsyncRaxeOpenAI. Install with: pip install openai"
             ) from None
 
         # Initialize AsyncOpenAI client
@@ -97,6 +97,7 @@ class AsyncRaxeOpenAI:
         # Create or use provided AsyncRaxe client
         if raxe is None:
             from raxe.async_sdk.client import AsyncRaxe
+
             raxe = AsyncRaxe(cache_size=raxe_cache_size)
 
         self.raxe = raxe
@@ -156,10 +157,7 @@ class AsyncRaxeOpenAI:
             RaxeBlockedError: If threat detected and blocking enabled
         """
         # Use AsyncRaxe.scan() - single entry point
-        result = await self.raxe.scan(
-            content,
-            block_on_threat=self.raxe_block_on_threat
-        )
+        result = await self.raxe.scan(content, block_on_threat=self.raxe_block_on_threat)
 
         # If we get here and blocking is enabled but not raised,
         # it means no threat was detected or scan() didn't raise
@@ -185,9 +183,7 @@ class AsyncRaxeOpenAI:
                         # (just monitor for policy violations)
                         result = await self.raxe.scan(content, block_on_threat=False)
                         if result.has_threats:
-                            logger.info(
-                                f"Threat detected in OpenAI response: {result.severity}"
-                            )
+                            logger.info(f"Threat detected in OpenAI response: {result.severity}")
         except Exception as e:
             # Don't fail on response scanning
             logger.error(f"Failed to scan response: {e}")

@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DailyRollup:
     """Daily aggregated statistics."""
+
     date: date
     total_scans: int
     total_threats: int
@@ -37,6 +38,7 @@ class DailyRollup:
 @dataclass
 class HourlyPattern:
     """Hourly usage pattern."""
+
     hour: int
     scan_count: int
     threat_count: int
@@ -46,6 +48,7 @@ class HourlyPattern:
 @dataclass
 class DetectionBreakdown:
     """Detection breakdown by category/severity."""
+
     severity: str
     count: int
     percentage: float
@@ -73,9 +76,7 @@ class DataAggregator:
 
         # Create database connection
         self.engine = create_engine(
-            f"sqlite:///{self.db_path}",
-            echo=False,
-            connect_args={"check_same_thread": False}
+            f"sqlite:///{self.db_path}", echo=False, connect_args={"check_same_thread": False}
         )
 
         # Create tables if they don't exist
@@ -91,11 +92,7 @@ class DataAggregator:
         return self.SessionLocal()
 
     def get_daily_rollup(
-        self,
-        start_date: date,
-        end_date: date,
-        *,
-        session: Session | None = None
+        self, start_date: date, end_date: date, *, session: Session | None = None
     ) -> list[DailyRollup]:
         """
         Get daily aggregated statistics using SQL aggregation.
@@ -119,30 +116,32 @@ class DataAggregator:
             session = self._get_session()
 
         try:
-            start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+            start_dt = datetime.combine(start_date, datetime.min.time()).replace(
+                tzinfo=timezone.utc
+            )
             end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
 
             # Validate date range (security: prevent DoS and invalid inputs)
             validate_date_range(start_dt, end_dt, max_days=730)
 
             # OPTIMIZED: Use SQL aggregation instead of loading all rows
-            daily_stats = session.query(
-                func.date(TelemetryEvent.timestamp).label('event_date'),
-                func.count(TelemetryEvent.id).label('total_scans'),
-                func.sum(
-                    case((TelemetryEvent.detection_count > 0, 1), else_=0)
-                ).label('total_threats'),
-                func.avg(TelemetryEvent.total_latency_ms).label('avg_duration'),
-                func.max(TelemetryEvent.total_latency_ms).label('max_duration'),
-                func.count(func.distinct(TelemetryEvent.customer_id)).label('unique_users')
-            ).filter(
-                and_(
-                    TelemetryEvent.timestamp >= start_dt,
-                    TelemetryEvent.timestamp <= end_dt
+            daily_stats = (
+                session.query(
+                    func.date(TelemetryEvent.timestamp).label("event_date"),
+                    func.count(TelemetryEvent.id).label("total_scans"),
+                    func.sum(case((TelemetryEvent.detection_count > 0, 1), else_=0)).label(
+                        "total_threats"
+                    ),
+                    func.avg(TelemetryEvent.total_latency_ms).label("avg_duration"),
+                    func.max(TelemetryEvent.total_latency_ms).label("max_duration"),
+                    func.count(func.distinct(TelemetryEvent.customer_id)).label("unique_users"),
                 )
-            ).group_by(
-                func.date(TelemetryEvent.timestamp)
-            ).all()
+                .filter(
+                    and_(TelemetryEvent.timestamp >= start_dt, TelemetryEvent.timestamp <= end_dt)
+                )
+                .group_by(func.date(TelemetryEvent.timestamp))
+                .all()
+            )
 
             # Convert to dictionary for easy lookup
             stats_by_date = {}
@@ -159,7 +158,7 @@ class DataAggregator:
                     avg_duration_ms=round(float(row.avg_duration or 0), 2),
                     max_duration_ms=round(float(row.max_duration or 0), 2),
                     unique_users=row.unique_users or 0,
-                    detection_rate=round(detection_rate, 2)
+                    detection_rate=round(detection_rate, 2),
                 )
 
             # Create rollups for all dates in range (including days with no activity)
@@ -170,15 +169,17 @@ class DataAggregator:
                     rollups.append(stats_by_date[current_date])
                 else:
                     # No activity on this day
-                    rollups.append(DailyRollup(
-                        date=current_date,
-                        total_scans=0,
-                        total_threats=0,
-                        avg_duration_ms=0.0,
-                        max_duration_ms=0.0,
-                        unique_users=0,
-                        detection_rate=0.0
-                    ))
+                    rollups.append(
+                        DailyRollup(
+                            date=current_date,
+                            total_scans=0,
+                            total_threats=0,
+                            avg_duration_ms=0.0,
+                            max_duration_ms=0.0,
+                            unique_users=0,
+                            detection_rate=0.0,
+                        )
+                    )
 
                 current_date += timedelta(days=1)
 
@@ -189,10 +190,7 @@ class DataAggregator:
                 session.close()
 
     def get_hourly_patterns(
-        self,
-        days: int = 30,
-        *,
-        session: Session | None = None
+        self, days: int = 30, *, session: Session | None = None
     ) -> list[HourlyPattern]:
         """
         Get hourly usage patterns.
@@ -219,14 +217,13 @@ class DataAggregator:
             validate_positive_integer(days, "days")
             if days > 730:  # Max 2 years
                 from raxe.utils.validators import ValidationError
+
                 raise ValidationError(f"days parameter too large: {days} (maximum: 730)")
 
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
             # Get events in time window
-            events = session.query(TelemetryEvent).filter(
-                TelemetryEvent.timestamp >= cutoff
-            ).all()
+            events = session.query(TelemetryEvent).filter(TelemetryEvent.timestamp >= cutoff).all()
 
             # Group by hour
             hourly_data: dict[int, list[TelemetryEvent]] = {h: [] for h in range(24)}
@@ -246,12 +243,14 @@ class DataAggregator:
                     else 0.0
                 )
 
-                patterns.append(HourlyPattern(
-                    hour=hour,
-                    scan_count=scan_count,
-                    threat_count=threat_count,
-                    avg_duration_ms=round(avg_duration, 2)
-                ))
+                patterns.append(
+                    HourlyPattern(
+                        hour=hour,
+                        scan_count=scan_count,
+                        threat_count=threat_count,
+                        avg_duration_ms=round(avg_duration, 2),
+                    )
+                )
 
             return patterns
 
@@ -260,10 +259,7 @@ class DataAggregator:
                 session.close()
 
     def get_detection_breakdown(
-        self,
-        days: int = 30,
-        *,
-        session: Session | None = None
+        self, days: int = 30, *, session: Session | None = None
     ) -> list[DetectionBreakdown]:
         """
         Get detection breakdown by severity.
@@ -283,12 +279,14 @@ class DataAggregator:
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
             # Get total detections
-            total_detections = session.query(func.count(TelemetryEvent.id)).filter(
-                and_(
-                    TelemetryEvent.timestamp >= cutoff,
-                    TelemetryEvent.detection_count > 0
+            total_detections = (
+                session.query(func.count(TelemetryEvent.id))
+                .filter(
+                    and_(TelemetryEvent.timestamp >= cutoff, TelemetryEvent.detection_count > 0)
                 )
-            ).scalar() or 0
+                .scalar()
+                or 0
+            )
 
             if total_detections == 0:
                 return []
@@ -296,20 +294,25 @@ class DataAggregator:
             # Count by severity
             breakdowns = []
             for severity in ["critical", "high", "medium", "low", "info"]:
-                count = session.query(func.count(TelemetryEvent.id)).filter(
-                    and_(
-                        TelemetryEvent.timestamp >= cutoff,
-                        TelemetryEvent.highest_severity == severity
+                count = (
+                    session.query(func.count(TelemetryEvent.id))
+                    .filter(
+                        and_(
+                            TelemetryEvent.timestamp >= cutoff,
+                            TelemetryEvent.highest_severity == severity,
+                        )
                     )
-                ).scalar() or 0
+                    .scalar()
+                    or 0
+                )
 
                 if count > 0:
-                    percentage = (count / total_detections * 100)
-                    breakdowns.append(DetectionBreakdown(
-                        severity=severity,
-                        count=count,
-                        percentage=round(percentage, 2)
-                    ))
+                    percentage = count / total_detections * 100
+                    breakdowns.append(
+                        DetectionBreakdown(
+                            severity=severity, count=count, percentage=round(percentage, 2)
+                        )
+                    )
 
             # Sort by count descending
             breakdowns.sort(key=lambda x: x.count, reverse=True)
@@ -321,10 +324,7 @@ class DataAggregator:
                 session.close()
 
     def get_performance_trends(
-        self,
-        days: int = 30,
-        *,
-        session: Session | None = None
+        self, days: int = 30, *, session: Session | None = None
     ) -> dict[str, Any]:
         """
         Get performance trends over time.
@@ -344,9 +344,12 @@ class DataAggregator:
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
             # Get events
-            events = session.query(TelemetryEvent).filter(
-                TelemetryEvent.timestamp >= cutoff
-            ).order_by(TelemetryEvent.timestamp).all()
+            events = (
+                session.query(TelemetryEvent)
+                .filter(TelemetryEvent.timestamp >= cutoff)
+                .order_by(TelemetryEvent.timestamp)
+                .all()
+            )
 
             if not events:
                 return {
@@ -357,7 +360,7 @@ class DataAggregator:
                     "p95_latency_ms": 0.0,
                     "p99_latency_ms": 0.0,
                     "trend": "stable",
-                    "sample_size": 0
+                    "sample_size": 0,
                 }
 
             # Calculate percentiles
@@ -379,7 +382,11 @@ class DataAggregator:
             # Calculate trend (compare first half vs second half)
             midpoint = total_count // 2
             first_half_avg = sum(latencies[:midpoint]) / midpoint if midpoint > 0 else 0
-            second_half_avg = sum(latencies[midpoint:]) / (total_count - midpoint) if total_count > midpoint else 0
+            second_half_avg = (
+                sum(latencies[midpoint:]) / (total_count - midpoint)
+                if total_count > midpoint
+                else 0
+            )
 
             if second_half_avg > first_half_avg * 1.1:
                 trend = "degrading"
@@ -396,7 +403,7 @@ class DataAggregator:
                 "p95_latency_ms": round(p95_latency, 2),
                 "p99_latency_ms": round(p99_latency, 2),
                 "trend": trend,
-                "sample_size": total_count
+                "sample_size": total_count,
             }
 
         finally:
@@ -404,10 +411,7 @@ class DataAggregator:
                 session.close()
 
     def get_l1_vs_l2_breakdown(
-        self,
-        days: int = 30,
-        *,
-        session: Session | None = None
+        self, days: int = 30, *, session: Session | None = None
     ) -> dict[str, Any]:
         """
         Get L1 vs L2 detection breakdown.
@@ -427,9 +431,12 @@ class DataAggregator:
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
             # Get all events
-            total_scans = session.query(func.count(TelemetryEvent.id)).filter(
-                TelemetryEvent.timestamp >= cutoff
-            ).scalar() or 0
+            total_scans = (
+                session.query(func.count(TelemetryEvent.id))
+                .filter(TelemetryEvent.timestamp >= cutoff)
+                .scalar()
+                or 0
+            )
 
             if total_scans == 0:
                 return {
@@ -438,40 +445,55 @@ class DataAggregator:
                     "l2_used": 0,
                     "l2_usage_rate": 0.0,
                     "avg_l1_ms": 0.0,
-                    "avg_l2_ms": 0.0
+                    "avg_l2_ms": 0.0,
                 }
 
             # Count L2 usage (where l2_inference_ms is not null and > 0)
-            l2_scans = session.query(func.count(TelemetryEvent.id)).filter(
-                and_(
-                    TelemetryEvent.timestamp >= cutoff,
-                    TelemetryEvent.l2_inference_ms.isnot(None),
-                    TelemetryEvent.l2_inference_ms > 0
+            l2_scans = (
+                session.query(func.count(TelemetryEvent.id))
+                .filter(
+                    and_(
+                        TelemetryEvent.timestamp >= cutoff,
+                        TelemetryEvent.l2_inference_ms.isnot(None),
+                        TelemetryEvent.l2_inference_ms > 0,
+                    )
                 )
-            ).scalar() or 0
+                .scalar()
+                or 0
+            )
 
             l1_only = total_scans - l2_scans
 
             # Average latencies
-            avg_l1 = session.query(func.avg(TelemetryEvent.l1_inference_ms)).filter(
-                TelemetryEvent.timestamp >= cutoff
-            ).scalar() or 0.0
+            avg_l1 = (
+                session.query(func.avg(TelemetryEvent.l1_inference_ms))
+                .filter(TelemetryEvent.timestamp >= cutoff)
+                .scalar()
+                or 0.0
+            )
 
-            avg_l2 = session.query(func.avg(TelemetryEvent.l2_inference_ms)).filter(
-                and_(
-                    TelemetryEvent.timestamp >= cutoff,
-                    TelemetryEvent.l2_inference_ms.isnot(None),
-                    TelemetryEvent.l2_inference_ms > 0
+            avg_l2 = (
+                session.query(func.avg(TelemetryEvent.l2_inference_ms))
+                .filter(
+                    and_(
+                        TelemetryEvent.timestamp >= cutoff,
+                        TelemetryEvent.l2_inference_ms.isnot(None),
+                        TelemetryEvent.l2_inference_ms > 0,
+                    )
                 )
-            ).scalar() or 0.0
+                .scalar()
+                or 0.0
+            )
 
             return {
                 "total_scans": total_scans,
                 "l1_only": l1_only,
                 "l2_used": l2_scans,
-                "l2_usage_rate": round((l2_scans / total_scans * 100) if total_scans > 0 else 0.0, 2),
+                "l2_usage_rate": round(
+                    (l2_scans / total_scans * 100) if total_scans > 0 else 0.0, 2
+                ),
                 "avg_l1_ms": round(avg_l1, 2),
-                "avg_l2_ms": round(avg_l2, 2)
+                "avg_l2_ms": round(avg_l2, 2),
             }
 
         finally:

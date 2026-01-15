@@ -3,6 +3,7 @@
 Tests the RaxeLlamaIndexCallback, RaxeQueryEngineCallback, RaxeAgentCallback,
 and RaxeSpanHandler for automatic scanning of LlamaIndex operations.
 """
+
 from unittest.mock import Mock
 
 import pytest

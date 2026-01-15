@@ -3,6 +3,7 @@
 Handles loading rule packs from filesystem.
 Infrastructure layer - performs I/O operations.
 """
+
 import logging
 from pathlib import Path
 
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class PackLoadError(Exception):
     """Exception raised when pack cannot be loaded."""
+
     pass
 
 
@@ -73,16 +75,12 @@ class PackLoader:
         # Load manifest
         manifest_path = pack_dir / "pack.yaml"
         if not manifest_path.exists():
-            raise FileNotFoundError(
-                f"Pack manifest not found: {manifest_path}"
-            )
+            raise FileNotFoundError(f"Pack manifest not found: {manifest_path}")
 
         try:
             manifest = self._load_manifest(manifest_path)
         except Exception as e:
-            raise PackLoadError(
-                f"Failed to load pack manifest from {manifest_path}: {e}"
-            ) from e
+            raise PackLoadError(f"Failed to load pack manifest from {manifest_path}: {e}") from e
 
         # Load all rules referenced in manifest
         rules = []
@@ -139,12 +137,11 @@ class PackLoader:
             # In non-strict mode, we may have partial rule loading
             # which will fail RulePack validation
             if not self.strict:
-                logger.warning(
-                    f"Pack validation failed but continuing in non-strict mode: {e}"
-                )
+                logger.warning(f"Pack validation failed but continuing in non-strict mode: {e}")
                 # Create a modified manifest with actual loaded rules
                 loaded_pack_rules = [
-                    pr for pr in manifest.rules
+                    pr
+                    for pr in manifest.rules
                     if any(r.versioned_id == pr.versioned_id for r in rules)
                 ]
 
@@ -185,28 +182,20 @@ class PackLoader:
             PackLoadError: If manifest is invalid
         """
         try:
-            with open(manifest_path, encoding='utf-8') as f:
+            with open(manifest_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except yaml.YAMLError as e:
-            raise PackLoadError(
-                f"Failed to parse manifest YAML: {e}"
-            ) from e
+            raise PackLoadError(f"Failed to parse manifest YAML: {e}") from e
         except Exception as e:
-            raise PackLoadError(
-                f"Failed to read manifest file: {e}"
-            ) from e
+            raise PackLoadError(f"Failed to read manifest file: {e}") from e
 
         if not isinstance(data, dict):
-            raise PackLoadError(
-                f"Manifest must be a YAML dictionary, got {type(data)}"
-            )
+            raise PackLoadError(f"Manifest must be a YAML dictionary, got {type(data)}")
 
         # Extract pack section
         pack_data = data.get("pack")
         if not pack_data:
-            raise PackLoadError(
-                "Manifest missing required 'pack' section"
-            )
+            raise PackLoadError("Manifest missing required 'pack' section")
 
         # Parse pack rules
         pack_rules = []
@@ -217,35 +206,29 @@ class PackLoader:
 
         for i, rule_data in enumerate(rules_data):
             if not isinstance(rule_data, dict):
-                raise PackLoadError(
-                    f"Rule entry {i} must be a dictionary, got {type(rule_data)}"
-                )
+                raise PackLoadError(f"Rule entry {i} must be a dictionary, got {type(rule_data)}")
 
             # Validate required fields
             for field in ["id", "version", "path"]:
                 if field not in rule_data:
-                    raise PackLoadError(
-                        f"Rule entry {i} missing required field: {field}"
-                    )
+                    raise PackLoadError(f"Rule entry {i} missing required field: {field}")
 
             try:
-                pack_rules.append(PackRule(
-                    id=rule_data["id"],
-                    version=rule_data["version"],
-                    path=rule_data["path"],
-                ))
+                pack_rules.append(
+                    PackRule(
+                        id=rule_data["id"],
+                        version=rule_data["version"],
+                        path=rule_data["path"],
+                    )
+                )
             except ValueError as e:
-                raise PackLoadError(
-                    f"Invalid rule entry {i}: {e}"
-                ) from e
+                raise PackLoadError(f"Invalid rule entry {i}: {e}") from e
 
         # Parse pack type
         try:
             pack_type = PackType(pack_data.get("type", "CUSTOM"))
         except ValueError as e:
-            raise PackLoadError(
-                f"Invalid pack type: {pack_data.get('type')}"
-            ) from e
+            raise PackLoadError(f"Invalid pack type: {pack_data.get('type')}") from e
 
         # Create manifest
         try:
@@ -261,13 +244,9 @@ class PackLoader:
                 signature_algorithm=pack_data.get("signature_algorithm"),
             )
         except KeyError as e:
-            raise PackLoadError(
-                f"Manifest missing required field: {e}"
-            ) from e
+            raise PackLoadError(f"Manifest missing required field: {e}") from e
         except ValueError as e:
-            raise PackLoadError(
-                f"Invalid manifest data: {e}"
-            ) from e
+            raise PackLoadError(f"Invalid manifest data: {e}") from e
 
     def _validate_rule_matches_manifest(
         self,
@@ -341,8 +320,7 @@ class PackLoader:
                 pack = self.load_pack(pack_dir)
                 packs.append(pack)
                 logger.info(
-                    f"Loaded pack: {pack.manifest.versioned_id} "
-                    f"with {len(pack.rules)} rules"
+                    f"Loaded pack: {pack.manifest.versioned_id} with {len(pack.rules)} rules"
                 )
             except Exception as e:
                 error_msg = f"Failed to load pack from {pack_dir}: {e}"
@@ -382,10 +360,7 @@ class PackLoader:
             return None
 
         # Find version directories (must start with 'v')
-        version_dirs = [
-            d for d in type_dir.iterdir()
-            if d.is_dir() and d.name.startswith("v")
-        ]
+        version_dirs = [d for d in type_dir.iterdir() if d.is_dir() and d.name.startswith("v")]
 
         if not version_dirs:
             logger.debug(f"No version directories found in {type_dir}")

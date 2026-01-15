@@ -1,7 +1,5 @@
 """Tests for head voters."""
 
-import pytest
-
 from raxe.domain.ml.voting.config import (
     BinaryHeadThresholds,
     FamilyHeadThresholds,

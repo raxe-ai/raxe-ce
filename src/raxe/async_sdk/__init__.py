@@ -24,6 +24,7 @@ Performance:
 - Cache hit rate: >80% for repeated prompts
 - P95 latency: <10ms (same as sync)
 """
+
 from raxe.async_sdk.cache import AsyncLRUCache, ScanResultCache
 from raxe.async_sdk.client import AsyncRaxe
 

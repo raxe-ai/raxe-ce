@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class AchievementType(Enum):
     """Achievement types."""
+
     FIRST_SCAN = "first_scan"
     STREAK_7 = "streak_7"
     STREAK_30 = "streak_30"
@@ -33,6 +34,7 @@ class AchievementType(Enum):
 @dataclass
 class Achievement:
     """Achievement definition."""
+
     id: str
     name: str
     description: str
@@ -49,7 +51,7 @@ class Achievement:
             "icon": self.icon,
             "points": self.points,
             "unlocked_at": self.unlocked_at.isoformat() if self.unlocked_at else None,
-            "unlocked": self.unlocked_at is not None
+            "unlocked": self.unlocked_at is not None,
         }
 
     @classmethod
@@ -65,7 +67,7 @@ class Achievement:
             description=data["description"],
             icon=data["icon"],
             points=data["points"],
-            unlocked_at=unlocked_at
+            unlocked_at=unlocked_at,
         )
 
 
@@ -76,70 +78,70 @@ ACHIEVEMENTS: dict[str, Achievement] = {
         name="First Scan",
         description="Completed your first security scan",
         icon="🔍",
-        points=10
+        points=10,
     ),
     AchievementType.STREAK_7.value: Achievement(
         id=AchievementType.STREAK_7.value,
         name="Week Warrior",
         description="Maintained a 7-day scan streak",
         icon="🔥",
-        points=50
+        points=50,
     ),
     AchievementType.STREAK_30.value: Achievement(
         id=AchievementType.STREAK_30.value,
         name="Monthly Master",
         description="Maintained a 30-day scan streak",
         icon="⚡",
-        points=200
+        points=200,
     ),
     AchievementType.SCANS_100.value: Achievement(
         id=AchievementType.SCANS_100.value,
         name="Century Scanner",
         description="Completed 100 scans",
         icon="💯",
-        points=100
+        points=100,
     ),
     AchievementType.SCANS_1000.value: Achievement(
         id=AchievementType.SCANS_1000.value,
         name="Scan Master",
         description="Completed 1,000 scans",
         icon="🌟",
-        points=500
+        points=500,
     ),
     AchievementType.FIRST_THREAT.value: Achievement(
         id=AchievementType.FIRST_THREAT.value,
         name="Threat Hunter",
         description="Detected your first security threat",
         icon="🛡️",
-        points=25
+        points=25,
     ),
     AchievementType.THREATS_10.value: Achievement(
         id=AchievementType.THREATS_10.value,
         name="Security Guardian",
         description="Detected 10 security threats",
         icon="🎯",
-        points=75
+        points=75,
     ),
     AchievementType.THREATS_100.value: Achievement(
         id=AchievementType.THREATS_100.value,
         name="Elite Defender",
         description="Detected 100 security threats",
         icon="👑",
-        points=300
+        points=300,
     ),
     AchievementType.SPEED_DEMON.value: Achievement(
         id=AchievementType.SPEED_DEMON.value,
         name="Speed Demon",
         description="Achieved average scan time under 5ms",
         icon="⚡",
-        points=150
+        points=150,
     ),
     AchievementType.GUARDIAN.value: Achievement(
         id=AchievementType.GUARDIAN.value,
         name="Guardian",
         description="Blocked 10 security threats",
         icon="🛡️",
-        points=100
+        points=100,
     ),
 }
 
@@ -147,6 +149,7 @@ ACHIEVEMENTS: dict[str, Achievement] = {
 @dataclass
 class StreakData:
     """Streak tracking data."""
+
     current_streak: int = 0
     longest_streak: int = 0
     last_scan_date: date | None = None
@@ -158,7 +161,7 @@ class StreakData:
             "current_streak": self.current_streak,
             "longest_streak": self.longest_streak,
             "last_scan_date": self.last_scan_date.isoformat() if self.last_scan_date else None,
-            "total_scan_days": self.total_scan_days
+            "total_scan_days": self.total_scan_days,
         }
 
     @classmethod
@@ -172,7 +175,7 @@ class StreakData:
             current_streak=data.get("current_streak", 0),
             longest_streak=data.get("longest_streak", 0),
             last_scan_date=last_scan_date,
-            total_scan_days=data.get("total_scan_days", 0)
+            total_scan_days=data.get("total_scan_days", 0),
         )
 
 
@@ -247,11 +250,11 @@ class StreakTracker:
                 "streak_data": self.streak_data.to_dict(),
                 "achievements": [a.to_dict() for a in self.achievements.values()],
                 "total_points": self.total_points,
-                "last_updated": datetime.now(timezone.utc).isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat(),
             }
 
             # Write file with secure permissions (owner read/write only)
-            with open(self.data_path, 'w') as f:
+            with open(self.data_path, "w") as f:
                 json.dump(data, f, indent=2)
 
             # Set restrictive permissions on the file (owner read/write only - 0o600)
@@ -290,8 +293,7 @@ class StreakTracker:
             # Consecutive day
             self.streak_data.current_streak += 1
             self.streak_data.longest_streak = max(
-                self.streak_data.longest_streak,
-                self.streak_data.current_streak
+                self.streak_data.longest_streak, self.streak_data.current_streak
             )
             self.streak_data.total_scan_days += 1
         else:
@@ -318,7 +320,7 @@ class StreakTracker:
         total_scans: int = 0,
         threats_detected: int = 0,
         avg_scan_time_ms: float = 0.0,
-        threats_blocked: int = 0
+        threats_blocked: int = 0,
     ) -> list[Achievement]:
         """
         Check and unlock achievements based on stats.
@@ -392,9 +394,7 @@ class StreakTracker:
         achievement.unlocked_at = datetime.now(timezone.utc)
         self.total_points += achievement.points
 
-        logger.info(
-            f"Achievement unlocked: {achievement.name} (+{achievement.points} points)"
-        )
+        logger.info(f"Achievement unlocked: {achievement.name} (+{achievement.points} points)")
 
         return [achievement]
 
@@ -430,10 +430,12 @@ class StreakTracker:
             "total_achievements": total_achievements,
             "unlocked": unlocked_count,
             "locked": total_achievements - unlocked_count,
-            "completion_percentage": round((unlocked_count / total_achievements * 100) if total_achievements > 0 else 0.0, 2),
+            "completion_percentage": round(
+                (unlocked_count / total_achievements * 100) if total_achievements > 0 else 0.0, 2
+            ),
             "total_points": self.total_points,
             "current_streak": self.streak_data.current_streak,
-            "longest_streak": self.streak_data.longest_streak
+            "longest_streak": self.streak_data.longest_streak,
         }
 
     def get_streak_info(self) -> dict[str, Any]:
@@ -446,9 +448,11 @@ class StreakTracker:
         return {
             "current_streak": self.streak_data.current_streak,
             "longest_streak": self.streak_data.longest_streak,
-            "last_scan_date": self.streak_data.last_scan_date.isoformat() if self.streak_data.last_scan_date else None,
+            "last_scan_date": self.streak_data.last_scan_date.isoformat()
+            if self.streak_data.last_scan_date
+            else None,
             "total_scan_days": self.streak_data.total_scan_days,
-            "is_active": self._is_streak_active()
+            "is_active": self._is_streak_active(),
         }
 
     def _is_streak_active(self) -> bool:

@@ -1,4 +1,5 @@
 """Tests for policy validation."""
+
 import base64
 import hashlib
 import json
@@ -131,9 +132,7 @@ class TestPolicyValidator:
 
         api_key = "raxe_live_cust_test123_randomsuffix123"
 
-        with pytest.raises(
-            PolicyValidationError, match="Unsupported signature algorithm"
-        ):
+        with pytest.raises(PolicyValidationError, match="Unsupported signature algorithm"):
             validator.validate_policy(policy_data, api_key)
 
     @signature_tests

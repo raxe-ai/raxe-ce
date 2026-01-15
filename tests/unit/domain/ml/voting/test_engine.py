@@ -1,11 +1,8 @@
 """Tests for VotingEngine."""
 
-import pytest
-
 from raxe.domain.ml.voting.config import (
     VotingConfig,
     VotingPreset,
-    get_voting_config,
 )
 from raxe.domain.ml.voting.engine import (
     HeadOutputs,

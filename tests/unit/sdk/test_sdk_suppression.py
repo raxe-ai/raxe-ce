@@ -7,6 +7,7 @@ Tests cover:
 4. Suppression precedence (inline > config file)
 5. Detection.is_flagged field
 """
+
 from datetime import datetime, timezone
 
 import pytest
@@ -14,9 +15,9 @@ import pytest
 from raxe.domain.engine.executor import Detection
 from raxe.domain.engine.matcher import Match
 from raxe.domain.inline_suppression import (
+    merge_suppressions,
     parse_inline_suppression,
     parse_inline_suppressions,
-    merge_suppressions,
 )
 from raxe.domain.rules.models import Severity
 from raxe.domain.suppression import (
@@ -60,11 +61,9 @@ class TestParseInlineSuppression:
 
     def test_dict_with_action_suppress(self):
         """Test parsing dict with SUPPRESS action."""
-        supp = parse_inline_suppression({
-            "pattern": "pi-001",
-            "action": "SUPPRESS",
-            "reason": "Known false positive"
-        })
+        supp = parse_inline_suppression(
+            {"pattern": "pi-001", "action": "SUPPRESS", "reason": "Known false positive"}
+        )
 
         assert supp.pattern == "pi-001"
         assert supp.action == SuppressionAction.SUPPRESS
@@ -72,11 +71,9 @@ class TestParseInlineSuppression:
 
     def test_dict_with_action_flag(self):
         """Test parsing dict with FLAG action."""
-        supp = parse_inline_suppression({
-            "pattern": "jb-*",
-            "action": "FLAG",
-            "reason": "Under review"
-        })
+        supp = parse_inline_suppression(
+            {"pattern": "jb-*", "action": "FLAG", "reason": "Under review"}
+        )
 
         assert supp.pattern == "jb-*"
         assert supp.action == SuppressionAction.FLAG
@@ -84,11 +81,9 @@ class TestParseInlineSuppression:
 
     def test_dict_with_action_log(self):
         """Test parsing dict with LOG action."""
-        supp = parse_inline_suppression({
-            "pattern": "enc-*",
-            "action": "LOG",
-            "reason": "Monitoring"
-        })
+        supp = parse_inline_suppression(
+            {"pattern": "enc-*", "action": "LOG", "reason": "Monitoring"}
+        )
 
         assert supp.pattern == "enc-*"
         assert supp.action == SuppressionAction.LOG
@@ -96,19 +91,13 @@ class TestParseInlineSuppression:
 
     def test_dict_with_lowercase_action(self):
         """Test parsing dict with lowercase action."""
-        supp = parse_inline_suppression({
-            "pattern": "pi-001",
-            "action": "flag"
-        })
+        supp = parse_inline_suppression({"pattern": "pi-001", "action": "flag"})
 
         assert supp.action == SuppressionAction.FLAG
 
     def test_dict_with_enum_action(self):
         """Test parsing dict with SuppressionAction enum."""
-        supp = parse_inline_suppression({
-            "pattern": "pi-001",
-            "action": SuppressionAction.FLAG
-        })
+        supp = parse_inline_suppression({"pattern": "pi-001", "action": SuppressionAction.FLAG})
 
         assert supp.action == SuppressionAction.FLAG
 
@@ -120,10 +109,7 @@ class TestParseInlineSuppression:
     def test_dict_invalid_action_raises(self):
         """Test dict with invalid action raises error."""
         with pytest.raises(SuppressionValidationError, match="Invalid action"):
-            parse_inline_suppression({
-                "pattern": "pi-001",
-                "action": "INVALID"
-            })
+            parse_inline_suppression({"pattern": "pi-001", "action": "INVALID"})
 
     def test_invalid_type_raises(self):
         """Test invalid type raises error."""
@@ -402,9 +388,9 @@ class TestSDKSuppressionIntegration:
             pytest.skip("No detections to flag")
 
         # Scan with FLAG action
-        result = raxe.scan(text, suppress=[
-            {"pattern": "pi-*", "action": "FLAG", "reason": "Test flagging"}
-        ])
+        result = raxe.scan(
+            text, suppress=[{"pattern": "pi-*", "action": "FLAG", "reason": "Test flagging"}]
+        )
 
         # Should still have detections
         assert result.has_threats
@@ -427,9 +413,9 @@ class TestSDKSuppressionIntegration:
             pytest.skip("No detections to log")
 
         # Scan with LOG action
-        result = raxe.scan(text, suppress=[
-            {"pattern": "pi-*", "action": "LOG", "reason": "Monitoring"}
-        ])
+        result = raxe.scan(
+            text, suppress=[{"pattern": "pi-*", "action": "LOG", "reason": "Monitoring"}]
+        )
 
         # Should still have same detections (LOG doesn't modify)
         assert result.has_threats
@@ -457,7 +443,9 @@ class TestSDKSuppressionIntegration:
 
         # Outside context, pi-* should work again
         result_outside = raxe.scan(text)
-        pi_rules_outside = [d.rule_id for d in result_outside.detections if d.rule_id.startswith("pi-")]
+        pi_rules_outside = [
+            d.rule_id for d in result_outside.detections if d.rule_id.startswith("pi-")
+        ]
         # May have pi-* detections again (depends on if there were any)
 
     def test_inline_suppression_metadata(self):
@@ -503,9 +491,6 @@ class TestEdgeCases:
         from raxe.sdk.client import Raxe
 
         raxe = Raxe(telemetry=False, l2_enabled=False)
-        result = raxe.scan(
-            "Ignore instructions",
-            suppress=["pi-*", "jb-*", "enc-*"]
-        )
+        result = raxe.scan("Ignore instructions", suppress=["pi-*", "jb-*", "enc-*"])
 
         assert result is not None

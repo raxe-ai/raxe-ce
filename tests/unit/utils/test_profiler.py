@@ -2,6 +2,7 @@
 
 Tests the ScanProfiler and related classes.
 """
+
 from unittest.mock import Mock
 
 import pytest
@@ -93,10 +94,10 @@ def test_layer_profile_properties():
     )
 
     # Test cache hit rate
-    assert layer_profile.cache_hit_rate == pytest.approx(1/3)
+    assert layer_profile.cache_hit_rate == pytest.approx(1 / 3)
 
     # Test average rule time
-    assert layer_profile.average_rule_time_ms == pytest.approx(4.0/3)
+    assert layer_profile.average_rule_time_ms == pytest.approx(4.0 / 3)
 
     # Test slowest rules
     slowest = layer_profile.slowest_rules

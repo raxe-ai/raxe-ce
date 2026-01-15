@@ -3,6 +3,7 @@
 Fetches policies from RAXE cloud API for cloud customers.
 Caches policies locally for offline operation.
 """
+
 import json
 from pathlib import Path
 from typing import Protocol
@@ -36,12 +37,14 @@ class HTTPClient(Protocol):
 
 class PolicyAPIError(Exception):
     """Error fetching policies from API."""
+
     pass
 
 
 def _get_default_api_base() -> str:
     """Get default API base URL from centralized config."""
     from raxe.infrastructure.config.endpoints import get_api_base
+
     return get_api_base()
 
 
@@ -249,8 +252,6 @@ class PolicyAPIClient:
             # requests not available - return stub that raises error
             class NoHTTPClient:
                 def get(self, url: str, headers: dict[str, str]) -> dict:
-                    raise PolicyAPIError(
-                        "HTTP client not available. Install 'requests' package."
-                    )
+                    raise PolicyAPIError("HTTP client not available. Install 'requests' package.")
 
             return NoHTTPClient()

@@ -18,6 +18,7 @@ Usage:
     # On startup, flush stale events from previous sessions:
     flush_stale_telemetry_async()
 """
+
 from __future__ import annotations
 
 import threading
@@ -67,6 +68,7 @@ def ensure_telemetry_flushed(
         # SDK cleanup
         ensure_telemetry_flushed(timeout_seconds=5.0, end_session=True)
     """
+
     def _do_flush() -> None:
         try:
             # End session first (if requested) to queue session_end event

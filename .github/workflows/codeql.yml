@@ -39,6 +39,8 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
+          # Use custom config to suppress known false positives
+          config-file: .github/codeql-config.yml
           # Use extended security queries for more thorough analysis
           queries: +security-extended,security-and-quality
 

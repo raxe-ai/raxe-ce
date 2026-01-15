@@ -2,6 +2,7 @@
 
 Tests pure domain logic - no mocks needed, no I/O.
 """
+
 from datetime import date
 
 from raxe.domain.analytics.achievements import (
@@ -40,7 +41,9 @@ class TestAchievements:
         """All achievements should have unlock conditions."""
         for ach in ACHIEVEMENTS:
             assert ach.unlock_condition
-            assert "scan_count >=" in ach.unlock_condition or "streak_count >=" in ach.unlock_condition
+            assert (
+                "scan_count >=" in ach.unlock_condition or "streak_count >=" in ach.unlock_condition
+            )
 
 
 class TestGetAchievementById:
@@ -231,7 +234,9 @@ class TestFindNextAchievements:
         next_achs = find_next_achievements(current, max_results=10)
 
         # Find getting_started (needs 10 scans)
-        getting_started = next((ach, prog) for ach, prog in next_achs if ach.id == "getting_started")
+        getting_started = next(
+            (ach, prog) for ach, prog in next_achs if ach.id == "getting_started"
+        )
         assert getting_started is not None
         assert getting_started[1] == 5  # Need 5 more scans
 

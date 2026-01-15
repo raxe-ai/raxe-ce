@@ -5,6 +5,7 @@ All functions are stateless and perform no I/O operations.
 
 CRITICAL: This is domain layer - NO database, network, or file operations.
 """
+
 from datetime import date, timedelta
 
 from .models import UsageStatistics
@@ -35,9 +36,7 @@ def calculate_dau(
         2
     """
     active_users = {
-        user_id
-        for user_id, dates in scan_dates_by_user.items()
-        if target_date in dates
+        user_id for user_id, dates in scan_dates_by_user.items() if target_date in dates
     }
     return len(active_users)
 

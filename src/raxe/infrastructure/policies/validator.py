@@ -5,6 +5,7 @@ Validates policies for security:
 - Customer ID matching
 - Schema validation
 """
+
 import hashlib
 import json
 
@@ -15,6 +16,7 @@ from raxe.infrastructure.security.signatures import SignatureVerifier
 
 class PolicyValidationError(Exception):
     """Policy validation failed."""
+
     pass
 
 
@@ -63,9 +65,7 @@ class PolicyValidator:
         # 1. Verify signature if required
         if require_signature:
             if not signature:
-                raise PolicyValidationError(
-                    "Signature required but not provided"
-                )
+                raise PolicyValidationError("Signature required but not provided")
             self._verify_signature(policies, signature)
 
         # 2. Filter policies by customer ID
@@ -130,20 +130,17 @@ class PolicyValidator:
         policy_data = self._canonical_policy_data(policies)
 
         # Hash the data
-        data_hash = hashlib.sha256(
-            json.dumps(policy_data, sort_keys=True).encode()
-        ).digest()
+        data_hash = hashlib.sha256(json.dumps(policy_data, sort_keys=True).encode()).digest()
 
         # Verify signature
         try:
             # Note: SignatureVerifier is designed for file-based verification
             # We'll use a simpler approach for policy data
             if not signature.startswith("ed25519:"):
-                raise PolicyValidationError(
-                    "Invalid signature format (must start with 'ed25519:')"
-                )
+                raise PolicyValidationError("Invalid signature format (must start with 'ed25519:')")
 
             import base64
+
             sig_b64 = signature.split(":", 1)[1]
             signature_bytes = base64.b64decode(sig_b64)
 
@@ -151,9 +148,7 @@ class PolicyValidator:
             self.signature_verifier.public_key.verify(signature_bytes, data_hash)
 
         except Exception as e:
-            raise PolicyValidationError(
-                f"Policy signature verification failed: {e}"
-            ) from e
+            raise PolicyValidationError(f"Policy signature verification failed: {e}") from e
 
     def _filter_by_customer(
         self,
@@ -169,10 +164,7 @@ class PolicyValidator:
         Returns:
             Policies belonging to customer
         """
-        return [
-            policy for policy in policies
-            if policy.customer_id == customer_id
-        ]
+        return [policy for policy in policies if policy.customer_id == customer_id]
 
     def _validate_policy(
         self,

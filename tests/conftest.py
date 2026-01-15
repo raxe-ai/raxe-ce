@@ -7,10 +7,12 @@ This module provides:
 - Test configuration settings
 - Suppression system fixtures
 """
+
 import tempfile
+from collections.abc import Generator
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 
@@ -98,9 +100,7 @@ def pytest_configure(config: pytest.Config) -> None:
     )
 
 
-def pytest_collection_modifyitems(
-    config: pytest.Config, items: list[pytest.Item]
-) -> None:
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Modify test collection to add automatic markers.
 
     Args:
@@ -215,16 +215,18 @@ class InMemorySuppressionRepository:
         Args:
             entry: AuditEntry to log
         """
-        self._audit_log.append({
-            "pattern": entry.pattern,
-            "reason": entry.reason,
-            "action": entry.action,
-            "created_at": entry.created_at,
-            "scan_id": entry.scan_id,
-            "rule_id": entry.rule_id,
-            "created_by": entry.created_by,
-            "metadata": entry.metadata,
-        })
+        self._audit_log.append(
+            {
+                "pattern": entry.pattern,
+                "reason": entry.reason,
+                "action": entry.action,
+                "created_at": entry.created_at,
+                "scan_id": entry.scan_id,
+                "rule_id": entry.rule_id,
+                "created_by": entry.created_by,
+                "metadata": entry.metadata,
+            }
+        )
 
     def get_audit_log(
         self,

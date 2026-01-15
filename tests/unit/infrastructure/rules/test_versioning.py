@@ -1,4 +1,5 @@
 """Unit tests for version checking and compatibility."""
+
 import pytest
 
 from raxe.infrastructure.rules.versioning import (

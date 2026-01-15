@@ -8,6 +8,7 @@ Tests:
 5. File loading/saving
 6. Integration with scan pipeline
 """
+
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -50,6 +51,7 @@ class TestSuppression:
         allowed. Wildcards must start with a valid family prefix.
         """
         import pytest
+
         from raxe.domain.suppression import SuppressionValidationError
 
         # Suffix-only wildcards are now rejected

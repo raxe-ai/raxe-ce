@@ -1,4 +1,5 @@
 """Test CLI progress indicators in different environments."""
+
 import os
 import subprocess
 import sys
@@ -21,17 +22,17 @@ class TestCLIProgressIndicators:
         env = {**os.environ, "TERM": "xterm", "COLUMNS": "80"}
 
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True,
-            env=env
+            [*self.raxe_cmd, "scan", safe_prompts[0]], capture_output=True, text=True, env=env
         )
 
         assert result.returncode == 0
         # Should show some progress indication (spinners, bars, etc.)
         # Note: Actual progress indicators might be cleared, so check stderr
         if result.stderr:
-            assert any(c in result.stderr for c in ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓", "✗", "..."])
+            assert any(
+                c in result.stderr
+                for c in ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓", "✗", "..."]
+            )
 
     def test_non_tty_progress_indicators(self, safe_prompts):
         """Test progress indicators in non-TTY environment (CI/CD)."""
@@ -45,7 +46,7 @@ class TestCLIProgressIndicators:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            env=env
+            env=env,
         )
         stdout, stderr = process.communicate()
 
@@ -56,14 +57,14 @@ class TestCLIProgressIndicators:
     def test_quiet_mode_no_progress(self, safe_prompts):
         """Test quiet mode suppresses all progress indicators."""
         result = subprocess.run(
-            [*self.raxe_cmd, "--quiet", "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "--quiet", "scan", safe_prompts[0]], capture_output=True, text=True
         )
 
         assert result.returncode == 0
         # Should have no progress indicators
-        assert not any(c in result.stdout + result.stderr for c in ["⠋", "⠙", "⠹", "⠸", "...", "Initializing"])
+        assert not any(
+            c in result.stdout + result.stderr for c in ["⠋", "⠙", "⠹", "⠸", "...", "Initializing"]
+        )
 
     def test_initialization_progress(self, safe_prompts):
         """Test initialization progress is shown on first run."""
@@ -71,10 +72,7 @@ class TestCLIProgressIndicators:
         env = {**os.environ, "RAXE_NO_CACHE": "true"}
 
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True,
-            env=env
+            [*self.raxe_cmd, "scan", safe_prompts[0]], capture_output=True, text=True, env=env
         )
 
         assert result.returncode == 0
@@ -86,11 +84,7 @@ class TestCLIProgressIndicators:
         """Test progress indicators with multiple prompts."""
         prompts = safe_prompts[:5]
 
-        result = subprocess.run(
-            [*self.raxe_cmd, "scan", *prompts],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run([*self.raxe_cmd, "scan", *prompts], capture_output=True, text=True)
 
         assert result.returncode == 0
         # Should show progress for multiple prompts
@@ -102,16 +96,12 @@ class TestCLIProgressIndicators:
         """Test progress indicators adapt to context."""
         # Test with safe prompt
         result_safe = subprocess.run(
-            [*self.raxe_cmd, "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", safe_prompts[0]], capture_output=True, text=True
         )
 
         # Test with threat prompt
         result_threat = subprocess.run(
-            [*self.raxe_cmd, "scan", threat_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", threat_prompts[0]], capture_output=True, text=True
         )
 
         # Should show different indicators for safe vs threat
@@ -135,10 +125,7 @@ class TestCLIProgressIndicators:
 
         start_time = time.time()
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", long_prompt],
-            capture_output=True,
-            text=True,
-            timeout=10
+            [*self.raxe_cmd, "scan", long_prompt], capture_output=True, text=True, timeout=10
         )
         duration = time.time() - start_time
 
@@ -152,10 +139,7 @@ class TestCLIProgressIndicators:
         env = {**os.environ, "DOCKER_CONTAINER": "true", "CI": "true"}
 
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True,
-            env=env
+            [*self.raxe_cmd, "scan", safe_prompts[0]], capture_output=True, text=True, env=env
         )
 
         assert result.returncode == 0
@@ -165,15 +149,15 @@ class TestCLIProgressIndicators:
     def test_progress_with_verbose_flag(self, safe_prompts):
         """Test progress with verbose output."""
         result = subprocess.run(
-            [*self.raxe_cmd, "--verbose", "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "--verbose", "scan", safe_prompts[0]], capture_output=True, text=True
         )
 
         assert result.returncode == 0
         # Verbose should show detailed progress
         output = result.stdout + result.stderr
-        assert any(word in output.lower() for word in ["initializ", "scan", "complete", "duration", "ms"])
+        assert any(
+            word in output.lower() for word in ["initializ", "scan", "complete", "duration", "ms"]
+        )
 
     def test_progress_interruption_handling(self, safe_prompts):
         """Test progress indicators handle interruption gracefully."""
@@ -182,7 +166,7 @@ class TestCLIProgressIndicators:
             [*self.raxe_cmd, "scan", safe_prompts[0] * 1000],  # Long prompt
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
         )
 
         # Give it a moment to start

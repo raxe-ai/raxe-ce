@@ -106,9 +106,9 @@ class TestHierarchicalScoreBounds:
         min_score = min(binary, family, subfamily)
         max_score = max(binary, family, subfamily)
 
-        assert min_score <= h_score <= max_score, (
-            f"Score {h_score} not in [{min_score}, {max_score}]"
-        )
+        assert (
+            min_score <= h_score <= max_score
+        ), f"Score {h_score} not in [{min_score}, {max_score}]"
 
     @given(scores=score_triple())
     @settings(max_examples=200)
@@ -126,9 +126,7 @@ class TestHierarchicalScoreBounds:
         """Property: Custom weights don't break bounds."""
         binary, family, subfamily = scores
 
-        h_score = calculate_hierarchical_score(
-            binary, family, subfamily, weights=weights
-        )
+        h_score = calculate_hierarchical_score(binary, family, subfamily, weights=weights)
 
         min_score = min(binary, family, subfamily)
         max_score = max(binary, family, subfamily)
@@ -291,9 +289,11 @@ class TestConsistencySymmetry:
         subfamily2 = max(0.0, min(1.0, subfamily + 0.1 * (subfamily - mean)))
 
         # Only proceed if we actually increased variance
-        original_var = ((binary - mean)**2 + (family - mean)**2 + (subfamily - mean)**2) / 3
+        original_var = ((binary - mean) ** 2 + (family - mean) ** 2 + (subfamily - mean) ** 2) / 3
         new_mean = (binary2 + family2 + subfamily2) / 3.0
-        new_var = ((binary2 - new_mean)**2 + (family2 - new_mean)**2 + (subfamily2 - new_mean)**2) / 3
+        new_var = (
+            (binary2 - new_mean) ** 2 + (family2 - new_mean) ** 2 + (subfamily2 - new_mean) ** 2
+        ) / 3
 
         assume(new_var > original_var + 0.001)
 
@@ -482,8 +482,7 @@ class TestWeightMonotonicity:
 
         # Increase binary weight
         h_score2 = calculate_hierarchical_score(
-            binary, family, subfamily,
-            weights={"binary": 0.7, "family": 0.2, "subfamily": 0.1}
+            binary, family, subfamily, weights={"binary": 0.7, "family": 0.2, "subfamily": 0.1}
         )
 
         # If binary is highest, increasing its weight should increase h_score
@@ -509,8 +508,10 @@ class TestWeightMonotonicity:
         subfamily = (binary + family) / 2.0  # Middle value
 
         h_score = calculate_hierarchical_score(
-            binary, family, subfamily,
-            weights={"binary": w_binary, "family": w_family, "subfamily": w_subfamily}
+            binary,
+            family,
+            subfamily,
+            weights={"binary": w_binary, "family": w_family, "subfamily": w_subfamily},
         )
 
         # As w_binary → 1, h_score should approach binary
@@ -536,8 +537,7 @@ class TestInvariantViolations:
         """Test that weights not summing to 1.0 are rejected."""
         with pytest.raises(ValueError):
             calculate_hierarchical_score(
-                0.5, 0.5, 0.5,
-                weights={"binary": 0.5, "family": 0.5, "subfamily": 0.5}
+                0.5, 0.5, 0.5, weights={"binary": 0.5, "family": 0.5, "subfamily": 0.5}
             )
 
     def test_negative_scores_fail(self):

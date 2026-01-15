@@ -10,10 +10,9 @@ CRITICAL: This test file enforces ZERO TOLERANCE for PII in telemetry.
 
 Target: 100% coverage for telemetry privacy validation.
 """
+
 import pytest
 
-from raxe.domain.policies.models import PolicyAction, PolicyDecision
-from raxe.domain.rules.models import Severity
 from raxe.domain.telemetry.event_creator import (
     create_scan_event,
     validate_event_privacy,
@@ -474,7 +473,9 @@ class TestComprehensivePrivacyGuarantees:
         # Hashed values should be 71 chars (sha256: prefix + 64 hex chars)
         session_hash = event["context"]["session_id"]
         user_hash = event["context"]["user_id"]
-        assert session_hash.startswith("sha256:"), f"Expected sha256: prefix, got {session_hash[:10]}"
+        assert session_hash.startswith(
+            "sha256:"
+        ), f"Expected sha256: prefix, got {session_hash[:10]}"
         assert user_hash.startswith("sha256:"), f"Expected sha256: prefix, got {user_hash[:10]}"
         assert len(session_hash) == 71, f"Expected 71 chars, got {len(session_hash)}"
         assert len(user_hash) == 71, f"Expected 71 chars, got {len(user_hash)}"
@@ -530,11 +531,7 @@ class TestL2MetadataSharing:
                 "model_version": "raxe-ml-v2.1.0",
                 "hierarchical_score": 0.88,
                 "classification": "ATTACK_LIKELY",
-                "signal_quality": {
-                    "consistency": 0.95,
-                    "margin": 0.82,
-                    "variance": 0.12
-                },
+                "signal_quality": {"consistency": 0.95, "margin": 0.82, "variance": 0.12},
                 "predictions": [
                     {
                         "threat_type": "PROMPT_INJECTION",
@@ -542,10 +539,10 @@ class TestL2MetadataSharing:
                         "features_used": ["instruction_override", "system_prompt_ref"],
                         "metadata": {
                             "ensemble_agreement": 0.92,
-                            "attention_weights_variance": 0.15
-                        }
+                            "attention_weights_variance": 0.15,
+                        },
                     }
-                ]
+                ],
             },
         }
 
@@ -598,7 +595,7 @@ class TestL2MetadataSharing:
                         "confidence": 0.75,
                         # No features_used, no metadata - should still work
                     }
-                ]
+                ],
             },
         }
 
@@ -641,10 +638,10 @@ class TestL2MetadataSharing:
                         "features_used": [
                             "api_key_pattern",
                             "credential_format",
-                            "sensitive_prefix"
-                        ]
+                            "sensitive_prefix",
+                        ],
                     }
-                ]
+                ],
             },
         }
 
@@ -671,7 +668,7 @@ class TestL2MetadataSharing:
                 "confidence": 0.85,
                 "processing_time_ms": 10.0,
                 "model_version": "raxe-jailbreak-detector-v2.3.1",
-                "predictions": []
+                "predictions": [],
             },
         }
 
@@ -681,4 +678,6 @@ class TestL2MetadataSharing:
         )
 
         # Model version should be transmitted for feedback loop
-        assert event["scan_result"]["l2_metadata"]["model_version"] == "raxe-jailbreak-detector-v2.3.1"
+        assert (
+            event["scan_result"]["l2_metadata"]["model_version"] == "raxe-jailbreak-detector-v2.3.1"
+        )

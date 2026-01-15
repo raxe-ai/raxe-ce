@@ -68,6 +68,7 @@ def test_detect_progress_simple_mode_env():
 
 def test_supports_unicode_utf8():
     """Test UTF-8 encoding supports unicode."""
+
     # Create a mock stdout with utf-8 encoding
     class MockStdout:
         encoding = "utf-8"

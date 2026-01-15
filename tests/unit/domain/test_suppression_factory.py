@@ -2,11 +2,10 @@
 
 Tests the factory functions and deprecation warnings for legacy .raxeignore files.
 """
+
 import tempfile
 import warnings
 from pathlib import Path
-
-import pytest
 
 from raxe.domain.suppression_factory import (
     _check_legacy_raxeignore,

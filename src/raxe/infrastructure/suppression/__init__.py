@@ -14,6 +14,7 @@ Note: The legacy .raxeignore file format (FileSuppressionRepository) has been
 removed in v1.0. Use .raxe/suppressions.yaml format instead. See UPDATE.md
 for migration instructions.
 """
+
 from raxe.infrastructure.suppression.composite_repository import (
     CompositeSuppressionRepository,
 )

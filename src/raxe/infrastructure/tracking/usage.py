@@ -8,6 +8,7 @@ Tracks privacy-preserving metrics:
 
 All tracking is local-only, opt-in telemetry to cloud.
 """
+
 import json
 import platform
 import sys
@@ -30,6 +31,7 @@ class InstallationInfo:
         install_source: Where installed from (pypi, git, source)
         raxe_version: RAXE version installed
     """
+
     installation_id: str
     installed_at: str
     python_version: str
@@ -52,6 +54,7 @@ class UsageStats:
         commands_used: Set of CLI commands used
         features_enabled: Set of features enabled (L2, telemetry, etc.)
     """
+
     first_scan_at: str | None = None
     time_to_first_scan_seconds: int | None = None
     total_scans: int = 0
@@ -134,6 +137,7 @@ class UsageTracker:
         # Check if running from git repository
         try:
             import raxe
+
             raxe_path = Path(raxe.__file__).parent
             if (raxe_path.parent.parent / ".git").exists():
                 return "git"
@@ -143,6 +147,7 @@ class UsageTracker:
         # Check if installed via pip
         try:
             import importlib.metadata
+
             dist = importlib.metadata.distribution("raxe")
             if dist:
                 return "pypi"

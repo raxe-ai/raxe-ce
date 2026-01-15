@@ -3,6 +3,7 @@
 Provides detailed performance breakdowns and bottleneck identification.
 Application layer - orchestrates domain logic with performance measurement.
 """
+
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -22,6 +23,7 @@ class RuleProfile:
         matched: Whether the rule matched
         cache_hit: Whether pattern was cached
     """
+
     rule_id: str
     execution_time_ms: float
     matched: bool
@@ -39,6 +41,7 @@ class LayerProfile:
         cache_hits: Number of cache hits
         cache_misses: Number of cache misses
     """
+
     layer_name: str
     total_time_ms: float
     rule_profiles: list[RuleProfile]
@@ -82,6 +85,7 @@ class ProfileResult:
         overhead_ms: Pipeline overhead (non-detection time)
         timestamp: When profile was taken
     """
+
     total_time_ms: float
     text_length: int
     l1_profile: LayerProfile
@@ -131,9 +135,7 @@ class ProfileResult:
 
         # Check L2 performance
         if self.l2_profile and self.l2_percentage > 64:
-            bottlenecks.append(
-                f"L2 inference taking {self.l2_percentage:.1f}% of time"
-            )
+            bottlenecks.append(f"L2 inference taking {self.l2_percentage:.1f}% of time")
 
         # Check cache performance
         if self.l1_profile.cache_hit_rate < 0.5:
@@ -143,9 +145,7 @@ class ProfileResult:
 
         # Check overhead
         if self.overhead_percentage > 20:
-            bottlenecks.append(
-                f"High pipeline overhead: {self.overhead_percentage:.1f}%"
-            )
+            bottlenecks.append(f"High pipeline overhead: {self.overhead_percentage:.1f}%")
 
         return bottlenecks
 
@@ -280,12 +280,14 @@ class ScanProfiler:
             else:
                 cache_misses += 1
 
-            rule_profiles.append(RuleProfile(
-                rule_id=rule.rule_id,
-                execution_time_ms=rule_time_ms,
-                matched=matched,
-                cache_hit=cache_hit,
-            ))
+            rule_profiles.append(
+                RuleProfile(
+                    rule_id=rule.rule_id,
+                    execution_time_ms=rule_time_ms,
+                    matched=matched,
+                    cache_hit=cache_hit,
+                )
+            )
 
         l1_time_ms = (time.perf_counter() - l1_start) * 1000
 

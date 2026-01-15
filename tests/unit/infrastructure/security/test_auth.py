@@ -1,4 +1,5 @@
 """Tests for API key validation."""
+
 import pytest
 
 from raxe.infrastructure.security.auth import (

@@ -482,9 +482,7 @@ class TestDlqClearCommand:
             mock_queue.return_value.clear_dlq.return_value = 3
             mock_queue.return_value.close = Mock()
 
-            result = cli_runner.invoke(
-                telemetry, ["dlq", "clear", "--older-than", "7d", "--force"]
-            )
+            result = cli_runner.invoke(telemetry, ["dlq", "clear", "--older-than", "7d", "--force"])
 
         assert result.exit_code == 0
         mock_queue.return_value.clear_dlq.assert_called_with(older_than_days=7)
@@ -622,10 +620,7 @@ class TestFlushCommand:
                     [],
                 ]
                 mock_queue.return_value.dequeue_standard.side_effect = [
-                    [
-                        {"event_id": f"evt_s{i}", "payload": {}}
-                        for i in range(5)
-                    ],
+                    [{"event_id": f"evt_s{i}", "payload": {}} for i in range(5)],
                     [],
                 ]
                 mock_queue.return_value.mark_batch_sent = Mock()
@@ -723,7 +718,9 @@ class TestDisableCommand:
         mock_config.core.api_key = None  # Free tier
 
         with patch("raxe.cli.telemetry._get_config", return_value=mock_config):
-            with patch("raxe.cli.telemetry._check_telemetry_disable_permission", return_value=False):
+            with patch(
+                "raxe.cli.telemetry._check_telemetry_disable_permission", return_value=False
+            ):
                 with patch("raxe.cli.telemetry._get_cached_tier", return_value="Community"):
                     result = cli_runner.invoke(telemetry, ["disable"])
 

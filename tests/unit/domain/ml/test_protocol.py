@@ -3,6 +3,7 @@
 Tests the pure domain models (value objects) for L2 ML detection.
 No I/O, no mocks needed - just pure function testing.
 """
+
 import pytest
 
 from raxe.domain.ml.protocol import (
@@ -22,7 +23,7 @@ class TestL2Prediction:
             confidence=0.85,
             explanation="Test explanation",
             features_used=["feature1", "feature2"],
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         assert pred.threat_type == L2ThreatType.JAILBREAK
@@ -35,40 +36,25 @@ class TestL2Prediction:
         """Should reject confidence outside 0-1 range."""
         # Too high
         with pytest.raises(ValueError, match="Confidence must be 0-1"):
-            L2Prediction(
-                threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION,
-                confidence=1.5
-            )
+            L2Prediction(threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION, confidence=1.5)
 
         # Too low
         with pytest.raises(ValueError, match="Confidence must be 0-1"):
-            L2Prediction(
-                threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION,
-                confidence=-0.1
-            )
+            L2Prediction(threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION, confidence=-0.1)
 
     def test_prediction_edge_cases(self):
         """Should handle edge case confidence values."""
         # Exactly 0.0
-        pred_zero = L2Prediction(
-            threat_type=L2ThreatType.BENIGN,
-            confidence=0.0
-        )
+        pred_zero = L2Prediction(threat_type=L2ThreatType.BENIGN, confidence=0.0)
         assert pred_zero.confidence == 0.0
 
         # Exactly 1.0
-        pred_one = L2Prediction(
-            threat_type=L2ThreatType.JAILBREAK,
-            confidence=1.0
-        )
+        pred_one = L2Prediction(threat_type=L2ThreatType.JAILBREAK, confidence=1.0)
         assert pred_one.confidence == 1.0
 
     def test_prediction_immutable(self):
         """Should be immutable (frozen dataclass)."""
-        pred = L2Prediction(
-            threat_type=L2ThreatType.JAILBREAK,
-            confidence=0.85
-        )
+        pred = L2Prediction(threat_type=L2ThreatType.JAILBREAK, confidence=0.85)
 
         with pytest.raises(Exception):  # FrozenInstanceError
             pred.confidence = 0.9
@@ -80,10 +66,7 @@ class TestL2Result:
     def test_create_empty_result(self):
         """Should create result with no predictions."""
         result = L2Result(
-            predictions=[],
-            confidence=0.0,
-            processing_time_ms=2.5,
-            model_version="stub-1.0.0"
+            predictions=[], confidence=0.0, processing_time_ms=2.5, model_version="stub-1.0.0"
         )
 
         assert result.predictions == []
@@ -97,21 +80,15 @@ class TestL2Result:
     def test_create_result_with_predictions(self):
         """Should create result with multiple predictions."""
         predictions = [
-            L2Prediction(
-                threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION,
-                confidence=0.7
-            ),
-            L2Prediction(
-                threat_type=L2ThreatType.JAILBREAK,
-                confidence=0.9
-            ),
+            L2Prediction(threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION, confidence=0.7),
+            L2Prediction(threat_type=L2ThreatType.JAILBREAK, confidence=0.9),
         ]
 
         result = L2Result(
             predictions=predictions,
             confidence=0.9,
             processing_time_ms=3.2,
-            model_version="stub-1.0.0"
+            model_version="stub-1.0.0",
         )
 
         assert result.has_predictions
@@ -121,45 +98,23 @@ class TestL2Result:
     def test_result_confidence_validation(self):
         """Should validate confidence is 0-1."""
         with pytest.raises(ValueError, match="Confidence must be 0-1"):
-            L2Result(
-                predictions=[],
-                confidence=1.5,
-                processing_time_ms=1.0,
-                model_version="test"
-            )
+            L2Result(predictions=[], confidence=1.5, processing_time_ms=1.0, model_version="test")
 
     def test_result_processing_time_validation(self):
         """Should validate processing_time_ms is non-negative."""
         with pytest.raises(ValueError, match="processing_time_ms must be non-negative"):
-            L2Result(
-                predictions=[],
-                confidence=0.5,
-                processing_time_ms=-1.0,
-                model_version="test"
-            )
+            L2Result(predictions=[], confidence=0.5, processing_time_ms=-1.0, model_version="test")
 
     def test_get_predictions_by_type(self):
         """Should filter predictions by threat type."""
         predictions = [
-            L2Prediction(
-                threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION,
-                confidence=0.7
-            ),
-            L2Prediction(
-                threat_type=L2ThreatType.JAILBREAK,
-                confidence=0.8
-            ),
-            L2Prediction(
-                threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION,
-                confidence=0.9
-            ),
+            L2Prediction(threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION, confidence=0.7),
+            L2Prediction(threat_type=L2ThreatType.JAILBREAK, confidence=0.8),
+            L2Prediction(threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION, confidence=0.9),
         ]
 
         result = L2Result(
-            predictions=predictions,
-            confidence=0.9,
-            processing_time_ms=1.0,
-            model_version="test"
+            predictions=predictions, confidence=0.9, processing_time_ms=1.0, model_version="test"
         )
 
         encoded = result.get_predictions_by_type(L2ThreatType.ENCODING_OR_OBFUSCATION)
@@ -172,10 +127,7 @@ class TestL2Result:
     def test_to_summary_no_predictions(self):
         """Should generate summary for empty result."""
         result = L2Result(
-            predictions=[],
-            confidence=0.0,
-            processing_time_ms=1.5,
-            model_version="test"
+            predictions=[], confidence=0.0, processing_time_ms=1.5, model_version="test"
         )
 
         summary = result.to_summary()
@@ -185,21 +137,12 @@ class TestL2Result:
     def test_to_summary_with_predictions(self):
         """Should generate summary with predictions."""
         predictions = [
-            L2Prediction(
-                threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION,
-                confidence=0.7
-            ),
-            L2Prediction(
-                threat_type=L2ThreatType.JAILBREAK,
-                confidence=0.85
-            ),
+            L2Prediction(threat_type=L2ThreatType.ENCODING_OR_OBFUSCATION, confidence=0.7),
+            L2Prediction(threat_type=L2ThreatType.JAILBREAK, confidence=0.85),
         ]
 
         result = L2Result(
-            predictions=predictions,
-            confidence=0.85,
-            processing_time_ms=2.3,
-            model_version="test"
+            predictions=predictions, confidence=0.85, processing_time_ms=2.3, model_version="test"
         )
 
         summary = result.to_summary()
@@ -215,7 +158,7 @@ class TestL2Result:
             processing_time_ms=1.0,
             model_version="test",
             features_extracted={"text_length": 100, "has_code": True},
-            metadata={"model_type": "stub"}
+            metadata={"model_type": "stub"},
         )
 
         assert result.features_extracted["text_length"] == 100

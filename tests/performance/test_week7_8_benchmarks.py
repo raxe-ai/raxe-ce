@@ -91,9 +91,7 @@ class TestFastModePerformance:
         print(f"  P99:  {stats['p99']:.2f}ms")
 
         # Assert P95 < 3ms target
-        assert stats["p95"] < 3.0, (
-            f"Fast mode P95 latency {stats['p95']:.2f}ms exceeds 3ms target"
-        )
+        assert stats["p95"] < 3.0, f"Fast mode P95 latency {stats['p95']:.2f}ms exceeds 3ms target"
 
     def test_fast_mode_latency_varied_prompts(self, raxe_client, test_prompts):
         """Verify fast mode performance across varied prompts.
@@ -113,9 +111,7 @@ class TestFastModePerformance:
 
         print(f"\nFast Mode Varied Prompts P95: {p95:.2f}ms")
 
-        assert p95 < 4.0, (
-            f"Fast mode P95 latency {p95:.2f}ms exceeds 4ms target"
-        )
+        assert p95 < 4.0, f"Fast mode P95 latency {p95:.2f}ms exceeds 4ms target"
 
 
 class TestBalancedModePerformance:
@@ -137,9 +133,9 @@ class TestBalancedModePerformance:
         print(f"  P99:  {stats['p99']:.2f}ms")
 
         # Assert P95 < 10ms target
-        assert stats["p95"] < 10.0, (
-            f"Balanced mode P95 latency {stats['p95']:.2f}ms exceeds 10ms target"
-        )
+        assert (
+            stats["p95"] < 10.0
+        ), f"Balanced mode P95 latency {stats['p95']:.2f}ms exceeds 10ms target"
 
     def test_balanced_mode_latency_varied_prompts(self, raxe_client, test_prompts):
         """Verify balanced mode performance across varied prompts."""
@@ -156,9 +152,7 @@ class TestBalancedModePerformance:
 
         print(f"\nBalanced Mode Varied Prompts P95: {p95:.2f}ms")
 
-        assert p95 < 10.0, (
-            f"Balanced mode P95 latency {p95:.2f}ms exceeds 10ms target"
-        )
+        assert p95 < 10.0, f"Balanced mode P95 latency {p95:.2f}ms exceeds 10ms target"
 
 
 class TestThoroughModePerformance:
@@ -180,9 +174,9 @@ class TestThoroughModePerformance:
         print(f"  P99:  {stats['p99']:.2f}ms")
 
         # Assert P95 < 100ms target
-        assert stats["p95"] < 100.0, (
-            f"Thorough mode P95 latency {stats['p95']:.2f}ms exceeds 100ms target"
-        )
+        assert (
+            stats["p95"] < 100.0
+        ), f"Thorough mode P95 latency {stats['p95']:.2f}ms exceeds 100ms target"
 
     def test_thorough_mode_latency_varied_prompts(self, raxe_client, test_prompts):
         """Verify thorough mode performance across varied prompts."""
@@ -199,9 +193,7 @@ class TestThoroughModePerformance:
 
         print(f"\nThorough Mode Varied Prompts P95: {p95:.2f}ms")
 
-        assert p95 < 100.0, (
-            f"Thorough mode P95 latency {p95:.2f}ms exceeds 100ms target"
-        )
+        assert p95 < 100.0, f"Thorough mode P95 latency {p95:.2f}ms exceeds 100ms target"
 
 
 class TestLayerControlPerformance:
@@ -225,9 +217,7 @@ class TestLayerControlPerformance:
         print(f"  P95:  {stats['p95']:.2f}ms")
 
         # Overhead should be <2ms (includes SDK, telemetry, validation)
-        assert stats["p95"] < 2.0, (
-            f"Overhead with layers disabled {stats['p95']:.2f}ms exceeds 2ms"
-        )
+        assert stats["p95"] < 2.0, f"Overhead with layers disabled {stats['p95']:.2f}ms exceeds 2ms"
 
     def test_l2_disabled_matches_fast_mode(self, raxe_client):
         """Verify L2 disabled has similar performance to fast mode."""
@@ -251,9 +241,9 @@ class TestLayerControlPerformance:
 
         # Should be within 20% of each other (some variability in measurement)
         ratio = l2_disabled_stats["p95"] / fast_mode_stats["p95"]
-        assert 0.8 <= ratio <= 1.2, (
-            f"L2 disabled and fast mode performance differ significantly (ratio: {ratio:.2f})"
-        )
+        assert (
+            0.8 <= ratio <= 1.2
+        ), f"L2 disabled and fast mode performance differ significantly (ratio: {ratio:.2f})"
 
 
 class TestModeComparison:
@@ -293,9 +283,9 @@ class TestModeComparison:
         assert thorough_stats["p95"] < 10.0, "Thorough mode should be <10ms P95"
 
         # Verify fast mode is fastest or tied
-        assert fast_stats["p95"] <= balanced_stats["p95"] + 1.0, (
-            "Fast mode should be within 1ms of balanced mode"
-        )
+        assert (
+            fast_stats["p95"] <= balanced_stats["p95"] + 1.0
+        ), "Fast mode should be within 1ms of balanced mode"
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 Orchestrates policy loading, validation, and evaluation.
 Coordinates between infrastructure (loading) and domain (evaluation).
 """
+
 from enum import Enum
 from pathlib import Path
 
@@ -17,9 +18,10 @@ from raxe.infrastructure.security.auth import APIKey
 
 class PolicySource(Enum):
     """Source of policy configuration."""
-    LOCAL_FILE = "local_file"      # .raxe/policies.yaml
-    API = "api"                      # Cloud API download
-    INLINE = "inline"                # Programmatic policies
+
+    LOCAL_FILE = "local_file"  # .raxe/policies.yaml
+    API = "api"  # Cloud API download
+    INLINE = "inline"  # Programmatic policies
 
 
 class ApplyPolicyUseCase:
@@ -253,6 +255,7 @@ class ApplyPolicyUseCase:
 
 
 # Convenience functions for common use cases
+
 
 def apply_policies_to_detection(
     detection: Detection,

@@ -19,6 +19,7 @@ Directory structure:
             pi-001_match_001_expected.json
             ...
 """
+
 import json
 from pathlib import Path
 from typing import Any
@@ -47,9 +48,7 @@ def discover_golden_files() -> list[dict[str, Any]]:
     # Find all input files recursively
     for input_file in sorted(FIXTURES_DIR.rglob("*_input.txt")):
         # Expected file should be in same directory
-        expected_file = input_file.parent / input_file.name.replace(
-            "_input.txt", "_expected.json"
-        )
+        expected_file = input_file.parent / input_file.name.replace("_input.txt", "_expected.json")
 
         if expected_file.exists():
             # Extract metadata from path
@@ -199,18 +198,14 @@ def test_golden_fixtures_structure() -> None:
         required_fields = ["has_detections", "detection_count", "detections"]
         for field in required_fields:
             if field not in expected:
-                errors.append(
-                    f"Missing required field '{field}' in {tc['expected_file']}"
-                )
+                errors.append(f"Missing required field '{field}' in {tc['expected_file']}")
 
         # Validate detection structure
         for detection in expected.get("detections", []):
             detection_fields = ["rule_id", "severity", "confidence"]
             for field in detection_fields:
                 if field not in detection:
-                    errors.append(
-                        f"Missing detection field '{field}' in {tc['expected_file']}"
-                    )
+                    errors.append(f"Missing detection field '{field}' in {tc['expected_file']}")
 
     if errors:
         pytest.fail("Golden file structure validation failed:\n" + "\n".join(errors))

@@ -1,4 +1,5 @@
 """Security validation - ensure no PII leaks."""
+
 import logging
 import re
 
@@ -71,8 +72,7 @@ class TestPIIPreventionInTelemetry:
         """Verify telemetry sends only hashes, not raw text."""
         # Mock the telemetry hook's send method
         mock_send = mocker.patch(
-            "raxe.infrastructure.telemetry.hook.TelemetryHook.send",
-            return_value=None
+            "raxe.infrastructure.telemetry.hook.TelemetryHook.send", return_value=None
         )
 
         raxe = Raxe(telemetry=True)
@@ -94,8 +94,7 @@ class TestPIIPreventionInTelemetry:
     def test_telemetry_disabled_sends_nothing(self, mocker) -> None:
         """Verify telemetry disabled means no data sent."""
         mock_send = mocker.patch(
-            "raxe.infrastructure.telemetry.hook.TelemetryHook.send",
-            return_value=None
+            "raxe.infrastructure.telemetry.hook.TelemetryHook.send", return_value=None
         )
 
         raxe = Raxe(telemetry=False)

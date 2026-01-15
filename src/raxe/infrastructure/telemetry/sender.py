@@ -36,14 +36,16 @@ def _generate_batch_id() -> str:
 
 class CircuitState(Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Failing, reject requests
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject requests
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker."""
+
     failure_threshold: int = 5
     reset_timeout_seconds: int = 30
     half_open_requests: int = 3
@@ -94,7 +96,9 @@ class CircuitBreaker:
                     self.half_open_requests = 0
                     logger.info("Circuit breaker transitioning to HALF_OPEN")
                 else:
-                    raise Exception(f"Circuit breaker is OPEN (will retry after {self.config.reset_timeout_seconds}s)")
+                    raise Exception(
+                        f"Circuit breaker is OPEN (will retry after {self.config.reset_timeout_seconds}s)"
+                    )
 
             if self.state == CircuitState.HALF_OPEN:
                 if self.half_open_requests >= self.config.half_open_requests:
@@ -145,7 +149,9 @@ class CircuitBreaker:
             elif self.state == CircuitState.CLOSED:
                 if self.failure_count >= self.config.failure_threshold:
                     self.state = CircuitState.OPEN
-                    logger.warning(f"Circuit breaker opened after {self.failure_count} consecutive failures")
+                    logger.warning(
+                        f"Circuit breaker opened after {self.failure_count} consecutive failures"
+                    )
 
     def get_state(self) -> CircuitState:
         """Get current circuit state."""
@@ -166,6 +172,7 @@ class CircuitBreaker:
 @dataclass
 class RetryPolicy:
     """Retry policy configuration."""
+
     max_retries: int = 2  # Reduced from 10 - CLI should fail fast
     initial_delay_ms: int = 500  # Reduced from 1000
     max_delay_ms: int = 5000  # Reduced from 512000 - max 5s wait between retries
@@ -228,9 +235,9 @@ class BatchSender:
         """
         # Security: Validate endpoint uses HTTPS only
         parsed = urllib.parse.urlparse(endpoint)
-        if parsed.scheme not in ('https', 'http'):
+        if parsed.scheme not in ("https", "http"):
             raise ValueError(f"Endpoint must use HTTPS protocol, got: {parsed.scheme}")
-        if parsed.scheme == 'http' and not parsed.netloc.startswith('localhost'):
+        if parsed.scheme == "http" and not parsed.netloc.startswith("localhost"):
             raise ValueError("HTTP endpoints only allowed for localhost, use HTTPS for production")
 
         self.endpoint = endpoint
@@ -303,6 +310,7 @@ class BatchSender:
         # Priority 2: Compute from api_key
         if self.api_key:
             from raxe.infrastructure.telemetry.credential_store import compute_key_id
+
             return compute_key_id(self.api_key)
 
         return None
@@ -335,8 +343,7 @@ class BatchSender:
                 if attempt < self.retry_policy.max_retries:
                     # Calculate delay with exponential backoff and jitter
                     jitter = random.uniform(
-                        -self.retry_policy.jitter_factor,
-                        self.retry_policy.jitter_factor
+                        -self.retry_policy.jitter_factor, self.retry_policy.jitter_factor
                     )
                     actual_delay = delay_ms * (1 + jitter)
                     actual_delay = min(actual_delay, self.retry_policy.max_delay_ms)
@@ -353,10 +360,12 @@ class BatchSender:
                 last_error = e
                 if attempt < self.retry_policy.max_retries:
                     # Network or other error, retry with backoff
-                    actual_delay = delay_ms * (1 + random.uniform(
-                        -self.retry_policy.jitter_factor,
-                        self.retry_policy.jitter_factor
-                    ))
+                    actual_delay = delay_ms * (
+                        1
+                        + random.uniform(
+                            -self.retry_policy.jitter_factor, self.retry_policy.jitter_factor
+                        )
+                    )
                     actual_delay = min(actual_delay, self.retry_policy.max_delay_ms)
 
                     logger.warning(
@@ -368,7 +377,9 @@ class BatchSender:
                     delay_ms *= self.retry_policy.backoff_multiplier
 
         # All retries exhausted
-        raise Exception(f"Failed to send batch after {self.retry_policy.max_retries} retries: {last_error}")
+        raise Exception(
+            f"Failed to send batch after {self.retry_policy.max_retries} retries: {last_error}"
+        )
 
     def _send_request(self, payload: dict[str, Any]) -> dict[str, Any]:
         """
@@ -384,7 +395,7 @@ class BatchSender:
             Exception: If request fails
         """
         # Serialize payload
-        json_data = json.dumps(payload).encode('utf-8')
+        json_data = json.dumps(payload).encode("utf-8")
 
         # Compress if enabled
         if self.compression == "gzip":
@@ -394,10 +405,7 @@ class BatchSender:
             content_encoding = None
 
         # Prepare headers
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "RAXE-CE/1.0"
-        }
+        headers = {"Content-Type": "application/json", "User-Agent": "RAXE-CE/1.0"}
 
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
@@ -408,10 +416,7 @@ class BatchSender:
         # Create request
         # Security: Validate endpoint is HTTPS only (configured in __init__)
         request = urllib.request.Request(
-            self.endpoint,
-            data=json_data,
-            headers=headers,
-            method="POST"
+            self.endpoint, data=json_data, headers=headers, method="POST"
         )
 
         # Send request
@@ -420,14 +425,14 @@ class BatchSender:
             with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
                 response_data = response.read()
                 if response_data:
-                    return json.loads(response_data.decode('utf-8'))
+                    return json.loads(response_data.decode("utf-8"))
                 return {"status": "ok", "code": response.code}
 
         except urllib.error.HTTPError as e:
             # Read error response if available
             error_body = None
             try:
-                error_body = e.read().decode('utf-8')
+                error_body = e.read().decode("utf-8")
             except:
                 pass
 
@@ -447,10 +452,7 @@ class BatchSender:
         return self.circuit_breaker.get_state().value
 
     def send_analytics_event(
-        self,
-        event_type: str,
-        installation_id: str,
-        metadata: dict[str, Any] | None = None
+        self, event_type: str, installation_id: str, metadata: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """
         Send analytics event to telemetry endpoint.
@@ -470,7 +472,7 @@ class BatchSender:
             "event_type": event_type,
             "installation_id": installation_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         return self.send_batch([event])

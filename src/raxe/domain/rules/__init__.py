@@ -3,6 +3,7 @@
 Pure domain layer - no I/O operations.
 Provides immutable value objects for rules, patterns, and detections.
 """
+
 from raxe.domain.rules.models import (
     Pattern,
     Rule,

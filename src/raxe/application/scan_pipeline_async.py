@@ -41,6 +41,7 @@ logger = get_logger(__name__)
 @dataclass(frozen=True)
 class AsyncScanMetrics:
     """Performance metrics for async parallel scan."""
+
     l1_start_time: float
     l1_end_time: float
     l1_duration_ms: float
@@ -56,6 +57,7 @@ class AsyncScanMetrics:
 @dataclass(frozen=True)
 class AsyncScanPipelineResult:
     """Result from async parallel scan pipeline."""
+
     scan_result: CombinedScanResult
     duration_ms: float
     text_hash: str
@@ -199,26 +201,19 @@ class AsyncScanPipeline:
         tasks = {}
 
         if l1_enabled:
-            tasks["l1"] = asyncio.create_task(
-                self._run_l1_async(text, rules),
-                name="L1-detection"
-            )
+            tasks["l1"] = asyncio.create_task(self._run_l1_async(text, rules), name="L1-detection")
 
         if l2_enabled and self.enable_l2 and mode != "fast":
             l2_start = time.perf_counter()
             tasks["l2"] = asyncio.create_task(
-                self._run_l2_async(text, context),
-                name="L2-detection"
+                self._run_l2_async(text, context), name="L2-detection"
             )
 
         # Wait for L1 first (fast path)
         l1_result = None
         if "l1" in tasks:
             try:
-                l1_result = await asyncio.wait_for(
-                    tasks["l1"],
-                    timeout=self.l1_timeout_ms / 1000
-                )
+                l1_result = await asyncio.wait_for(tasks["l1"], timeout=self.l1_timeout_ms / 1000)
                 l1_end = time.perf_counter()
             except asyncio.TimeoutError:
                 logger.warning(f"L1 timeout after {self.l1_timeout_ms}ms")
@@ -248,8 +243,7 @@ class AsyncScanPipeline:
                 # Wait for L2 with timeout
                 try:
                     l2_result = await asyncio.wait_for(
-                        tasks["l2"],
-                        timeout=self.l2_timeout_ms / 1000
+                        tasks["l2"], timeout=self.l2_timeout_ms / 1000
                     )
                     l2_end = time.perf_counter()
                 except asyncio.TimeoutError:
@@ -342,7 +336,7 @@ class AsyncScanPipeline:
             None,  # Use default thread pool executor
             self.rule_executor.execute_rules,
             text,
-            rules
+            rules,
         )
 
     async def _run_l2_async(self, text: str, context: dict[str, Any] | None) -> L2Result:
@@ -360,7 +354,7 @@ class AsyncScanPipeline:
             self.l2_detector.analyze,
             text,
             None,  # L1 results not needed for bundle detector
-            context
+            context,
         )
 
     def _should_cancel_l2(self, l1_result: ScanResult | None) -> bool:
@@ -379,9 +373,8 @@ class AsyncScanPipeline:
         if l1_result.highest_severity == Severity.CRITICAL:
             # Check confidence of CRITICAL detections
             max_confidence = max(
-                (d.confidence for d in l1_result.detections
-                 if d.severity == Severity.CRITICAL),
-                default=0.0
+                (d.confidence for d in l1_result.detections if d.severity == Severity.CRITICAL),
+                default=0.0,
             )
 
             return max_confidence >= self.min_confidence_for_skip

@@ -3,6 +3,7 @@
 Tests pure domain logic - no I/O, fast execution.
 Target: >95% coverage for domain layer.
 """
+
 from datetime import datetime, timezone
 
 from raxe.domain.engine.executor import Detection
@@ -31,15 +32,17 @@ def make_detection(
         rule_version="1.0.0",
         severity=severity,
         confidence=confidence,
-        matches=[Match(
-            pattern_index=0,
-            start=0,
-            end=10,
-            matched_text="test match",
-            groups=(),
-            context_before="",
-            context_after="",
-        )],
+        matches=[
+            Match(
+                pattern_index=0,
+                start=0,
+                end=10,
+                matched_text="test match",
+                groups=(),
+                context_before="",
+                context_after="",
+            )
+        ],
         detected_at=datetime.now(timezone.utc).isoformat(),
     )
 
@@ -168,7 +171,6 @@ class TestEvaluatePolicies:
         assert decision.original_severity == Severity.HIGH
         assert decision.final_severity == Severity.HIGH
         assert decision.severity_changed is False
-
 
     def test_disabled_policy_ignored(self):
         """Disabled policies are not evaluated."""

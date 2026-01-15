@@ -4,6 +4,7 @@ Pure domain layer - NO I/O operations.
 This module defines immutable value objects for rule pack management,
 supporting the three-tier pack distribution system (Core/Community/Custom).
 """
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -19,6 +20,7 @@ class PackType(Enum):
     - COMMUNITY: Community-contributed packs downloaded from registry
     - CUSTOM: User-created packs for organization-specific rules
     """
+
     OFFICIAL = "OFFICIAL"
     COMMUNITY = "COMMUNITY"
     CUSTOM = "CUSTOM"
@@ -42,6 +44,7 @@ class PackRule:
             path='rules/PI/pi-001@0.0.1.yaml'
         )
     """
+
     id: str
     version: str
     path: str
@@ -98,6 +101,7 @@ class PackManifest:
             metadata={'maintainer': 'raxe-ai', 'created': '2025-11-15'}
         )
     """
+
     id: str
     version: str
     name: str
@@ -189,6 +193,7 @@ class RulePack:
             rules=[Rule(...), Rule(...)]
         )
     """
+
     manifest: PackManifest
     rules: list[Rule]
 
@@ -211,15 +216,11 @@ class RulePack:
 
         missing = manifest_rule_ids - loaded_rule_ids
         if missing:
-            raise ValueError(
-                f"Pack is missing rules declared in manifest: {missing}"
-            )
+            raise ValueError(f"Pack is missing rules declared in manifest: {missing}")
 
         extra = loaded_rule_ids - manifest_rule_ids
         if extra:
-            raise ValueError(
-                f"Pack contains rules not declared in manifest: {extra}"
-            )
+            raise ValueError(f"Pack contains rules not declared in manifest: {extra}")
 
     def get_rule(self, rule_id: str) -> Rule | None:
         """Get rule by ID (without version).

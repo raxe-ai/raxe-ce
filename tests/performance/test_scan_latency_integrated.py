@@ -7,6 +7,7 @@ Performance targets:
 
 These tests measure real-world performance with all components integrated.
 """
+
 import statistics
 import time
 
@@ -210,8 +211,8 @@ rules_file: "rules.yaml"
         print(f"  - L1 average: {avg_l1:.3f}ms")
         print(f"  - L2 average: {avg_l2:.3f}ms")
         print(f"  - Total average: {avg_total:.3f}ms")
-        print(f"  - L1 percentage: {(avg_l1/avg_total)*100:.1f}%")
-        print(f"  - L2 percentage: {(avg_l2/avg_total)*100:.1f}%")
+        print(f"  - L1 percentage: {(avg_l1 / avg_total) * 100:.1f}%")
+        print(f"  - L2 percentage: {(avg_l2 / avg_total) * 100:.1f}%")
 
         # L1 should be <5ms target
         print(f"\nL1 target: <5ms, actual: {avg_l1:.3f}ms")
@@ -279,7 +280,7 @@ rules_file: "rules.yaml"
         throughput = len(texts) / duration
 
         print("\nBatch scan performance (100 prompts):")
-        print(f"  - Total duration: {duration*1000:.1f}ms")
+        print(f"  - Total duration: {duration * 1000:.1f}ms")
         print(f"  - Average per scan: {avg_per_scan:.3f}ms")
         print(f"  - Throughput: {throughput:.1f} scans/second")
 
@@ -354,11 +355,13 @@ class TestComponentLatency:
         # Measure send latency
         start = time.perf_counter()
         for _ in range(100):
-            hook.send({
-                "text_hash": "a" * 64,
-                "severity": "low",
-                "detections": 0,
-            })
+            hook.send(
+                {
+                    "text_hash": "a" * 64,
+                    "severity": "low",
+                    "detections": 0,
+                }
+            )
         duration_ms = (time.perf_counter() - start) * 1000
         avg_send_ms = duration_ms / 100
 

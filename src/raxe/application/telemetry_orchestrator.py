@@ -318,6 +318,9 @@ class TelemetryOrchestrator:
             credential_store = CredentialStore()
             credentials = credential_store.get_or_create(raise_on_expired=False)
             installation_id = credentials.installation_id
+            # SECURITY NOTE: installation_id is a non-secret machine UUID (inst_xxx format)
+            # It is intentionally logged for debugging and transmitted in telemetry.
+            # It cannot identify a person and is not considered PII.
             logger.debug(
                 "Using installation_id from credentials: %s",
                 installation_id,
@@ -377,6 +380,9 @@ class TelemetryOrchestrator:
 
         if self._queue:
             self._queue.enqueue(event)
+            # SECURITY NOTE: installation_id is a non-secret machine UUID (inst_xxx).
+            # key_type is a categorical tier label (temp/community/pro/enterprise).
+            # Neither value is sensitive or can identify a person.
             logger.info(f"Installation event fired: {installation_id} (key_type={key_type})")
 
     # =========================================================================
@@ -578,6 +584,9 @@ class TelemetryOrchestrator:
         try:
             api_key_id = compute_key_id(api_key)
             self._queue.set_state(StateKey.CURRENT_API_KEY_ID, api_key_id)
+            # SECURITY NOTE: api_key_id is a truncated SHA-256 hash (key_{12_hex_chars}).
+            # It CANNOT be reversed to obtain the original API key.
+            # The actual API key is NEVER logged. See: credential_store.py:compute_key_id()
             logger.debug(f"Stored api_key_id in telemetry state: {api_key_id}")
         except Exception as e:
             logger.debug(f"Could not store api_key_id in telemetry state: {e}")

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Main test runner for RAXE functional test suite with performance tracking."""
+
 import json
 import subprocess
 import sys
@@ -12,6 +13,7 @@ from pathlib import Path
 @dataclass
 class TestResult:
     """Test execution result."""
+
     suite: str
     passed: int
     failed: int
@@ -23,6 +25,7 @@ class TestResult:
 @dataclass
 class PerformanceBenchmark:
     """Performance benchmark result."""
+
     metric: str
     value: float
     target: float
@@ -34,6 +37,7 @@ class PerformanceBenchmark:
 @dataclass
 class ReleaseValidation:
     """Release validation summary."""
+
     timestamp: str
     total_tests: int
     passed_tests: int
@@ -59,15 +63,17 @@ class FunctionalTestRunner:
         """Run a specific test suite."""
         print(f"\n{'=' * 60}")
         print(f"Running {suite_name} Tests")
-        print('=' * 60)
+        print("=" * 60)
 
         cmd = [
-            sys.executable, "-m", "pytest",
+            sys.executable,
+            "-m",
+            "pytest",
             suite_path,
             "-v" if self.verbose else "-q",
             "--tb=short",
             "--json-report",
-            "--json-report-file=/tmp/pytest-report.json"
+            "--json-report-file=/tmp/pytest-report.json",
         ]
 
         start = time.perf_counter()
@@ -99,7 +105,7 @@ class FunctionalTestRunner:
                     for i, part in enumerate(parts):
                         if part == "passed":
                             try:
-                                passed = int(parts[i-1])
+                                passed = int(parts[i - 1])
                             except:
                                 pass
                 if "failed" in line:
@@ -107,7 +113,7 @@ class FunctionalTestRunner:
                     for i, part in enumerate(parts):
                         if part == "failed":
                             try:
-                                failed = int(parts[i-1])
+                                failed = int(parts[i - 1])
                             except:
                                 pass
 
@@ -129,14 +135,14 @@ class FunctionalTestRunner:
             failed=failed,
             skipped=skipped,
             duration_ms=duration_ms,
-            errors=errors
+            errors=errors,
         )
 
     def run_performance_benchmarks(self):
         """Run performance benchmark tests."""
         print(f"\n{'=' * 60}")
         print("Running Performance Benchmarks")
-        print('=' * 60)
+        print("=" * 60)
 
         # Define benchmarks
         benchmark_specs = [
@@ -144,7 +150,7 @@ class FunctionalTestRunner:
             ("Scan P95 Latency", 10, 20, "ms"),
             ("L2 Inference", 150, 300, "ms"),
             ("Memory per Scan", 1, 5, "MB"),
-            ("CLI Overhead", 50, 100, "ms")
+            ("CLI Overhead", 50, 100, "ms"),
         ]
 
         # Run simple benchmark tests
@@ -158,14 +164,16 @@ class FunctionalTestRunner:
             print(f"  {metric}: {value:.1f}{unit} {status}")
             print(f"    Target: <{target}{unit}, Threshold: <{threshold}{unit}")
 
-            self.benchmarks.append(PerformanceBenchmark(
-                metric=metric,
-                value=value,
-                target=target,
-                threshold=threshold,
-                passed=passed,
-                unit=unit
-            ))
+            self.benchmarks.append(
+                PerformanceBenchmark(
+                    metric=metric,
+                    value=value,
+                    target=target,
+                    threshold=threshold,
+                    passed=passed,
+                    unit=unit,
+                )
+            )
 
     def _run_benchmark(self, metric: str) -> float:
         """Run a specific benchmark (simplified for demo)."""
@@ -176,7 +184,7 @@ class FunctionalTestRunner:
             "Scan P95 Latency": 8,
             "L2 Inference": 120,
             "Memory per Scan": 0.8,
-            "CLI Overhead": 45
+            "CLI Overhead": 45,
         }
         return mock_values.get(metric, 100)
 
@@ -184,15 +192,17 @@ class FunctionalTestRunner:
         """Run coverage analysis."""
         print(f"\n{'=' * 60}")
         print("Running Coverage Analysis")
-        print('=' * 60)
+        print("=" * 60)
 
         cmd = [
-            sys.executable, "-m", "pytest",
+            sys.executable,
+            "-m",
+            "pytest",
             str(self.test_dir),
             "--cov=raxe",
             "--cov-report=term-missing:skip-covered",
             "--cov-report=json",
-            "-q"
+            "-q",
         ]
 
         subprocess.run(cmd, capture_output=True, text=True)
@@ -228,21 +238,21 @@ class FunctionalTestRunner:
             test_results=self.results,
             performance_benchmarks=self.benchmarks,
             coverage_percent=coverage,
-            all_passed=all_tests_passed and all_benchmarks_passed
+            all_passed=all_tests_passed and all_benchmarks_passed,
         )
 
     def print_summary(self, validation: ReleaseValidation):
         """Print test summary."""
         print(f"\n{'=' * 60}")
         print("RELEASE VALIDATION SUMMARY")
-        print('=' * 60)
+        print("=" * 60)
 
         print("\nTest Results:")
         print(f"  Total Tests: {validation.total_tests}")
         print(f"  Passed: {validation.passed_tests} ✅")
         print(f"  Failed: {validation.failed_tests} ❌")
         print(f"  Skipped: {validation.skipped_tests} ⏭️")
-        print(f"  Duration: {validation.total_duration_ms/1000:.1f}s")
+        print(f"  Duration: {validation.total_duration_ms / 1000:.1f}s")
 
         if validation.coverage_percent:
             coverage_status = "✅" if validation.coverage_percent > 80 else "❌"
@@ -266,12 +276,12 @@ class FunctionalTestRunner:
                 print(f"  {len(failed_benchmarks)} benchmarks failed:")
                 for b in failed_benchmarks:
                     print(f"    - {b.metric}: {b.value:.1f}{b.unit} > {b.threshold}{b.unit}")
-        print('=' * 60)
+        print("=" * 60)
 
     def save_report(self, validation: ReleaseValidation):
         """Save validation report to JSON."""
         report_file = self.test_dir / "validation_report.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(asdict(validation), f, indent=2)
         print(f"\nReport saved to: {report_file}")
 
@@ -328,10 +338,7 @@ def main():
     if args.benchmarks_only:
         runner.run_performance_benchmarks()
     elif args.suite:
-        result = runner.run_test_suite(
-            str(runner.test_dir / args.suite),
-            args.suite.upper()
-        )
+        result = runner.run_test_suite(str(runner.test_dir / args.suite), args.suite.upper())
         runner.results.append(result)
         runner.print_summary(runner.generate_report(None))
     else:

@@ -1,4 +1,5 @@
 """Shared fixtures and utilities for functional tests."""
+
 import json
 import os
 import sys
@@ -46,7 +47,7 @@ def edge_cases(test_data_dir: Path) -> dict[str, Any]:
 @pytest.fixture
 def temp_config_file():
     """Create temporary config file."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write("""
 api_key: test_key_123
 telemetry:
@@ -79,6 +80,7 @@ def mock_progress():
 @pytest.fixture
 def performance_tracker():
     """Track performance metrics during tests."""
+
     class PerformanceTracker:
         def __init__(self):
             self.metrics = {}
@@ -112,7 +114,7 @@ def performance_tracker():
                 "p50": values[n // 2],
                 "p95": values[int(n * 0.95)] if n > 1 else values[0],
                 "p99": values[int(n * 0.99)] if n > 1 else values[0],
-                "count": n
+                "count": n,
             }
 
     return PerformanceTracker()
@@ -131,6 +133,7 @@ def memory_tracker():
         def reset_baseline(self):
             """Set current memory as baseline."""
             import gc
+
             gc.collect()
             self.baseline = self.process.memory_info().rss / 1024 / 1024  # MB
 
@@ -150,6 +153,7 @@ def memory_tracker():
 @pytest.fixture
 def thread_pool():
     """Create thread pool for concurrent testing."""
+
     class ThreadPool:
         def __init__(self):
             self.results = []
@@ -184,6 +188,7 @@ def thread_pool():
 @pytest.fixture
 def assert_performance():
     """Performance assertion helper."""
+
     def _assert(actual_ms: float, target_ms: float, threshold_ms: float, metric_name: str):
         """Assert performance metric is within bounds."""
         assert actual_ms <= threshold_ms, (

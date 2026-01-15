@@ -14,25 +14,19 @@ This module tests the TelemetryOrchestrator class which coordinates:
 from __future__ import annotations
 
 import threading
-import time
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Literal
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
-
-import pytest
+from unittest.mock import Mock, patch
 
 from raxe.domain.telemetry.events import (
     EventType,
-    TelemetryEvent,
-    create_scan_event,
 )
 from raxe.infrastructure.telemetry.config import TelemetryConfig
 from raxe.infrastructure.telemetry.dual_queue import DualQueue, StateKey
-from raxe.infrastructure.telemetry.sender import BatchSender, CircuitBreaker
+from raxe.infrastructure.telemetry.sender import BatchSender
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    pass
 
 
 # =============================================================================
@@ -389,8 +383,7 @@ class TelemetryOrchestrator:
 
         # Check if this is disabling telemetry
         is_disabling = any(
-            c.get("key") == "telemetry.enabled" and c.get("new_value") is False
-            for c in changes
+            c.get("key") == "telemetry.enabled" and c.get("new_value") is False for c in changes
         )
 
         from raxe.domain.telemetry.events import create_config_changed_event
@@ -1158,9 +1151,7 @@ class TestBackpressureSampling:
         )
 
         # Mock high queue depth
-        with patch.object(
-            mock_queue, "get_stats", return_value={"total_queued": 9000}
-        ):
+        with patch.object(mock_queue, "get_stats", return_value={"total_queued": 9000}):
             orchestrator._update_backpressure()
 
         # Should reduce sample rate (queue at 90% of 10000 max)

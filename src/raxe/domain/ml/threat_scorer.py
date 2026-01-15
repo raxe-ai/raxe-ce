@@ -22,6 +22,7 @@ Performance Requirements:
 - No expensive operations (like model inference) in scoring logic
 - Efficient use of native Python (list comprehensions, built-ins)
 """
+
 import statistics
 from typing import Any
 
@@ -46,31 +47,26 @@ OBVIOUS_ATTACK_PATTERNS = [
     "forget previous",
     "override previous",
     "bypass previous",
-
     # Memory/context manipulation
     "delete all previous",
     "clear all previous",
     "erase all instructions",
     "reset all instructions",
-
     # Role manipulation with malicious intent
     "you are now in",
     "pretend you are",
     "act as if you",
     "from now on you",
-
     # Direct jailbreak attempts
     "jailbreak mode",
     "developer mode",
     "god mode",
     "admin mode enabled",
-
     # System prompt exposure attempts
     "show me your system",
     "reveal your system",
     "what is your system prompt",
     "display your instructions",
-
     # Encoded/obfuscated attacks (base64, rot13, etc.)
     "base64 decode",
     "rot13 decode",
@@ -158,9 +154,7 @@ class HierarchicalThreatScorer:
     """
 
     def __init__(
-        self,
-        mode: ScoringMode = ScoringMode.BALANCED,
-        thresholds: ScoringThresholds | None = None
+        self, mode: ScoringMode = ScoringMode.BALANCED, thresholds: ScoringThresholds | None = None
     ) -> None:
         """Initialize the threat scorer.
 
@@ -216,29 +210,27 @@ class HierarchicalThreatScorer:
         hierarchical_score = self.calculate_hierarchical_score(
             threat_score.binary_threat_score,
             threat_score.family_confidence,
-            threat_score.subfamily_confidence
+            threat_score.subfamily_confidence,
         )
 
         is_consistent, variance = self.check_consistency(
             threat_score.binary_threat_score,
             threat_score.family_confidence,
-            threat_score.subfamily_confidence
+            threat_score.subfamily_confidence,
         )
 
         margins = self.calculate_margins(
-            threat_score.binary_proba,
-            threat_score.family_proba,
-            threat_score.subfamily_proba
+            threat_score.binary_proba, threat_score.family_proba, threat_score.subfamily_proba
         )
 
         weak_margins_count = self._count_weak_margins(margins)
 
         # Build metadata
         metadata: dict[str, Any] = {
-            'mode': self.mode.value,
-            'margins': margins,
-            'family_name': threat_score.family_name,
-            'subfamily_name': threat_score.subfamily_name
+            "mode": self.mode.value,
+            "margins": margins,
+            "family_name": threat_score.family_name,
+            "subfamily_name": threat_score.subfamily_name,
         }
 
         # Apply decision logic (context-aware rules)
@@ -249,14 +241,11 @@ class HierarchicalThreatScorer:
             variance=variance,
             weak_margins_count=weak_margins_count,
             metadata=metadata,
-            prompt=prompt
+            prompt=prompt,
         )
 
     def calculate_hierarchical_score(
-        self,
-        threat_score: float,
-        family_confidence: float,
-        subfamily_confidence: float
+        self, threat_score: float, family_confidence: float, subfamily_confidence: float
     ) -> float:
         """Calculate weighted hierarchical confidence score.
 
@@ -285,17 +274,10 @@ class HierarchicalThreatScorer:
             >>> score = scorer.calculate_hierarchical_score(0.626, 0.502, 0.343)
             >>> print(f"{score:.3f}")  # 0.552 (below FP_LIKELY threshold)
         """
-        return (
-            0.60 * threat_score +
-            0.25 * family_confidence +
-            0.15 * subfamily_confidence
-        )
+        return 0.60 * threat_score + 0.25 * family_confidence + 0.15 * subfamily_confidence
 
     def check_consistency(
-        self,
-        threat_score: float,
-        family_confidence: float,
-        subfamily_confidence: float
+        self, threat_score: float, family_confidence: float, subfamily_confidence: float
     ) -> tuple[bool, float]:
         """Check if confidence levels are consistent across hierarchy.
 
@@ -337,10 +319,7 @@ class HierarchicalThreatScorer:
         return is_consistent, variance
 
     def calculate_margins(
-        self,
-        binary_proba: list[float],
-        family_proba: list[float],
-        subfamily_proba: list[float]
+        self, binary_proba: list[float], family_proba: list[float], subfamily_proba: list[float]
     ) -> dict[str, float]:
         """Calculate decision margins at each classification level.
 
@@ -391,19 +370,13 @@ class HierarchicalThreatScorer:
 
         # Subfamily margin
         subfamily_sorted = sorted(subfamily_proba, reverse=True)
-        subfamily_margin = subfamily_sorted[0] - subfamily_sorted[1] if len(subfamily_sorted) > 1 else 1.0
+        subfamily_margin = (
+            subfamily_sorted[0] - subfamily_sorted[1] if len(subfamily_sorted) > 1 else 1.0
+        )
 
-        return {
-            'binary': binary_margin,
-            'family': family_margin,
-            'subfamily': subfamily_margin
-        }
+        return {"binary": binary_margin, "family": family_margin, "subfamily": subfamily_margin}
 
-    def calculate_entropy(
-        self,
-        proba_dist: list[float],
-        normalized: bool = True
-    ) -> float:
+    def calculate_entropy(self, proba_dist: list[float], normalized: bool = True) -> float:
         """Calculate Shannon entropy of a probability distribution.
 
         **Technique 4: Entropy-Based Uncertainty**
@@ -454,6 +427,7 @@ class HierarchicalThreatScorer:
         # Calculate Shannon entropy: -Σ p(x) * log2(p(x))
         # Use native Python math.log2 (no numpy dependency)
         import math
+
         entropy = -sum(p * math.log2(p) for p in clipped_proba)
 
         if normalized:
@@ -466,10 +440,7 @@ class HierarchicalThreatScorer:
         return entropy
 
     def calculate_entropy_metrics(
-        self,
-        binary_proba: list[float],
-        family_proba: list[float],
-        subfamily_proba: list[float]
+        self, binary_proba: list[float], family_proba: list[float], subfamily_proba: list[float]
     ) -> dict[str, float]:
         """Calculate entropy metrics for all classification levels.
 
@@ -497,9 +468,9 @@ class HierarchicalThreatScorer:
             >>> print(f"{metrics['binary_entropy']:.3f}")  # ~0.955 (high uncertainty)
         """
         return {
-            'binary_entropy': self.calculate_entropy(binary_proba, normalized=True),
-            'family_entropy': self.calculate_entropy(family_proba, normalized=True),
-            'subfamily_entropy': self.calculate_entropy(subfamily_proba, normalized=True)
+            "binary_entropy": self.calculate_entropy(binary_proba, normalized=True),
+            "family_entropy": self.calculate_entropy(family_proba, normalized=True),
+            "subfamily_entropy": self.calculate_entropy(subfamily_proba, normalized=True),
         }
 
     def _count_weak_margins(self, margins: dict[str, float]) -> int:
@@ -523,11 +494,11 @@ class HierarchicalThreatScorer:
         """
         weak_count = 0
 
-        if margins['binary'] < 0.4:
+        if margins["binary"] < 0.4:
             weak_count += 1
-        if margins['family'] < 0.2:
+        if margins["family"] < 0.2:
             weak_count += 1
-        if margins['subfamily'] < 0.15:
+        if margins["subfamily"] < 0.15:
             weak_count += 1
 
         return weak_count
@@ -553,7 +524,7 @@ class HierarchicalThreatScorer:
             variance=0.0,
             weak_margins_count=0,
             reason=f"Low threat score ({threat_score.binary_threat_score:.3f})",
-            metadata={}
+            metadata={},
         )
 
     def _classify(
@@ -564,7 +535,7 @@ class HierarchicalThreatScorer:
         variance: float,
         weak_margins_count: int,
         metadata: dict[str, Any],
-        prompt: str | None = None
+        prompt: str | None = None,
     ) -> ScoringResult:
         """Apply classification logic using context-aware rules.
 
@@ -619,7 +590,7 @@ class HierarchicalThreatScorer:
                     f"(hierarchical: {hierarchical_score:.3f}, "
                     f"weak margins: {weak_margins_count}/3)"
                 ),
-                metadata=metadata
+                metadata=metadata,
             )
 
         # Rule 2: LIKELY_THREAT - High confidence + obvious attack patterns
@@ -636,10 +607,11 @@ class HierarchicalThreatScorer:
         #
         # Only 17.9% of high-confidence review cases have obvious patterns.
         if (
-            self.thresholds.likely_threat is not None and
-            hierarchical_score >= self.thresholds.review and  # Changed: use review threshold as lower bound
-            hierarchical_score < self.thresholds.threat and
-            has_obvious_attack_pattern(prompt)
+            self.thresholds.likely_threat is not None
+            and hierarchical_score
+            >= self.thresholds.review  # Changed: use review threshold as lower bound
+            and hierarchical_score < self.thresholds.threat
+            and has_obvious_attack_pattern(prompt)
         ):
             return ScoringResult(
                 classification=ThreatLevel.LIKELY_THREAT,
@@ -657,7 +629,7 @@ class HierarchicalThreatScorer:
                     f"(hierarchical: {hierarchical_score:.3f}, "
                     f"pattern detected)"
                 ),
-                metadata={**metadata, 'has_attack_pattern': True}
+                metadata={**metadata, "has_attack_pattern": True},
             )
 
         # Rule 3: REVIEW - Inconsistent or individual signals too weak
@@ -667,10 +639,10 @@ class HierarchicalThreatScorer:
         # - Any individual signal below threshold
         # Note: LIKELY_THREAT is checked FIRST to catch obvious attacks even with mixed signals
         if (
-            not is_consistent or
-            threat_score.binary_threat_score < self.thresholds.review or
-            threat_score.family_confidence < self.thresholds.weak_family or
-            threat_score.subfamily_confidence < self.thresholds.weak_subfamily
+            not is_consistent
+            or threat_score.binary_threat_score < self.thresholds.review
+            or threat_score.family_confidence < self.thresholds.weak_family
+            or threat_score.subfamily_confidence < self.thresholds.weak_subfamily
         ):
             return ScoringResult(
                 classification=ThreatLevel.REVIEW,
@@ -690,7 +662,7 @@ class HierarchicalThreatScorer:
                     f"sub: {threat_score.subfamily_confidence:.3f}, "
                     f"variance: {variance:.3f})"
                 ),
-                metadata=metadata
+                metadata=metadata,
             )
 
         # Rule 4: HIGH_THREAT - Very confident across all signals
@@ -698,8 +670,8 @@ class HierarchicalThreatScorer:
         # - Very high hierarchical score (>= high_threat threshold)
         # - High family confidence (> 0.8) to ensure it's not just TOX/XX FP
         if (
-            hierarchical_score >= self.thresholds.high_threat and
-            threat_score.family_confidence > 0.8
+            hierarchical_score >= self.thresholds.high_threat
+            and threat_score.family_confidence > 0.8
         ):
             return ScoringResult(
                 classification=ThreatLevel.HIGH_THREAT,
@@ -717,7 +689,7 @@ class HierarchicalThreatScorer:
                     f"(threat: {threat_score.binary_threat_score:.3f}, "
                     f"family: {threat_score.family_confidence:.3f})"
                 ),
-                metadata=metadata
+                metadata=metadata,
             )
 
         # Rule 5: THREAT - Confident detection
@@ -736,7 +708,7 @@ class HierarchicalThreatScorer:
                 variance=variance,
                 weak_margins_count=weak_margins_count,
                 reason=f"Confident threat detection (hierarchical: {hierarchical_score:.3f})",
-                metadata=metadata
+                metadata=metadata,
             )
 
         # Fallback: REVIEW (edge case - shouldn't normally reach here)
@@ -753,5 +725,5 @@ class HierarchicalThreatScorer:
             variance=variance,
             weak_margins_count=weak_margins_count,
             reason="Mixed signals, manual review recommended",
-            metadata=metadata
+            metadata=metadata,
         )

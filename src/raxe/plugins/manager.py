@@ -187,8 +187,7 @@ class PluginManager:
             self.executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="plugin")
 
         logger.debug(
-            f"PluginManager initialized (timeout={timeout_seconds}s, "
-            f"parallel={parallel_execution})"
+            f"PluginManager initialized (timeout={timeout_seconds}s, parallel={parallel_execution})"
         )
 
     def initialize(
@@ -211,9 +210,7 @@ class PluginManager:
         plugins = self.loader.load_all_enabled(enabled_plugins, plugin_configs)
 
         # Sort by priority (lower value = higher priority)
-        sorted_plugins = sorted(
-            plugins.values(), key=lambda p: p.metadata.priority.value
-        )
+        sorted_plugins = sorted(plugins.values(), key=lambda p: p.metadata.priority.value)
 
         # Store and categorize
         for plugin in sorted_plugins:
@@ -225,9 +222,7 @@ class PluginManager:
                 logger.debug(f"Registered detector plugin: {plugin.metadata.name}")
 
             if hasattr(plugin, "should_execute") and hasattr(plugin, "execute"):
-                if callable(plugin.should_execute) and callable(
-                    plugin.execute
-                ):
+                if callable(plugin.should_execute) and callable(plugin.execute):
                     self.action_plugins.append(plugin)  # type: ignore
                     logger.debug(f"Registered action plugin: {plugin.metadata.name}")
 
@@ -305,9 +300,7 @@ class PluginManager:
 
         return results
 
-    def run_detectors(
-        self, text: str, context: dict[str, Any] | None = None
-    ) -> list["Detection"]:
+    def run_detectors(self, text: str, context: dict[str, Any] | None = None) -> list["Detection"]:
         """Run all detector plugins.
 
         Executes the detect() method on all detector plugins and
@@ -367,8 +360,7 @@ class PluginManager:
 
             except FutureTimeoutError:
                 logger.error(
-                    f"Detector plugin {plugin.metadata.name} timed out "
-                    f"after {self.timeout}s"
+                    f"Detector plugin {plugin.metadata.name} timed out after {self.timeout}s"
                 )
                 metrics.record_timeout("detect")
 
@@ -418,8 +410,7 @@ class PluginManager:
 
             except FutureTimeoutError:
                 logger.error(
-                    f"Action plugin {plugin.metadata.name} timed out "
-                    f"after {self.timeout}s"
+                    f"Action plugin {plugin.metadata.name} timed out after {self.timeout}s"
                 )
                 metrics.record_timeout("execute")
 
@@ -445,9 +436,7 @@ class PluginManager:
                 plugin.on_shutdown()
                 logger.debug(f"Plugin {plugin.metadata.name} shut down")
             except Exception as e:
-                logger.error(
-                    f"Error shutting down plugin {plugin.metadata.name}: {e}"
-                )
+                logger.error(f"Error shutting down plugin {plugin.metadata.name}: {e}")
 
         # Shutdown thread pool
         if self.executor:
@@ -459,9 +448,7 @@ class PluginManager:
 
         logger.info("Plugin manager shutdown complete")
 
-    def _execute_with_timeout(
-        self, func: Callable, args: tuple, kwargs: dict
-    ) -> Any:
+    def _execute_with_timeout(self, func: Callable, args: tuple, kwargs: dict) -> Any:
         """Execute function with timeout.
 
         Uses ThreadPoolExecutor for parallel mode, otherwise executes

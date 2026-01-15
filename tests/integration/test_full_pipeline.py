@@ -117,7 +117,12 @@ class TestFullPipelineIntegration:
                     inline_policies=[policy],
                 )
                 # Verify decision was made
-                assert decision.action in [PolicyAction.ALLOW, PolicyAction.BLOCK, PolicyAction.FLAG, PolicyAction.LOG]
+                assert decision.action in [
+                    PolicyAction.ALLOW,
+                    PolicyAction.BLOCK,
+                    PolicyAction.FLAG,
+                    PolicyAction.LOG,
+                ]
 
     def test_batch_scan(self, tmp_path):
         """Test scanning multiple texts in batch."""

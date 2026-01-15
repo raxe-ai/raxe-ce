@@ -152,9 +152,7 @@ class RaxePlugin(Protocol):
         """
         ...
 
-    def on_scan_start(
-        self, text: str, context: dict[str, Any] | None = None
-    ) -> str | None:
+    def on_scan_start(self, text: str, context: dict[str, Any] | None = None) -> str | None:
         """Called before scanning begins.
 
         Plugins can use this hook to:
@@ -247,9 +245,7 @@ class DetectorPlugin(RaxePlugin, Protocol):
     """
 
     @abstractmethod
-    def detect(
-        self, text: str, context: dict[str, Any] | None = None
-    ) -> list["Detection"]:
+    def detect(self, text: str, context: dict[str, Any] | None = None) -> list["Detection"]:
         """Execute custom detection logic.
 
         Called during the L1 detection phase. Runs in parallel with
@@ -379,9 +375,7 @@ class TransformPlugin(RaxePlugin, Protocol):
         ```
     """
 
-    def transform_input(
-        self, text: str, context: dict[str, Any] | None = None
-    ) -> str:
+    def transform_input(self, text: str, context: dict[str, Any] | None = None) -> str:
         """Transform text before scanning.
 
         Called before detection starts. Can normalize, clean, or

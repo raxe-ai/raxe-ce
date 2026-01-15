@@ -37,39 +37,37 @@ def sanitize_error_message(error: Exception) -> str:
     message = str(error)
 
     # Remove Unix-style file paths
-    message = re.sub(r'/Users/[^/\s]+/[^\s]*', '<path>', message)
-    message = re.sub(r'/home/[^/\s]+/[^\s]*', '<path>', message)
-    message = re.sub(r'/var/[^\s]*', '<path>', message)
+    message = re.sub(r"/Users/[^/\s]+/[^\s]*", "<path>", message)
+    message = re.sub(r"/home/[^/\s]+/[^\s]*", "<path>", message)
+    message = re.sub(r"/var/[^\s]*", "<path>", message)
     # nosec B108 - This is regex pattern matching, not temp file usage
-    message = re.sub(r'/tmp/[^\s]*', '<path>', message)
+    message = re.sub(r"/tmp/[^\s]*", "<path>", message)
 
     # Remove Windows-style file paths
-    message = re.sub(r'C:\\Users\\[^\\]+\\[^\s]*', '<path>', message)
-    message = re.sub(r'[A-Z]:\\[^\s]+', '<path>', message)
+    message = re.sub(r"C:\\Users\\[^\\]+\\[^\s]*", "<path>", message)
+    message = re.sub(r"[A-Z]:\\[^\s]+", "<path>", message)
 
     # Remove API keys (rxk_ prefix)
-    message = re.sub(r'rxk_[a-zA-Z0-9_]+', '<api_key>', message)
+    message = re.sub(r"rxk_[a-zA-Z0-9_]+", "<api_key>", message)
 
     # Remove database connection strings
-    message = re.sub(r'sqlite:///[^\s]+', 'sqlite:///<db>', message)
-    message = re.sub(r'postgresql://[^\s]+', 'postgresql://<connection>', message)
-    message = re.sub(r'mysql://[^\s]+', 'mysql://<connection>', message)
+    message = re.sub(r"sqlite:///[^\s]+", "sqlite:///<db>", message)
+    message = re.sub(r"postgresql://[^\s]+", "postgresql://<connection>", message)
+    message = re.sub(r"mysql://[^\s]+", "mysql://<connection>", message)
 
     # Remove environment variable values
-    message = re.sub(r'RAXE_[A-Z_]+=\S+', 'RAXE_<var>=<value>', message)
+    message = re.sub(r"RAXE_[A-Z_]+=\S+", "RAXE_<var>=<value>", message)
 
     # Remove internal variable assignments
-    message = re.sub(r'_[a-z_]+\s*=\s*[^\s,;]+', '<internal>', message)
+    message = re.sub(r"_[a-z_]+\s*=\s*[^\s,;]+", "<internal>", message)
 
     # Remove UUIDs
     message = re.sub(
-        r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-        '<id>',
-        message
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "<id>", message
     )
 
     # Remove IP addresses
-    message = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '<ip>', message)
+    message = re.sub(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "<ip>", message)
 
     # Remove Python file paths with line numbers
     message = re.sub(r'File "[^"]+\.py", line \d+', 'File "<file>", line <n>', message)
@@ -127,6 +125,7 @@ def safe_error_display(error: Exception, *, show_traceback: bool = False) -> str
 
     if show_traceback:
         import traceback
+
         tb = traceback.format_exc()
         # Sanitize traceback too
         sanitized_tb = sanitize_error_message(Exception(tb))

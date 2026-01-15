@@ -927,15 +927,13 @@ class ScanPipeline:
                 elif self.schema_validation_mode == "warn":
                     # Log warning but allow send
                     logger.warning(
-                        f"Telemetry validation failed: {errors}. " f"Sending anyway (mode=warn)"
+                        f"Telemetry validation failed: {errors}. Sending anyway (mode=warn)"
                     )
                     return True
 
                 elif self.schema_validation_mode == "enforce":
                     # Block invalid data
-                    logger.error(
-                        f"Telemetry validation failed: {errors}. " f"Blocked (mode=enforce)"
-                    )
+                    logger.error(f"Telemetry validation failed: {errors}. Blocked (mode=enforce)")
                     return False
 
             return True

@@ -23,10 +23,7 @@ class OptimizedAggregator(DataAggregator):
     """
 
     def get_detection_breakdown(
-        self,
-        days: int = 30,
-        *,
-        session: Session | None = None
+        self, days: int = 30, *, session: Session | None = None
     ) -> list[DetectionBreakdown]:
         """
         Get detection breakdown by severity using SQL aggregation.
@@ -49,18 +46,20 @@ class OptimizedAggregator(DataAggregator):
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
             # OPTIMIZED: Single GROUP BY query instead of N queries
-            severity_stats = session.query(
-                TelemetryEvent.highest_severity,
-                func.count(TelemetryEvent.id).label('count')
-            ).filter(
-                and_(
-                    TelemetryEvent.timestamp >= cutoff,
-                    TelemetryEvent.detection_count > 0,
-                    TelemetryEvent.highest_severity.isnot(None)
+            severity_stats = (
+                session.query(
+                    TelemetryEvent.highest_severity, func.count(TelemetryEvent.id).label("count")
                 )
-            ).group_by(
-                TelemetryEvent.highest_severity
-            ).all()
+                .filter(
+                    and_(
+                        TelemetryEvent.timestamp >= cutoff,
+                        TelemetryEvent.detection_count > 0,
+                        TelemetryEvent.highest_severity.isnot(None),
+                    )
+                )
+                .group_by(TelemetryEvent.highest_severity)
+                .all()
+            )
 
             if not severity_stats:
                 return []
@@ -71,11 +70,13 @@ class OptimizedAggregator(DataAggregator):
             breakdowns = []
             for row in severity_stats:
                 percentage = (row.count / total_detections * 100) if total_detections > 0 else 0.0
-                breakdowns.append(DetectionBreakdown(
-                    severity=row.highest_severity,
-                    count=row.count,
-                    percentage=round(percentage, 2)
-                ))
+                breakdowns.append(
+                    DetectionBreakdown(
+                        severity=row.highest_severity,
+                        count=row.count,
+                        percentage=round(percentage, 2),
+                    )
+                )
 
             # Sort by count descending
             breakdowns.sort(key=lambda x: x.count, reverse=True)
@@ -87,11 +88,7 @@ class OptimizedAggregator(DataAggregator):
                 session.close()
 
     def get_daily_scan_counts(
-        self,
-        start_date: datetime,
-        end_date: datetime,
-        *,
-        session: Session | None = None
+        self, start_date: datetime, end_date: datetime, *, session: Session | None = None
     ) -> dict[str, int]:
         """
         Get scan counts per day using database aggregation.
@@ -111,17 +108,19 @@ class OptimizedAggregator(DataAggregator):
             session = self._get_session()
 
         try:
-            result = session.query(
-                func.date(TelemetryEvent.timestamp).label('scan_date'),
-                func.count(TelemetryEvent.id).label('scan_count'),
-            ).filter(
-                and_(
-                    TelemetryEvent.timestamp >= start_date,
-                    TelemetryEvent.timestamp <= end_date
+            result = (
+                session.query(
+                    func.date(TelemetryEvent.timestamp).label("scan_date"),
+                    func.count(TelemetryEvent.id).label("scan_count"),
                 )
-            ).group_by(
-                func.date(TelemetryEvent.timestamp)
-            ).all()
+                .filter(
+                    and_(
+                        TelemetryEvent.timestamp >= start_date, TelemetryEvent.timestamp <= end_date
+                    )
+                )
+                .group_by(func.date(TelemetryEvent.timestamp))
+                .all()
+            )
 
             return {str(row.scan_date): row.scan_count for row in result}
 
@@ -135,7 +134,7 @@ class OptimizedAggregator(DataAggregator):
         end_date: datetime,
         page_size: int = 1000,
         *,
-        session: Session | None = None
+        session: Session | None = None,
     ) -> list[list[str]]:
         """
         Get all active users in paginated batches.
@@ -160,14 +159,18 @@ class OptimizedAggregator(DataAggregator):
             offset = 0
 
             while True:
-                batch = session.query(
-                    func.distinct(TelemetryEvent.customer_id)
-                ).filter(
-                    and_(
-                        TelemetryEvent.timestamp >= start_date,
-                        TelemetryEvent.timestamp <= end_date
+                batch = (
+                    session.query(func.distinct(TelemetryEvent.customer_id))
+                    .filter(
+                        and_(
+                            TelemetryEvent.timestamp >= start_date,
+                            TelemetryEvent.timestamp <= end_date,
+                        )
                     )
-                ).limit(page_size).offset(offset).all()
+                    .limit(page_size)
+                    .offset(offset)
+                    .all()
+                )
 
                 if not batch:
                     break

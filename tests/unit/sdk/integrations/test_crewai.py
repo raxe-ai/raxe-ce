@@ -4,8 +4,9 @@ Tests the RaxeCrewGuard for automatic scanning of CrewAI multi-agent
 applications including step callbacks, task callbacks, tool wrapping,
 and crew protection.
 """
-from unittest.mock import Mock, MagicMock, patch
+
 from dataclasses import dataclass
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -34,13 +35,14 @@ def _create_threat_scan_result(should_block: bool = True, severity: str = "HIGH"
         action_taken="block" if should_block else "log",
         pipeline_result=None,
     )
+
+
 from raxe.sdk.integrations.crewai import (
     CrewGuardConfig,
     CrewScanStats,
     RaxeCrewGuard,
     create_crew_guard,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -105,6 +107,7 @@ def strict_guard(mock_raxe_with_threat):
 @dataclass
 class MockStepOutput:
     """Mock CrewAI step output."""
+
     thought: str = "I need to search for information"
     tool_input: str = "search query"
     agent_name: str = "researcher"
@@ -114,6 +117,7 @@ class MockStepOutput:
 @dataclass
 class MockTaskOutput:
     """Mock CrewAI task output."""
+
     raw: str = "Task completed successfully"
     description: str = "Research AI trends"
     agent: Mock = None
@@ -125,6 +129,7 @@ class MockTaskOutput:
 
 class MockTool:
     """Mock CrewAI tool."""
+
     name: str = "search_tool"
     description: str = "Search the web"
 
@@ -134,6 +139,7 @@ class MockTool:
 
 class MockCrew:
     """Mock CrewAI Crew."""
+
     def __init__(self):
         self.agents = []
         self.tasks = []

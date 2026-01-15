@@ -11,6 +11,7 @@ class TestAsyncRaxeOpenAI:
         """Test that import fails gracefully without openai package."""
         # This test just verifies the module structure exists
         from raxe.async_sdk.wrappers import AsyncRaxeOpenAI
+
         assert AsyncRaxeOpenAI is not None
 
     @pytest.mark.skipif(True, reason="Requires openai package")

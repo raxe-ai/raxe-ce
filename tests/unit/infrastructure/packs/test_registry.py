@@ -6,6 +6,7 @@ Tests pack registry with precedence resolution:
 - Rule deduplication
 - Version conflicts
 """
+
 import shutil
 from pathlib import Path
 
@@ -17,7 +18,10 @@ from raxe.infrastructure.packs.registry import PackRegistry, RegistryConfig
 @pytest.fixture
 def test_rule_source():
     """Path to the test rule file."""
-    return Path(__file__).parent.parent.parent.parent.parent / "src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml"
+    return (
+        Path(__file__).parent.parent.parent.parent.parent
+        / "src/raxe/packs/core/v1.0.0/rules/PI/pi-001@1.0.0.yaml"
+    )
 
 
 @pytest.fixture
@@ -162,8 +166,7 @@ class TestPackRegistry:
     def test_registry_precedence_custom_over_core(self, three_tier_packs):
         """Test custom rules override core rules."""
         config = RegistryConfig(
-            packs_root=three_tier_packs,
-            precedence=["custom", "community", "core"]
+            packs_root=three_tier_packs, precedence=["custom", "community", "core"]
         )
         registry = PackRegistry(config)
         registry.load_all_packs()
@@ -181,8 +184,7 @@ class TestPackRegistry:
     def test_registry_get_all_rules_deduplicates(self, three_tier_packs):
         """Test get_all_rules deduplicates by rule_id."""
         config = RegistryConfig(
-            packs_root=three_tier_packs,
-            precedence=["custom", "community", "core"]
+            packs_root=three_tier_packs, precedence=["custom", "community", "core"]
         )
         registry = PackRegistry(config)
         registry.load_all_packs()
@@ -313,8 +315,7 @@ class TestPackRegistry:
         """Test custom precedence order."""
         # Reverse precedence: core > community > custom
         config = RegistryConfig(
-            packs_root=three_tier_packs,
-            precedence=["core", "community", "custom"]
+            packs_root=three_tier_packs, precedence=["core", "community", "custom"]
         )
         registry = PackRegistry(config)
         registry.load_all_packs()

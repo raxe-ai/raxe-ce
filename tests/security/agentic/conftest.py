@@ -2,6 +2,7 @@
 
 Provides attack payloads and security test utilities.
 """
+
 import pytest
 
 
@@ -76,12 +77,12 @@ def unicode_edge_cases() -> list[str]:
     """Unicode edge cases for fuzzing."""
     return [
         "\u0000",  # Null character
-        "\uFFFF",  # Max BMP character
-        "\U0001F600",  # Emoji
-        "\u202E",  # RTL override
+        "\uffff",  # Max BMP character
+        "\U0001f600",  # Emoji
+        "\u202e",  # RTL override
         "a\u0300",  # Combining character
-        "\uFEFF",  # BOM
-        "\u200B",  # Zero-width space
+        "\ufeff",  # BOM
+        "\u200b",  # Zero-width space
         "\u2028",  # Line separator
         "\u2029",  # Paragraph separator
     ]

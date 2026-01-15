@@ -10,6 +10,7 @@ Tests for:
 
 All tests are PURE - no I/O, no mocks needed for domain logic.
 """
+
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -452,6 +453,7 @@ class TestEdgeCases:
     def test_pattern_at_max_length(self):
         """Test pattern at exactly maximum length is accepted."""
         from raxe.domain.suppression import MAX_PATTERN_LENGTH
+
         # Create pattern that is exactly at the limit (pi- prefix + remaining chars)
         pattern = "pi-" + "a" * (MAX_PATTERN_LENGTH - 3)
         assert len(pattern) == MAX_PATTERN_LENGTH
@@ -462,6 +464,7 @@ class TestEdgeCases:
     def test_reason_at_max_length(self):
         """Test reason at exactly maximum length is accepted."""
         from raxe.domain.suppression import MAX_REASON_LENGTH
+
         reason = "A" * MAX_REASON_LENGTH
         assert len(reason) == MAX_REASON_LENGTH
         supp = Suppression(pattern="pi-001", reason=reason)
@@ -657,7 +660,6 @@ class TestFailClosedExpiration:
 
         # Create a new suppression with invalid expires_at by bypassing validation
         # This simulates data loaded from storage that might have been corrupted
-        from dataclasses import replace
 
         # We can't directly set invalid dates due to validation
         # Instead, test by creating a mock-like situation where we test the logic directly

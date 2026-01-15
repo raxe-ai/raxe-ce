@@ -3,6 +3,7 @@
 All models are immutable value objects (frozen=True).
 Pure domain layer - no I/O operations.
 """
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -15,6 +16,7 @@ class ThreatType(Enum):
 
     Maps to rule families but provides more semantic categorization.
     """
+
     PROMPT_INJECTION = "PROMPT_INJECTION"
     JAILBREAK = "JAILBREAK"
     PII_LEAK = "PII_LEAK"
@@ -36,6 +38,7 @@ class ScanRequest:
         rule_filters: Optional list of rule IDs to apply (None = all rules)
         max_text_length: Maximum allowed text length (default 1MB)
     """
+
     text: str
     context: dict[str, str] | None = None
     rule_filters: list[str] | None = None

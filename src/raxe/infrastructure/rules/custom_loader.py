@@ -2,6 +2,7 @@
 
 Handles I/O operations for loading custom rules from YAML files.
 """
+
 import logging
 from pathlib import Path
 
@@ -70,9 +71,7 @@ class CustomRuleLoader:
             # Test against examples
             examples_passed, failures = CustomRuleValidator.test_rule_examples(rule)
             if not examples_passed:
-                logger.warning(
-                    f"Rule {rule.rule_id} examples failed: {', '.join(failures[:3])}"
-                )
+                logger.warning(f"Rule {rule.rule_id} examples failed: {', '.join(failures[:3])}")
 
             logger.info(f"Loaded custom rule: {rule.rule_id}@{rule.version} from {file_path}")
             return rule
@@ -211,12 +210,14 @@ class CustomRuleLoader:
                     rule_dict = yaml.safe_load(f)
 
                 if rule_dict:
-                    rules_info.append({
-                        "id": rule_dict.get("id", "unknown"),
-                        "name": rule_dict.get("name", "unknown"),
-                        "version": rule_dict.get("version", "0.0.1"),
-                        "file_path": str(yaml_file),
-                    })
+                    rules_info.append(
+                        {
+                            "id": rule_dict.get("id", "unknown"),
+                            "name": rule_dict.get("name", "unknown"),
+                            "version": rule_dict.get("version", "0.0.1"),
+                            "file_path": str(yaml_file),
+                        }
+                    )
             except Exception as e:
                 logger.debug(f"Could not read metadata from {yaml_file}: {e}")
                 continue

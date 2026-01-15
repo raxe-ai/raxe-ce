@@ -5,6 +5,7 @@ All functions are stateless and perform no I/O operations.
 
 CRITICAL: This is domain layer - NO database, network, or file operations.
 """
+
 from datetime import date, timedelta
 
 from .models import RetentionMetrics
@@ -64,16 +65,10 @@ def calculate_retention(
     day1_retained = day1_date in scan_date_set
 
     # Day 7 retention: scan between day 6-8 (inclusive)
-    day7_retained = any(
-        (install_date + timedelta(days=d)) in scan_date_set
-        for d in range(6, 9)
-    )
+    day7_retained = any((install_date + timedelta(days=d)) in scan_date_set for d in range(6, 9))
 
     # Day 30 retention: scan between day 29-31 (inclusive)
-    day30_retained = any(
-        (install_date + timedelta(days=d)) in scan_date_set
-        for d in range(29, 32)
-    )
+    day30_retained = any((install_date + timedelta(days=d)) in scan_date_set for d in range(29, 32))
 
     return RetentionMetrics(
         installation_id=installation_id,
@@ -87,7 +82,7 @@ def calculate_retention(
 
 
 def calculate_cohort_retention(
-    cohort: dict[str, tuple[date, list[date]]]
+    cohort: dict[str, tuple[date, list[date]]],
 ) -> dict[str, RetentionMetrics]:
     """Calculate retention for an entire cohort of users.
 
@@ -160,9 +155,6 @@ def calculate_retention_rate(
         "day30": "day30_retained",
     }
 
-    retained_count = sum(
-        1 for m in retention_metrics
-        if getattr(m, attr_map[window])
-    )
+    retained_count = sum(1 for m in retention_metrics if getattr(m, attr_map[window]))
 
     return (retained_count / len(retention_metrics)) * 100.0

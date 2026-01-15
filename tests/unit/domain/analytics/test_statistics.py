@@ -2,6 +2,7 @@
 
 Tests pure domain logic - no mocks needed, no I/O.
 """
+
 from datetime import date
 
 from raxe.domain.analytics.statistics import (
@@ -116,8 +117,8 @@ class TestCalculateWAU:
         data = {
             "user1": [date(2025, 1, 15)],  # Last day
             "user2": [date(2025, 1, 10)],  # Middle of week
-            "user3": [date(2025, 1, 9)],   # First day
-            "user4": [date(2025, 1, 8)],   # Outside window
+            "user3": [date(2025, 1, 9)],  # First day
+            "user4": [date(2025, 1, 8)],  # Outside window
         }
         result = calculate_wau(data, week_end)
         assert result == 3
@@ -189,8 +190,8 @@ class TestCalculateMAU:
         data = {
             "user1": [date(2025, 1, 31)],  # Last day
             "user2": [date(2025, 1, 15)],  # Middle
-            "user3": [date(2025, 1, 2)],   # First day
-            "user4": [date(2025, 1, 1)],   # Outside window
+            "user3": [date(2025, 1, 2)],  # First day
+            "user4": [date(2025, 1, 1)],  # Outside window
         }
         result = calculate_mau(data, month_end)
         assert result == 3
@@ -229,8 +230,8 @@ class TestCalculateUsageStatistics:
         data = {
             "user1": [
                 date(2024, 12, 31),  # Before period
-                date(2025, 1, 15),   # In period
-                date(2025, 2, 1),    # After period
+                date(2025, 1, 15),  # In period
+                date(2025, 2, 1),  # After period
             ],
         }
         result = calculate_usage_statistics(
@@ -255,9 +256,9 @@ class TestCalculateUsageStatistics:
             period_end=period_end,
         )
 
-        assert result.dau == 1   # user1
-        assert result.wau == 2   # user1, user2
-        assert result.mau == 3   # all users
+        assert result.dau == 1  # user1
+        assert result.wau == 2  # user1, user2
+        assert result.mau == 3  # all users
 
     def test_calculates_total_scans(self):
         """Total scans is sum of all scans in period."""

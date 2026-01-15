@@ -36,7 +36,7 @@ class TelemetryManager:
         self,
         config: TelemetryConfig | None = None,
         db_path: Path | None = None,
-        api_key: str | None = None
+        api_key: str | None = None,
     ):
         """
         Initialize telemetry manager.
@@ -69,10 +69,7 @@ class TelemetryManager:
     def _init_components(self, db_path: Path | None) -> None:
         """Initialize telemetry components."""
         # Create event queue
-        self.queue = EventQueue(
-            db_path=db_path,
-            max_queue_size=self.config.max_queue_size
-        )
+        self.queue = EventQueue(db_path=db_path, max_queue_size=self.config.max_queue_size)
 
         # Create batch sender with circuit breaker
         circuit_breaker = CircuitBreaker()
@@ -81,13 +78,14 @@ class TelemetryManager:
             initial_delay_ms=self.config.retry_policy.initial_delay_ms,
             max_delay_ms=self.config.retry_policy.max_delay_ms,
             backoff_multiplier=self.config.retry_policy.backoff_multiplier,
-            retry_on_status=self.config.retry_policy.retry_on_status
+            retry_on_status=self.config.retry_policy.retry_on_status,
         )
 
         # Resolve endpoint (fallback to centralized config if empty)
         endpoint = self.config.endpoint
         if not endpoint:
             from raxe.infrastructure.config.endpoints import get_telemetry_endpoint
+
             endpoint = get_telemetry_endpoint()
 
         self.sender = BatchSender(
@@ -95,15 +93,13 @@ class TelemetryManager:
             api_key=self.api_key,
             circuit_breaker=circuit_breaker,
             retry_policy=retry_policy,
-            compression=self.config.compression
+            compression=self.config.compression,
         )
 
     def _start_flush_thread(self) -> None:
         """Start background thread for periodic flushing."""
         self._flush_thread = threading.Thread(
-            target=self._flush_loop,
-            daemon=True,
-            name="telemetry-flush"
+            target=self._flush_loop, daemon=True, name="telemetry-flush"
         )
         self._flush_thread.start()
         logger.debug("Started telemetry flush thread")
@@ -131,9 +127,7 @@ class TelemetryManager:
 
         try:
             # Dequeue batch
-            batch_id, events = self.queue.dequeue_batch(
-                batch_size=self.config.batch_size
-            )
+            batch_id, events = self.queue.dequeue_batch(batch_size=self.config.batch_size)
 
             if not events:
                 return
@@ -149,25 +143,15 @@ class TelemetryManager:
 
             except Exception as e:
                 # Mark batch as failed for retry
-                retry_delay = min(
-                    self.config.retry_policy.initial_delay_ms / 1000,
-                    60
-                )
-                self.queue.mark_batch_failed(
-                    batch_id,
-                    str(e),
-                    int(retry_delay)
-                )
+                retry_delay = min(self.config.retry_policy.initial_delay_ms / 1000, 60)
+                self.queue.mark_batch_failed(batch_id, str(e), int(retry_delay))
                 logger.warning(f"Failed to send batch {batch_id}: {e}")
 
         except Exception as e:
             logger.error(f"Error flushing batch: {e}")
 
     def track_scan(
-        self,
-        scan_result: dict[str, Any],
-        customer_id: str,
-        context: dict[str, Any] | None = None
+        self, scan_result: dict[str, Any], customer_id: str, context: dict[str, Any] | None = None
     ) -> str | None:
         """
         Track a scan event.
@@ -200,7 +184,7 @@ class TelemetryManager:
                 api_key_id=self.api_key,
                 context=context,
                 performance_metrics=performance_metrics,
-                hash_algorithm=self.config.hash_algorithm
+                hash_algorithm=self.config.hash_algorithm,
             )
 
             # Calculate priority
@@ -208,9 +192,7 @@ class TelemetryManager:
 
             # Queue event
             event_id = self.queue.enqueue(
-                event_type="scan_performed",
-                payload=event,
-                priority=priority
+                event_type="scan_performed", payload=event, priority=priority
             )
 
             # If critical, flush immediately
@@ -283,14 +265,10 @@ class TelemetryManager:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "error_type": type(error).__name__,
                 "error_message": str(error),
-                "context": context
+                "context": context,
             }
 
-            self.queue.enqueue(
-                event_type="error",
-                payload=error_event,
-                priority=EventPriority.LOW
-            )
+            self.queue.enqueue(event_type="error", payload=error_event, priority=EventPriority.LOW)
         except Exception as e:
             logger.debug(f"Failed to track error event: {e}")
 
@@ -309,7 +287,7 @@ class TelemetryManager:
             "endpoint": self.config.endpoint,
             "privacy_mode": self.config.privacy_mode,
             "queue_stats": self.queue.get_stats() if self.queue else {},
-            "circuit_breaker_state": self.sender.get_circuit_state() if self.sender else "unknown"
+            "circuit_breaker_state": self.sender.get_circuit_state() if self.sender else "unknown",
         }
 
         return stats

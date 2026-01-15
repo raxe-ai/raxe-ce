@@ -6,6 +6,7 @@ This infrastructure layer module handles ALL SQLite I/O operations:
 - Audit log persistence
 - Query execution
 """
+
 import json
 import logging
 import sqlite3
@@ -145,20 +146,23 @@ class SQLiteSuppressionRepository:
         cursor = conn.cursor()
 
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO suppression_audit (
                     pattern, reason, action, scan_id, rule_id, created_at, created_by, metadata
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                entry.pattern,
-                entry.reason,
-                entry.action,
-                entry.scan_id,
-                entry.rule_id,
-                entry.created_at,
-                entry.created_by,
-                json.dumps(entry.metadata) if entry.metadata else None,
-            ))
+            """,
+                (
+                    entry.pattern,
+                    entry.reason,
+                    entry.action,
+                    entry.scan_id,
+                    entry.rule_id,
+                    entry.created_at,
+                    entry.created_by,
+                    json.dumps(entry.metadata) if entry.metadata else None,
+                ),
+            )
 
             conn.commit()
             logger.debug(f"Logged audit entry: {entry.action} {entry.pattern}")

@@ -186,9 +186,7 @@ def validate_manifest(data: dict[str, Any]) -> tuple[bool, list[str]]:
         status = data["status"]
         valid_statuses = [s.value for s in ModelStatus]
         if status not in valid_statuses:
-            errors.append(
-                f"Invalid status: {status}. " f"Must be one of: {', '.join(valid_statuses)}"
-            )
+            errors.append(f"Invalid status: {status}. Must be one of: {', '.join(valid_statuses)}")
 
     if "model" not in data or not data["model"]:
         errors.append("Field 'model' is required")

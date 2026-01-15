@@ -1,4 +1,5 @@
 """Unit tests for YAML rule loader."""
+
 from pathlib import Path
 
 import pytest

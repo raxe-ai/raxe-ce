@@ -2,6 +2,7 @@
 
 Verifies <1ms policy evaluation requirement.
 """
+
 from datetime import datetime, timezone
 
 import pytest
@@ -24,15 +25,17 @@ def make_detection(severity: Severity = Severity.HIGH) -> Detection:
         rule_version="0.0.1",
         severity=severity,
         confidence=0.9,
-        matches=[Match(
-            pattern_index=0,
-            start=0,
-            end=10,
-            matched_text="test match",
-            groups=(),
-            context_before="",
-            context_after="",
-        )],
+        matches=[
+            Match(
+                pattern_index=0,
+                start=0,
+                end=10,
+                matched_text="test match",
+                groups=(),
+                context_before="",
+                context_after="",
+            )
+        ],
         detected_at=datetime.now(timezone.utc).isoformat(),
     )
 
@@ -122,15 +125,17 @@ class TestPhase3PolicyPerformance:
             rule_version="0.0.1",
             severity=Severity.HIGH,
             confidence=0.92,
-            matches=[Match(
-                pattern_index=0,
-                start=0,
-                end=0,
-                matched_text="[L2 ML Detection]",
-                groups=(),
-                context_before="",
-                context_after="",
-            )],
+            matches=[
+                Match(
+                    pattern_index=0,
+                    start=0,
+                    end=0,
+                    matched_text="[L2 ML Detection]",
+                    groups=(),
+                    context_before="",
+                    context_after="",
+                )
+            ],
             detected_at=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -141,9 +146,9 @@ class TestPhase3PolicyPerformance:
                 customer_id="cust_test",
                 name=f"L2 Policy {i}",
                 description="Match L2 virtual rules",
-                conditions=[PolicyCondition(
-                    rule_ids=["l2-prompt-injection", "l2-jailbreak", "l2-pii"]
-                )],
+                conditions=[
+                    PolicyCondition(rule_ids=["l2-prompt-injection", "l2-jailbreak", "l2-pii"])
+                ],
                 action=PolicyAction.BLOCK,
                 priority=i,
             )
@@ -203,7 +208,9 @@ class TestPhase3PolicyPerformance:
         # Highest priority should be first
         assert len(result.matched_policies) == 100
         # Verify priorities are sorted (highest first)
-        policy_priorities = [(p.priority) for p in policies if p.policy_id in result.matched_policies]
+        policy_priorities = [
+            (p.priority) for p in policies if p.policy_id in result.matched_policies
+        ]
 
     def test_mixed_l1_l2_policy_matching(self, benchmark):
         """Policies matching both L1 and L2 rules perform well."""
@@ -233,9 +240,9 @@ class TestPhase3PolicyPerformance:
                         customer_id="cust_test",
                         name=f"L2 Policy {i}",
                         description="Match L2 virtual rules",
-                        conditions=[PolicyCondition(
-                            rule_ids=["l2-prompt-injection", "l2-jailbreak"]
-                        )],
+                        conditions=[
+                            PolicyCondition(rule_ids=["l2-prompt-injection", "l2-jailbreak"])
+                        ],
                         action=PolicyAction.FLAG,
                         priority=i,
                     )

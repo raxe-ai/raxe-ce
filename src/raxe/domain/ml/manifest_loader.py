@@ -3,6 +3,7 @@
 Loads and validates YAML manifest files for folder-based model packages.
 Provides clear error messages for invalid manifests with fix suggestions.
 """
+
 from __future__ import annotations
 
 import logging
@@ -16,16 +17,19 @@ logger = logging.getLogger(__name__)
 
 class ManifestError(Exception):
     """Base exception for manifest loading errors."""
+
     pass
 
 
 class ManifestLoadError(ManifestError):
     """Error loading manifest file."""
+
     pass
 
 
 class ManifestValidationError(ManifestError):
     """Error validating manifest data."""
+
     pass
 
 
@@ -146,8 +150,7 @@ class ManifestLoader:
             import yaml
         except ImportError as e:
             raise ImportError(
-                "Manifest loader requires PyYAML. "
-                "Install with: pip install pyyaml"
+                "Manifest loader requires PyYAML. Install with: pip install pyyaml"
             ) from e
 
         with open(path, encoding="utf-8") as f:
@@ -176,11 +179,7 @@ class ManifestLoader:
 
         return data
 
-    def _format_validation_errors(
-        self,
-        path: Path,
-        errors: list[str]
-    ) -> str:
+    def _format_validation_errors(self, path: Path, errors: list[str]) -> str:
         """Format validation errors with fix suggestions.
 
         Args:
@@ -190,11 +189,7 @@ class ManifestLoader:
         Returns:
             Formatted error message with suggestions
         """
-        lines = [
-            f"Manifest validation failed: {path}",
-            f"Found {len(errors)} error(s):",
-            ""
-        ]
+        lines = [f"Manifest validation failed: {path}", f"Found {len(errors)} error(s):", ""]
 
         for i, error in enumerate(errors, 1):
             lines.append(f"{i}. {error}")
@@ -207,7 +202,9 @@ class ManifestLoader:
                 lines.append("   Fix: Use one of: 'active', 'experimental', 'deprecated'")
 
             elif "tokenizer" in error.lower() and "name" in error.lower():
-                lines.append("   Fix: Add tokenizer.name field (e.g., 'sentence-transformers/all-mpnet-base-v2')")
+                lines.append(
+                    "   Fix: Add tokenizer.name field (e.g., 'sentence-transformers/all-mpnet-base-v2')"
+                )
 
             elif "tokenizer" in error.lower() and "type" in error.lower():
                 lines.append("   Fix: Add tokenizer.type field (e.g., 'AutoTokenizer')")
@@ -221,24 +218,26 @@ class ManifestLoader:
             lines.append("")
 
         # Add example manifest section
-        lines.extend([
-            "Example valid manifest structure:",
-            "```yaml",
-            "name: 'RAXE L2 v0.0.1'",
-            "version: '0.0.1'",
-            "status: 'active'",
-            "",
-            "model:",
-            "  bundle_file: 'raxe_model_l2_v1.0.raxe'",
-            "  embedding_model: 'all-mpnet-base-v2'",
-            "",
-            "tokenizer:",
-            "  name: 'sentence-transformers/all-mpnet-base-v2'",
-            "  type: 'AutoTokenizer'",
-            "  config:",
-            "    max_length: 512",
-            "```"
-        ])
+        lines.extend(
+            [
+                "Example valid manifest structure:",
+                "```yaml",
+                "name: 'RAXE L2 v0.0.1'",
+                "version: '0.0.1'",
+                "status: 'active'",
+                "",
+                "model:",
+                "  bundle_file: 'raxe_model_l2_v1.0.raxe'",
+                "  embedding_model: 'all-mpnet-base-v2'",
+                "",
+                "tokenizer:",
+                "  name: 'sentence-transformers/all-mpnet-base-v2'",
+                "  type: 'AutoTokenizer'",
+                "  config:",
+                "    max_length: 512",
+                "```",
+            ]
+        )
 
         return "\n".join(lines)
 

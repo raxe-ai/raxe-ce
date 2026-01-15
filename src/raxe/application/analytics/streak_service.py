@@ -38,10 +38,7 @@ class StreakService:
         self.repository = repository
 
     def get_user_streak(
-        self,
-        installation_id: str,
-        *,
-        as_of_date: date | None = None
+        self, installation_id: str, *, as_of_date: date | None = None
     ) -> StreakMetrics:
         """Get current and longest streak for a user.
 
@@ -64,8 +61,7 @@ class StreakService:
         try:
             # Step 1: Load user activity from repository (I/O)
             activity = self.repository.get_user_activity(
-                installation_id=installation_id,
-                end_date=as_of_date
+                installation_id=installation_id, end_date=as_of_date
             )
 
             if not activity:
@@ -75,14 +71,14 @@ class StreakService:
                     current_streak=0,
                     longest_streak=0,
                     total_scan_days=0,
-                    last_scan_date=as_of_date
+                    last_scan_date=as_of_date,
                 )
 
             # Step 2: Calculate streak using domain function (pure logic)
             streak_metrics = calculate_streaks(
                 installation_id=installation_id,
                 scan_dates=activity.scan_dates,
-                reference_date=as_of_date
+                reference_date=as_of_date,
             )
 
             logger.info(
@@ -99,10 +95,7 @@ class StreakService:
             raise
 
     def get_active_streak_users(
-        self,
-        *,
-        min_streak: int = 1,
-        reference_date: date | None = None
+        self, *, min_streak: int = 1, reference_date: date | None = None
     ) -> list[dict[str, Any]]:
         """Get users who currently have an active streak.
 
@@ -126,8 +119,7 @@ class StreakService:
             # Step 1: Get all active users in the last 2 days (I/O)
             # (to find users who might have an active streak)
             active_user_ids = self.repository.get_active_users(
-                target_date=reference_date,
-                window_days=2
+                target_date=reference_date, window_days=2
             )
 
             if not active_user_ids:
@@ -137,30 +129,24 @@ class StreakService:
             # Step 2: Calculate streaks for all active users
             active_streaks = []
             for user_id in active_user_ids:
-                streak_metrics = self.get_user_streak(
-                    user_id,
-                    as_of_date=reference_date
-                )
+                streak_metrics = self.get_user_streak(user_id, as_of_date=reference_date)
 
                 # Filter by minimum streak length
                 if streak_metrics.current_streak >= min_streak:
-                    active_streaks.append({
-                        "installation_id": user_id,
-                        "current_streak": streak_metrics.current_streak,
-                        "longest_streak": streak_metrics.longest_streak,
-                        "total_scan_days": streak_metrics.total_scan_days,
-                        "last_scan_date": streak_metrics.last_scan_date.isoformat()
-                    })
+                    active_streaks.append(
+                        {
+                            "installation_id": user_id,
+                            "current_streak": streak_metrics.current_streak,
+                            "longest_streak": streak_metrics.longest_streak,
+                            "total_scan_days": streak_metrics.total_scan_days,
+                            "last_scan_date": streak_metrics.last_scan_date.isoformat(),
+                        }
+                    )
 
             # Sort by streak length (descending)
-            active_streaks.sort(
-                key=lambda x: x["current_streak"],
-                reverse=True
-            )
+            active_streaks.sort(key=lambda x: x["current_streak"], reverse=True)
 
-            logger.info(
-                f"Found {len(active_streaks)} users with active streaks >= {min_streak}"
-            )
+            logger.info(f"Found {len(active_streaks)} users with active streaks >= {min_streak}")
 
             return active_streaks
 
@@ -169,10 +155,7 @@ class StreakService:
             raise
 
     def get_streak_leaderboard(
-        self,
-        *,
-        limit: int = 10,
-        metric: str = "current_streak"
+        self, *, limit: int = 10, metric: str = "current_streak"
     ) -> list[dict[str, Any]]:
         """Get top users by streak length.
 
@@ -194,8 +177,7 @@ class StreakService:
         """
         if metric not in ("current_streak", "longest_streak"):
             raise ValueError(
-                f"Invalid metric: {metric}. "
-                f"Must be 'current_streak' or 'longest_streak'"
+                f"Invalid metric: {metric}. Must be 'current_streak' or 'longest_streak'"
             )
 
         try:
@@ -206,17 +188,13 @@ class StreakService:
             all_streaks = self.get_active_streak_users(min_streak=1)
 
             # Sort by requested metric
-            all_streaks.sort(
-                key=lambda x: x[metric],
-                reverse=True
-            )
+            all_streaks.sort(key=lambda x: x[metric], reverse=True)
 
             # Return top N
             leaderboard = all_streaks[:limit]
 
             logger.info(
-                f"Generated streak leaderboard: {len(leaderboard)} users "
-                f"ranked by {metric}"
+                f"Generated streak leaderboard: {len(leaderboard)} users ranked by {metric}"
             )
 
             return leaderboard
@@ -226,10 +204,7 @@ class StreakService:
             raise
 
     def compare_user_streaks(
-        self,
-        installation_id: str,
-        previous_date: date,
-        current_date: date | None = None
+        self, installation_id: str, previous_date: date, current_date: date | None = None
     ) -> dict[str, int]:
         """Compare user's streaks between two dates.
 
@@ -255,15 +230,9 @@ class StreakService:
 
         try:
             # Calculate streaks for both dates
-            previous_metrics = self.get_user_streak(
-                installation_id,
-                as_of_date=previous_date
-            )
+            previous_metrics = self.get_user_streak(installation_id, as_of_date=previous_date)
 
-            current_metrics = self.get_user_streak(
-                installation_id,
-                as_of_date=current_date
-            )
+            current_metrics = self.get_user_streak(installation_id, as_of_date=current_date)
 
             # Use domain function to calculate deltas (pure logic)
             deltas = compare_streaks(current_metrics, previous_metrics)
@@ -277,7 +246,5 @@ class StreakService:
             return deltas
 
         except Exception as e:
-            logger.error(
-                f"Failed to compare streaks for {installation_id}: {e}"
-            )
+            logger.error(f"Failed to compare streaks for {installation_id}: {e}")
             raise

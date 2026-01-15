@@ -214,7 +214,7 @@ class TestGetVotingConfig:
         assert config.name == "harm_focused"
         # Low harm thresholds (key feature)
         assert config.harm.threat_threshold == 0.50  # Was 0.92 in balanced
-        assert config.harm.safe_threshold == 0.40    # Was 0.50 in balanced
+        assert config.harm.safe_threshold == 0.40  # Was 0.50 in balanced
         # Harm has DOMINANT weight (3.0)
         assert config.weights.harm == 3.0
         # Single vote can trigger threat

@@ -5,6 +5,7 @@ High false positive rate degrades user experience and trust.
 
 Target: <5% false positive rate on benign prompts
 """
+
 import pytest
 
 from raxe.application.preloader import preload_pipeline

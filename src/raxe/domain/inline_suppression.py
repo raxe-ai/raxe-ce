@@ -19,6 +19,7 @@ Clean Architecture:
     - No I/O, no file access, no logging
     - Converts inline specs to Suppression objects
 """
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, TypeAlias
@@ -82,9 +83,7 @@ def parse_inline_suppression(spec: InlineSuppressionSpec) -> Suppression:
         # Dict with full config
         pattern = spec.get("pattern")
         if not pattern:
-            raise SuppressionValidationError(
-                "Inline suppression dict must have 'pattern' key"
-            )
+            raise SuppressionValidationError("Inline suppression dict must have 'pattern' key")
 
         # Parse action
         action_str = spec.get("action", "SUPPRESS")
@@ -96,8 +95,7 @@ def parse_inline_suppression(spec: InlineSuppressionSpec) -> Suppression:
             except ValueError:
                 valid_actions = [a.value for a in SuppressionAction]
                 raise SuppressionValidationError(
-                    f"Invalid action '{action_str}'. "
-                    f"Valid actions: {', '.join(valid_actions)}"
+                    f"Invalid action '{action_str}'. Valid actions: {', '.join(valid_actions)}"
                 ) from None
 
         # Get reason (optional, has default)
@@ -114,8 +112,7 @@ def parse_inline_suppression(spec: InlineSuppressionSpec) -> Suppression:
         )
 
     raise SuppressionValidationError(
-        f"Invalid inline suppression type: {type(spec).__name__}. "
-        "Expected str or dict."
+        f"Invalid inline suppression type: {type(spec).__name__}. Expected str or dict."
     )
 
 

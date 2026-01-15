@@ -1,4 +1,5 @@
 """Tests for logging infrastructure."""
+
 from pathlib import Path
 
 import pytest

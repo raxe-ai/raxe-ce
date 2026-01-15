@@ -1,4 +1,5 @@
 """Test CLI output format options."""
+
 import json
 import subprocess
 import sys
@@ -18,9 +19,7 @@ class TestCLIOutputFormats:
     def test_default_text_output(self, safe_prompts):
         """Test default text output format."""
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", safe_prompts[0]],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", safe_prompts[0]], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -38,7 +37,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--format", "json", safe_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -56,7 +55,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--format", "json", threat_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 1
@@ -74,7 +73,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--format", "verbose", safe_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -90,9 +89,7 @@ class TestCLIOutputFormats:
         prompts = [safe_prompts[0], threat_prompts[0], safe_prompts[1]]
 
         result = subprocess.run(
-            [*self.raxe_cmd, "scan", "--format", "json", *prompts],
-            capture_output=True,
-            text=True
+            [*self.raxe_cmd, "scan", "--format", "json", *prompts], capture_output=True, text=True
         )
 
         # Should fail if any threat
@@ -115,7 +112,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--format", "csv", safe_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # CSV might not be implemented yet
@@ -135,7 +132,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "--quiet", "scan", "--format", "json", safe_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -148,7 +145,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--format", "json", safe_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -173,7 +170,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "-f", str(test_file), "--format", "json"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -191,7 +188,7 @@ class TestCLIOutputFormats:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            bufsize=1  # Line buffered
+            bufsize=1,  # Line buffered
         )
 
         # Read output line by line
@@ -214,7 +211,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--format", "json", edge_cases["malformed_json"][0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should handle gracefully
@@ -232,7 +229,7 @@ class TestCLIOutputFormats:
         result = subprocess.run(
             [*self.raxe_cmd, "scan", "--template", "{status} - {severity}", safe_prompts[0]],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         if result.returncode == 2:

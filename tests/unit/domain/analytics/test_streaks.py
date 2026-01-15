@@ -2,6 +2,7 @@
 
 Tests pure domain logic - no mocks needed, no I/O.
 """
+
 from datetime import date, timedelta
 
 from raxe.domain.analytics.models import StreakMetrics
@@ -17,9 +18,7 @@ class TestCalculateStreaks:
     def test_no_scans_returns_zero_streaks(self):
         """User with no scans has zero streaks."""
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=[],
-            reference_date=date(2025, 1, 15)
+            installation_id="user1", scan_dates=[], reference_date=date(2025, 1, 15)
         )
 
         assert result.installation_id == "user1"
@@ -31,9 +30,7 @@ class TestCalculateStreaks:
         """Single scan today creates 1-day streak."""
         today = date(2025, 1, 15)
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=[today],
-            reference_date=today
+            installation_id="user1", scan_dates=[today], reference_date=today
         )
 
         assert result.current_streak == 1
@@ -46,9 +43,7 @@ class TestCalculateStreaks:
         today = date(2025, 1, 15)
         yesterday = date(2025, 1, 14)
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=[yesterday],
-            reference_date=today
+            installation_id="user1", scan_dates=[yesterday], reference_date=today
         )
 
         assert result.current_streak == 1
@@ -59,9 +54,7 @@ class TestCalculateStreaks:
         today = date(2025, 1, 15)
         two_days_ago = date(2025, 1, 13)
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=[two_days_ago],
-            reference_date=today
+            installation_id="user1", scan_dates=[two_days_ago], reference_date=today
         )
 
         assert result.current_streak == 0
@@ -76,9 +69,7 @@ class TestCalculateStreaks:
             date(2025, 1, 15),
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 3
@@ -96,9 +87,7 @@ class TestCalculateStreaks:
             date(2025, 1, 15),
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 2
@@ -118,9 +107,7 @@ class TestCalculateStreaks:
             date(2025, 1, 15),  # 2-day current streak
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 2
@@ -138,9 +125,7 @@ class TestCalculateStreaks:
             date(2025, 1, 15),
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 3
@@ -155,9 +140,7 @@ class TestCalculateStreaks:
             date(2025, 1, 14),  # Out of order
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 3
@@ -170,9 +153,7 @@ class TestCalculateStreaks:
         scan_dates = [today - timedelta(days=i) for i in range(30)]
 
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 30
@@ -200,9 +181,7 @@ class TestCalculateStreaks:
             date(2025, 1, 31),
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 2
@@ -218,9 +197,7 @@ class TestCalculateStreaks:
             date(2025, 1, 15),
         ]
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 3
@@ -232,9 +209,7 @@ class TestCalculateStreaks:
         scan_dates = [date(2025, 1, 1)]  # 14 days ago
 
         result = calculate_streaks(
-            installation_id="user1",
-            scan_dates=scan_dates,
-            reference_date=today
+            installation_id="user1", scan_dates=scan_dates, reference_date=today
         )
 
         assert result.current_streak == 0  # Too old

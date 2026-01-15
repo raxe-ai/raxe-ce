@@ -32,6 +32,7 @@ Example YAML config:
       rotation_size: 10MB
       rotation_count: 5
 """
+
 import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -43,6 +44,7 @@ import yaml
 @dataclass
 class CoreConfig:
     """Core configuration settings."""
+
     api_key: str = ""
     environment: Literal["development", "production", "test", "local", "staging"] = "production"
     version: str = "0.0.1"
@@ -51,6 +53,7 @@ class CoreConfig:
 @dataclass
 class DetectionConfig:
     """Detection engine configuration."""
+
     l1_enabled: bool = True
     l2_enabled: bool = True
     mode: Literal["fast", "balanced", "thorough"] = "balanced"
@@ -62,6 +65,7 @@ class DetectionConfig:
 @dataclass
 class TelemetryConfig:
     """Telemetry configuration."""
+
     enabled: bool = True
     batch_size: int = 50
     flush_interval: int = 300  # seconds
@@ -73,6 +77,7 @@ class TelemetryConfig:
 @dataclass
 class PerformanceConfig:
     """Performance and reliability configuration."""
+
     max_queue_size: int = 10000
     scan_timeout: int = 30  # seconds
     circuit_breaker_enabled: bool = True
@@ -83,6 +88,7 @@ class PerformanceConfig:
 @dataclass
 class LoggingConfig:
     """Logging configuration."""
+
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     directory: str = "~/.raxe/logs"
     rotation_size: str = "10MB"
@@ -102,6 +108,7 @@ class RaxeConfig:
         performance: Performance settings
         logging: Logging settings
     """
+
     core: CoreConfig = field(default_factory=CoreConfig)
     detection: DetectionConfig = field(default_factory=DetectionConfig)
     telemetry: TelemetryConfig = field(default_factory=TelemetryConfig)
@@ -148,6 +155,7 @@ class RaxeConfig:
             Filtered dictionary with only known fields
         """
         import dataclasses
+
         known_fields = {f.name for f in dataclasses.fields(dataclass_type)}
         return {k: v for k, v in data.items() if k in known_fields}
 
@@ -169,10 +177,18 @@ class RaxeConfig:
 
         # Build sub-configs, filtering unknown fields for compatibility
         core = CoreConfig(**cls._filter_known_fields(CoreConfig, data.get("core", {})))
-        detection = DetectionConfig(**cls._filter_known_fields(DetectionConfig, data.get("detection", {})))
-        telemetry = TelemetryConfig(**cls._filter_known_fields(TelemetryConfig, data.get("telemetry", {})))
-        performance = PerformanceConfig(**cls._filter_known_fields(PerformanceConfig, data.get("performance", {})))
-        logging_cfg = LoggingConfig(**cls._filter_known_fields(LoggingConfig, data.get("logging", {})))
+        detection = DetectionConfig(
+            **cls._filter_known_fields(DetectionConfig, data.get("detection", {}))
+        )
+        telemetry = TelemetryConfig(
+            **cls._filter_known_fields(TelemetryConfig, data.get("telemetry", {}))
+        )
+        performance = PerformanceConfig(
+            **cls._filter_known_fields(PerformanceConfig, data.get("performance", {}))
+        )
+        logging_cfg = LoggingConfig(
+            **cls._filter_known_fields(LoggingConfig, data.get("logging", {}))
+        )
 
         # Resolve empty telemetry endpoint from centralized config
         if not telemetry.endpoint:
@@ -208,6 +224,7 @@ class RaxeConfig:
         Returns:
             RaxeConfig from environment
         """
+
         # Helper to get bool from env
         def get_bool(key: str, default: bool) -> bool:
             return os.getenv(key, str(default)).lower() in ("true", "1", "yes")
@@ -233,7 +250,9 @@ class RaxeConfig:
             l2_enabled=get_bool("RAXE_DETECTION_L2_ENABLED", True),
             mode=os.getenv("RAXE_DETECTION_MODE", "balanced"),  # type: ignore
             confidence_threshold=get_float("RAXE_DETECTION_CONFIDENCE_THRESHOLD", 0.5),
-            fail_fast_on_critical=get_bool("RAXE_DETECTION_FAIL_FAST_ON_CRITICAL", False),  # Changed default to False
+            fail_fast_on_critical=get_bool(
+                "RAXE_DETECTION_FAIL_FAST_ON_CRITICAL", False
+            ),  # Changed default to False
             min_confidence_for_skip=get_float("RAXE_DETECTION_MIN_CONFIDENCE_FOR_SKIP", 0.7),
         )
 
@@ -378,9 +397,7 @@ class RaxeConfig:
 
         # Validate batch size
         if self.telemetry.batch_size < 1:
-            errors.append(
-                f"telemetry.batch_size must be >= 1, got {self.telemetry.batch_size}"
-            )
+            errors.append(f"telemetry.batch_size must be >= 1, got {self.telemetry.batch_size}")
 
         # Validate flush interval
         if self.telemetry.flush_interval < 1:

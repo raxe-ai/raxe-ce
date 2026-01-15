@@ -92,9 +92,7 @@ class CustomRule:
         if not self.id:
             raise ValueError("Rule ID cannot be empty")
         if not (0.0 <= self.confidence <= 1.0):
-            raise ValueError(
-                f"Confidence must be 0.0-1.0, got {self.confidence}"
-            )
+            raise ValueError(f"Confidence must be 0.0-1.0, got {self.confidence}")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "CustomRule":
@@ -141,8 +139,7 @@ class CustomRule:
             severity = Severity[severity_str.upper()]
         except KeyError:
             raise ValueError(
-                f"Invalid severity: {severity_str}. "
-                f"Must be one of: {[s.name for s in Severity]}"
+                f"Invalid severity: {severity_str}. Must be one of: {[s.name for s in Severity]}"
             ) from None
 
         # Create rule
@@ -256,10 +253,7 @@ class CustomRuleLoader:
                 error_count += 1
                 logger.warning(f"Failed to load rule {rule_file}: {e}")
 
-        logger.info(
-            f"Loaded {loaded_count} custom rules "
-            f"({error_count} failed)"
-        )
+        logger.info(f"Loaded {loaded_count} custom rules ({error_count} failed)")
 
     def _load_rule_file(self, path: Path) -> CustomRule:
         """Load a single rule file.
@@ -277,8 +271,7 @@ class CustomRuleLoader:
             import yaml
         except ImportError:
             raise ImportError(
-                "PyYAML is required for custom rules. "
-                "Install with: pip install pyyaml"
+                "PyYAML is required for custom rules. Install with: pip install pyyaml"
             ) from None
 
         # Load YAML
@@ -321,7 +314,7 @@ class CustomRuleLoader:
                     pattern="custom_rule",
                     text=text[:100],  # Include first 100 chars as context
                     start=0,
-                    end=min(100, len(text))
+                    end=min(100, len(text)),
                 )
 
                 detection = Detection(
@@ -337,10 +330,7 @@ class CustomRuleLoader:
                 )
                 detections.append(detection)
 
-                logger.debug(
-                    f"Custom rule matched: {rule.id} "
-                    f"(severity={rule.severity.name})"
-                )
+                logger.debug(f"Custom rule matched: {rule.id} (severity={rule.severity.name})")
 
         return detections
 

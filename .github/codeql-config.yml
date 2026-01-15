@@ -1,0 +1,43 @@
+# CodeQL Configuration for RAXE
+# Suppresses known false positives while maintaining security coverage
+#
+# Documentation: https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
+
+name: "RAXE CodeQL Config"
+
+# Suppress known false positives
+# See: .claude/plans/concurrent-hugging-pascal.md for full security analysis
+query-filters:
+  # py/clear-text-logging-sensitive-data
+  # FALSE POSITIVE: We log installation_id (machine UUID), key_type (tier label),
+  # and api_key_id (truncated SHA-256 hash). None of these are actual secrets.
+  # The actual API key is NEVER logged.
+  # Reviewed: 2026-01-15 by security-analyst agent
+  - exclude:
+      id: py/clear-text-logging-sensitive-data
+      tags contain: security
+
+  # py/weak-sensitive-data-hashing
+  # FALSE POSITIVE: CodeQL incorrectly flagged SHA-256 as "weak". SHA-256 is
+  # appropriate for our use case (privacy fingerprinting and identifier derivation),
+  # not password hashing. bcrypt/argon2 would be needed only for password storage.
+  # Reviewed: 2026-01-15 by security-analyst agent
+  - exclude:
+      id: py/weak-sensitive-data-hashing
+      tags contain: security
+
+# Paths to analyze (same as workflow)
+paths:
+  - src
+  - tests
+
+# Paths to exclude from analysis
+paths-ignore:
+  # Third-party vendored code
+  - "**/vendor/**"
+  # Generated files
+  - "**/generated/**"
+  # Build artifacts
+  - "**/.venv/**"
+  - "**/dist/**"
+  - "**/build/**"

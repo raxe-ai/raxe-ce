@@ -10,6 +10,7 @@ This is the integration point between the two detection layers:
 The merger preserves both L1 and L2 results while providing a unified
 view for downstream processing (logging, blocking, alerting, etc.).
 """
+
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -31,6 +32,7 @@ class CombinedScanResult:
         total_processing_ms: Total time for L1 + L2 combined
         metadata: Additional metadata about the scan
     """
+
     l1_result: L1ScanResult
     l2_result: L2Result | None
     combined_severity: Severity | None
@@ -52,10 +54,7 @@ class CombinedScanResult:
             True if any threats detected by L1 rules or L2 predictions
         """
         l1_threats = self.l1_result.has_detections
-        l2_threats = (
-            self.l2_result.has_predictions
-            if self.l2_result else False
-        )
+        l2_threats = self.l2_result.has_predictions if self.l2_result else False
         return l1_threats or l2_threats
 
     @property
@@ -135,10 +134,7 @@ class CombinedScanResult:
         l1_count = self.l1_detection_count
         l2_count = self.l2_prediction_count
 
-        severity_str = (
-            self.combined_severity.value.upper()
-            if self.combined_severity else "NONE"
-        )
+        severity_str = self.combined_severity.value.upper() if self.combined_severity else "NONE"
 
         parts = []
         if l1_count > 0:
@@ -150,10 +146,7 @@ class CombinedScanResult:
             return f"No threats detected ({self.total_processing_ms:.2f}ms)"
 
         threats_str = ", ".join(parts)
-        return (
-            f"{severity_str}: {threats_str} "
-            f"({self.total_processing_ms:.2f}ms total)"
-        )
+        return f"{severity_str}: {threats_str} ({self.total_processing_ms:.2f}ms total)"
 
     def to_dict(self) -> dict[str, object]:
         """Convert to dictionary for serialization.
@@ -189,17 +182,17 @@ class ScanMerger:
     # These are conservative - L2 must be quite confident to elevate severity
     SEVERITY_CONFIDENCE_THRESHOLDS: ClassVar[dict[Severity, float]] = {
         Severity.CRITICAL: 0.95,  # Very high confidence required for CRITICAL
-        Severity.HIGH: 0.85,      # High confidence for HIGH
-        Severity.MEDIUM: 0.70,    # Moderate confidence for MEDIUM
-        Severity.LOW: 0.50,       # Low confidence for LOW
-        Severity.INFO: 0.30,      # Very low confidence for INFO
+        Severity.HIGH: 0.85,  # High confidence for HIGH
+        Severity.MEDIUM: 0.70,  # Moderate confidence for MEDIUM
+        Severity.LOW: 0.50,  # Low confidence for LOW
+        Severity.INFO: 0.30,  # Very low confidence for INFO
     }
 
     def merge(
         self,
         l1_result: L1ScanResult,
         l2_result: L2Result | None = None,
-        metadata: dict[str, object] | None = None
+        metadata: dict[str, object] | None = None,
     ) -> CombinedScanResult:
         """Combine L1 and L2 results.
 
@@ -212,10 +205,7 @@ class ScanMerger:
             CombinedScanResult with merged data
         """
         # Calculate combined severity (max of L1 and L2)
-        combined_severity = self._calculate_combined_severity(
-            l1_result,
-            l2_result
-        )
+        combined_severity = self._calculate_combined_severity(l1_result, l2_result)
 
         # Sum processing time
         total_time = l1_result.scan_duration_ms
@@ -227,13 +217,11 @@ class ScanMerger:
             l2_result=l2_result,
             combined_severity=combined_severity,
             total_processing_ms=total_time,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
     def _calculate_combined_severity(
-        self,
-        l1_result: L1ScanResult,
-        l2_result: L2Result | None
+        self, l1_result: L1ScanResult, l2_result: L2Result | None
     ) -> Severity | None:
         """Calculate combined severity from L1 and L2.
 
@@ -263,9 +251,7 @@ class ScanMerger:
 
         # Map L2 confidence to severity
         if l2_result and l2_result.has_predictions:
-            l2_severity = self._map_confidence_to_severity(
-                l2_result.highest_confidence
-            )
+            l2_severity = self._map_confidence_to_severity(l2_result.highest_confidence)
             if l2_severity:
                 severities.append(l2_severity)
 

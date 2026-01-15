@@ -52,13 +52,9 @@ class QueueMetrics:
                 f"standard_queue_size cannot be negative, got {self.standard_queue_size}"
             )
         if self.critical_queue_max <= 0:
-            raise ValueError(
-                f"critical_queue_max must be positive, got {self.critical_queue_max}"
-            )
+            raise ValueError(f"critical_queue_max must be positive, got {self.critical_queue_max}")
         if self.standard_queue_max <= 0:
-            raise ValueError(
-                f"standard_queue_max must be positive, got {self.standard_queue_max}"
-            )
+            raise ValueError(f"standard_queue_max must be positive, got {self.standard_queue_max}")
         if self.dlq_size < 0:
             raise ValueError(f"dlq_size cannot be negative, got {self.dlq_size}")
 
@@ -150,9 +146,7 @@ class BackpressureDecision:
             ValueError: If sample_rate is invalid.
         """
         if not (0.0 <= self.sample_rate <= 1.0):
-            raise ValueError(
-                f"sample_rate must be between 0 and 1, got {self.sample_rate}"
-            )
+            raise ValueError(f"sample_rate must be between 0 and 1, got {self.sample_rate}")
 
 
 def calculate_backpressure(

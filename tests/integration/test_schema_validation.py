@@ -1,4 +1,5 @@
 """Integration tests for schema validation in scan pipeline."""
+
 from unittest.mock import Mock
 
 from raxe.application.preloader import PipelinePreloader
@@ -21,10 +22,7 @@ class TestSchemaValidation:
 
     def test_schema_validation_enabled_via_config(self):
         """Test that schema validation can be enabled via config."""
-        config = ScanConfig(
-            enable_schema_validation=True,
-            schema_validation_mode="log_only"
-        )
+        config = ScanConfig(enable_schema_validation=True, schema_validation_mode="log_only")
         preloader = PipelinePreloader(config=config)
         pipeline, _stats = preloader.preload()
 
@@ -35,10 +33,7 @@ class TestSchemaValidation:
 
     def test_validation_mode_log_only(self):
         """Test log_only mode allows invalid data through."""
-        config = ScanConfig(
-            enable_schema_validation=True,
-            schema_validation_mode="log_only"
-        )
+        config = ScanConfig(enable_schema_validation=True, schema_validation_mode="log_only")
         preloader = PipelinePreloader(config=config)
         pipeline, _stats = preloader.preload()
 
@@ -56,10 +51,7 @@ class TestSchemaValidation:
 
     def test_validation_mode_warn(self):
         """Test warn mode allows data through with warnings."""
-        config = ScanConfig(
-            enable_schema_validation=True,
-            schema_validation_mode="warn"
-        )
+        config = ScanConfig(enable_schema_validation=True, schema_validation_mode="warn")
         preloader = PipelinePreloader(config=config)
         pipeline, _stats = preloader.preload()
 
@@ -67,10 +59,7 @@ class TestSchemaValidation:
 
     def test_validation_mode_enforce(self):
         """Test enforce mode blocks invalid data."""
-        config = ScanConfig(
-            enable_schema_validation=True,
-            schema_validation_mode="enforce"
-        )
+        config = ScanConfig(enable_schema_validation=True, schema_validation_mode="enforce")
         preloader = PipelinePreloader(config=config)
         pipeline, _stats = preloader.preload()
 
@@ -114,10 +103,7 @@ class TestSchemaValidation:
 
     def test_validation_error_tracking(self):
         """Test that validation errors are tracked."""
-        config = ScanConfig(
-            enable_schema_validation=True,
-            schema_validation_mode="log_only"
-        )
+        config = ScanConfig(enable_schema_validation=True, schema_validation_mode="log_only")
         preloader = PipelinePreloader(config=config)
         pipeline, _stats = preloader.preload()
 
@@ -134,10 +120,7 @@ class TestSchemaValidation:
 
     def test_schema_validation_doesnt_break_scans(self):
         """Test that enabling validation doesn't break normal scanning."""
-        config = ScanConfig(
-            enable_schema_validation=True,
-            schema_validation_mode="enforce"
-        )
+        config = ScanConfig(enable_schema_validation=True, schema_validation_mode="enforce")
         preloader = PipelinePreloader(config=config)
         pipeline, _stats = preloader.preload()
 

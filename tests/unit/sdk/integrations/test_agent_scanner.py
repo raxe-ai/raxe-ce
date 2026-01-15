@@ -3,6 +3,7 @@
 Tests the core message scanning logic used by framework-specific integrations.
 Uses the canonical API from raxe.sdk.agent_scanner.
 """
+
 from unittest.mock import Mock
 
 import pytest

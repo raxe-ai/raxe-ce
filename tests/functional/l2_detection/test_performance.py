@@ -1,4 +1,5 @@
 """Test L2 detection performance metrics."""
+
 import statistics
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -141,7 +142,7 @@ class TestL2Performance:
             ("short", "Hi"),
             ("medium", "This is a medium length prompt " * 10),
             ("long", "This is a very long prompt " * 100),
-            ("very_long", "Extremely long prompt " * 500)
+            ("very_long", "Extremely long prompt " * 500),
         ]
 
         for name, prompt in test_cases:
@@ -189,10 +190,12 @@ class TestL2Performance:
                 client.scan(safe_prompts[0])
                 window_times.append((time.perf_counter() - start) * 1000)
 
-            window_stats.append({
-                "mean": statistics.mean(window_times),
-                "p95": statistics.quantiles(window_times, n=20)[18]
-            })
+            window_stats.append(
+                {
+                    "mean": statistics.mean(window_times),
+                    "p95": statistics.quantiles(window_times, n=20)[18],
+                }
+            )
 
         # Performance should not degrade over time
         first_window = window_stats[0]
@@ -205,6 +208,7 @@ class TestL2Performance:
         """Test ONNX provides performance benefit."""
         # This test is conditional on ONNX availability
         import importlib.util
+
         has_onnx = importlib.util.find_spec("onnxruntime") is not None
 
         if not has_onnx:

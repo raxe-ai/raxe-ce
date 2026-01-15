@@ -3,6 +3,7 @@
 Provides mock objects and test utilities for agent scanning tests.
 All fixtures avoid I/O operations to maintain test purity.
 """
+
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import Mock

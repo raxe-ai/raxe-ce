@@ -8,7 +8,6 @@ Tests the L2 virtual rule mapping added in Phase 3:
 
 Target: >80% coverage for application layer.
 """
-import pytest
 
 from raxe.application.scan_pipeline import ScanPipeline
 from raxe.domain.engine.executor import Detection
@@ -128,7 +127,11 @@ class TestL2VirtualRuleMapping:
 
         assert len(detections) == 3
         rule_ids = {d.rule_id for d in detections}
-        assert rule_ids == {"l2-rag-or-context-attack", "l2-jailbreak", "l2-encoding-or-obfuscation-attack"}
+        assert rule_ids == {
+            "l2-rag-or-context-attack",
+            "l2-jailbreak",
+            "l2-encoding-or-obfuscation-attack",
+        }
 
     def test_empty_predictions_create_no_detections(self):
         """L2 result with no predictions creates no detections."""

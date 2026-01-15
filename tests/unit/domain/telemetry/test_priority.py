@@ -6,6 +6,7 @@ These tests are PURE - no mocks, no I/O, no database.
 
 Coverage target: >95%
 """
+
 import pytest
 
 from raxe.domain.telemetry.priority import (
@@ -15,7 +16,6 @@ from raxe.domain.telemetry.priority import (
     is_critical_event_type,
     is_standard_event_type,
 )
-
 
 # =============================================================================
 # Test Markers
@@ -37,24 +37,28 @@ class TestPriorityConfig:
     def test_default_config_has_always_critical_types(self) -> None:
         """Default config should list always-critical event types."""
         config = PriorityConfig()
-        expected = frozenset({
-            "installation",
-            "activation",
-            "session_end",
-            "error",
-            "key_upgrade",
-        })
+        expected = frozenset(
+            {
+                "installation",
+                "activation",
+                "session_end",
+                "error",
+                "key_upgrade",
+            }
+        )
         assert config.always_critical_types == expected
 
     def test_default_config_has_always_standard_types(self) -> None:
         """Default config should list always-standard event types."""
         config = PriorityConfig()
-        expected = frozenset({
-            "session_start",
-            "performance",
-            "feature_usage",
-            "heartbeat",
-        })
+        expected = frozenset(
+            {
+                "session_start",
+                "performance",
+                "feature_usage",
+                "heartbeat",
+            }
+        )
         assert config.always_standard_types == expected
 
     def test_priority_config_is_frozen(self) -> None:
@@ -98,9 +102,7 @@ class TestAlwaysCriticalEventTypes:
             "key_upgrade",
         ],
     )
-    def test_always_critical_types_return_critical(
-        self, event_type: str
-    ) -> None:
+    def test_always_critical_types_return_critical(self, event_type: str) -> None:
         """Always-critical event types should return 'critical' priority."""
         result = classify_priority(event_type, {})
         assert result == "critical"
@@ -115,9 +117,7 @@ class TestAlwaysCriticalEventTypes:
             "key_upgrade",
         ],
     )
-    def test_always_critical_ignores_payload(
-        self, event_type: str
-    ) -> None:
+    def test_always_critical_ignores_payload(self, event_type: str) -> None:
         """Always-critical types should ignore payload content."""
         # Even with a payload that might suggest standard priority
         payload = {"threat_detected": False, "highest_severity": "LOW"}
@@ -134,9 +134,7 @@ class TestAlwaysCriticalEventTypes:
             " error ",
         ],
     )
-    def test_always_critical_case_insensitive(
-        self, event_type: str
-    ) -> None:
+    def test_always_critical_case_insensitive(self, event_type: str) -> None:
         """Classification should be case-insensitive."""
         result = classify_priority(event_type, {})
         assert result == "critical"
@@ -157,9 +155,7 @@ class TestAlwaysStandardEventTypes:
             "heartbeat",
         ],
     )
-    def test_always_standard_types_return_standard(
-        self, event_type: str
-    ) -> None:
+    def test_always_standard_types_return_standard(self, event_type: str) -> None:
         """Always-standard event types should return 'standard' priority."""
         result = classify_priority(event_type, {})
         assert result == "standard"
@@ -173,9 +169,7 @@ class TestAlwaysStandardEventTypes:
             "heartbeat",
         ],
     )
-    def test_always_standard_ignores_payload(
-        self, event_type: str
-    ) -> None:
+    def test_always_standard_ignores_payload(self, event_type: str) -> None:
         """Always-standard types should ignore payload content."""
         # Even with a payload that might suggest critical priority
         payload = {"threat_detected": True, "highest_severity": "CRITICAL"}
@@ -192,9 +186,7 @@ class TestAlwaysStandardEventTypes:
             " heartbeat ",
         ],
     )
-    def test_always_standard_case_insensitive(
-        self, event_type: str
-    ) -> None:
+    def test_always_standard_case_insensitive(self, event_type: str) -> None:
         """Classification should be case-insensitive."""
         result = classify_priority(event_type, {})
         assert result == "standard"
@@ -229,9 +221,7 @@ class TestScanEventPriority:
             ("NONE", "standard"),
         ],
     )
-    def test_scan_priority_by_severity(
-        self, severity: str, expected_priority: str
-    ) -> None:
+    def test_scan_priority_by_severity(self, severity: str, expected_priority: str) -> None:
         """Scan priority should depend on highest_severity when threat detected."""
         payload = {"threat_detected": True, "highest_severity": severity}
         result = classify_priority("scan", payload)
@@ -433,9 +423,7 @@ class TestIsCriticalEventType:
             "unknown",
         ],
     )
-    def test_returns_false_for_non_critical_types(
-        self, event_type: str
-    ) -> None:
+    def test_returns_false_for_non_critical_types(self, event_type: str) -> None:
         """Should return False for non-always-critical event types."""
         assert is_critical_event_type(event_type) is False
 
@@ -481,9 +469,7 @@ class TestIsStandardEventType:
             "unknown",
         ],
     )
-    def test_returns_false_for_non_standard_types(
-        self, event_type: str
-    ) -> None:
+    def test_returns_false_for_non_standard_types(self, event_type: str) -> None:
         """Should return False for non-always-standard event types."""
         assert is_standard_event_type(event_type) is False
 

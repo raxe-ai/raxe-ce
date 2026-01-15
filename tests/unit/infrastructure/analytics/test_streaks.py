@@ -26,7 +26,7 @@ from raxe.infrastructure.analytics.streaks import (
 @pytest.fixture
 def temp_data_file():
     """Create a temporary achievements file for testing."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         data_path = Path(f.name)
 
     yield data_path
@@ -48,10 +48,7 @@ class TestStreakData:
     def test_streak_data_creation(self):
         """Test creating StreakData object."""
         data = StreakData(
-            current_streak=5,
-            longest_streak=10,
-            last_scan_date=date.today(),
-            total_scan_days=20
+            current_streak=5, longest_streak=10, last_scan_date=date.today(), total_scan_days=20
         )
 
         assert data.current_streak == 5
@@ -60,11 +57,7 @@ class TestStreakData:
 
     def test_streak_data_to_dict(self):
         """Test converting StreakData to dictionary."""
-        data = StreakData(
-            current_streak=5,
-            longest_streak=10,
-            last_scan_date=date.today()
-        )
+        data = StreakData(current_streak=5, longest_streak=10, last_scan_date=date.today())
 
         result = data.to_dict()
         assert result["current_streak"] == 5
@@ -77,7 +70,7 @@ class TestStreakData:
             "current_streak": 5,
             "longest_streak": 10,
             "last_scan_date": "2025-11-16",
-            "total_scan_days": 20
+            "total_scan_days": 20,
         }
 
         data = StreakData.from_dict(dict_data)
@@ -96,7 +89,7 @@ class TestAchievement:
             name="Test Achievement",
             description="A test achievement",
             icon="🏆",
-            points=100
+            points=100,
         )
 
         assert achievement.id == "test_achievement"
@@ -112,7 +105,7 @@ class TestAchievement:
             description="Test achievement",
             icon="🏆",
             points=100,
-            unlocked_at=datetime.now(timezone.utc)
+            unlocked_at=datetime.now(timezone.utc),
         )
 
         result = achievement.to_dict()
@@ -129,7 +122,7 @@ class TestAchievement:
             "description": "Test achievement",
             "icon": "🏆",
             "points": 100,
-            "unlocked_at": datetime.now(timezone.utc).isoformat()
+            "unlocked_at": datetime.now(timezone.utc).isoformat(),
         }
 
         achievement = Achievement.from_dict(dict_data)
@@ -164,7 +157,7 @@ class TestStreakTracker:
 
         # Record scans for 5 consecutive days
         for i in range(5):
-            scan_date = today - timedelta(days=4-i)
+            scan_date = today - timedelta(days=4 - i)
             streak_tracker.record_scan(scan_date)
 
         assert streak_tracker.streak_data.current_streak == 5
@@ -177,7 +170,7 @@ class TestStreakTracker:
 
         # Build a 5-day streak
         for i in range(5):
-            scan_date = today - timedelta(days=10-i)
+            scan_date = today - timedelta(days=10 - i)
             streak_tracker.record_scan(scan_date)
 
         assert streak_tracker.streak_data.current_streak == 5
@@ -207,7 +200,7 @@ class TestStreakTracker:
 
         # Build a 7-day streak
         for i in range(7):
-            scan_date = today - timedelta(days=6-i)
+            scan_date = today - timedelta(days=6 - i)
             streak_tracker.record_scan(scan_date)
 
         # Check achievement is unlocked
@@ -220,7 +213,7 @@ class TestStreakTracker:
 
         # Build a 30-day streak
         for i in range(30):
-            scan_date = today - timedelta(days=29-i)
+            scan_date = today - timedelta(days=29 - i)
             streak_tracker.record_scan(scan_date)
 
         # Check achievement is unlocked
@@ -267,10 +260,7 @@ class TestStreakTracker:
     def test_speed_demon_achievement(self, streak_tracker):
         """Test speed demon achievement unlocks."""
         # Avg scan time < 5ms with at least 10 scans
-        streak_tracker.check_achievements(
-            total_scans=10,
-            avg_scan_time_ms=4.5
-        )
+        streak_tracker.check_achievements(total_scans=10, avg_scan_time_ms=4.5)
 
         achievement = streak_tracker.achievements[AchievementType.SPEED_DEMON.value]
         assert achievement.unlocked_at is not None

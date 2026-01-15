@@ -55,12 +55,12 @@ def sample_events(aggregator):
 
     # Create events over 7 days with varied patterns
     for day in range(7):
-        day_start = now - timedelta(days=6-day)
+        day_start = now - timedelta(days=6 - day)
 
         # Create events at different hours
         for hour in [8, 12, 16, 20]:  # Morning, noon, afternoon, evening
             for i in range(5):  # 5 scans per hour
-                event_time = day_start.replace(hour=hour, minute=i*10, second=0)
+                event_time = day_start.replace(hour=hour, minute=i * 10, second=0)
 
                 event = TelemetryEvent(
                     event_id=f"event_{day}_{hour}_{i}",
@@ -77,7 +77,7 @@ def sample_events(aggregator):
                     policy_action="allow",
                     sdk_version="0.0.1",
                     environment="production",
-                    timestamp=event_time
+                    timestamp=event_time,
                 )
                 events.append(event)
 
@@ -200,7 +200,7 @@ class TestDataAggregator:
         if len(breakdown) > 1:
             # Check descending order
             for i in range(len(breakdown) - 1):
-                assert breakdown[i].count >= breakdown[i+1].count
+                assert breakdown[i].count >= breakdown[i + 1].count
 
     def test_get_performance_trends_no_data(self, aggregator):
         """Test performance trends with no data."""
@@ -273,7 +273,7 @@ class TestDailyRollup:
             avg_duration_ms=10.5,
             max_duration_ms=50.0,
             unique_users=10,
-            detection_rate=25.0
+            detection_rate=25.0,
         )
 
         assert rollup.total_scans == 100
@@ -286,12 +286,7 @@ class TestHourlyPattern:
 
     def test_hourly_pattern_creation(self):
         """Test creating HourlyPattern object."""
-        pattern = HourlyPattern(
-            hour=14,
-            scan_count=50,
-            threat_count=10,
-            avg_duration_ms=8.5
-        )
+        pattern = HourlyPattern(hour=14, scan_count=50, threat_count=10, avg_duration_ms=8.5)
 
         assert pattern.hour == 14
         assert pattern.scan_count == 50
@@ -303,11 +298,7 @@ class TestDetectionBreakdown:
 
     def test_detection_breakdown_creation(self):
         """Test creating DetectionBreakdown object."""
-        breakdown = DetectionBreakdown(
-            severity="high",
-            count=50,
-            percentage=45.5
-        )
+        breakdown = DetectionBreakdown(severity="high", count=50, percentage=45.5)
 
         assert breakdown.severity == "high"
         assert breakdown.count == 50

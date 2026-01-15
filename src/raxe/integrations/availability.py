@@ -15,6 +15,7 @@ Usage:
     # Or raise helpful error:
     require_integration("mcp")  # Raises ImportError with install hint
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -23,8 +24,7 @@ from typing import Literal
 
 # Type alias for integration names
 IntegrationName = Literal[
-    "mcp", "langchain", "crewai", "autogen", "llamaindex", "openai", "anthropic",
-    "litellm", "dspy"
+    "mcp", "langchain", "crewai", "autogen", "llamaindex", "openai", "anthropic", "litellm", "dspy"
 ]
 
 

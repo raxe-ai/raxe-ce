@@ -248,7 +248,7 @@ class MinimalDownloadProgress(DownloadProgress):
                 if downloaded_bytes > 0
                 else 0
             )
-            f"{eta_seconds:.0f}s" if eta_seconds < 60 else f"{eta_seconds/60:.1f}m"
+            f"{eta_seconds:.0f}s" if eta_seconds < 60 else f"{eta_seconds / 60:.1f}m"
         else:
             pass
 

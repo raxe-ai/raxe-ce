@@ -2,6 +2,7 @@
 
 Tests that L2 is intelligently skipped based on L1 confidence levels.
 """
+
 from unittest.mock import Mock
 
 import pytest

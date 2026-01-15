@@ -190,10 +190,13 @@ class DualQueue:
 
                 # Initialize stats if not present
                 now = datetime.now(timezone.utc).isoformat()
-                conn.execute("""
+                conn.execute(
+                    """
                     INSERT OR IGNORE INTO telemetry_stats (stat_key, stat_value, updated_at)
                     VALUES ('events_sent_total', 0, ?), ('batches_sent_total', 0, ?), ('scans_sent_total', 0, ?)
-                """, (now, now, now))
+                """,
+                    (now, now, now),
+                )
 
                 # Create indexes for efficient queries
                 conn.execute("""
@@ -449,21 +452,30 @@ class DualQueue:
 
                     # Update lifetime stats
                     now = datetime.now(timezone.utc).isoformat()
-                    conn.execute("""
+                    conn.execute(
+                        """
                         UPDATE telemetry_stats
                         SET stat_value = stat_value + ?, updated_at = ?
                         WHERE stat_key = 'events_sent_total'
-                    """, (len(event_ids), now))
-                    conn.execute("""
+                    """,
+                        (len(event_ids), now),
+                    )
+                    conn.execute(
+                        """
                         UPDATE telemetry_stats
                         SET stat_value = stat_value + ?, updated_at = ?
                         WHERE stat_key = 'scans_sent_total'
-                    """, (scan_count, now))
-                    conn.execute("""
+                    """,
+                        (scan_count, now),
+                    )
+                    conn.execute(
+                        """
                         UPDATE telemetry_stats
                         SET stat_value = stat_value + 1, updated_at = ?
                         WHERE stat_key = 'batches_sent_total'
-                    """, (now,))
+                    """,
+                        (now,),
+                    )
 
                     conn.commit()
 

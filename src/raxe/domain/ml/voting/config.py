@@ -248,9 +248,7 @@ class DecisionThresholds:
                 f"high_confidence_threshold must be 0-1, got {self.high_confidence_threshold}"
             )
         if self.min_threat_votes < 1:
-            raise ValueError(
-                f"min_threat_votes must be >= 1, got {self.min_threat_votes}"
-            )
+            raise ValueError(f"min_threat_votes must be >= 1, got {self.min_threat_votes}")
         if self.severity_veto_override_votes < 1:
             raise ValueError(
                 f"severity_veto_override_votes must be >= 1, got {self.severity_veto_override_votes}"
@@ -576,14 +574,14 @@ def _get_harm_focused_config() -> VotingConfig:
         ),
         harm=HarmHeadThresholds(
             threat_threshold=0.50,  # Much lower! (was 0.92)
-            safe_threshold=0.40,    # Still fairly sensitive
+            safe_threshold=0.40,  # Still fairly sensitive
         ),
         weights=HeadWeights(
-            binary=0.8,   # Lower weight
-            family=0.8,   # Lower weight
-            severity=1.0, # Normal weight
-            technique=0.6,# Lower weight
-            harm=3.0,     # DOMINANT weight - harm is 3x other heads
+            binary=0.8,  # Lower weight
+            family=0.8,  # Lower weight
+            severity=1.0,  # Normal weight
+            technique=0.6,  # Lower weight
+            harm=3.0,  # DOMINANT weight - harm is 3x other heads
         ),
         decision=DecisionThresholds(
             high_confidence_threshold=0.60,  # Lower for harm override

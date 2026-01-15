@@ -32,19 +32,23 @@ class PriorityConfig:
     """
 
     critical_severities: frozenset[str] = frozenset({"CRITICAL", "HIGH", "MEDIUM"})
-    always_critical_types: frozenset[str] = frozenset({
-        "installation",
-        "activation",
-        "session_end",
-        "error",
-        "key_upgrade",
-    })
-    always_standard_types: frozenset[str] = frozenset({
-        "session_start",
-        "performance",
-        "feature_usage",
-        "heartbeat",
-    })
+    always_critical_types: frozenset[str] = frozenset(
+        {
+            "installation",
+            "activation",
+            "session_end",
+            "error",
+            "key_upgrade",
+        }
+    )
+    always_standard_types: frozenset[str] = frozenset(
+        {
+            "session_start",
+            "performance",
+            "feature_usage",
+            "heartbeat",
+        }
+    )
 
 
 # Default configuration instance for convenience

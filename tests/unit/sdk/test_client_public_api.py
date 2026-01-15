@@ -24,8 +24,8 @@ class TestRaxePublicAPI:
 
         # Verify rule structure - rules should have rule_id and patterns
         for rule in rules[:5]:  # Check first 5
-            assert hasattr(rule, 'rule_id')
-            assert hasattr(rule, 'patterns')
+            assert hasattr(rule, "rule_id")
+            assert hasattr(rule, "patterns")
 
     def test_list_rule_packs(self):
         """Test list_rule_packs returns pack objects."""
@@ -37,7 +37,7 @@ class TestRaxePublicAPI:
 
         # Packs are RulePack objects, check for 'core' pack by ID
         pack_ids = [pack.manifest.id for pack in packs]
-        assert 'core' in pack_ids  # Core pack should always exist
+        assert "core" in pack_ids  # Core pack should always exist
 
     def test_has_api_key_without_key(self):
         """Test has_api_key detection without API key."""
@@ -68,26 +68,26 @@ class TestRaxePublicAPI:
 
         # Check structure
         assert isinstance(components, dict)
-        assert 'executor' in components
-        assert 'l2_detector' in components
-        assert 'rules' in components
+        assert "executor" in components
+        assert "l2_detector" in components
+        assert "rules" in components
 
         # Check types
-        assert components['executor'] is not None
-        assert isinstance(components['rules'], list)
+        assert components["executor"] is not None
+        assert isinstance(components["rules"], list)
 
         # L2 detector may be None if disabled
         if raxe.config.enable_l2:
-            assert components['l2_detector'] is not None
+            assert components["l2_detector"] is not None
 
     def test_get_profiling_components_without_l2(self):
         """Test profiling components when L2 is disabled."""
         raxe = Raxe(l2_enabled=False)
         components = raxe.get_profiling_components()
 
-        assert components['l2_detector'] is None
-        assert components['executor'] is not None
-        assert len(components['rules']) > 0
+        assert components["l2_detector"] is None
+        assert components["executor"] is not None
+        assert len(components["rules"]) > 0
 
     def test_get_pipeline_stats(self):
         """Test pipeline statistics."""
@@ -96,24 +96,24 @@ class TestRaxePublicAPI:
 
         # Check required fields
         assert isinstance(stats, dict)
-        assert 'rules_loaded' in stats
-        assert 'packs_loaded' in stats
-        assert 'telemetry_enabled' in stats
-        assert 'has_api_key' in stats
-        assert 'l2_enabled' in stats
+        assert "rules_loaded" in stats
+        assert "packs_loaded" in stats
+        assert "telemetry_enabled" in stats
+        assert "has_api_key" in stats
+        assert "l2_enabled" in stats
 
         # Check values
-        assert stats['rules_loaded'] > 0
-        assert stats['packs_loaded'] > 0
-        assert isinstance(stats['telemetry_enabled'], bool)
-        assert isinstance(stats['has_api_key'], bool)
-        assert isinstance(stats['l2_enabled'], bool)
+        assert stats["rules_loaded"] > 0
+        assert stats["packs_loaded"] > 0
+        assert isinstance(stats["telemetry_enabled"], bool)
+        assert isinstance(stats["has_api_key"], bool)
+        assert isinstance(stats["l2_enabled"], bool)
 
         # Check optional preload stats
-        if 'preload_time_ms' in stats:
-            assert stats['preload_time_ms'] >= 0
-        if 'patterns_compiled' in stats:
-            assert stats['patterns_compiled'] >= 0
+        if "preload_time_ms" in stats:
+            assert stats["preload_time_ms"] >= 0
+        if "patterns_compiled" in stats:
+            assert stats["patterns_compiled"] >= 0
 
     def test_validate_configuration_valid(self):
         """Test configuration validation with valid config."""
@@ -121,23 +121,23 @@ class TestRaxePublicAPI:
         validation = raxe.validate_configuration()
 
         assert isinstance(validation, dict)
-        assert 'config_valid' in validation
-        assert 'errors' in validation
-        assert 'warnings' in validation
+        assert "config_valid" in validation
+        assert "errors" in validation
+        assert "warnings" in validation
 
         # Should be valid with defaults
-        assert validation['config_valid'] is True
-        assert isinstance(validation['errors'], list)
-        assert isinstance(validation['warnings'], list)
+        assert validation["config_valid"] is True
+        assert isinstance(validation["errors"], list)
+        assert isinstance(validation["warnings"], list)
 
     def test_validate_configuration_with_valid_api_key(self):
         """Test validation with properly formatted API key."""
         raxe = Raxe(api_key="raxe_test_key_1234567890")
         validation = raxe.validate_configuration()
 
-        assert validation['config_valid'] is True
+        assert validation["config_valid"] is True
         # Should have no warnings about API key format
-        api_key_warnings = [w for w in validation['warnings'] if 'API key' in w]
+        api_key_warnings = [w for w in validation["warnings"] if "API key" in w]
         assert len(api_key_warnings) == 0
 
     def test_validate_configuration_with_short_api_key(self):
@@ -146,10 +146,10 @@ class TestRaxePublicAPI:
         validation = raxe.validate_configuration()
 
         # Config should still be valid (warning, not error)
-        assert validation['config_valid'] is True
+        assert validation["config_valid"] is True
         # But should have warning
-        assert len(validation['warnings']) > 0
-        assert any('too short' in w.lower() for w in validation['warnings'])
+        assert len(validation["warnings"]) > 0
+        assert any("too short" in w.lower() for w in validation["warnings"])
 
     def test_validate_configuration_with_bad_prefix_api_key(self):
         """Test validation with API key missing proper prefix."""
@@ -157,10 +157,10 @@ class TestRaxePublicAPI:
         validation = raxe.validate_configuration()
 
         # Config should still be valid (warning, not error)
-        assert validation['config_valid'] is True
+        assert validation["config_valid"] is True
         # But should have warning
-        assert len(validation['warnings']) > 0
-        assert any('should start with' in w.lower() for w in validation['warnings'])
+        assert len(validation["warnings"]) > 0
+        assert any("should start with" in w.lower() for w in validation["warnings"])
 
     def test_public_api_stability(self):
         """Test that public API maintains compatibility."""
@@ -169,14 +169,14 @@ class TestRaxePublicAPI:
 
         # All these methods should exist and be callable
         public_methods = [
-            'scan',
-            'get_all_rules',
-            'list_rule_packs',
-            'has_api_key',
-            'get_telemetry_enabled',
-            'get_profiling_components',
-            'get_pipeline_stats',
-            'validate_configuration'
+            "scan",
+            "get_all_rules",
+            "list_rule_packs",
+            "has_api_key",
+            "get_telemetry_enabled",
+            "get_profiling_components",
+            "get_pipeline_stats",
+            "validate_configuration",
         ]
 
         for method_name in public_methods:
@@ -229,16 +229,16 @@ class TestRaxePublicAPI:
         stats = raxe.get_pipeline_stats()
 
         # Rules count should match get_all_rules
-        assert stats['rules_loaded'] == len(raxe.get_all_rules())
+        assert stats["rules_loaded"] == len(raxe.get_all_rules())
 
         # Packs count should match list_rule_packs
-        assert stats['packs_loaded'] == len(raxe.list_rule_packs())
+        assert stats["packs_loaded"] == len(raxe.list_rule_packs())
 
         # API key status should match has_api_key
-        assert stats['has_api_key'] == raxe.has_api_key()
+        assert stats["has_api_key"] == raxe.has_api_key()
 
         # Telemetry status should match get_telemetry_enabled
-        assert stats['telemetry_enabled'] == raxe.get_telemetry_enabled()
+        assert stats["telemetry_enabled"] == raxe.get_telemetry_enabled()
 
 
 class TestPublicAPIErrorHandling:
@@ -249,7 +249,9 @@ class TestPublicAPIErrorHandling:
         raxe = Raxe()
 
         # Mock the internal method to raise an error
-        with patch.object(raxe.pipeline.pack_registry, 'get_all_rules', side_effect=Exception("Test error")):
+        with patch.object(
+            raxe.pipeline.pack_registry, "get_all_rules", side_effect=Exception("Test error")
+        ):
             with pytest.raises(Exception) as exc_info:
                 raxe.get_all_rules()
             assert "Test error" in str(exc_info.value)
@@ -261,7 +263,7 @@ class TestPublicAPIErrorHandling:
         # Should not crash even if performance_mode is missing
         validation = raxe.validate_configuration()
         assert isinstance(validation, dict)
-        assert 'config_valid' in validation
+        assert "config_valid" in validation
 
 
 class TestPublicAPIDocumentation:
@@ -272,13 +274,13 @@ class TestPublicAPIDocumentation:
         raxe = Raxe()
 
         public_methods = [
-            'get_all_rules',
-            'list_rule_packs',
-            'has_api_key',
-            'get_telemetry_enabled',
-            'get_profiling_components',
-            'get_pipeline_stats',
-            'validate_configuration'
+            "get_all_rules",
+            "list_rule_packs",
+            "has_api_key",
+            "get_telemetry_enabled",
+            "get_profiling_components",
+            "get_pipeline_stats",
+            "validate_configuration",
         ]
 
         for method_name in public_methods:
@@ -292,18 +294,19 @@ class TestPublicAPIDocumentation:
 
         # Methods that should have examples in docstrings
         methods_with_examples = [
-            'get_all_rules',
-            'list_rule_packs',
-            'has_api_key',
-            'get_telemetry_enabled',
-            'get_profiling_components',
-            'get_pipeline_stats',
-            'validate_configuration'
+            "get_all_rules",
+            "list_rule_packs",
+            "has_api_key",
+            "get_telemetry_enabled",
+            "get_profiling_components",
+            "get_pipeline_stats",
+            "validate_configuration",
         ]
 
         for method_name in methods_with_examples:
             method = getattr(raxe, method_name)
             docstring = method.__doc__
             # Check for "Example:" section
-            assert 'Example:' in docstring or 'example' in docstring.lower(), \
-                f"{method_name} docstring should include usage example"
+            assert (
+                "Example:" in docstring or "example" in docstring.lower()
+            ), f"{method_name} docstring should include usage example"

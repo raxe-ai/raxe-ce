@@ -16,6 +16,7 @@ Example usage:
             messages=[{"role": "user", "content": "Hello"}]
         )
 """
+
 from raxe.async_sdk.wrappers.openai import AsyncRaxeOpenAI
 
 __all__ = [

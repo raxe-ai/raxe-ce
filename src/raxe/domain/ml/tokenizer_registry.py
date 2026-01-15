@@ -4,6 +4,7 @@ Maintains a registry of known tokenizer-embedding model compatibility pairs.
 Validates that tokenizers are compatible with their embedding models to prevent
 runtime errors and embedding quality issues.
 """
+
 from __future__ import annotations
 
 import logging
@@ -43,7 +44,6 @@ class TokenizerRegistry:
             "microsoft/mpnet-base",
             "sentence-transformers/all-mpnet-base-v2",
         ],
-
         # MiniLM-based models (384 dim, 512 max length)
         "all-minilm-l6-v2": [
             "sentence-transformers/all-MiniLM-L6-v2",
@@ -53,19 +53,16 @@ class TokenizerRegistry:
             "sentence-transformers/all-MiniLM-L12-v2",
             "microsoft/MiniLM-L12-H384-uncased",
         ],
-
         # DistilBERT-based models (768 dim, 512 max length)
         "all-distilroberta-v1": [
             "sentence-transformers/all-distilroberta-v1",
             "distilroberta-base",
         ],
-
         # Multi-QA models
         "multi-qa-mpnet-base-dot-v1": [
             "sentence-transformers/multi-qa-mpnet-base-dot-v1",
             "microsoft/mpnet-base",
         ],
-
         # Paraphrase models
         "paraphrase-mpnet-base-v2": [
             "sentence-transformers/paraphrase-mpnet-base-v2",
@@ -106,11 +103,7 @@ class TokenizerRegistry:
         """Initialize tokenizer registry."""
         self._custom_pairs: dict[str, list[str]] = {}
 
-    def is_compatible(
-        self,
-        tokenizer_name: str,
-        embedding_model: str
-    ) -> bool:
+    def is_compatible(self, tokenizer_name: str, embedding_model: str) -> bool:
         """Check if tokenizer is compatible with embedding model.
 
         Args:
@@ -155,10 +148,7 @@ class TokenizerRegistry:
         )
         return True
 
-    def get_tokenizer_config(
-        self,
-        embedding_model: str
-    ) -> dict[str, Any] | None:
+    def get_tokenizer_config(self, embedding_model: str) -> dict[str, Any] | None:
         """Get default tokenizer configuration for embedding model.
 
         Args:
@@ -192,11 +182,7 @@ class TokenizerRegistry:
             "model_max_length": 512,
         }
 
-    def register_compatible_pair(
-        self,
-        embedding_model: str,
-        tokenizer_name: str
-    ) -> None:
+    def register_compatible_pair(self, embedding_model: str, tokenizer_name: str) -> None:
         """Register a custom tokenizer-embedding compatible pair.
 
         Allows extending the registry with new compatibility mappings at runtime.
@@ -224,10 +210,7 @@ class TokenizerRegistry:
                 f"embedding='{embedding_model}', tokenizer='{tokenizer_name}'"
             )
 
-    def get_compatible_tokenizers(
-        self,
-        embedding_model: str
-    ) -> list[str]:
+    def get_compatible_tokenizers(self, embedding_model: str) -> list[str]:
         """Get list of compatible tokenizers for embedding model.
 
         Args:
@@ -257,10 +240,7 @@ class TokenizerRegistry:
         return tokenizers
 
     def validate_tokenizer(
-        self,
-        tokenizer_name: str,
-        tokenizer_config: dict[str, Any],
-        embedding_model: str
+        self, tokenizer_name: str, tokenizer_config: dict[str, Any], embedding_model: str
     ) -> tuple[bool, list[str]]:
         """Validate tokenizer configuration for embedding model.
 
@@ -307,9 +287,7 @@ class TokenizerRegistry:
         if "max_length" in tokenizer_config:
             max_len = tokenizer_config["max_length"]
             if not isinstance(max_len, int) or max_len <= 0:
-                errors.append(
-                    f"Invalid max_length: {max_len}. Must be positive integer."
-                )
+                errors.append(f"Invalid max_length: {max_len}. Must be positive integer.")
             elif max_len > 2048:
                 errors.append(
                     f"max_length {max_len} is very large (>2048). "

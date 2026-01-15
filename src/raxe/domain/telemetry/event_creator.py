@@ -39,7 +39,7 @@ def hash_text(text: str, algorithm: str = "sha256") -> str:
     else:
         raise ValueError(f"Unsupported hash algorithm: {algorithm}")
 
-    hasher.update(text.encode('utf-8'))
+    hasher.update(text.encode("utf-8"))
     return f"{algorithm}:{hasher.hexdigest()}"
 
 
@@ -67,7 +67,7 @@ def create_scan_event(
     api_key_id: str | None = None,
     context: dict[str, Any] | None = None,
     performance_metrics: dict[str, Any] | None = None,
-    hash_algorithm: str = "sha256"
+    hash_algorithm: str = "sha256",
 ) -> dict[str, Any]:
     """
     Create a privacy-preserving scan event from a scan result.
@@ -103,11 +103,13 @@ def create_scan_event(
         l1_result = scan_result["l1_result"]
         if "detections" in l1_result:
             for detection in l1_result["detections"]:
-                l1_detections.append({
-                    "rule_id": detection.get("rule_id", ""),
-                    "severity": detection.get("severity", "").lower(),
-                    "confidence": detection.get("confidence", 1.0)
-                })
+                l1_detections.append(
+                    {
+                        "rule_id": detection.get("rule_id", ""),
+                        "severity": detection.get("severity", "").lower(),
+                        "confidence": detection.get("confidence", 1.0),
+                    }
+                )
 
     # Extract L2 predictions with rich metadata (no PII)
     # L2 METADATA SHARING POLICY (privacy-safe):
@@ -167,9 +169,9 @@ def create_scan_event(
 
     # Determine threat detection status
     threat_detected = (
-        len(l1_detections) > 0 or
-        len(l2_predictions) > 0 or
-        (policy_decision and policy_decision["action"] != "ALLOW")
+        len(l1_detections) > 0
+        or len(l2_predictions) > 0
+        or (policy_decision and policy_decision["action"] != "ALLOW")
     )
 
     # Calculate highest severity
@@ -205,7 +207,7 @@ def create_scan_event(
         "detection_count": len(l1_detections) + len(l2_predictions),
         "highest_severity": highest_severity,
         "l1_detections": l1_detections,
-        "l2_predictions": l2_predictions
+        "l2_predictions": l2_predictions,
     }
 
     # Add L2 metadata if available (rich ML metrics)
@@ -220,7 +222,7 @@ def create_scan_event(
         "event_id": str(uuid.uuid4()),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "customer_id": customer_id,
-        "scan_result": event_scan_result
+        "scan_result": event_scan_result,
     }
 
     # Add optional fields
@@ -255,7 +257,7 @@ def validate_event_privacy(event: dict[str, Any]) -> list[str]:
         ("email", r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
         ("phone", r"\+?[1-9]\d{10,14}$"),  # More specific phone pattern
         ("ssn", r"\d{3}-\d{2}-\d{4}"),
-        ("credit_card", r"\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}")
+        ("credit_card", r"\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}"),
     ]
 
     def check_value(value: Any, path: str) -> None:
@@ -264,24 +266,25 @@ def validate_event_privacy(event: dict[str, Any]) -> list[str]:
             # Check if it looks like a prefixed hash (sha256:64hexchars = 71 chars)
             if value.startswith("sha256:") and len(value) == 71:
                 hex_part = value[7:]
-                if all(c in '0123456789abcdef' for c in hex_part):
+                if all(c in "0123456789abcdef" for c in hex_part):
                     return  # Valid prefixed hash, safe
             # Also accept legacy format (64 hex chars) for backwards compatibility during transition
-            if len(value) == 64 and all(c in '0123456789abcdef' for c in value):
+            if len(value) == 64 and all(c in "0123456789abcdef" for c in value):
                 return  # Likely a legacy hash, safe
 
             # Skip known safe patterns
             # UUID pattern (event_id, etc)
             import re
-            if re.match(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', value):
+
+            if re.match(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$", value):
                 return  # UUID, safe
 
             # ISO timestamp pattern
-            if re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', value):
+            if re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", value):
                 return  # Timestamp, safe
 
             # Customer ID pattern
-            if re.match(r'^cust-[a-z0-9]{8}$', value):
+            if re.match(r"^cust-[a-z0-9]{8}$", value):
                 return  # Customer ID format, safe
 
             # Check for PII patterns
@@ -310,14 +313,16 @@ def validate_event_privacy(event: dict[str, Any]) -> list[str]:
             text_hash = scan_result["text_hash"]
             # Accept new prefixed format (sha256:64hexchars = 71 chars)
             is_valid_prefixed = (
-                isinstance(text_hash, str) and
-                text_hash.startswith("sha256:") and
-                len(text_hash) == 71
+                isinstance(text_hash, str)
+                and text_hash.startswith("sha256:")
+                and len(text_hash) == 71
             )
             # Also accept legacy format (64 hex chars) during transition
             is_valid_legacy = isinstance(text_hash, str) and len(text_hash) == 64
             if not (is_valid_prefixed or is_valid_legacy):
-                violations.append("scan_result.text_hash is not a valid SHA256 hash (expected sha256:... format)")
+                violations.append(
+                    "scan_result.text_hash is not a valid SHA256 hash (expected sha256:... format)"
+                )
 
     return violations
 

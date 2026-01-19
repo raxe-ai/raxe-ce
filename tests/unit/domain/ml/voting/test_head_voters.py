@@ -137,30 +137,20 @@ class TestVoteSeverity:
         assert detail.weight == 1.5
         assert "safe_severities" in detail.rationale
 
-    def test_vote_threat_severity_high(self):
-        """Test voting THREAT for severity=high."""
+    def test_vote_threat_severity_severe(self):
+        """Test voting THREAT for severity=severe."""
         detail = vote_severity(
-            severity_prediction="high",
+            severity_prediction="severe",
             severity_confidence=0.80,
             thresholds=SeverityHeadThresholds(),
             weight=1.5,
         )
         assert detail.vote == Vote.THREAT
 
-    def test_vote_threat_severity_critical(self):
-        """Test voting THREAT for severity=critical."""
+    def test_vote_threat_severity_moderate(self):
+        """Test voting THREAT for severity=moderate."""
         detail = vote_severity(
-            severity_prediction="critical",
-            severity_confidence=0.90,
-            thresholds=SeverityHeadThresholds(),
-            weight=1.5,
-        )
-        assert detail.vote == Vote.THREAT
-
-    def test_vote_threat_severity_low(self):
-        """Test voting THREAT for severity=low."""
-        detail = vote_severity(
-            severity_prediction="low",
+            severity_prediction="moderate",
             severity_confidence=0.70,
             thresholds=SeverityHeadThresholds(),
             weight=1.5,

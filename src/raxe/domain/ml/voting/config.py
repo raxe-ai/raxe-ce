@@ -41,7 +41,8 @@ class BinaryHeadThresholds:
             raise ValueError(f"threat_threshold must be 0-1, got {self.threat_threshold}")
         if self.safe_threshold >= self.threat_threshold:
             raise ValueError(
-                f"safe_threshold ({self.safe_threshold}) must be < threat_threshold ({self.threat_threshold})"
+                f"safe_threshold ({self.safe_threshold}) must be < "
+                f"threat_threshold ({self.threat_threshold})"
             )
 
 
@@ -75,7 +76,7 @@ class SeverityHeadThresholds:
     """Thresholds for the severity classifier head.
 
     Voting rules:
-    - THREAT if severity in (low, medium, high, critical)
+    - THREAT if severity in (moderate, severe)
     - SAFE if severity == none
     - No abstain - severity always has an opinion
 
@@ -83,11 +84,11 @@ class SeverityHeadThresholds:
     indicates threat severity and has strong signal quality.
 
     Attributes:
-        threat_severities: Severities that indicate threat (default: low, medium, high, critical)
+        threat_severities: Severities that indicate threat (default: moderate, severe)
         safe_severities: Severities that indicate safe (default: none)
     """
 
-    threat_severities: tuple[str, ...] = ("low", "medium", "high", "critical")
+    threat_severities: tuple[str, ...] = ("moderate", "severe")
     safe_severities: tuple[str, ...] = ("none",)
 
 
@@ -251,7 +252,8 @@ class DecisionThresholds:
             raise ValueError(f"min_threat_votes must be >= 1, got {self.min_threat_votes}")
         if self.severity_veto_override_votes < 1:
             raise ValueError(
-                f"severity_veto_override_votes must be >= 1, got {self.severity_veto_override_votes}"
+                f"severity_veto_override_votes must be >= 1, "
+                f"got {self.severity_veto_override_votes}"
             )
         if self.threat_ratio <= 0:
             raise ValueError(f"threat_ratio must be > 0, got {self.threat_ratio}")
@@ -259,7 +261,8 @@ class DecisionThresholds:
             raise ValueError(f"review_ratio_min must be >= 0, got {self.review_ratio_min}")
         if self.review_ratio_min >= self.threat_ratio:
             raise ValueError(
-                f"review_ratio_min ({self.review_ratio_min}) must be < threat_ratio ({self.threat_ratio})"
+                f"review_ratio_min ({self.review_ratio_min}) must be < "
+                f"threat_ratio ({self.threat_ratio})"
             )
 
 
@@ -385,7 +388,8 @@ def get_voting_config(preset: VotingPreset | str = VotingPreset.BALANCED) -> Vot
         return _get_harm_focused_config()
     else:
         raise ValueError(
-            f"Unknown preset: {preset}. Valid presets: balanced, high_security, low_fp, harm_focused"
+            f"Unknown preset: {preset}. "
+            "Valid presets: balanced, high_security, low_fp, harm_focused"
         )
 
 
@@ -406,7 +410,7 @@ def _get_balanced_config() -> VotingConfig:
             safe_confidence=0.35,
         ),
         severity=SeverityHeadThresholds(
-            threat_severities=("low", "medium", "high", "critical"),
+            threat_severities=("moderate", "severe"),
             safe_severities=("none",),
         ),
         technique=TechniqueHeadThresholds(
@@ -452,7 +456,7 @@ def _get_high_security_config() -> VotingConfig:
             safe_confidence=0.25,
         ),
         severity=SeverityHeadThresholds(
-            threat_severities=("low", "medium", "high", "critical"),
+            threat_severities=("moderate", "severe"),
             safe_severities=("none",),
         ),
         technique=TechniqueHeadThresholds(
@@ -498,8 +502,8 @@ def _get_low_fp_config() -> VotingConfig:
             safe_confidence=0.45,
         ),
         severity=SeverityHeadThresholds(
-            threat_severities=("medium", "high", "critical"),  # Exclude low severity
-            safe_severities=("none", "low"),  # Low severity is considered safe
+            threat_severities=("severe",),  # Only severe is threat
+            safe_severities=("none", "moderate"),  # Moderate is considered safe
         ),
         technique=TechniqueHeadThresholds(
             threat_confidence=0.65,  # Higher confidence required
@@ -565,7 +569,7 @@ def _get_harm_focused_config() -> VotingConfig:
             safe_confidence=0.40,  # Higher - more abstains
         ),
         severity=SeverityHeadThresholds(
-            threat_severities=("low", "medium", "high", "critical"),
+            threat_severities=("moderate", "severe"),
             safe_severities=("none",),
         ),
         technique=TechniqueHeadThresholds(

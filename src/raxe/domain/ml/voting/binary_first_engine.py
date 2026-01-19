@@ -373,9 +373,7 @@ class BinaryFirstEngine:
             ),
             "severity": HeadVoteDetail(
                 head_name="severity",
-                vote=(
-                    Vote.THREAT if outputs.severity_prediction not in ("none", "low") else Vote.SAFE
-                ),
+                vote=(Vote.THREAT if outputs.severity_prediction not in ("none",) else Vote.SAFE),
                 confidence=outputs.severity_confidence,
                 weight=0.8,
                 raw_probability=outputs.severity_confidence,

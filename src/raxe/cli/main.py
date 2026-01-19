@@ -510,7 +510,7 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
     "--suppress",
     "suppress_patterns",
     multiple=True,
-    help="Suppress rule(s) for this scan. Supports wildcards and action override (e.g., pi-001, jb-*, pi-001:FLAG)",
+    help="Suppress rule(s) for this scan (e.g., pi-001, jb-*, pi-001:FLAG)",
 )
 @click.option(
     "--tenant",
@@ -995,8 +995,9 @@ def scan(
         pass  # Never let telemetry affect scan completion
 
     # Exit with appropriate code for CI/CD (quiet mode)
-    # Use should_block which respects the policy mode (monitor=never block, etc.)
-    if quiet and result.should_block:
+    # In CI mode, exit 1 if ANY threats detected (not policy-dependent)
+    # This allows CI to detect threats regardless of policy mode
+    if quiet and result.has_threats:
         sys.exit(EXIT_THREAT_DETECTED)
 
 

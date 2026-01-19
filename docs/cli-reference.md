@@ -752,7 +752,7 @@ raxe doctor
 # RAXE Health Check
 # ═════════════════
 # [OK] Configuration file exists
-# [OK] Rules loaded successfully (460 rules)
+# [OK] Rules loaded successfully (514 rules)
 # [OK] Database initialized
 # [OK] ML model available
 # [OK] Telemetry endpoint reachable
@@ -763,7 +763,7 @@ raxe doctor
 
 # With key expiry warning (days 11-14):
 # [OK] Configuration file exists
-# [OK] Rules loaded successfully (460 rules)
+# [OK] Rules loaded successfully (514 rules)
 # [WARN] API key expires in 3 days
 #        Get a permanent key at: https://console.raxe.ai
 # [OK] Database initialized

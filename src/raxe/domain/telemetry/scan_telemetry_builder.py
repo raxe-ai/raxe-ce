@@ -45,30 +45,43 @@ FAMILY_LABELS = [
     "toxic_or_policy_violating_content",
 ]
 
-SEVERITY_LABELS = ["none", "low", "medium", "high", "critical"]
+SEVERITY_LABELS = ["none", "moderate", "severe"]
 
 TECHNIQUE_LABELS = [
+    "none",
+    "agent_spoofing",
+    "cascade_trigger",
     "chain_of_thought_or_internal_state_leak",
     "context_or_delimiter_injection",
+    "context_poisoning",
+    "credential_theft_via_tool",
+    "cross_agent_injection",
     "data_exfil_system_prompt_or_config",
     "data_exfil_user_content",
     "encoding_or_obfuscation",
     "eval_or_guardrail_evasion",
+    "goal_redirection",
     "hidden_or_steganographic_prompt",
+    "identity_confusion",
     "indirect_injection_via_content",
     "instruction_override",
+    "memory_injection",
     "mode_switch_or_privilege_escalation",
     "multi_turn_or_crescendo",
-    "none",
+    "objective_substitution",
     "other_attack_technique",
     "payload_splitting_or_staging",
     "policy_override_or_rewriting",
+    "privilege_escalation_via_tool",
     "rag_poisoning_or_context_bias",
+    "reasoning_manipulation",
     "role_or_persona_manipulation",
     "safety_bypass_harmful_output",
+    "session_hijacking",
     "social_engineering_content",
     "system_prompt_or_config_extraction",
     "tool_abuse_or_unintended_action",
+    "tool_chain_abuse",
     "tool_or_command_injection",
 ]
 
@@ -560,7 +573,7 @@ class ScanTelemetryBuilder:
         """
         # Try to get full distribution
         probs = metadata.get("severity_probabilities")
-        if probs and isinstance(probs, list | tuple) and len(probs) == 5:
+        if probs and isinstance(probs, list | tuple) and len(probs) == 3:
             return dict(zip(SEVERITY_LABELS, [float(p) for p in probs], strict=False))
 
         # Fallback: construct from prediction and confidence

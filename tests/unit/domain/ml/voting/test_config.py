@@ -58,18 +58,18 @@ class TestSeverityHeadThresholds:
     def test_default_thresholds(self):
         """Test default threshold values."""
         t = SeverityHeadThresholds()
-        assert "high" in t.threat_severities
-        assert "critical" in t.threat_severities
+        assert "moderate" in t.threat_severities
+        assert "severe" in t.threat_severities
         assert "none" in t.safe_severities
 
     def test_custom_severities(self):
-        """Test custom severity configuration."""
+        """Test custom severity configuration for low_fp preset."""
         t = SeverityHeadThresholds(
-            threat_severities=("medium", "high", "critical"),
-            safe_severities=("none", "low"),
+            threat_severities=("severe",),
+            safe_severities=("none", "moderate"),
         )
-        assert "low" not in t.threat_severities
-        assert "low" in t.safe_severities
+        assert "moderate" not in t.threat_severities
+        assert "moderate" in t.safe_severities
 
 
 class TestTechniqueHeadThresholds:

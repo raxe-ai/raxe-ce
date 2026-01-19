@@ -41,9 +41,9 @@ The Gemma L2 detector uses 5 specialized classifier heads:
 | Head | Description | Weight | Signal Quality |
 |------|-------------|--------|----------------|
 | **binary** | Is threat? (yes/no) | 1.0 | Baseline |
-| **family** | Threat category (9 classes) | 1.2 | Strong |
-| **severity** | Threat level (none/low/medium/high/critical) | 1.5 | Highest |
-| **technique** | Attack technique (22 classes) | 1.0 | Good |
+| **family** | Threat category (15 classes) | 1.2 | Strong |
+| **severity** | Threat level (none/moderate/severe) | 1.5 | Highest |
+| **technique** | Attack technique (35 classes) | 1.0 | Good |
 | **harm** | Harm types (10 labels, multilabel) | 0.8 | Prone to FPs |
 
 ### Per-Head Voting Rules
@@ -66,7 +66,7 @@ ABSTAIN otherwise
 
 #### Severity Head
 ```
-THREAT if severity in (low, medium, high, critical)
+THREAT if severity in (moderate, severe)
 SAFE   if severity == "none"
 No abstain - severity always has an opinion
 ```
@@ -321,6 +321,64 @@ custom_config = VotingConfig(
 
 # Note: Custom config requires code changes to GemmaL2Detector
 ```
+
+## L2 Classification Categories
+
+### Threat Families (15 classes)
+
+| Family | Description |
+|--------|-------------|
+| `benign` | No threat detected |
+| `agent_goal_hijack` | Attempts to redirect agent objectives |
+| `data_exfiltration` | Stealing sensitive data |
+| `encoding_or_obfuscation_attack` | Using encoding to evade detection |
+| `human_trust_exploit` | Social engineering via LLM |
+| `inter_agent_attack` | Attacks targeting multi-agent systems |
+| `jailbreak` | Bypassing safety guidelines |
+| `memory_poisoning` | Corrupting agent memory/context |
+| `other_security` | Other security concerns |
+| `privilege_escalation` | Gaining elevated access |
+| `prompt_injection` | Instruction override attacks |
+| `rag_or_context_attack` | RAG/retrieval manipulation |
+| `rogue_behavior` | Causing unintended agent actions |
+| `tool_or_command_abuse` | Misusing tools/commands |
+| `toxic_or_policy_violating_content` | Harmful or policy-violating output |
+
+### Severity Levels (3 classes)
+
+| Severity | Description |
+|----------|-------------|
+| `none` | No threat detected |
+| `moderate` | Medium-risk threat, may require review |
+| `severe` | High-risk threat, should be blocked |
+
+### Primary Techniques (35 classes)
+
+The model classifies attacks into 35 specific techniques, including:
+- `instruction_override` - Direct instruction manipulation
+- `role_or_persona_manipulation` - Persona hijacking (DAN, etc.)
+- `system_prompt_or_config_extraction` - Extracting hidden prompts
+- `encoding_or_obfuscation` - l33t speak, Base64, etc.
+- `indirect_injection_via_content` - Attacks via external content
+- `tool_abuse_or_unintended_action` - Misusing agent tools
+- And 29 more specialized technique categories
+
+See `src/raxe/domain/ml/gemma_models.py` for the complete list.
+
+### Harm Types (10 classes, multilabel)
+
+| Harm Type | Description |
+|-----------|-------------|
+| `cbrn_or_weapons` | Chemical/biological/nuclear/weapons content |
+| `crime_or_fraud` | Criminal activity or fraud |
+| `cybersecurity_or_malware` | Hacking, malware creation |
+| `hate_or_harassment` | Hate speech, harassment |
+| `misinformation_or_disinfo` | False information |
+| `other_harm` | Other harmful content |
+| `privacy_or_pii` | Privacy violations, PII exposure |
+| `self_harm_or_suicide` | Self-harm content |
+| `sexual_content` | Adult/sexual content |
+| `violence_or_physical_harm` | Violence, physical harm |
 
 ## Architecture
 

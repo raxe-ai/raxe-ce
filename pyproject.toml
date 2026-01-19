@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raxe"
-version = "0.7.1"
+version = "0.7.2"
 description = "RAXE Community Edition - AI Security for Everyone. 460+ threat detection rules, L2 CPU-based ML, always free."
 authors = [{name = "RAXE Technologies, Inc.", email = "hello@raxe.ai"}]
 license = {text = "Proprietary - See LICENSE file"}
@@ -287,7 +287,9 @@ exclude_dirs = ["tests", "scripts"]
 # B608: SQL injection (safe parameterized queries with placeholders)
 # B310: URL open (URL scheme validated to be https://)
 # B108: Temp file (regex pattern matching, not file usage)
-skips = ["B608", "B310", "B108"]
+# B301: Pickle (loading trusted model files from our distribution only)
+# B202: Tarfile (members validated via _get_safe_members before extraction)
+skips = ["B608", "B310", "B108", "B301", "B202"]
 
 # =============================================================================
 # Semantic Release Configuration

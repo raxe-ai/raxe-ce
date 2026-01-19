@@ -14,7 +14,7 @@ RAXE uses YAML-based detection rules that are:
 - **Testable** - Every rule includes test cases for validation
 - **Versioned** - Rules follow semantic versioning (rule_id@version)
 
-RAXE ships with **460 production rules** across 7 threat families. You can add your own custom rules to detect application-specific threats.
+RAXE ships with **514 production rules** across 7 threat families. You can add your own custom rules to detect application-specific threats.
 
 ---
 

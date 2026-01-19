@@ -76,7 +76,7 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
       },
 
       "family": {
-        "prediction": "<string: 9-class enum>",
+        "prediction": "<string: 15-class enum>",
         "confidence": "<float: max probability>",
         "top3": [
           {"label": "<string>", "probability": "<float>"}
@@ -84,19 +84,17 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
       },
 
       "severity": {
-        "prediction": "<string: 5-class enum>",
+        "prediction": "<string: 3-class enum (none|moderate|severe)>",
         "confidence": "<float: max probability>",
         "distribution": {
           "none": "<float>",
-          "low": "<float>",
-          "medium": "<float>",
-          "high": "<float>",
-          "critical": "<float>"
+          "moderate": "<float>",
+          "severe": "<float>"
         }
       },
 
       "technique": {
-        "prediction": "<string|null: 22-class enum>",
+        "prediction": "<string|null: 35-class enum>",
         "confidence": "<float: max probability>",
         "top3": [
           {"label": "<string>", "probability": "<float>"}
@@ -357,31 +355,33 @@ Each head in `voting.per_head_votes` contains:
 
 ## Enum Values Reference
 
-### L2 Family (9 classes)
+### L2 Family (15 classes)
 ```
-benign, data_exfiltration, encoding_or_obfuscation_attack, jailbreak,
-other_security, prompt_injection, rag_or_context_attack,
-tool_or_command_abuse, toxic_or_policy_violating_content
-```
-
-### L2 Severity (5 classes)
-```
-none, low, medium, high, critical
+agent_goal_hijack, benign, data_exfiltration, encoding_or_obfuscation_attack,
+human_trust_exploit, inter_agent_attack, jailbreak, memory_poisoning,
+other_security, privilege_escalation, prompt_injection, rag_or_context_attack,
+rogue_behavior, tool_or_command_abuse, toxic_or_policy_violating_content
 ```
 
-### L2 Primary Technique (22 classes)
+### L2 Severity (3 classes)
 ```
-chain_of_thought_or_internal_state_leak, context_or_delimiter_injection,
-data_exfil_system_prompt_or_config, data_exfil_user_content,
-encoding_or_obfuscation, eval_or_guardrail_evasion,
-hidden_or_steganographic_prompt, indirect_injection_via_content,
-instruction_override, mode_switch_or_privilege_escalation,
-multi_turn_or_crescendo, none, other_attack_technique,
-payload_splitting_or_staging, policy_override_or_rewriting,
-rag_poisoning_or_context_bias, role_or_persona_manipulation,
-safety_bypass_harmful_output, social_engineering_content,
+none, moderate, severe
+```
+
+### L2 Primary Technique (35 classes)
+```
+none, agent_spoofing, cascade_trigger, chain_of_thought_or_internal_state_leak,
+context_or_delimiter_injection, context_poisoning, credential_theft_via_tool,
+cross_agent_injection, data_exfil_system_prompt_or_config, data_exfil_user_content,
+encoding_or_obfuscation, eval_or_guardrail_evasion, goal_redirection,
+hidden_or_steganographic_prompt, identity_confusion, indirect_injection_via_content,
+instruction_override, memory_injection, mode_switch_or_privilege_escalation,
+multi_turn_or_crescendo, objective_substitution, other_attack_technique,
+payload_splitting_or_staging, policy_override_or_rewriting, privilege_escalation_via_tool,
+rag_poisoning_or_context_bias, reasoning_manipulation, role_or_persona_manipulation,
+safety_bypass_harmful_output, session_hijacking, social_engineering_content,
 system_prompt_or_config_extraction, tool_abuse_or_unintended_action,
-tool_or_command_injection
+tool_chain_abuse, tool_or_command_injection
 ```
 
 ### L2 Harm Types (10 classes)

@@ -22,7 +22,7 @@ class TestHeadOutputs:
             binary_safe_prob=0.20,
             family_prediction="jailbreak",
             family_confidence=0.75,
-            severity_prediction="high",
+            severity_prediction="severe",
             severity_confidence=0.85,
             technique_prediction="instruction_override",
             technique_confidence=0.70,
@@ -71,7 +71,7 @@ class TestVotingEngine:
             binary_safe_prob=0.15,
             family_prediction="jailbreak",
             family_confidence=0.80,
-            severity_prediction="high",
+            severity_prediction="severe",
             severity_confidence=0.85,
             technique_prediction="instruction_override",
             technique_confidence=0.75,
@@ -210,7 +210,7 @@ class TestVotingEngine:
             binary_safe_prob=0.30,
             family_prediction="jailbreak",
             family_confidence=0.60,  # THREAT
-            severity_prediction="high",  # THREAT
+            severity_prediction="severe",  # THREAT
             severity_confidence=0.80,
             technique_prediction="instruction_override",
             technique_confidence=0.60,  # THREAT
@@ -233,7 +233,7 @@ class TestVotingEngine:
             binary_safe_prob=0.50,
             family_prediction="jailbreak",
             family_confidence=0.60,  # THREAT
-            severity_prediction="low",  # THREAT
+            severity_prediction="moderate",  # THREAT
             severity_confidence=0.50,
             technique_prediction="none",  # SAFE
             technique_confidence=0.60,
@@ -300,7 +300,7 @@ class TestVotingEngine:
             binary_safe_prob=0.20,
             family_prediction="jailbreak",
             family_confidence=0.70,  # THREAT (weight 1.2)
-            severity_prediction="high",  # THREAT (weight 1.5)
+            severity_prediction="severe",  # THREAT (weight 1.5)
             severity_confidence=0.80,
             technique_prediction="instruction_override",
             technique_confidence=0.60,  # THREAT (weight 1.0)
@@ -323,7 +323,7 @@ class TestVotingEngine:
             binary_safe_prob=0.20,
             family_prediction="jailbreak",
             family_confidence=0.70,
-            severity_prediction="high",
+            severity_prediction="severe",
             severity_confidence=0.80,
             technique_prediction="instruction_override",
             technique_confidence=0.60,
@@ -402,7 +402,7 @@ class TestHighSecurityPreset:
             binary_safe_prob=0.45,
             family_prediction="jailbreak",
             family_confidence=0.45,  # Between thresholds
-            severity_prediction="low",
+            severity_prediction="moderate",
             severity_confidence=0.70,
             technique_prediction="instruction_override",
             technique_confidence=0.40,  # Between thresholds
@@ -453,7 +453,7 @@ class TestLowFpPreset:
             binary_safe_prob=0.30,
             family_prediction="jailbreak",
             family_confidence=0.65,  # Below low_fp threshold (0.70)
-            severity_prediction="low",  # SAFE in low_fp (low is safe there)
+            severity_prediction="moderate",  # SAFE in low_fp (moderate is safe there)
             severity_confidence=0.70,
             technique_prediction="instruction_override",
             technique_confidence=0.60,  # Below low_fp threshold (0.65)
@@ -591,13 +591,13 @@ class TestVoteFromClassification:
             safe_probability=0.15,
             threat_family=ThreatFamily.JAILBREAK,
             family_confidence=0.75,
-            family_probabilities=(0.05, 0.02, 0.01, 0.75, 0.05, 0.05, 0.03, 0.02, 0.02),
-            severity=Severity.HIGH,
+            family_probabilities=tuple([0.02] * 6 + [0.75] + [0.02] * 8),  # 15 classes
+            severity=Severity.SEVERE,
             severity_confidence=0.80,
-            severity_probabilities=(0.05, 0.05, 0.10, 0.80, 0.00),
+            severity_probabilities=(0.05, 0.15, 0.80),  # 3 classes: none, moderate, severe
             primary_technique=PrimaryTechnique.INSTRUCTION_OVERRIDE,
             technique_confidence=0.70,
-            technique_probabilities=tuple([0.01] * 8 + [0.70] + [0.01] * 13),
+            technique_probabilities=tuple([0.01] * 16 + [0.70] + [0.01] * 18),  # 35 classes
             harm_types=MultilabelResult(
                 active_labels=[HarmType.CYBERSECURITY_OR_MALWARE],
                 probabilities={HarmType.CYBERSECURITY_OR_MALWARE: 0.75},
@@ -695,13 +695,13 @@ class TestVoteFromClassification:
             safe_probability=0.25,
             threat_family=ThreatFamily.PROMPT_INJECTION,
             family_confidence=0.65,
-            family_probabilities=(0.10, 0.05, 0.05, 0.05, 0.05, 0.65, 0.02, 0.02, 0.01),
-            severity=Severity.MEDIUM,
+            family_probabilities=tuple([0.02] * 10 + [0.65] + [0.02] * 4),  # 15 classes
+            severity=Severity.MODERATE,
             severity_confidence=0.70,
-            severity_probabilities=(0.10, 0.10, 0.70, 0.05, 0.05),
+            severity_probabilities=(0.10, 0.70, 0.20),  # 3 classes: none, moderate, severe
             primary_technique=PrimaryTechnique.CONTEXT_OR_DELIMITER_INJECTION,
             technique_confidence=0.55,
-            technique_probabilities=tuple([0.02] + [0.55] + [0.02] * 20),
+            technique_probabilities=tuple([0.02] * 4 + [0.55] + [0.02] * 30),  # 35 classes
             harm_types=MultilabelResult(
                 active_labels=[HarmType.PRIVACY_OR_PII],
                 probabilities={HarmType.PRIVACY_OR_PII: 0.60},
@@ -718,7 +718,7 @@ class TestVoteFromClassification:
             binary_safe_prob=0.25,
             family_prediction="prompt_injection",
             family_confidence=0.65,
-            severity_prediction="medium",
+            severity_prediction="moderate",
             severity_confidence=0.70,
             technique_prediction="context_or_delimiter_injection",
             technique_confidence=0.55,

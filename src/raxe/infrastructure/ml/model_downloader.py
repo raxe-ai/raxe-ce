@@ -7,9 +7,10 @@ Architecture: Single source of truth for model configuration.
 - CURRENT_MODEL: The one model that RAXE uses (change only this to update)
 - MODEL_REGISTRY: Auto-generated from CURRENT_MODEL for backward compatibility
 
-Current model (v0.3.0 - RAXE 0.7.0+):
+Current model (v0.4.0 - RAXE 0.8.0+):
 - Gemma MLP 5-head classifier with BinaryFirstEngine
-- TPR: 90.4%, FPR: 7.4%
+- Classification: 15 families, 3 severity levels, 35 techniques
+- TPR: 91.2%, FPR: 6.4%, F1: 0.94
 - INT8 quantized for CPU inference (~235MB)
 """
 
@@ -44,8 +45,8 @@ def get_remote_file_size(url: str, timeout: int = 10) -> int | None:
         File size in bytes, or None if unavailable
     """
     try:
-        request = Request(url, method="HEAD")
-        with urlopen(request, timeout=timeout) as response:  # nosec B310 - URLs are from CURRENT_MODEL config
+        request = Request(url, method="HEAD")  # noqa: S310 - URLs from CURRENT_MODEL config
+        with urlopen(request, timeout=timeout) as response:  # noqa: S310 nosec B310
             content_length = response.headers.get("Content-Length")
             return int(content_length) if content_length else None
     except Exception:
@@ -72,16 +73,16 @@ class ModelConfig:
 
 # THE CURRENT MODEL - This is the ONLY place to update when releasing a new model
 _MODEL_BASE_URL = os.environ.get(
-    "RAXE_MODEL_URL", "https://github.com/raxe-ai/raxe-models/releases/download/v0.3.0"
+    "RAXE_MODEL_URL", "https://github.com/raxe-ai/raxe-models/releases/download/v0.4.0"
 )
 
 CURRENT_MODEL = ModelConfig(
     id="threat_classifier_gemma_mlp_v3",
     name="Threat Classifier Gemma MLP v3",
-    description="Gemma MLP 5-head classifier with BinaryFirstEngine. TPR 90.4%, FPR 7.4%.",
+    description="Gemma MLP 5-head classifier with BinaryFirstEngine. TPR 91.2%, FPR 6.4%.",
     size_mb=235,  # Actual compressed size; use get_remote_file_size() for exact value
     url=f"{_MODEL_BASE_URL}/threat_classifier_gemma_mlp_v3_deploy.tar.gz",
-    sha256="4e60e8e5774c82939b2181488d81414511f02410928dee6b0713f03b95bf621e",
+    sha256="4885735c08e8f4f28ec7aebdcb8e613df0c189e15a8ff28d98606bab831fd8c7",
     folder_name="threat_classifier_gemma_mlp_v3_deploy",
 )
 
@@ -350,7 +351,7 @@ def _download_file(
         RuntimeError: If download fails
     """
     try:
-        with urlopen(url, timeout=60) as response:
+        with urlopen(url, timeout=60) as response:  # noqa: S310 nosec B310
             total_size = int(response.headers.get("Content-Length", 0))
             downloaded = 0
             chunk_size = 8192
@@ -414,7 +415,7 @@ def _extract_tarball(archive_path: Path, dest_dir: Path) -> None:
             else:
                 # Python 3.10-3.11: validate members and extract safe ones only
                 safe_members = _get_safe_members(tar, dest_dir)
-                tar.extractall(dest_dir, members=safe_members)
+                tar.extractall(dest_dir, members=safe_members)  # noqa: S202 nosec B202
 
     except tarfile.TarError as e:
         raise RuntimeError(f"Failed to extract model archive: {e}") from e

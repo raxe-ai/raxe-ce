@@ -1,6 +1,51 @@
 # CHANGELOG
 
 
+## v0.7.2 (2026-01-19)
+
+### Features
+
+- **ml**: Update L2 model to v0.4.0 with expanded classification schema
+
+  The L2 ML classifier now uses an updated classification schema with improved accuracy:
+
+  **Classification Changes:**
+  - Severity: 5 levels → 3 levels (none/moderate/severe)
+  - Threat Family: 9 classes → 15 classes
+  - Primary Technique: 22 classes → 35 classes
+  - Harm Types: 10 classes (unchanged)
+
+  **New Threat Families:**
+  - `agent_goal_hijack` - Attempts to redirect agent objectives
+  - `privilege_escalation` - Gaining elevated access
+  - `inter_agent_attack` - Multi-agent system attacks
+  - `memory_poisoning` - Corrupting agent memory/context
+  - `human_trust_exploit` - Social engineering via LLM
+  - `rogue_behavior` - Causing unintended agent actions
+
+  **Performance:**
+  - TPR: 91.2% (was 90.4%)
+  - FPR: 6.4% (was 7.4%)
+  - F1: 0.94
+
+  **Model Download:**
+  - New model automatically downloaded on first use
+  - Model URL: `v0.4.0` release from raxe-models
+
+### Breaking Changes
+
+- L2 severity values changed from 5 levels to 3 levels
+  - Old: `none`, `low`, `medium`, `high`, `critical`
+  - New: `none`, `moderate`, `severe`
+- Code checking L2 severity should update to use new values
+
+### Documentation
+
+- Updated `docs/VOTING_ENGINE.md` with new classification schema
+- Updated `raxe-ce-docs/concepts/detection-engine.mdx` with L2 details
+- Updated `raxe-ce-docs/concepts/threat-families.mdx` with L1 vs L2 distinction
+
+
 ## v0.7.1 (2026-01-13)
 
 ### Features

@@ -2,9 +2,9 @@
 
 This detector uses the EmbeddingGemma-300M model with 5 classifier heads:
 1. is_threat (binary): benign vs threat
-2. threat_family (multiclass, 9): Attack category
-3. severity (multiclass, 5): Threat severity level
-4. primary_technique (multiclass, 22): Specific attack technique
+2. threat_family (multiclass, 15): Attack category
+3. severity (multiclass, 3): Threat severity level (none, moderate, severe)
+4. primary_technique (multiclass, 35): Specific attack technique
 5. harm_types (multilabel, 10): Types of potential harm
 
 Model files expected in model directory:
@@ -645,11 +645,11 @@ class GemmaL2Detector:
 
         # Apply severity boost
         if ensemble.use_severity_boost:
-            if severity in (Severity.HIGH, Severity.CRITICAL):
+            if severity == Severity.SEVERE:
                 effective_threat_prob = min(
                     1.0, effective_threat_prob + ensemble.severity_boost_amount
                 )
-                if severity == Severity.CRITICAL and not is_threat:
+                if not is_threat:
                     is_threat = True
 
         # Apply technique boost
@@ -835,7 +835,7 @@ class GemmaL2Detector:
         reasons.append(family_desc)
 
         # Severity reason
-        if classification.severity in (Severity.HIGH, Severity.CRITICAL):
+        if classification.severity == Severity.SEVERE:
             reasons.append(
                 f"{classification.severity.value.upper()} severity - immediate action recommended"
             )
@@ -864,14 +864,10 @@ class GemmaL2Detector:
         """Generate recommended actions based on classification."""
         actions = []
 
-        if classification.severity == Severity.CRITICAL:
-            actions.append("CRITICAL threat - BLOCK immediately and alert security team")
-        elif classification.severity == Severity.HIGH:
-            actions.append("HIGH severity - BLOCK and log for review")
-        elif classification.severity == Severity.MEDIUM:
-            actions.append("MEDIUM severity - Consider blocking or require additional validation")
-        elif classification.severity == Severity.LOW:
-            actions.append("LOW severity - Log and monitor, allow with caution")
+        if classification.severity == Severity.SEVERE:
+            actions.append("SEVERE threat - BLOCK immediately and alert security team")
+        elif classification.severity == Severity.MODERATE:
+            actions.append("MODERATE severity - Consider blocking or require additional validation")
         else:
             actions.append("Minimal severity - Allow with logging")
 
@@ -882,6 +878,14 @@ class GemmaL2Detector:
             actions.append("Block and update guardrails to prevent similar attempts")
         elif classification.threat_family == ThreatFamily.PROMPT_INJECTION:
             actions.append("Sanitize input and validate instruction boundaries")
+        elif classification.threat_family == ThreatFamily.AGENT_GOAL_HIJACK:
+            actions.append("Review agent goals and validate task boundaries")
+        elif classification.threat_family == ThreatFamily.PRIVILEGE_ESCALATION:
+            actions.append("Audit access controls and review permission boundaries")
+        elif classification.threat_family == ThreatFamily.INTER_AGENT_ATTACK:
+            actions.append("Isolate agents and validate inter-agent communication")
+        elif classification.threat_family == ThreatFamily.MEMORY_POISONING:
+            actions.append("Clear memory state and validate memory sources")
 
         return actions
 

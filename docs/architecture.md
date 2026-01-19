@@ -143,7 +143,7 @@ Fast, precise pattern matching using curated YAML rules:
 │  L1 Detector    │
 │  • Regex rules  │
 │  • Fast (<1ms)  │
-│  • 460 rules    │
+│  • 514 rules    │
 └────────┬────────┘
          │
          ▼

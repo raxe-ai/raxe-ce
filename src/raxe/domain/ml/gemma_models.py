@@ -5,9 +5,9 @@ These models represent the classification outputs from the Gemma ML model.
 
 Model Architecture:
 - is_threat: Binary classifier (benign/threat)
-- threat_family: 9-class multiclass
-- severity: 5-class multiclass
-- primary_technique: 22-class multiclass (threats only)
+- threat_family: 15-class multiclass
+- severity: 3-class multiclass
+- primary_technique: 35-class multiclass (threats only)
 - harm_types: 10-class MULTILABEL (threats only)
 """
 
@@ -17,15 +17,21 @@ from typing import Any
 
 
 class ThreatFamily(Enum):
-    """Threat family classifications from Gemma model (9 classes)."""
+    """Threat family classifications from Gemma model (15 classes)."""
 
+    AGENT_GOAL_HIJACK = "agent_goal_hijack"
     BENIGN = "benign"
     DATA_EXFILTRATION = "data_exfiltration"
     ENCODING_OR_OBFUSCATION_ATTACK = "encoding_or_obfuscation_attack"
+    HUMAN_TRUST_EXPLOIT = "human_trust_exploit"
+    INTER_AGENT_ATTACK = "inter_agent_attack"
     JAILBREAK = "jailbreak"
+    MEMORY_POISONING = "memory_poisoning"
     OTHER_SECURITY = "other_security"
+    PRIVILEGE_ESCALATION = "privilege_escalation"
     PROMPT_INJECTION = "prompt_injection"
     RAG_OR_CONTEXT_ATTACK = "rag_or_context_attack"
+    ROGUE_BEHAVIOR = "rogue_behavior"
     TOOL_OR_COMMAND_ABUSE = "tool_or_command_abuse"
     TOXIC_OR_POLICY_VIOLATING_CONTENT = "toxic_or_policy_violating_content"
 
@@ -33,13 +39,19 @@ class ThreatFamily(Enum):
     def from_index(cls, index: int) -> "ThreatFamily":
         """Convert model output index to ThreatFamily."""
         classes = [
+            cls.AGENT_GOAL_HIJACK,
             cls.BENIGN,
             cls.DATA_EXFILTRATION,
             cls.ENCODING_OR_OBFUSCATION_ATTACK,
+            cls.HUMAN_TRUST_EXPLOIT,
+            cls.INTER_AGENT_ATTACK,
             cls.JAILBREAK,
+            cls.MEMORY_POISONING,
             cls.OTHER_SECURITY,
+            cls.PRIVILEGE_ESCALATION,
             cls.PROMPT_INJECTION,
             cls.RAG_OR_CONTEXT_ATTACK,
+            cls.ROGUE_BEHAVIOR,
             cls.TOOL_OR_COMMAND_ABUSE,
             cls.TOXIC_OR_POLICY_VIOLATING_CONTENT,
         ]
@@ -49,78 +61,102 @@ class ThreatFamily(Enum):
 
 
 class Severity(Enum):
-    """Severity levels from Gemma model (5 classes)."""
+    """Severity levels from Gemma model (3 classes)."""
 
     NONE = "none"
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
+    MODERATE = "moderate"
+    SEVERE = "severe"
 
     @classmethod
     def from_index(cls, index: int) -> "Severity":
         """Convert model output index to Severity."""
-        classes = [cls.NONE, cls.LOW, cls.MEDIUM, cls.HIGH, cls.CRITICAL]
+        classes = [cls.NONE, cls.MODERATE, cls.SEVERE]
         if 0 <= index < len(classes):
             return classes[index]
         return cls.NONE
 
 
 class PrimaryTechnique(Enum):
-    """Primary attack technique classifications (22 classes).
+    """Primary attack technique classifications (35 classes).
 
     These represent specific attack vectors detected by the model.
     Only populated when is_threat=True.
     """
 
+    NONE = "none"
+    AGENT_SPOOFING = "agent_spoofing"
+    CASCADE_TRIGGER = "cascade_trigger"
     CHAIN_OF_THOUGHT_OR_INTERNAL_STATE_LEAK = "chain_of_thought_or_internal_state_leak"
     CONTEXT_OR_DELIMITER_INJECTION = "context_or_delimiter_injection"
+    CONTEXT_POISONING = "context_poisoning"
+    CREDENTIAL_THEFT_VIA_TOOL = "credential_theft_via_tool"
+    CROSS_AGENT_INJECTION = "cross_agent_injection"
     DATA_EXFIL_SYSTEM_PROMPT_OR_CONFIG = "data_exfil_system_prompt_or_config"
     DATA_EXFIL_USER_CONTENT = "data_exfil_user_content"
     ENCODING_OR_OBFUSCATION = "encoding_or_obfuscation"
     EVAL_OR_GUARDRAIL_EVASION = "eval_or_guardrail_evasion"
+    GOAL_REDIRECTION = "goal_redirection"
     HIDDEN_OR_STEGANOGRAPHIC_PROMPT = "hidden_or_steganographic_prompt"
+    IDENTITY_CONFUSION = "identity_confusion"
     INDIRECT_INJECTION_VIA_CONTENT = "indirect_injection_via_content"
     INSTRUCTION_OVERRIDE = "instruction_override"
+    MEMORY_INJECTION = "memory_injection"
     MODE_SWITCH_OR_PRIVILEGE_ESCALATION = "mode_switch_or_privilege_escalation"
     MULTI_TURN_OR_CRESCENDO = "multi_turn_or_crescendo"
-    NONE = "none"
+    OBJECTIVE_SUBSTITUTION = "objective_substitution"
     OTHER_ATTACK_TECHNIQUE = "other_attack_technique"
     PAYLOAD_SPLITTING_OR_STAGING = "payload_splitting_or_staging"
     POLICY_OVERRIDE_OR_REWRITING = "policy_override_or_rewriting"
+    PRIVILEGE_ESCALATION_VIA_TOOL = "privilege_escalation_via_tool"
     RAG_POISONING_OR_CONTEXT_BIAS = "rag_poisoning_or_context_bias"
+    REASONING_MANIPULATION = "reasoning_manipulation"
     ROLE_OR_PERSONA_MANIPULATION = "role_or_persona_manipulation"
     SAFETY_BYPASS_HARMFUL_OUTPUT = "safety_bypass_harmful_output"
+    SESSION_HIJACKING = "session_hijacking"
     SOCIAL_ENGINEERING_CONTENT = "social_engineering_content"
     SYSTEM_PROMPT_OR_CONFIG_EXTRACTION = "system_prompt_or_config_extraction"
     TOOL_ABUSE_OR_UNINTENDED_ACTION = "tool_abuse_or_unintended_action"
+    TOOL_CHAIN_ABUSE = "tool_chain_abuse"
     TOOL_OR_COMMAND_INJECTION = "tool_or_command_injection"
 
     @classmethod
     def from_index(cls, index: int) -> "PrimaryTechnique":
         """Convert model output index to PrimaryTechnique."""
         classes = [
+            cls.NONE,
+            cls.AGENT_SPOOFING,
+            cls.CASCADE_TRIGGER,
             cls.CHAIN_OF_THOUGHT_OR_INTERNAL_STATE_LEAK,
             cls.CONTEXT_OR_DELIMITER_INJECTION,
+            cls.CONTEXT_POISONING,
+            cls.CREDENTIAL_THEFT_VIA_TOOL,
+            cls.CROSS_AGENT_INJECTION,
             cls.DATA_EXFIL_SYSTEM_PROMPT_OR_CONFIG,
             cls.DATA_EXFIL_USER_CONTENT,
             cls.ENCODING_OR_OBFUSCATION,
             cls.EVAL_OR_GUARDRAIL_EVASION,
+            cls.GOAL_REDIRECTION,
             cls.HIDDEN_OR_STEGANOGRAPHIC_PROMPT,
+            cls.IDENTITY_CONFUSION,
             cls.INDIRECT_INJECTION_VIA_CONTENT,
             cls.INSTRUCTION_OVERRIDE,
+            cls.MEMORY_INJECTION,
             cls.MODE_SWITCH_OR_PRIVILEGE_ESCALATION,
             cls.MULTI_TURN_OR_CRESCENDO,
-            cls.NONE,
+            cls.OBJECTIVE_SUBSTITUTION,
             cls.OTHER_ATTACK_TECHNIQUE,
             cls.PAYLOAD_SPLITTING_OR_STAGING,
             cls.POLICY_OVERRIDE_OR_REWRITING,
+            cls.PRIVILEGE_ESCALATION_VIA_TOOL,
             cls.RAG_POISONING_OR_CONTEXT_BIAS,
+            cls.REASONING_MANIPULATION,
             cls.ROLE_OR_PERSONA_MANIPULATION,
             cls.SAFETY_BYPASS_HARMFUL_OUTPUT,
+            cls.SESSION_HIJACKING,
             cls.SOCIAL_ENGINEERING_CONTENT,
             cls.SYSTEM_PROMPT_OR_CONFIG_EXTRACTION,
             cls.TOOL_ABUSE_OR_UNINTENDED_ACTION,
+            cls.TOOL_CHAIN_ABUSE,
             cls.TOOL_OR_COMMAND_INJECTION,
         ]
         if 0 <= index < len(classes):

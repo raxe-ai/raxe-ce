@@ -97,13 +97,13 @@ THREAT_FAMILY_SCHEMA = {
 }
 
 # =============================================================================
-# HEAD 3: severity (Multiclass, 5 classes)
+# HEAD 3: severity (Multiclass, 3 classes)
 # =============================================================================
 SEVERITY_SCHEMA = {
     "head_name": "severity",
     "type": "multiclass",
-    "num_classes": 5,
-    "classes": ["none", "low", "medium", "high", "critical"],
+    "num_classes": 3,
+    "classes": ["none", "moderate", "severe"],
     "output_fields": {
         "severity": {
             "type": "str",
@@ -118,42 +118,55 @@ SEVERITY_SCHEMA = {
         },
         "severity_probabilities": {
             "type": "tuple[float, ...]",
-            "length": 5,
+            "length": 3,
             "description": "Full probability distribution over severity levels",
         },
     },
 }
 
 # =============================================================================
-# HEAD 4: primary_technique (Multiclass, 22 classes) - THREATS ONLY
+# HEAD 4: primary_technique (Multiclass, 35 classes) - THREATS ONLY
 # =============================================================================
 PRIMARY_TECHNIQUE_SCHEMA = {
     "head_name": "primary_technique",
     "type": "multiclass",
-    "num_classes": 22,
+    "num_classes": 35,
     "condition": "is_threat == True",
     "classes": [
+        "none",
+        "agent_spoofing",
+        "cascade_trigger",
         "chain_of_thought_or_internal_state_leak",
         "context_or_delimiter_injection",
+        "context_poisoning",
+        "credential_theft_via_tool",
+        "cross_agent_injection",
         "data_exfil_system_prompt_or_config",
         "data_exfil_user_content",
         "encoding_or_obfuscation",
         "eval_or_guardrail_evasion",
+        "goal_redirection",
         "hidden_or_steganographic_prompt",
+        "identity_confusion",
         "indirect_injection_via_content",
         "instruction_override",
+        "memory_injection",
         "mode_switch_or_privilege_escalation",
         "multi_turn_or_crescendo",
-        "none",
+        "objective_substitution",
         "other_attack_technique",
         "payload_splitting_or_staging",
         "policy_override_or_rewriting",
+        "privilege_escalation_via_tool",
         "rag_poisoning_or_context_bias",
+        "reasoning_manipulation",
         "role_or_persona_manipulation",
         "safety_bypass_harmful_output",
+        "session_hijacking",
         "social_engineering_content",
         "system_prompt_or_config_extraction",
         "tool_abuse_or_unintended_action",
+        "tool_chain_abuse",
         "tool_or_command_injection",
     ],
     "output_fields": {
@@ -172,7 +185,7 @@ PRIMARY_TECHNIQUE_SCHEMA = {
         },
         "technique_probabilities": {
             "type": "tuple[float, ...] | None",
-            "length": 22,
+            "length": 35,
             "description": "Full probability distribution over techniques",
         },
     },

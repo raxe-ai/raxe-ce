@@ -156,7 +156,7 @@ class TestBinaryFirstEngine:
             harm_active_labels=[],
         )
 
-        result = engine.vote(outputs)
+        _result = engine.vote(outputs)
         suppression = engine.last_suppression
 
         assert suppression is not None
@@ -176,7 +176,7 @@ class TestBinaryFirstEngine:
             binary_safe_prob=0.30,
             family_prediction="jailbreak",  # Threat
             family_confidence=0.80,
-            severity_prediction="high",  # Threat
+            severity_prediction="severe",  # Threat
             severity_confidence=0.85,
             technique_prediction="instruction_override",  # Threat
             technique_confidence=0.75,
@@ -326,7 +326,7 @@ class TestBinaryFirstEngine:
             binary_safe_prob=0.51,
             family_prediction="jailbreak",  # Even with threat signals
             family_confidence=0.90,
-            severity_prediction="high",
+            severity_prediction="severe",
             severity_confidence=0.90,
             technique_prediction="instruction_override",
             technique_confidence=0.80,
@@ -375,7 +375,7 @@ class TestBinaryFirstEngine:
             binary_safe_prob=0.30,
             family_prediction="jailbreak",
             family_confidence=0.80,
-            severity_prediction="high",
+            severity_prediction="severe",
             severity_confidence=0.85,
             technique_prediction="instruction_override",
             technique_confidence=0.75,

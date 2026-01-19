@@ -43,7 +43,7 @@ dependencies = [
     "rich>=13.0,<14.0",
     "tomli>=2.0,<3.0; python_version < '3.11'",
     "jsonschema>=4.17,<5.0",
-    "regex>=2024.0.0,<2026.0",  # ReDoS-safe pattern matching with timeout
+    "regex>=2024.0.0,<2027.0",  # ReDoS-safe pattern matching with timeout
     # ML dependencies for L2 detection (model auto-downloads on first use)
     "onnxruntime>=1.16.0,<2.0",
     "sentence-transformers>=2.2.0,<3.0",

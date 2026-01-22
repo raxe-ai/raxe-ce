@@ -1,4 +1,4 @@
-# RAXE Scan Telemetry Schema v2.3
+# RAXE Scan Telemetry Schema v2.4
 
 > **CANONICAL SOURCE**: This is the authoritative schema definition for scan telemetry events.
 > All telemetry entry points (CLI, SDK, wrappers, decorators) MUST comply with this schema.
@@ -6,8 +6,8 @@
 ## Schema Version
 
 ```
-Version: 2.3.0
-Last Updated: 2026-01-13
+Version: 2.4.0
+Last Updated: 2026-01-22
 Status: LOCKED (changes require version bump)
 ```
 
@@ -68,6 +68,8 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
       "hit": "<bool: is_threat property>",
       "duration_ms": "<float: processing_time_ms>",
       "model_version": "<string: model identifier>",
+      "token_count": "<int|null: number of tokens after tokenization (max 512)>",
+      "tokens_truncated": "<bool: true if input was truncated to 512 tokens>",
 
       "binary": {
         "is_threat": "<bool: argmax == threat>",
@@ -231,6 +233,8 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 | `l2.hit` | `l2_result.is_threat` property | L2Result |
 | `l2.duration_ms` | `l2_result.processing_time_ms` | L2Result |
 | `l2.model_version` | `l2_result.model_version` | L2Result |
+| `l2.token_count` | Number of tokens after tokenization (max 512) | L2Result.metadata |
+| `l2.tokens_truncated` | `original_token_count > 512` | L2Result.metadata |
 
 #### Head 1: Binary (is_threat)
 
@@ -454,6 +458,12 @@ telemetry = builder.build(
 ---
 
 ## Changelog
+
+### v2.4.0 (2026-01-22)
+- Added `l2.token_count`: Number of tokens after tokenization (max 512)
+- Added `l2.tokens_truncated`: Boolean flag indicating if input was truncated
+- These fields help monitor tokenization behavior and detect input truncation
+- Token count reveals encoding length without exposing actual token IDs (privacy-safe)
 
 ### v2.3.0 (2026-01-13)
 - Added policy attribution fields for multi-tenant support:

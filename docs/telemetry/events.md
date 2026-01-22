@@ -305,6 +305,8 @@ event = create_scan_event(
 | entry_point | enum | No | How scan was triggered |
 | wrapper_type | enum | No | Wrapper used if applicable |
 
+> **Note:** For the complete scan telemetry schema including L2 fields (`token_count`, `tokens_truncated`, voting details, model metadata), see [SCAN_TELEMETRY_SCHEMA.md](../SCAN_TELEMETRY_SCHEMA.md).
+
 ---
 
 ### 6. error

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from raxe.domain.ml.protocol import L2Result
 
 # Schema version - bump when schema changes
-SCHEMA_VERSION = "2.1.0"
+SCHEMA_VERSION = "2.4.0"
 
 # Enum labels for probability distributions
 FAMILY_LABELS = [
@@ -394,13 +394,19 @@ class ScanTelemetryBuilder:
         # Check if L2 has predictions
         predictions = getattr(l2_result, "predictions", []) or []
         if not predictions:
-            # Even without predictions, include voting data if available
+            # Even without predictions, include voting data and token info if available
             base_result: dict[str, Any] = {
                 "enabled": True,
                 "hit": False,
                 "duration_ms": getattr(l2_result, "processing_time_ms", 0.0) or 0.0,
                 "model_version": getattr(l2_result, "model_version", "unknown"),
             }
+            # Include token count fields if available (NEW in v2.4)
+            l2_metadata = getattr(l2_result, "metadata", {}) or {}
+            token_count = l2_metadata.get("token_count")
+            if token_count is not None:
+                base_result["token_count"] = token_count
+                base_result["tokens_truncated"] = l2_metadata.get("tokens_truncated", False)
             # Include voting block for transparency on SAFE decisions
             voting_block = self._build_voting_block(l2_result)
             if voting_block:
@@ -480,6 +486,11 @@ class ScanTelemetryBuilder:
         # Build voting block if available (NEW in v2.1)
         voting_block = self._build_voting_block(l2_result)
 
+        # Extract token count info from L2Result metadata (NEW in v2.4)
+        l2_metadata = getattr(l2_result, "metadata", {}) or {}
+        token_count = l2_metadata.get("token_count")
+        tokens_truncated = l2_metadata.get("tokens_truncated", False)
+
         result = {
             "enabled": True,
             "hit": l2_hit,
@@ -496,6 +507,11 @@ class ScanTelemetryBuilder:
             "hierarchical_score": float(hierarchical_score),
             "quality": quality_block,
         }
+
+        # Add token count fields if available (NEW in v2.4)
+        if token_count is not None:
+            result["token_count"] = token_count
+            result["tokens_truncated"] = tokens_truncated
 
         # Add voting block if available
         if voting_block:

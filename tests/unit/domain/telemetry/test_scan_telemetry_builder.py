@@ -114,11 +114,12 @@ class TestBuildL1BlockFamilies:
 
         # Create a mock L1Result with detections that have category field
         class MockL1Result:
-            scan_duration_ms = 5.0
-            detections = [
-                MockDetection(rule_id="pi-001", category="pi", severity="high"),
-                MockDetection(rule_id="jb-001", category="jb", severity="high"),
-            ]
+            def __init__(self):
+                self.scan_duration_ms = 5.0
+                self.detections = [
+                    MockDetection(rule_id="pi-001", category="pi", severity="high"),
+                    MockDetection(rule_id="jb-001", category="jb", severity="high"),
+                ]
 
         l1_result = MockL1Result()
         result = builder._build_l1_block(l1_result)
@@ -134,10 +135,11 @@ class TestBuildL1BlockFamilies:
         builder = ScanTelemetryBuilder()
 
         class MockL1Result:
-            scan_duration_ms = 5.0
-            detections = [
-                MockDetection(rule_id="pi-001", category="pi", severity="high"),
-            ]
+            def __init__(self):
+                self.scan_duration_ms = 5.0
+                self.detections = [
+                    MockDetection(rule_id="pi-001", category="pi", severity="high"),
+                ]
 
         l1_result = MockL1Result()
         result = builder._build_l1_block(l1_result)
@@ -152,12 +154,13 @@ class TestBuildL1BlockFamilies:
         builder = ScanTelemetryBuilder()
 
         class MockL1Result:
-            scan_duration_ms = 5.0
-            detections = [
-                MockDetection(rule_id="pi-001", category="pi", severity="high"),
-                MockDetection(rule_id="pi-002", category="pi", severity="medium"),
-                MockDetection(rule_id="pi-003", category="pi", severity="low"),
-            ]
+            def __init__(self):
+                self.scan_duration_ms = 5.0
+                self.detections = [
+                    MockDetection(rule_id="pi-001", category="pi", severity="high"),
+                    MockDetection(rule_id="pi-002", category="pi", severity="medium"),
+                    MockDetection(rule_id="pi-003", category="pi", severity="low"),
+                ]
 
         l1_result = MockL1Result()
         result = builder._build_l1_block(l1_result)
@@ -502,6 +505,157 @@ class TestVotingBlockWithEmptyPredictions:
         assert result["enabled"] is True
         assert result["hit"] is False
         assert "voting" not in result  # No voting block when voting is None
+
+
+class TestTokenCountTelemetry:
+    """Tests for token count fields in L2 telemetry (NEW in v2.4)."""
+
+    def test_l2_block_includes_token_count_when_present(self):
+        """Token count from L2Result metadata appears in telemetry."""
+        builder = ScanTelemetryBuilder()
+
+        l2_result = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type="jailbreak",
+                    confidence=0.85,
+                    features_used=["binary"],
+                    metadata={"is_attack": True},
+                )
+            ],
+            confidence=0.85,
+            processing_time_ms=15.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "detector_type": "gemma",
+                "token_count": 142,
+                "tokens_truncated": False,
+            },
+        )
+
+        result = builder._build_l2_block(l2_result, l2_enabled=True)
+
+        assert result is not None
+        assert "token_count" in result
+        assert result["token_count"] == 142
+        assert "tokens_truncated" in result
+        assert result["tokens_truncated"] is False
+
+    def test_l2_block_includes_tokens_truncated_true(self):
+        """tokens_truncated=True when input exceeded 512 tokens."""
+        builder = ScanTelemetryBuilder()
+
+        l2_result = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type="prompt_injection",
+                    confidence=0.75,
+                    features_used=["binary"],
+                    metadata={"is_attack": True},
+                )
+            ],
+            confidence=0.75,
+            processing_time_ms=20.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "detector_type": "gemma",
+                "token_count": 512,  # At max
+                "tokens_truncated": True,  # Input was truncated
+            },
+        )
+
+        result = builder._build_l2_block(l2_result, l2_enabled=True)
+
+        assert result is not None
+        assert result["token_count"] == 512
+        assert result["tokens_truncated"] is True
+
+    def test_l2_block_token_count_none_when_missing(self):
+        """Token count is not in telemetry if L2 metadata doesn't include it."""
+        builder = ScanTelemetryBuilder()
+
+        l2_result = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type="benign",
+                    confidence=0.90,
+                    features_used=["binary"],
+                    metadata={},
+                )
+            ],
+            confidence=0.90,
+            processing_time_ms=10.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "detector_type": "gemma",
+                # No token_count or tokens_truncated
+            },
+        )
+
+        result = builder._build_l2_block(l2_result, l2_enabled=True)
+
+        assert result is not None
+        assert "token_count" not in result
+        assert "tokens_truncated" not in result
+
+    def test_l2_block_token_count_included_when_no_predictions(self):
+        """Token count included even when no predictions (SAFE case)."""
+        builder = ScanTelemetryBuilder()
+
+        l2_result = L2Result(
+            predictions=[],  # No predictions (SAFE case)
+            confidence=0.95,
+            processing_time_ms=12.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "detector_type": "gemma",
+                "token_count": 85,
+                "tokens_truncated": False,
+            },
+        )
+
+        result = builder._build_l2_block(l2_result, l2_enabled=True)
+
+        assert result is not None
+        assert result["hit"] is False
+        assert "token_count" in result
+        assert result["token_count"] == 85
+        assert result["tokens_truncated"] is False
+
+    def test_full_telemetry_includes_l2_token_count(self):
+        """Complete telemetry payload includes token count in L2 block."""
+        builder = ScanTelemetryBuilder()
+
+        l2_result = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type="jailbreak",
+                    confidence=0.88,
+                    features_used=["binary", "family"],
+                    metadata={"is_attack": True, "severity": "high"},
+                )
+            ],
+            confidence=0.88,
+            processing_time_ms=18.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "detector_type": "gemma",
+                "token_count": 256,
+                "tokens_truncated": False,
+            },
+        )
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=l2_result,
+            scan_duration_ms=20.0,
+            entry_point="sdk",
+            prompt="test prompt for telemetry",
+        )
+
+        assert "l2" in result
+        assert result["l2"]["token_count"] == 256
+        assert result["l2"]["tokens_truncated"] is False
 
 
 class TestMultiTenantTelemetry:

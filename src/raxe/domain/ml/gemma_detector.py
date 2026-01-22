@@ -286,8 +286,8 @@ class GemmaL2Detector:
         start_time = time.perf_counter()
 
         try:
-            # Generate embeddings (with caching)
-            embeddings = self._generate_embeddings(text)
+            # Generate embeddings (with caching) and get token info
+            embeddings, token_count, tokens_truncated = self._generate_embeddings(text)
 
             # Run classification (returns both classification and voting result)
             classification, voting_result = self._classify(embeddings, text=text)
@@ -342,6 +342,9 @@ class GemmaL2Detector:
                     "detector_type": "gemma",
                     "classification_result": classification.to_dict(),
                     "voting_enabled": self._voting_enabled,
+                    # Token count info for telemetry (v2.4)
+                    "token_count": token_count,
+                    "tokens_truncated": tokens_truncated,
                 },
                 hierarchical_score=hierarchical_score,
                 classification=classification_label,
@@ -385,20 +388,21 @@ class GemmaL2Detector:
         else:
             return "ALLOW"
 
-    def _generate_embeddings(self, text: str) -> np.ndarray:
+    def _generate_embeddings(self, text: str) -> tuple[np.ndarray, int, bool]:
         """Generate embeddings with optional caching.
 
         The EmbeddingGemma model outputs two tensors:
         - outputs[0]: token embeddings (batch, seq_len, hidden_dim)
         - outputs[1]: pooled embedding (batch, hidden_dim) - used directly
-        """
-        # Check cache
-        if self._cache_enabled and self._embedding_cache:
-            cached = self._embedding_cache.get(text)
-            if cached is not None:
-                return cached
 
-        # Tokenize
+        Returns:
+            Tuple of:
+            - embeddings: numpy array of shape (1, embedding_dim)
+            - token_count: number of tokens after tokenization (max 512)
+            - tokens_truncated: True if input was truncated to 512 tokens
+        """
+        # Always tokenize to get token count (needed for telemetry)
+        # This is fast (<1ms) even on cache hit
         inputs = self._tokenizer(
             text,
             padding=True,
@@ -406,6 +410,27 @@ class GemmaL2Detector:
             max_length=512,
             return_tensors="np",
         )
+
+        # Extract token count info (excluding padding tokens)
+        attention_mask = inputs["attention_mask"][0]
+        token_count = int(np.sum(attention_mask))
+
+        # Check if truncation occurred by tokenizing without truncation
+        # to get the original length
+        inputs_no_truncate = self._tokenizer(
+            text,
+            padding=False,
+            truncation=False,
+            return_tensors="np",
+        )
+        original_token_count = len(inputs_no_truncate["input_ids"][0])
+        tokens_truncated = original_token_count > 512
+
+        # Check cache
+        if self._cache_enabled and self._embedding_cache:
+            cached = self._embedding_cache.get(text)
+            if cached is not None:
+                return cached, token_count, tokens_truncated
 
         # Get embeddings from model
         outputs = self._embedding_session.run(
@@ -431,7 +456,7 @@ class GemmaL2Detector:
         if self._cache_enabled and self._embedding_cache:
             self._embedding_cache.put(text, embeddings)
 
-        return embeddings
+        return embeddings, token_count, tokens_truncated
 
     def _extract_handcrafted_features(self, text: str) -> np.ndarray:
         """Extract handcrafted features for model v3+.

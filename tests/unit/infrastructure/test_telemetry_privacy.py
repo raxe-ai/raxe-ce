@@ -206,7 +206,7 @@ class TestTelemetryPrivacyValidation:
             },
         }
 
-        violations = validate_event_privacy(event)
+        _violations = validate_event_privacy(event)
 
         # Should detect unhashed long text (policy-001 itself might not trigger, but let's be safe)
         # The main point is the field shouldn't exist at all
@@ -516,6 +516,120 @@ class TestComprehensivePrivacyGuarantees:
         assert "prompt" not in scan_res
         assert "prompt_text" not in scan_res
         assert "matched_text" not in scan_res
+
+
+class TestTokenCountPrivacy:
+    """Test that only token COUNT is transmitted, not actual token IDs (NEW in v2.4)."""
+
+    def test_token_count_only_no_actual_tokens(self):
+        """Verify only token COUNT is transmitted, not actual token IDs.
+
+        Token count is safe to transmit because:
+        - It's an integer count, not the actual token IDs
+        - It reveals encoding length, not content
+        - Cannot be reversed to recover the original text
+
+        MUST NOT transmit:
+        - input_ids (actual token ID array)
+        - token_ids (same)
+        - attention_mask (could reveal structure)
+        - Any reversible token representation
+        """
+        from raxe.domain.ml.protocol import L2Prediction, L2Result
+        from raxe.domain.telemetry.scan_telemetry_builder import ScanTelemetryBuilder
+
+        builder = ScanTelemetryBuilder()
+
+        # Create L2Result with token count (the safe field)
+        l2_result = L2Result(
+            predictions=[
+                L2Prediction(
+                    threat_type="prompt_injection",
+                    confidence=0.92,
+                    features_used=["binary"],
+                    metadata={"is_attack": True},
+                )
+            ],
+            confidence=0.92,
+            processing_time_ms=15.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "detector_type": "gemma",
+                "token_count": 142,  # SAFE - just a count
+                "tokens_truncated": False,  # SAFE - just a boolean
+                # These should NEVER be in metadata (and we don't add them)
+                # "input_ids": [101, 2023, 2003, ...],  # FORBIDDEN
+                # "attention_mask": [1, 1, 1, ...],    # FORBIDDEN
+            },
+        )
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=l2_result,
+            scan_duration_ms=20.0,
+            entry_point="sdk",
+            prompt="test prompt for privacy check",
+        )
+
+        # Token count should be present (safe)
+        assert result["l2"]["token_count"] == 142
+        assert result["l2"]["tokens_truncated"] is False
+
+        # Convert to string for comprehensive check
+        result_str = str(result)
+
+        # These dangerous fields should NEVER appear
+        assert "input_ids" not in result_str
+        assert "token_ids" not in result_str
+        assert "attention_mask" not in result_str
+
+        # Should not contain arrays of numbers that look like token IDs
+        # (actual token IDs are integers, usually 4-5 digits)
+        import re
+
+        # Pattern that would match "[101, 2023, 2003]" style arrays
+        token_array_pattern = r"\[(\d{3,5},\s*)+\d{3,5}\]"
+        assert not re.search(
+            token_array_pattern, result_str
+        ), "Found what looks like a token ID array in telemetry"
+
+    def test_truncation_flag_reveals_no_content(self):
+        """tokens_truncated boolean reveals only that truncation occurred, not content."""
+        from raxe.domain.ml.protocol import L2Result
+        from raxe.domain.telemetry.scan_telemetry_builder import ScanTelemetryBuilder
+
+        builder = ScanTelemetryBuilder()
+
+        # Case where truncation occurred
+        l2_result = L2Result(
+            predictions=[],
+            confidence=0.50,
+            processing_time_ms=10.0,
+            model_version="gemma-5head-v1",
+            metadata={
+                "token_count": 512,  # At max limit
+                "tokens_truncated": True,  # Truncation happened
+            },
+        )
+
+        result = builder.build(
+            l1_result=None,
+            l2_result=l2_result,
+            scan_duration_ms=15.0,
+            entry_point="sdk",
+            prompt="This is a very long prompt " * 100,  # Long prompt
+        )
+
+        # Boolean is safe - reveals that truncation occurred, not what was truncated
+        assert result["l2"]["tokens_truncated"] is True
+        assert result["l2"]["token_count"] == 512
+
+        # The actual prompt should NOT be in telemetry
+        result_str = str(result)
+        assert "This is a very long prompt" not in result_str
+
+        # Only hash should be present
+        assert result["prompt_hash"].startswith("sha256:")
 
 
 class TestL2MetadataSharing:

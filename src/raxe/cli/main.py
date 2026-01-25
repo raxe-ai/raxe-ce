@@ -14,6 +14,7 @@ from raxe import __version__
 from raxe.cli.app import app
 from raxe.cli.auth import auth, auth_link
 from raxe.cli.config import config
+from raxe.cli.dashboard_cmd import dashboard, monitor
 from raxe.cli.doctor import doctor
 from raxe.cli.error_handler import handle_cli_error
 from raxe.cli.event import event
@@ -1505,6 +1506,8 @@ cli.add_command(event)
 cli.add_command(history)
 cli.add_command(telemetry)
 cli.add_command(help_command)
+cli.add_command(dashboard)
+cli.add_command(monitor)
 
 # Top-level alias for 'raxe link ABC123' (same as 'raxe auth link ABC123')
 cli.add_command(auth_link, name="link")

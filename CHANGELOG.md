@@ -1,6 +1,67 @@
 # CHANGELOG
 
 
+## v0.9.0 (2026-01-28)
+
+### Bug Fixes
+
+- **ml**: Restore print statements removed by CodeQL
+  ([`aab74a2`](https://github.com/raxe-ai/raxe-ce/commit/aab74a21621936abb29c8d1cd526198509726796))
+
+The CodeQL security scan incorrectly identified print statements in download_progress.py as dead
+  code and removed them. This broke all progress indicators for ML model downloads.
+
+Restored print statements in: - SimpleDownloadProgress._log() - MinimalDownloadProgress.start(),
+  update(), complete(), error() - QuietDownloadProgress.error()
+
+Also fixed test_updates_throttled_to_500ms to check for correct [RAXE] pattern instead of
+  "Progress:" pattern.
+
+- **telemetry**: Use structlog logger instead of stdlib logging
+  ([`0b2dca4`](https://github.com/raxe-ai/raxe-ce/commit/0b2dca4eb2add506af586a3057a448cd38dd4be1))
+
+The telemetry_orchestrator.py was using Python's standard logger (logging.getLogger) which doesn't
+  support keyword arguments for structured logging. This caused the flush scheduler to fail with:
+
+Logger._log() got an unexpected keyword argument 'critical_interval'
+
+Changed to use structlog's get_logger() from raxe.utils.logging, which properly handles structured
+  logging keyword arguments.
+
+The error was non-blocking (telemetry still worked via fallback), but generated confusing error
+  messages in logs.
+
+### Features
+
+- **cli**: Add real-time security monitoring dashboard
+  ([`828d27c`](https://github.com/raxe-ai/raxe-ce/commit/828d27c588a026ce15b5783a10e7250b54779006))
+
+Add interactive terminal dashboard with: - Live threat detection feed with navigable alerts -
+  Severity breakdown and 24h trend sparklines - Performance metrics (avg/p95/L1/L2 latency) - System
+  status panel (rules loaded, ML model status) - Expandable alert detail view with full context -
+  New alert flash animation with visual indicators - Keyboard navigation (arrows, j/k, Enter, Esc) -
+  RAXE brand theme with cyan/magenta gradient - Version display in header
+
+Commands: raxe dashboard, raxe monitor (alias)
+
+Options: --refresh, --theme, --animations, --no-logo
+
+### Testing
+
+- **golden**: Update agent-001 expected output after enc-019 removal
+  ([`83971db`](https://github.com/raxe-ai/raxe-ce/commit/83971dbe96f1de39fdc0aaba466c34fff3d11b66))
+
+The enc-019 rule was removed in commit 9c77cab to fix false positives on educational questions. This
+  updates the golden file to match the new expected behavior (only agent-001 detection, not
+  enc-019).
+
+- **golden**: Update expected outputs after enc-019 rule removal
+  ([`09e3fd7`](https://github.com/raxe-ai/raxe-ce/commit/09e3fd7f05aa8dda2cc6e41e5cde60a52536f649))
+
+The enc-019 rule was removed in commit 9c77cab to fix false positives on educational questions. This
+  updates all golden files that previously expected enc-019 detections.
+
+
 ## v0.8.0 (2026-01-22)
 
 ### Bug Fixes

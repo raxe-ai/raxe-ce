@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raxe"
-version = "0.8.0"
+version = "0.9.0"
 description = "RAXE Community Edition - AI Security for Everyone. 460+ threat detection rules, L2 CPU-based ML, always free."
 authors = [{name = "RAXE Technologies, Inc.", email = "hello@raxe.ai"}]
 license = {text = "Proprietary - See LICENSE file"}

@@ -183,7 +183,8 @@ class TestMinimalDownloadProgress:
 
         output = stderr.getvalue()
         # Should only have one progress update line (plus start)
-        progress_lines = [l for l in output.split("\n") if "Progress:" in l]
+        # MinimalDownloadProgress uses [RAXE] prefix with percentage
+        progress_lines = [line for line in output.split("\n") if "[RAXE]" in line and "%" in line]
         assert len(progress_lines) == 1
 
     def test_complete_shows_raxe_prefix(self):

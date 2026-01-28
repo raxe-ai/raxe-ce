@@ -23,7 +23,6 @@ Privacy Guarantees:
 from __future__ import annotations
 
 import atexit
-import logging
 import platform
 import sys
 import threading
@@ -63,7 +62,9 @@ from .session_tracker import SessionTracker
 if TYPE_CHECKING:
     pass
 
-logger = logging.getLogger(__name__)
+from raxe.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _get_install_method() -> Literal["pip", "uv", "pipx", "poetry", "conda", "source", "unknown"]:

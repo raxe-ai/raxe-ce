@@ -43,6 +43,7 @@ from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
 from raxe.cli.repl import repl
 from raxe.cli.rules import rules
+from raxe.cli.serve import serve
 from raxe.cli.stats import stats
 from raxe.cli.suppress import suppress
 from raxe.cli.telemetry import telemetry
@@ -1538,6 +1539,7 @@ cli.add_command(telemetry)
 cli.add_command(help_command)
 cli.add_command(dashboard)
 cli.add_command(monitor)
+cli.add_command(serve)
 
 # Top-level alias for 'raxe link ABC123' (same as 'raxe auth link ABC123')
 cli.add_command(auth_link, name="link")

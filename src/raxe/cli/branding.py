@@ -105,6 +105,7 @@ COMMAND_CATEGORIES = {
         ("pack", "Manage rule packs"),
         ("models", "List ML model information"),
         ("event", "Send custom telemetry events"),
+        ("serve", "Start JSON-RPC server for AI platforms"),
     ],
     "reference": [
         ("privacy", "Show privacy guarantees"),

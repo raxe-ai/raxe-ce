@@ -156,7 +156,7 @@ Now the SDK explicitly tracks when lookups fail and sets boolean flags that the 
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
-- **ux**: Improve multi-tenant policy UX for Bunny.net use case
+- **ux**: Improve multi-tenant policy UX for partner use cases
   ([`daabb89`](https://github.com/raxe-ai/raxe-ce/commit/daabb8981c53d6185c13c0e15f8c79874fda27c1))
 
 Bug fixes: - Fix severity case mismatch in blocking logic (severity.value is lowercase, but

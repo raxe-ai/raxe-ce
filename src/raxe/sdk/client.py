@@ -413,6 +413,12 @@ class Raxe:
         event_id: str | None = None,
         wrapper_type: str | None = None,
         integration_type: str | None = None,
+        # MSSP/Partner ecosystem parameters (NEW in v3.0)
+        mssp_id: str | None = None,
+        mssp_customer_id: str | None = None,
+        mssp_customer_name: str | None = None,
+        mssp_data_mode: str | None = None,
+        mssp_data_fields: list[str] | None = None,
     ) -> None:
         """Track scan telemetry using schema v2.0 (non-blocking, never raises).
 
@@ -420,7 +426,8 @@ class Raxe:
         the full L2 telemetry schema defined in docs/SCAN_TELEMETRY_SCHEMA.md.
 
         Privacy: Only hashes, metrics, and enum values are transmitted.
-        No actual prompt content is ever transmitted.
+        No actual prompt content is ever transmitted (except to MSSP webhook
+        in full mode, never to RAXE backend).
 
         Args:
             result: The scan result to track
@@ -429,6 +436,11 @@ class Raxe:
             event_id: Pre-generated event ID for portal-CLI correlation
             wrapper_type: SDK wrapper type if applicable (openai, anthropic, etc.)
             integration_type: Integration framework if applicable (langchain, crewai, etc.)
+            mssp_id: MSSP/Partner identifier (must start with 'mssp_')
+            mssp_customer_id: Customer identifier within MSSP (must start with 'cust_')
+            mssp_customer_name: Human-readable customer name (e.g., 'Acme Corp')
+            mssp_data_mode: Privacy mode ('full' or 'privacy_safe')
+            mssp_data_fields: List of fields to include in MSSP webhook
         """
         try:
             orchestrator = get_orchestrator()
@@ -485,6 +497,13 @@ class Raxe:
                 policy_mode=telemetry_policy_mode,
                 policy_version=telemetry_policy_version,
                 resolution_source=telemetry_resolution_source,
+                # MSSP/Partner ecosystem (NEW in v3.0)
+                mssp_id=mssp_id,
+                customer_id=mssp_customer_id,
+                customer_name=mssp_customer_name,
+                data_mode=mssp_data_mode,  # type: ignore[arg-type]
+                data_fields=mssp_data_fields,
+                include_prompt_text=(mssp_data_mode == "full"),
             )
 
             # Track using v2 method
@@ -958,6 +977,8 @@ class Raxe:
         tenant_id: str | None = None,
         app_id: str | None = None,
         policy_id: str | None = None,
+        # MSSP/Partner ecosystem parameters (NEW in v3.0)
+        mssp_id: str | None = None,
     ) -> ScanPipelineResult:
         """Scan text for security threats with layer control.
 
@@ -1249,12 +1270,40 @@ class Raxe:
                     effective_entry_point = "integration"
                 else:
                     effective_entry_point = "sdk"
+
+                # Resolve MSSP context if mssp_id is provided
+                mssp_customer_id = None
+                mssp_customer_name = None
+                mssp_data_mode = None
+                mssp_data_fields = None
+                if mssp_id:
+                    try:
+                        from raxe.application.mssp_service import create_mssp_service
+
+                        mssp_service = create_mssp_service()
+                        # Use customer_id if provided, otherwise check for default
+                        if customer_id and customer_id.startswith("cust_"):
+                            mssp_customer_id = customer_id
+                            customer = mssp_service.get_customer(mssp_id, customer_id)
+                            if customer:
+                                mssp_customer_name = customer.name
+                                mssp_data_mode = customer.data_mode.value
+                                mssp_data_fields = customer.data_fields
+                    except Exception:
+                        # Don't fail scan if MSSP resolution fails
+                        pass
+
                 self._track_scan(
                     result,
                     prompt=text,
                     entry_point=effective_entry_point,
                     event_id=event_id,
                     integration_type=integration_type,
+                    mssp_id=mssp_id,
+                    mssp_customer_id=mssp_customer_id,
+                    mssp_customer_name=mssp_customer_name,
+                    mssp_data_mode=mssp_data_mode,
+                    mssp_data_fields=mssp_data_fields,
                 )
 
                 # Track usage (creates install.json on first scan)

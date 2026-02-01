@@ -360,20 +360,20 @@ class DashboardOrchestrator:
 
             # Use pbcopy on macOS, xclip on Linux
             if sys.platform == "darwin":
-                subprocess.run(  # noqa: S603
+                subprocess.run(
                     ["pbcopy"],  # noqa: S607
                     input=alert.prompt_hash.encode(),
                     check=True,
                 )
             elif sys.platform.startswith("linux"):
-                subprocess.run(  # noqa: S603
+                subprocess.run(
                     ["xclip", "-selection", "clipboard"],  # noqa: S607
                     input=alert.prompt_hash.encode(),
                     check=True,
                 )
             else:
                 # Windows - use clip
-                subprocess.run(  # noqa: S603
+                subprocess.run(
                     ["clip"],  # noqa: S607
                     input=alert.prompt_hash.encode(),
                     check=True,

@@ -703,11 +703,11 @@ class TestMultiTenantTelemetry:
             scan_duration_ms=5.0,
             entry_point="sdk",
             prompt="test prompt",
-            tenant_id="bunny-tenant-123",
+            tenant_id="partner-tenant-123",
             policy_id="balanced",
         )
 
-        assert result["tenant_id"] == "bunny-tenant-123"
+        assert result["tenant_id"] == "partner-tenant-123"
         assert result["policy_id"] == "balanced"
 
     def test_tenant_fields_not_included_when_not_provided(self):
@@ -778,13 +778,13 @@ class TestMultiTenantTelemetry:
             scan_duration_ms=5.0,
             entry_point="sdk",
             prompt="user query that should not appear in telemetry",
-            tenant_id="tenant_bunny_abc123",
+            tenant_id="tenant_partner_abc123",
             app_id="app_chatbot_xyz789",
             policy_id="pol_strict_v1",
         )
 
         # These are safe configuration identifiers
-        assert result["tenant_id"] == "tenant_bunny_abc123"
+        assert result["tenant_id"] == "tenant_partner_abc123"
         assert result["app_id"] == "app_chatbot_xyz789"
         assert result["policy_id"] == "pol_strict_v1"
 

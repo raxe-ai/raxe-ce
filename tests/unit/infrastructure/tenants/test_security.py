@@ -23,7 +23,7 @@ class TestEntityIdValidation:
     def test_valid_simple_id(self):
         """Simple alphanumeric IDs are valid."""
         assert validate_entity_id("acme", "tenant") == "acme"
-        assert validate_entity_id("bunny123", "tenant") == "bunny123"
+        assert validate_entity_id("partner123", "tenant") == "partner123"
 
     def test_valid_id_with_hyphens(self):
         """IDs with hyphens are valid."""
@@ -81,7 +81,7 @@ class TestEntityIdValidation:
         """Unicode path traversal attempts are rejected."""
         # Various unicode representations of ../
         with pytest.raises(InvalidEntityIdError):
-            validate_entity_id("．．/admin", "tenant")  # Fullwidth dots
+            validate_entity_id("．．/admin", "tenant")  # noqa: RUF001 - Fullwidth dots (intentional)
 
     def test_null_byte_rejected(self):
         """Null bytes are rejected."""

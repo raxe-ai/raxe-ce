@@ -60,7 +60,7 @@ def create_tenant(name: str, tenant_id: str | None, policy: str):
     \b
     Examples:
         raxe tenant create --name "Acme Corp"
-        raxe tenant create --name "Bunny CDN" --id bunny --policy strict
+        raxe tenant create --name "Partner CDN" --id partner --policy strict
     """
     service = create_tenant_service()
     base_path = get_tenants_base_path()
@@ -260,7 +260,7 @@ def set_tenant_policy(tenant_id: str, policy: str):
     \b
     Examples:
         raxe tenant set-policy acme strict
-        raxe tenant set-policy bunny monitor
+        raxe tenant set-policy partner monitor
     """
     service = create_tenant_service()
 

@@ -138,9 +138,9 @@ class TestIdGenerators:
 class TestEventType:
     """Test EventType enumeration."""
 
-    def test_event_type_has_all_12_types(self) -> None:
-        """EventType should have exactly 12 event types."""
-        assert len(EventType) == 12
+    def test_event_type_has_all_13_types(self) -> None:
+        """EventType should have exactly 13 event types."""
+        assert len(EventType) == 13
 
     @pytest.mark.parametrize(
         "event_type,expected_value",

@@ -23,6 +23,7 @@ Privacy Guarantees:
 from __future__ import annotations
 
 import atexit
+import copy
 import platform
 import sys
 import threading
@@ -60,7 +61,7 @@ from raxe.infrastructure.telemetry.flush_scheduler import (
 from .session_tracker import SessionTracker
 
 if TYPE_CHECKING:
-    pass
+    from raxe.application.mssp_webhook_sender import MSSPWebhookSender
 
 from raxe.utils.logging import get_logger
 
@@ -227,6 +228,9 @@ class TelemetryOrchestrator:
         self._queue: DualQueue | None = None
         self._session_tracker: SessionTracker | None = None
         self._installation_id: str | None = None
+
+        # MSSP webhook sender (lazy-initialized)
+        self._mssp_webhook_sender: MSSPWebhookSender | None = None
 
         # Flush scheduler components (lazy-initialized)
         self._queue_adapter: SQLiteDualQueueAdapter | None = None
@@ -660,6 +664,15 @@ class TelemetryOrchestrator:
         """
         return self._config.enabled and self._initialized
 
+    @property
+    def mssp_webhook_sender(self) -> MSSPWebhookSender:
+        """Lazy-load MSSP webhook sender for dual-send telemetry."""
+        if self._mssp_webhook_sender is None:
+            from raxe.application.mssp_webhook_sender import MSSPWebhookSender
+
+            self._mssp_webhook_sender = MSSPWebhookSender()
+        return self._mssp_webhook_sender
+
     # =========================================================================
     # Event Tracking Methods
     # =========================================================================
@@ -782,6 +795,11 @@ class TelemetryOrchestrator:
         Use this for full L2 telemetry capture as defined in
         docs/SCAN_TELEMETRY_SCHEMA.md.
 
+        Dual-Send Architecture:
+        - MSSP webhook receives full payload (including _mssp_data if present)
+        - RAXE backend NEVER receives _mssp_data (privacy guarantee)
+        - MSSP webhook failures don't block RAXE telemetry
+
         Args:
             payload: Pre-built payload dict from ScanTelemetryBuilder.build()
             event_id: Optional event ID. If not provided, one will be generated.
@@ -790,8 +808,9 @@ class TelemetryOrchestrator:
 
         Privacy:
             - All fields in payload are dynamically calculated from scan results
-            - No actual prompt content is transmitted
-            - Only hashes, metrics, and enum values
+            - No actual prompt content is transmitted to RAXE
+            - _mssp_data is ONLY sent to MSSP webhook, NEVER to RAXE backend
+            - Only hashes, metrics, and enum values go to RAXE
         """
         if not self._ensure_initialized():
             return
@@ -799,12 +818,47 @@ class TelemetryOrchestrator:
         if self._queue is None:
             return
 
+        # =====================================================================
+        # DUAL-SEND: Step 1 - Send to MSSP webhook (non-blocking)
+        # =====================================================================
+        # Extract MSSP context from payload
+        mssp_id = payload.get("mssp_id")
+        customer_id = payload.get("customer_id")
+        mssp_context = payload.get("_mssp_context", {})
+
+        # Use context values if top-level not present
+        if not mssp_id:
+            mssp_id = mssp_context.get("mssp_id")
+        if not customer_id:
+            customer_id = mssp_context.get("customer_id")
+
+        # Send to MSSP webhook (with full payload including _mssp_data)
+        # This is non-blocking - failures don't affect RAXE telemetry
+        try:
+            self.mssp_webhook_sender.send_if_configured(
+                event_payload={"event_type": "scan", "payload": payload},
+                mssp_id=mssp_id,
+                customer_id=customer_id,
+            )
+        except Exception as e:
+            # Never block RAXE telemetry on MSSP webhook errors
+            logger.debug(f"MSSP webhook send error (non-blocking): {e}")
+
+        # =====================================================================
+        # DUAL-SEND: Step 2 - Prepare RAXE payload (strip _mssp_data)
+        # =====================================================================
+        # CRITICAL PRIVACY GUARANTEE: _mssp_data must NEVER go to RAXE backend
+        # Make a defensive copy and strip sensitive data
+        raxe_payload = copy.deepcopy(payload)
+        if "_mssp_data" in raxe_payload:
+            del raxe_payload["_mssp_data"]
+
         # Import v2 event creator
         from raxe.domain.telemetry.events import create_scan_event_v2
 
-        # Create scan event with v2 schema
+        # Create scan event with v2 schema (using sanitized payload)
         event = create_scan_event_v2(
-            payload=payload,
+            payload=raxe_payload,
             event_id=event_id,
             org_id=org_id,
             team_id=team_id,
@@ -815,7 +869,7 @@ class TelemetryOrchestrator:
             self._events_dropped += 1
             return
 
-        # Enqueue event
+        # Enqueue event to RAXE backend
         self._queue.enqueue(event)
         self._events_queued += 1
 
@@ -840,7 +894,7 @@ class TelemetryOrchestrator:
         l2_classification = l2_block.get("classification", "N/A")
         logger.debug(
             f"Scan event tracked (v2): threat={threat_detected}, "
-            f"l2_classification={l2_classification}"
+            f"l2_classification={l2_classification}, mssp_id={mssp_id}"
         )
 
     def track_error(
@@ -1018,6 +1072,164 @@ class TelemetryOrchestrator:
         self._events_queued += 1
 
         logger.debug(f"Config change tracked: {key} = {new_value}")
+
+    def track_heartbeat(
+        self,
+        uptime_seconds: float,
+        scans_since_last_heartbeat: int,
+        *,
+        threats_since_last_heartbeat: int | None = None,
+        memory_mb: float | None = None,
+        mssp_id: str | None = None,
+        customer_id: str | None = None,
+        agent_id: str | None = None,
+    ) -> None:
+        """Track an agent heartbeat event.
+
+        Heartbeats indicate agent health for MSSP monitoring.
+        Also supports dual-send to MSSP webhook when configured.
+
+        Args:
+            uptime_seconds: Time since agent started.
+            scans_since_last_heartbeat: Scans performed since last heartbeat.
+            threats_since_last_heartbeat: Threats detected since last heartbeat.
+            memory_mb: Current memory usage (optional).
+            mssp_id: MSSP identifier for webhook routing.
+            customer_id: Customer identifier for webhook routing.
+            agent_id: Agent identifier for tracking.
+        """
+        if not self._ensure_initialized():
+            return
+
+        if self._queue is None:
+            return
+
+        from raxe.domain.telemetry.events import create_heartbeat_event
+
+        # Create heartbeat event
+        event = create_heartbeat_event(
+            uptime_seconds=uptime_seconds,
+            scans_since_last_heartbeat=scans_since_last_heartbeat,
+            threats_since_last_heartbeat=threats_since_last_heartbeat,
+            memory_mb=memory_mb,
+        )
+
+        # Send to MSSP webhook if configured (dual-send)
+        if mssp_id or customer_id:
+            try:
+                # Build heartbeat payload for MSSP
+                heartbeat_payload = {
+                    "event_type": "heartbeat",
+                    "payload": {
+                        "uptime_seconds": uptime_seconds,
+                        "scans_since_last_heartbeat": scans_since_last_heartbeat,
+                        "threats_since_last_heartbeat": threats_since_last_heartbeat,
+                        "memory_mb": memory_mb,
+                        "agent_id": agent_id,
+                    },
+                }
+                self.mssp_webhook_sender.send_if_configured(
+                    event_payload=heartbeat_payload,
+                    mssp_id=mssp_id,
+                    customer_id=customer_id,
+                )
+            except Exception as e:
+                # Never block on MSSP webhook errors
+                logger.debug(f"MSSP heartbeat webhook error (non-blocking): {e}")
+
+        # Enqueue to RAXE backend (heartbeats are standard priority)
+        if not self._should_queue_event(event):
+            self._events_dropped += 1
+            return
+
+        self._queue.enqueue(event)
+        self._events_queued += 1
+
+        logger.debug(
+            f"Heartbeat tracked: uptime={uptime_seconds:.0f}s, "
+            f"scans={scans_since_last_heartbeat}, mssp_id={mssp_id}"
+        )
+
+    def track_agent_status_change(
+        self,
+        agent_id: str,
+        previous_status: str,
+        new_status: str,
+        reason: str,
+        *,
+        mssp_id: str | None = None,
+        customer_id: str | None = None,
+        agent_version: str | None = None,
+        platform: str | None = None,
+    ) -> None:
+        """Track an agent status change event.
+
+        Status changes are critical for MSSP SOC alerting (agent offline, etc.).
+        Dual-sends to MSSP webhook when configured.
+
+        Args:
+            agent_id: Agent identifier.
+            previous_status: Previous agent status.
+            new_status: New agent status.
+            reason: Reason for status change.
+            mssp_id: MSSP identifier for webhook routing.
+            customer_id: Customer identifier for webhook routing.
+            agent_version: Agent software version.
+            platform: Agent platform (darwin, linux, win32).
+        """
+        if not self._ensure_initialized():
+            return
+
+        if self._queue is None:
+            return
+
+        from raxe.domain.telemetry.events import create_agent_status_change_event
+
+        # Create status change event
+        event = create_agent_status_change_event(
+            agent_id=agent_id,
+            previous_status=previous_status,  # type: ignore[arg-type]
+            new_status=new_status,  # type: ignore[arg-type]
+            reason=reason,  # type: ignore[arg-type]
+            mssp_id=mssp_id,
+            customer_id=customer_id,
+            agent_version=agent_version,
+            platform=platform,
+        )
+
+        # Send to MSSP webhook if configured (dual-send)
+        if mssp_id or customer_id:
+            try:
+                # Build status change payload for MSSP
+                status_change_payload = {
+                    "event_type": "agent_status_change",
+                    "payload": {
+                        "agent_id": agent_id,
+                        "previous_status": previous_status,
+                        "new_status": new_status,
+                        "reason": reason,
+                        "agent_version": agent_version,
+                        "platform": platform,
+                    },
+                }
+                self.mssp_webhook_sender.send_if_configured(
+                    event_payload=status_change_payload,
+                    mssp_id=mssp_id,
+                    customer_id=customer_id,
+                )
+            except Exception as e:
+                # Never block on MSSP webhook errors
+                logger.debug(f"MSSP status change webhook error (non-blocking): {e}")
+
+        # Enqueue to RAXE backend (status changes are critical priority)
+        # Always queue critical events regardless of backpressure
+        self._queue.enqueue(event)
+        self._events_queued += 1
+
+        logger.info(
+            f"Agent status change tracked: agent={agent_id}, "
+            f"{previous_status} -> {new_status}, reason={reason}"
+        )
 
     # =========================================================================
     # Manual Operations

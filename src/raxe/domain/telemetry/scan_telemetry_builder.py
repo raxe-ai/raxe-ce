@@ -1,4 +1,4 @@
-"""Scan Telemetry Builder - Canonical implementation for schema v2.1.
+"""Scan Telemetry Builder - Canonical implementation for schema v3.0.
 
 This builder creates telemetry payloads that comply with SCAN_TELEMETRY_SCHEMA.md.
 All fields are dynamically calculated from L1/L2 results - NO hardcoded values.
@@ -16,12 +16,17 @@ Usage:
 See: docs/SCAN_TELEMETRY_SCHEMA.md for field definitions.
 
 NEW in v2.1: Voting engine telemetry support
+NEW in v3.0: MSSP/Partner ecosystem support
+  - mssp_id, customer_id, agent_id hierarchy
+  - _mssp_context block with data_mode and data_fields
+  - _mssp_data block for full mode (MSSP webhook only, never RAXE)
 """
 
 from __future__ import annotations
 
 import hashlib
 import math
+import sys
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -30,7 +35,8 @@ if TYPE_CHECKING:
     from raxe.domain.ml.protocol import L2Result
 
 # Schema version - bump when schema changes
-SCHEMA_VERSION = "2.4.0"
+# v3.0.0: MSSP/Partner ecosystem support
+SCHEMA_VERSION = "3.0.0"
 
 # Enum labels for probability distributions
 FAMILY_LABELS = [
@@ -151,6 +157,19 @@ class ScanTelemetryBuilder:
         policy_mode: str | None = None,
         policy_version: int | None = None,
         resolution_source: str | None = None,
+        # MSSP/Partner ecosystem fields (NEW in v3.0)
+        mssp_id: str | None = None,
+        customer_id: str | None = None,
+        customer_name: str | None = None,
+        agent_id: str | None = None,
+        data_mode: Literal["full", "privacy_safe"] | None = None,
+        data_fields: list[str] | None = None,
+        include_prompt_text: bool = False,
+        # Additional MSSP data fields (NEW in v3.0)
+        response_text: str | None = None,
+        system_prompt: str | None = None,
+        tool_calls: list[dict[str, Any]] | None = None,
+        rag_context: str | None = None,
     ) -> dict[str, Any]:
         """Build complete scan telemetry payload.
 
@@ -175,9 +194,20 @@ class ScanTelemetryBuilder:
             policy_mode: Policy mode (monitor/balanced/strict/custom)
             policy_version: Policy version number
             resolution_source: How policy was resolved (request/app/tenant/system_default)
+            mssp_id: MSSP/Partner identifier (must start with 'mssp_')
+            customer_id: Customer identifier within MSSP (must start with 'cust_')
+            customer_name: Human-readable customer name (e.g., 'Acme Corp')
+            agent_id: Agent identifier (must start with 'agent_')
+            data_mode: Privacy mode ('full' or 'privacy_safe', default 'privacy_safe')
+            data_fields: List of fields to include in full mode
+            include_prompt_text: Whether to include raw prompt in _mssp_data block
+            response_text: LLM response text (for _mssp_data when enabled)
+            system_prompt: System prompt text (for _mssp_data when enabled)
+            tool_calls: Tool call details (for _mssp_data when enabled)
+            rag_context: RAG context text (for _mssp_data when enabled)
 
         Returns:
-            Complete telemetry payload dict matching schema v2.0
+            Complete telemetry payload dict matching schema v3.0
         """
         # Calculate prompt_hash and prompt_length
         if prompt is not None:
@@ -241,6 +271,88 @@ class ScanTelemetryBuilder:
         if resolution_source:
             payload["resolution_source"] = resolution_source
 
+        # MSSP/Partner ecosystem fields (NEW in v3.0)
+        if mssp_id:
+            payload["mssp_id"] = mssp_id
+        if customer_id:
+            payload["customer_id"] = customer_id
+        if agent_id:
+            payload["agent_id"] = agent_id
+
+        # Build _mssp_context block if mssp_id is provided
+        if mssp_id:
+            # Default data_mode to privacy_safe if not specified
+            effective_data_mode = data_mode or "privacy_safe"
+            effective_data_fields = data_fields or []
+
+            mssp_context: dict[str, Any] = {
+                "mssp_id": mssp_id,
+                "data_mode": effective_data_mode,
+            }
+
+            # Add optional fields to context
+            if customer_id:
+                mssp_context["customer_id"] = customer_id
+            if customer_name:
+                mssp_context["customer_name"] = customer_name
+            if app_id:
+                mssp_context["app_id"] = app_id
+            if agent_id:
+                mssp_context["agent_id"] = agent_id
+            if effective_data_fields:
+                mssp_context["data_fields"] = effective_data_fields
+
+            payload["_mssp_context"] = mssp_context
+
+            # Build _mssp_data block for full mode (MSSP webhook only, never RAXE)
+            if effective_data_mode == "full" and include_prompt_text:
+                mssp_data: dict[str, Any] = {}
+
+                # Add prompt_text if configured
+                if prompt and ("prompt" in effective_data_fields or not effective_data_fields):
+                    mssp_data["prompt_text"] = prompt
+
+                # Add matched_text if configured (extract from L1 detections)
+                if "matched_text" in effective_data_fields or not effective_data_fields:
+                    matched_texts: list[str] = []
+                    if l1_result:
+                        detections = getattr(l1_result, "detections", []) or []
+                        for detection in detections:
+                            matches = getattr(detection, "matches", []) or []
+                            for match in matches:
+                                text = getattr(match, "matched_text", None)
+                                if text and text not in matched_texts:
+                                    matched_texts.append(text)
+                    if matched_texts:
+                        mssp_data["matched_text"] = matched_texts
+
+                # Add response_text if configured
+                if response_text and (
+                    "response" in effective_data_fields or not effective_data_fields
+                ):
+                    mssp_data["response_text"] = response_text
+
+                # Add system_prompt if configured
+                if system_prompt and (
+                    "system_prompt" in effective_data_fields or not effective_data_fields
+                ):
+                    mssp_data["system_prompt"] = system_prompt
+
+                # Add tool_calls if configured
+                if tool_calls and (
+                    "tool_calls" in effective_data_fields or not effective_data_fields
+                ):
+                    mssp_data["tool_calls"] = tool_calls
+
+                # Add rag_context if configured
+                if rag_context and (
+                    "rag_context" in effective_data_fields or not effective_data_fields
+                ):
+                    mssp_data["rag_context"] = rag_context
+
+                if mssp_data:
+                    payload["_mssp_data"] = mssp_data
+
         # Add L1 block if available
         if l1_block:
             payload["l1"] = l1_block
@@ -248,6 +360,21 @@ class ScanTelemetryBuilder:
         # Add L2 block if available
         if l2_block:
             payload["l2"] = l2_block
+
+        # Add agent info block (NEW in v3.0)
+        try:
+            from raxe import __version__
+
+            agent_block: dict[str, Any] = {
+                "version": __version__,
+                "platform": sys.platform,
+            }
+            if integration_type:
+                agent_block["integration"] = integration_type
+            payload["agent"] = agent_block
+        except ImportError:
+            # Don't fail if version import fails
+            pass
 
         return payload
 
@@ -754,6 +881,19 @@ def build_scan_telemetry(
     policy_mode: str | None = None,
     policy_version: int | None = None,
     resolution_source: str | None = None,
+    # MSSP/Partner ecosystem fields (NEW in v3.0)
+    mssp_id: str | None = None,
+    customer_id: str | None = None,
+    customer_name: str | None = None,
+    agent_id: str | None = None,
+    data_mode: Literal["full", "privacy_safe"] | None = None,
+    data_fields: list[str] | None = None,
+    include_prompt_text: bool = False,
+    # Additional MSSP data fields (NEW in v3.0)
+    response_text: str | None = None,
+    system_prompt: str | None = None,
+    tool_calls: list[dict[str, Any]] | None = None,
+    rag_context: str | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Convenience function to build scan telemetry.
@@ -775,6 +915,17 @@ def build_scan_telemetry(
         policy_mode: Policy mode (monitor/balanced/strict/custom)
         policy_version: Policy version number
         resolution_source: How policy was resolved (request/app/tenant/system_default)
+        mssp_id: MSSP/Partner identifier (must start with 'mssp_')
+        customer_id: Customer identifier within MSSP (must start with 'cust_')
+        customer_name: Human-readable customer name (e.g., 'Acme Corp')
+        agent_id: Agent identifier (must start with 'agent_')
+        data_mode: Privacy mode ('full' or 'privacy_safe', default 'privacy_safe')
+        data_fields: List of fields to include in full mode
+        include_prompt_text: Whether to include raw prompt in _mssp_data block
+        response_text: LLM response text (for _mssp_data when enabled)
+        system_prompt: System prompt text (for _mssp_data when enabled)
+        tool_calls: Tool call details (for _mssp_data when enabled)
+        rag_context: RAG context text (for _mssp_data when enabled)
         **kwargs: Additional arguments passed to builder
 
     Returns:
@@ -796,5 +947,16 @@ def build_scan_telemetry(
         policy_mode=policy_mode,
         policy_version=policy_version,
         resolution_source=resolution_source,
+        mssp_id=mssp_id,
+        customer_id=customer_id,
+        customer_name=customer_name,
+        agent_id=agent_id,
+        data_mode=data_mode,
+        data_fields=data_fields,
+        include_prompt_text=include_prompt_text,
+        response_text=response_text,
+        system_prompt=system_prompt,
+        tool_calls=tool_calls,
+        rag_context=rag_context,
         **kwargs,
     )

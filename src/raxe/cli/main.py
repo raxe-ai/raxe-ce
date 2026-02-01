@@ -11,9 +11,13 @@ from pathlib import Path
 import click
 
 from raxe import __version__
+
+# MSSP/Partner ecosystem CLI commands
+from raxe.cli.agent import agent
 from raxe.cli.app import app
 from raxe.cli.auth import auth, auth_link
 from raxe.cli.config import config
+from raxe.cli.customer import customer
 from raxe.cli.dashboard_cmd import dashboard, monitor
 from raxe.cli.doctor import doctor
 from raxe.cli.error_handler import handle_cli_error
@@ -32,6 +36,7 @@ from raxe.cli.export import export
 from raxe.cli.help import help_command
 from raxe.cli.history import history
 from raxe.cli.models import models
+from raxe.cli.mssp import mssp
 from raxe.cli.output import console, display_error, display_scan_result, display_success
 from raxe.cli.policy import policy
 from raxe.cli.privacy import privacy_command
@@ -531,6 +536,16 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
     "policy_id",
     help="Explicit policy ID override (highest priority)",
 )
+@click.option(
+    "--mssp",
+    "mssp_id",
+    help="MSSP/Partner ID for partner ecosystem (must start with 'mssp_')",
+)
+@click.option(
+    "--customer",
+    "customer_id",
+    help="Customer ID within MSSP (must start with 'cust_')",
+)
 @click.pass_context
 def scan(
     ctx,
@@ -549,6 +564,8 @@ def scan(
     tenant_id: str | None,
     app_id: str | None,
     policy_id: str | None,
+    mssp_id: str | None,
+    customer_id: str | None,
 ):
     """
     Scan text for security threats.
@@ -574,6 +591,11 @@ def scan(
       raxe scan "text" --tenant acme                      # Use tenant's default policy
       raxe scan "text" --tenant acme --app chatbot        # Use app's policy override
       raxe scan "text" --tenant acme --policy strict      # Override with specific policy
+
+    \b
+    MSSP/Partner Examples:
+      raxe scan "text" --mssp mssp_partner --customer cust_acme  # Scan with MSSP context
+      # Alerts are sent to MSSP webhook with customer-specific data mode
 
     \b
     Exit Codes (for CI/CD integration):
@@ -732,6 +754,8 @@ def scan(
                     tenant_id=tenant_id,
                     app_id=app_id,
                     policy_id=policy_id,
+                    mssp_id=mssp_id,
+                    customer_id=customer_id,
                 )
 
                 # Show scan result first
@@ -763,6 +787,8 @@ def scan(
                         tenant_id=tenant_id,
                         app_id=app_id,
                         policy_id=policy_id,
+                        mssp_id=mssp_id,
+                        customer_id=customer_id,
                     )
             except ImportError:
                 console.print("[yellow]Warning: Profiling not available[/yellow]")
@@ -778,6 +804,8 @@ def scan(
                     tenant_id=tenant_id,
                     app_id=app_id,
                     policy_id=policy_id,
+                    mssp_id=mssp_id,
+                    customer_id=customer_id,
                 )
         else:
             result = raxe.scan(
@@ -792,6 +820,8 @@ def scan(
                 tenant_id=tenant_id,
                 app_id=app_id,
                 policy_id=policy_id,
+                mssp_id=mssp_id,
+                customer_id=customer_id,
             )
     except Exception as e:
         display_error("Scan execution failed", str(e))
@@ -1511,6 +1541,11 @@ cli.add_command(monitor)
 
 # Top-level alias for 'raxe link ABC123' (same as 'raxe auth link ABC123')
 cli.add_command(auth_link, name="link")
+
+# MSSP/Partner ecosystem commands
+cli.add_command(mssp)
+cli.add_command(customer)
+cli.add_command(agent)
 
 
 if __name__ == "__main__":

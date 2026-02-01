@@ -1,0 +1,1 @@
+"""MSSP domain model tests."""

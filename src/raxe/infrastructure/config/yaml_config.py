@@ -41,6 +41,15 @@ from typing import Any, Literal
 import yaml
 
 
+def get_config_path() -> Path:
+    """Get the base RAXE configuration directory.
+
+    Returns:
+        Path to ~/.raxe directory
+    """
+    return Path.home() / ".raxe"
+
+
 @dataclass
 class CoreConfig:
     """Core configuration settings."""

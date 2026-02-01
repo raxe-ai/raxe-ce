@@ -107,7 +107,7 @@ class TestYamlTenantRepository:
             tenant_id="customer_123",
             name="Customer 123",
             default_policy_id="balanced",
-            partner_id="bunny_net",
+            partner_id="partner_net",
             tier="enterprise",
         )
 
@@ -115,7 +115,7 @@ class TestYamlTenantRepository:
         loaded = repo.get_tenant("customer_123")
 
         assert loaded is not None
-        assert loaded.partner_id == "bunny_net"
+        assert loaded.partner_id == "partner_net"
         assert loaded.tier == "enterprise"
 
 

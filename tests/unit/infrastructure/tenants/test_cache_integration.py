@@ -84,27 +84,27 @@ class TestCachedPolicyRepository:
             mode=PolicyMode.BALANCED,
             blocking_enabled=True,
         )
-        policy_bunny = TenantPolicy(
+        policy_partner = TenantPolicy(
             policy_id="custom",
-            name="Bunny Custom",
-            tenant_id="bunny",
+            name="Partner Custom",
+            tenant_id="partner",
             mode=PolicyMode.STRICT,
             blocking_enabled=True,
         )
 
         base_repo = YamlPolicyRepository(tmp_path)
         base_repo.save_policy(policy_acme)
-        base_repo.save_policy(policy_bunny)
+        base_repo.save_policy(policy_partner)
 
         cached_repo = CachedPolicyRepository(base_repo)
 
         # Get both policies
         p1 = cached_repo.get_policy("custom", "acme")
-        p2 = cached_repo.get_policy("custom", "bunny")
+        p2 = cached_repo.get_policy("custom", "partner")
 
         # Should be different policies
         assert p1.tenant_id == "acme"
-        assert p2.tenant_id == "bunny"
+        assert p2.tenant_id == "partner"
         assert p1.mode != p2.mode
 
     def test_save_invalidates_cache(self, tmp_path, sample_policy):

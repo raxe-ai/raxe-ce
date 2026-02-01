@@ -90,9 +90,11 @@ class TestTenantCRUD:
         """Create tenant with partner_id."""
         service = TenantService(base_path=tmp_path)
 
-        tenant = service.create_tenant(CreateTenantRequest(name="Customer", partner_id="bunny-cdn"))
+        tenant = service.create_tenant(
+            CreateTenantRequest(name="Customer", partner_id="partner-net")
+        )
 
-        assert tenant.partner_id == "bunny-cdn"
+        assert tenant.partner_id == "partner-net"
 
     def test_create_tenant_with_tier(self, tmp_path):
         """Create tenant with custom tier."""

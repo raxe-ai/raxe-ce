@@ -292,9 +292,9 @@ class TestTenant:
             tenant_id="customer_123",
             name="Customer 123",
             default_policy_id="balanced",
-            partner_id="bunny_net",
+            partner_id="partner_net",
         )
-        assert tenant.partner_id == "bunny_net"
+        assert tenant.partner_id == "partner_net"
 
 
 class TestApp:

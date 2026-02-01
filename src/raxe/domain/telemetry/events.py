@@ -1,5 +1,5 @@
 """
-Telemetry event factory module with all 12 event types.
+Telemetry event factory module with all 13 event types.
 
 This module contains ONLY pure functions - no I/O operations.
 All functions take data and return data without side effects.
@@ -17,9 +17,10 @@ Event Types:
 - key_upgrade: Fired when API key is upgraded
 - config_changed: Fired when configuration is changed
 - team_invite: Tracks team invitations for viral growth metrics
+- agent_status_change: Fired when agent status changes (for MSSP alerting)
 
 Priority Assignment:
-- Critical: installation, activation, session_end, error, key_upgrade, team_invite
+- Critical: installation, activation, session_end, error, key_upgrade, team_invite, agent_status_change
 - Standard: session_start, performance, feature_usage, heartbeat
 - Conditional: scan (critical if threat HIGH+), config_changed (critical if disabling telemetry)
 """
@@ -48,6 +49,7 @@ class EventType(str, Enum):
     KEY_UPGRADE = "key_upgrade"
     CONFIG_CHANGED = "config_changed"
     TEAM_INVITE = "team_invite"
+    AGENT_STATUS_CHANGE = "agent_status_change"
 
 
 @dataclass(frozen=True)
@@ -1221,6 +1223,96 @@ def create_team_invite_event(
         event_type=EventType.TEAM_INVITE.value,
         timestamp=_get_utc_timestamp(),
         priority="critical",
+        payload=payload,
+        org_id=org_id,
+        team_id=team_id,
+    )
+
+
+# =============================================================================
+# Agent Status Change Event
+# =============================================================================
+
+
+def create_agent_status_change_event(
+    agent_id: str,
+    previous_status: Literal["online", "degraded", "offline", "unknown"],
+    new_status: Literal["online", "degraded", "offline", "unknown"],
+    reason: Literal[
+        "no_heartbeat",
+        "heartbeat_received",
+        "startup",
+        "shutdown",
+        "error",
+        "manual",
+    ],
+    *,
+    mssp_id: str | None = None,
+    customer_id: str | None = None,
+    agent_version: str | None = None,
+    platform: str | None = None,
+    org_id: str | None = None,
+    team_id: str | None = None,
+) -> TelemetryEvent:
+    """Create an agent status change telemetry event.
+
+    Fired when an agent's status changes (for MSSP SOC alerting).
+
+    Args:
+        agent_id: Agent identifier.
+        previous_status: Previous agent status.
+        new_status: New agent status.
+        reason: Reason for status change.
+            - no_heartbeat: Agent missed heartbeat threshold
+            - heartbeat_received: Agent came back online
+            - startup: Agent just started
+            - shutdown: Agent gracefully stopped
+            - error: Agent encountered error
+            - manual: Status manually changed
+        mssp_id: MSSP identifier (for MSSP routing).
+        customer_id: Customer identifier.
+        agent_version: Agent software version.
+        platform: Agent platform (darwin, linux, win32).
+        org_id: Organization ID for multi-tenant tracking.
+        team_id: Team ID for team-level analytics.
+
+    Returns:
+        TelemetryEvent with agent_status_change payload (critical priority).
+
+    Example:
+        >>> event = create_agent_status_change_event(
+        ...     agent_id="agent_xyz789",
+        ...     previous_status="online",
+        ...     new_status="offline",
+        ...     reason="no_heartbeat",
+        ...     mssp_id="mssp_partner",
+        ...     customer_id="cust_acme",
+        ... )
+    """
+    payload: dict[str, Any] = {
+        "agent_id": agent_id,
+        "previous_status": previous_status,
+        "new_status": new_status,
+        "reason": reason,
+    }
+
+    if mssp_id is not None:
+        payload["mssp_id"] = mssp_id
+
+    if customer_id is not None:
+        payload["customer_id"] = customer_id
+
+    if agent_version is not None:
+        payload["agent_version"] = agent_version
+
+    if platform is not None:
+        payload["platform"] = platform
+
+    return TelemetryEvent(
+        event_id=generate_event_id(),
+        event_type=EventType.AGENT_STATUS_CHANGE.value,
+        timestamp=_get_utc_timestamp(),
+        priority="critical",  # Status changes are critical for SOC alerting
         payload=payload,
         org_id=org_id,
         team_id=team_id,

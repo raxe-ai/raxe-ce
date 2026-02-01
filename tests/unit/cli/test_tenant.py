@@ -60,7 +60,7 @@ class TestTenantList:
         """Test listing tenants with data."""
         # Create tenants
         runner.invoke(tenant, ["create", "--name", "Acme Corp", "--id", "acme"])
-        runner.invoke(tenant, ["create", "--name", "Bunny CDN", "--id", "bunny"])
+        runner.invoke(tenant, ["create", "--name", "Partner CDN", "--id", "partner"])
 
         # List tenants
         result = runner.invoke(tenant, ["list"])

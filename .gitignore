@@ -32,6 +32,11 @@ docs/VOTING_ENGINE.md
 # Sample .raxe config directory (user-created, not tracked)
 .raxe/
 
+# MSSP/Partner internal data (customer configs, webhook secrets, agent registry)
+# These files contain sensitive partner and customer data
+mssp_data/
+**/mssp_data/
+
 # Internal update documentation (client docs kept separately)
 UPDATE.md
 

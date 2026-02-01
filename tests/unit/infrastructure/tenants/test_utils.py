@@ -121,7 +121,7 @@ class TestSlugify:
     def test_real_world_tenant_names(self):
         """Real-world tenant name examples work correctly."""
         assert slugify("Acme Corporation") == "acme-corporation"
-        assert slugify("Bunny.net CDN") == "bunnynet-cdn"
+        assert slugify("Partner.net CDN") == "partnernet-cdn"
         assert slugify("First National Bank") == "first-national-bank"
         assert slugify("My App (Production)") == "my-app-production"
 

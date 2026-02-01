@@ -1,4 +1,4 @@
-# RAXE Scan Telemetry Schema v2.4
+# RAXE Scan Telemetry Schema v3.0
 
 > **CANONICAL SOURCE**: This is the authoritative schema definition for scan telemetry events.
 > All telemetry entry points (CLI, SDK, wrappers, decorators) MUST comply with this schema.
@@ -6,8 +6,8 @@
 ## Schema Version
 
 ```
-Version: 2.4.0
-Last Updated: 2026-01-22
+Version: 3.0.0
+Last Updated: 2026-01-29
 Status: LOCKED (changes require version bump)
 ```
 
@@ -26,7 +26,7 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 {
   "event_id": "evt_<16_hex_chars>",
   "event_type": "scan",
-  "schema_version": "2.0.0",
+  "schema_version": "3.0.0",
   "priority": "critical|standard",
   "timestamp": "ISO8601_UTC",
 
@@ -46,6 +46,31 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
     "policy_mode": "monitor|balanced|strict|custom|null",
     "policy_version": "<int|null: policy version number>",
     "resolution_source": "request|app|tenant|system_default|null",
+
+    "mssp_id": "<string|null: MSSP/Partner identifier (mssp_xxx)>",
+    "customer_id": "<string|null: Customer identifier (cust_xxx)>",
+    "agent_id": "<string|null: Agent identifier (agent_xxx)>",
+
+    "_mssp_context": {
+      "mssp_id": "<string: MSSP/Partner identifier>",
+      "data_mode": "full|privacy_safe",
+      "customer_id": "<string|null: Customer identifier>",
+      "customer_name": "<string|null: Human-readable customer name>",
+      "app_id": "<string|null: Application identifier>",
+      "agent_id": "<string|null: Agent identifier>",
+      "data_fields": ["<string: configured fields>"]
+    },
+
+    "_mssp_data": {
+      "prompt_text": "<string|null: Raw prompt (only in full mode)>",
+      "matched_text": ["<string: L1 matched text snippets>"]
+    },
+
+    "agent": {
+      "version": "<string: RAXE version (e.g., 0.9.0)>",
+      "platform": "<string: OS platform (darwin|linux|win32)>",
+      "integration": "<string|null: Integration type (langchain|crewai|etc)>"
+    },
 
     "l1": {
       "hit": "<bool: detection_count > 0>",
@@ -213,6 +238,33 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
 - `system_default`: System default policy (balanced) used
 
 **Note:** These fields are optional and only present when multi-tenant policy management is active. They support audit/compliance requirements by providing full attribution of which policy was applied to each scan.
+
+### MSSP/Partner Ecosystem Fields (NEW in v3.0)
+
+| Field | Calculation | Source |
+|-------|-------------|--------|
+| `mssp_id` | MSSP/Partner identifier (must start with 'mssp_') | Request/Config |
+| `customer_id` | Customer identifier within MSSP (must start with 'cust_') | Request/Config |
+| `agent_id` | Agent identifier (must start with 'agent_') | Request/Config |
+| `_mssp_context.data_mode` | Privacy mode ('full' or 'privacy_safe') | Customer config |
+| `_mssp_context.customer_name` | Human-readable customer name | Customer config |
+| `_mssp_context.data_fields` | List of configured data fields | Customer config |
+| `_mssp_data.prompt_text` | Raw prompt text (only when data_mode='full' and 'prompt' in data_fields) | Input |
+| `_mssp_data.matched_text` | Array of L1 matched text snippets (only when data_mode='full' and 'matched_text' in data_fields) | L1 detections |
+| `agent.version` | RAXE package version | raxe.__version__ |
+| `agent.platform` | OS platform (darwin, linux, win32) | sys.platform |
+| `agent.integration` | Integration framework if applicable | Request/Config |
+
+**Privacy Notes:**
+- `_mssp_context` and `_mssp_data` blocks are ONLY sent to MSSP webhooks, NEVER to RAXE backend
+- In `privacy_safe` mode, `_mssp_data` block is not included
+- `data_fields` controls which fields appear in `_mssp_data`
+- If `data_fields` is empty, all available fields are included in full mode
+
+**Agent Block:**
+- `agent.version` comes from `raxe.__version__`
+- `agent.platform` comes from `sys.platform`
+- `agent.integration` is only present when using an integration (langchain, crewai, etc.)
 
 ### L1 Fields
 
@@ -451,13 +503,32 @@ telemetry = builder.build(
 
 ## Backwards Compatibility
 
-- `schema_version: "2.0.0"` enables new fields
-- Backend accepts both v1 and v2 schemas
+- `schema_version: "3.0.0"` enables MSSP/Partner ecosystem fields
+- `schema_version: "2.0.0"` enables L2 and voting engine fields
+- Backend accepts v1, v2, and v3 schemas
 - v1 events without `schema_version` field are treated as legacy
+- MSSP fields (`_mssp_context`, `_mssp_data`, `agent`) are optional and only present when MSSP mode is active
 
 ---
 
 ## Changelog
+
+### v3.0.0 (2026-01-29)
+- **MAJOR**: Added MSSP/Partner Ecosystem support for multi-tenant MSSP deployments
+- Added `mssp_id`, `customer_id`, `agent_id` top-level fields for hierarchy identification
+- Added `_mssp_context` block containing:
+  - `mssp_id`, `customer_id`, `customer_name`: Identification
+  - `data_mode`: Privacy mode (full or privacy_safe)
+  - `data_fields`: Configured fields for full mode
+  - `app_id`, `agent_id`: Optional identifiers
+- Added `_mssp_data` block (MSSP webhook only, never sent to RAXE backend):
+  - `prompt_text`: Raw prompt text (in full mode when 'prompt' in data_fields)
+  - `matched_text`: Array of L1 matched text snippets (in full mode when 'matched_text' in data_fields)
+- Added `agent` block containing:
+  - `version`: RAXE package version
+  - `platform`: OS platform (darwin, linux, win32)
+  - `integration`: Integration framework if applicable (langchain, crewai, etc.)
+- Privacy: `_mssp_data` block supports configurable privacy modes per customer
 
 ### v2.4.0 (2026-01-22)
 - Added `l2.token_count`: Number of tokens after tokenization (max 512)

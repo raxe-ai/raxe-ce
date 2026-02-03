@@ -3,7 +3,7 @@
 Thank you for contributing a new detection rule to RAXE! Please fill out this template completely to help us review your submission.
 
 **Before submitting:**
-- [ ] I have read the [CONTRIBUTING_RULES.md](../CONTRIBUTING_RULES.md) guide
+- [ ] I have read the [Custom Rules Guide](../docs/CUSTOM_RULES.md)
 - [ ] I have validated my rule with `raxe validate-rule <path>`
 - [ ] All validation checks pass without errors
 - [ ] I have tested the rule against real examples

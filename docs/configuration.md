@@ -4,7 +4,7 @@
 
 # RAXE Configuration Guide
 
-Complete configuration reference for RAXE Community Edition v0.1.0.
+Complete configuration reference for RAXE Community Edition v0.9.x.
 
 ## Quick Start
 
@@ -678,10 +678,23 @@ The configuration format changed significantly in v0.1.0. To migrate:
 
 ---
 
+## Enterprise/MSSP Configuration
+
+For managed service provider (MSSP) and enterprise multi-tenant deployments, RAXE supports:
+
+- **Multi-tenant architecture**: MSSP → Customer → Application → Agent hierarchy
+- **Dual-send telemetry**: Metadata to RAXE, full data to MSSP webhook
+- **Per-customer SIEM routing**: Splunk, CrowdStrike, Sentinel, CEF
+
+See [MSSP Integration Guide](MSSP_INTEGRATION_GUIDE.md) for complete enterprise configuration.
+
+---
+
 ## Related Documentation
 
 - [Getting Started](getting-started.md) - Quick start guide
 - [Architecture](architecture.md) - System design and components
+- [MSSP Integration](MSSP_INTEGRATION_GUIDE.md) - Enterprise/partner deployments
 - [Custom Rules](CUSTOM_RULES.md) - Writing detection rules
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
 - [API Reference](api_reference.md) - Python SDK documentation

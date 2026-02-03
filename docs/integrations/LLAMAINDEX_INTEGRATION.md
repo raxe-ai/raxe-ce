@@ -32,7 +32,7 @@ This document describes the LlamaIndex integration for RAXE, providing automatic
           v
 +-------------------+    +-------------------+
 |    L1 Detection   |--->|    L2 Detection   |
-|  (514 rules)     |    |   (ML classifier) |
+|  (515+ rules)    |    |   (ML classifier) |
 +-------------------+    +-------------------+
 ```
 

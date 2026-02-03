@@ -69,7 +69,7 @@ Everything runs locally. Your data never leaves your machine.
 ### Easy Integration
 One line of code. Works with OpenAI, Anthropic, LangChain.
 
-### 514 Detection Rules
+### 515+ Detection Rules
 Community-driven detection rules across 7 threat families.
 
 ---
@@ -78,7 +78,7 @@ Community-driven detection rules across 7 threat families.
 
 ### L1: Rule-Based Detection
 
-Fast pattern matching with 514 curated YAML rules:
+Fast pattern matching with 515+ curated YAML rules:
 
 | Family | Description | Example |
 |--------|-------------|---------|

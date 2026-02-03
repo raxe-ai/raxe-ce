@@ -12,7 +12,7 @@
 ### Is RAXE really free?
 
 **Yes, forever!** RAXE Community Edition will always remain free with:
-- 460+ detection rules shared with the community
+- 515+ detection rules shared with the community
 - L2 CPU-based ML classifier
 - Privacy-first local scanning
 - CLI tool and Python SDK
@@ -37,7 +37,7 @@ RAXE Community Edition is fundamentally different from most AI security solution
 
 | Feature | RAXE Community | Typical Solutions |
 |---------|----------------|-------------------|
-| **Detection Rules** | 460+ community rules | Closed source, proprietary |
+| **Detection Rules** | 515+ community rules | Closed source, proprietary |
 | **Privacy** | Local-first, your data stays on device | Cloud-only, sends prompts to vendor |
 | **Transparency** | Detection rules shared with community | Black-box "trust us" approach |
 | **Education** | Explains how attacks work | Just blocks, no learning |
@@ -90,7 +90,7 @@ RAXE uses a **dual-layer detection system** with complementary strengths:
 - **~95% precision** on known attack patterns
 - Extremely fast (<1ms per scan)
 - Zero false positives on well-crafted rules
-- 460+ curated rules maintained by security researchers
+- 515+ curated rules maintained by security researchers
 
 **L2 ML-Based Detection:**
 - **~85% recall** on novel/obfuscated attacks
@@ -310,7 +310,7 @@ We collect:
 
 | Aspect | RAXE Community | Proprietary Solutions |
 |--------|----------------|---------------------|
-| **Detection Rules** | 460+ community rules | Closed, can't audit |
+| **Detection Rules** | 515+ community rules | Closed, can't audit |
 | **Privacy** | Local-first, verifiable | Cloud-only, trust required |
 | **Detection Logic** | Rules shared with community | Black-box "magic" |
 | **Data Handling** | You control everything | Vendor controls your data |
@@ -799,7 +799,7 @@ raxe changelog
 
 | Feature | Community | Pro | Enterprise |
 |---------|-----------|-----|------------|
-| **Detection** | L1 + L2 (460+ rules) | L1-L6 (1000+ rules) | Custom models |
+| **Detection** | L1 + L2 (515+ rules) | L1-L6 (1000+ rules) | Custom models |
 | **Latency** | <10ms P95 | <5ms P95 | <3ms P95 |
 | **Deployment** | Local only | Local + Cloud | On-prem + Cloud |
 | **Dashboard** | CLI | Web Console | Custom + SSO |

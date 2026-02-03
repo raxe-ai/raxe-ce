@@ -1091,9 +1091,26 @@ Error: Policy count (120) exceeds maximum allowed (100)
   priority: 30
 ```
 
+## Policies vs Suppressions
+
+| Aspect | Policies | Suppressions |
+|--------|----------|--------------|
+| **Purpose** | Enforce security actions | Manage false positives |
+| **Scope** | Rule-based enforcement (ALLOW/FLAG/BLOCK/LOG) | Pattern-based filtering |
+| **Use case** | Define how threats are handled | Silence known-safe detections |
+| **Priority** | Evaluated for all detections | Applied after policy resolution |
+| **Audit** | Logged in telemetry | Requires reason field |
+
+**When to use Policies:** Define how your application responds to different threat types and severities.
+
+**When to use Suppressions:** Silence specific rule IDs that are false positives in your context.
+
+See [Suppression System](SUPPRESSIONS.md) for managing false positives.
+
 ## Related Documentation
 
-- [Quick Start Guide](../QUICKSTART.md) - Get started with RAXE in 60 seconds
+- [Getting Started](getting-started.md) - Get started with RAXE
+- [Suppression System](SUPPRESSIONS.md) - Manage false positives
 - [Custom Rules](CUSTOM_RULES.md) - Create your own detection rules
 - [Configuration Guide](configuration.md) - RAXE configuration options
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions

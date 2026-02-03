@@ -103,7 +103,7 @@ docs/
 
 RAXE uses a **dual-layer detection system**:
 
-- **L1 (Rule-Based)**: Fast pattern matching with 514 curated YAML rules
+- **L1 (Rule-Based)**: Fast pattern matching with 515+ curated YAML rules
 - **L2 (ML-Based)**: Adaptive detection for obfuscated and novel attacks
 
 See [Architecture](architecture.md#dual-layer-detection-system) for details.

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/raxe-ai/raxe-ce/discussions
+    about: Ask questions, share ideas, or start discussions with the community
+  - name: Security Vulnerabilities
+    url: https://github.com/raxe-ai/raxe-ce/security/advisories/new
+    about: Report security issues privately (do not create public issues for security vulnerabilities)
+  - name: Rule Submissions
+    url: https://github.com/raxe-ai/raxe-ce/blob/main/.github/RULE_SUBMISSION.md
+    about: Submit a new detection rule to the RAXE rule pack

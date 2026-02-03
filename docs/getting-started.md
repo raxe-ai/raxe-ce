@@ -62,7 +62,7 @@ You should see:
 
 ```
 Configuration file exists
-Rules loaded successfully (514 rules)
+Rules loaded successfully (515 rules)
 Database initialized
 ML model available
 System ready

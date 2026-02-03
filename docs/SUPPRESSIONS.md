@@ -219,3 +219,11 @@ All suppressions require a reason.
 - Reason length limit: 500 characters
 - Maximum suppressions: 1000
 - Audit trail for all operations
+
+## Related Documentation
+
+> **For enforcement rules**, see [Policy System](POLICIES.md) to define how threats are handled (ALLOW/FLAG/BLOCK/LOG).
+
+- [Policy System](POLICIES.md) - Define enforcement actions for threats
+- [Custom Rules](CUSTOM_RULES.md) - Create your own detection rules
+- [Configuration Guide](configuration.md) - RAXE configuration options

@@ -130,7 +130,7 @@ For questions about this Code of Conduct:
 
 This Code of Conduct may be revised periodically. We will announce major changes, but it is your responsibility to review this document regularly.
 
-**Last updated:** 2025-11-14
+**Last updated:** 2026-02-03
 
 ---
 

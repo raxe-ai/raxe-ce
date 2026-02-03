@@ -98,7 +98,7 @@ If approved, the RAXE team will:
 ### Step 4: Inclusion in Community Edition
 
 Validated rules are added to:
-- Community Edition (460+ rules)
+- Community Edition (515+ rules)
 - Public rule documentation
 - Educational threat database
 

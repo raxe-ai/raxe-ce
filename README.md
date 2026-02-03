@@ -11,7 +11,7 @@
     <a href="https://pypi.org/project/raxe/"><img src="https://img.shields.io/pypi/v/raxe?style=flat-square&color=0366d6" alt="PyPI"></a>
     <img src="https://img.shields.io/badge/agents-7_frameworks-9b59b6?style=flat-square" alt="7 Agent Frameworks">
     <img src="https://img.shields.io/badge/on--device_ML-5_head_ensemble-ff6f00?style=flat-square" alt="On-Device ML">
-    <img src="https://img.shields.io/badge/L1-514_rules-3498db?style=flat-square" alt="514 Rules">
+    <img src="https://img.shields.io/badge/L1-515+_rules-3498db?style=flat-square" alt="515+ Rules">
     <img src="https://img.shields.io/badge/agentic-11_rule_families-e74c3c?style=flat-square" alt="11 Rule Families">
     <img src="https://img.shields.io/badge/100%25_local-zero_cloud-27ae60?style=flat-square" alt="100% Local">
   </p>
@@ -167,7 +167,7 @@ if result.has_threats:
 |---------|---------|
 | **7 agent framework integrations** | LangChain, CrewAI, AutoGen, LlamaIndex, LiteLLM, DSPy, Portkey |
 | **On-device ML ensemble** | 5-head classifier with weighted voting - runs locally, no API calls |
-| **514 detection rules** | 11 threat families: 7 L1 + 4 agentic (AGENT, TOOL, MEM, MULTI) |
+| **515+ detection rules** | 11 threat families: 7 L1 + 4 agentic (AGENT, TOOL, MEM, MULTI) |
 | **Agentic security scanning** | Goal hijack, memory poisoning, tool chain validation, agent handoff |
 | **Dual-layer detection** | L1 (pattern matching) + L2 (ML ensemble) for 94.7% TPR |
 | **<10ms P95 latency** | Fast enough for real-time agent protection |
@@ -429,7 +429,7 @@ handler.scan_memory_before_save(memory_key, content)
 │  ┌──────────────────────────┐    ┌────────────────────────────────────────┐│
 │  │    L1: Pattern Rules     │    │      L2: On-Device ML Ensemble         ││
 │  │  ──────────────────────  │    │  ────────────────────────────────────  ││
-│  │  • 514 detection rules  │    │                                        ││
+│  │  • 515+ detection rules │    │                                        ││
 │  │  • 7 L1 threat families  │    │  ┌─────────────────────────────────┐   ││
 │  │  • Regex + semantic      │    │  │     EmbeddingGemma-300M         │   ││
 │  │  • <5ms execution        │    │  │     256-dim embeddings          │   ││
@@ -474,7 +474,7 @@ pip install raxe
 # 2. Verify setup
 raxe doctor
 # → API key: valid (or temporary)
-# → Rules loaded: 514
+# → Rules loaded: 515
 # → ML model: ready
 
 # 3. Test detection
@@ -546,7 +546,7 @@ RAXE is **community-driven** - like Snort rules or YARA signatures, but for AI a
 ## Beta Status
 
 **What's working:**
-- Core detection (514 rules, L1 + L2 5-head ML ensemble)
+- Core detection (515+ rules, L1 + L2 5-head ML ensemble)
 - Python SDK and CLI with guided setup wizard
 - OpenAI/Anthropic wrappers
 - 7 agent framework integrations (LangChain, CrewAI, AutoGen, LlamaIndex, LiteLLM, DSPy, Portkey)
@@ -591,7 +591,7 @@ RAXE Community Edition is proprietary software, free for use. See [LICENSE](LICE
 
 *Every runtime has its security layer. Agents need theirs.*
 
-On-device ML. 514 rules. <10ms. 100% local. Free forever.
+On-device ML. 515+ rules. <10ms. 100% local. Free forever.
 
 [Start Protecting Your Agents](docs/getting-started.md) | [Join the Community](https://x.com/raxeai)
 

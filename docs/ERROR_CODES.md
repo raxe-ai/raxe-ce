@@ -69,7 +69,7 @@ fi
 
 **Remediation:**
 1. Review the scan output with `raxe scan "$PROMPT" --explain`
-2. If false positive, add suppression rule in `.raxeignore`
+2. If false positive, add suppression in `.raxe/suppressions.yaml` (see [Suppression System](SUPPRESSIONS.md))
 3. If true positive, sanitize or reject the input
 
 ---

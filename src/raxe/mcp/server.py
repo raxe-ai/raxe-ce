@@ -20,9 +20,9 @@ RATE_LIMIT_RPM = 60  # 60 requests per minute per client
 
 # These imports will fail if MCP is not installed
 # The CLI entry point checks for this before importing this module
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import (
+from mcp.server import Server  # noqa: E402
+from mcp.server.stdio import stdio_server  # noqa: E402
+from mcp.types import (  # noqa: E402
     CallToolResult,
     GetPromptResult,
     ListPromptsResult,
@@ -35,9 +35,9 @@ from mcp.types import (
     TextContent,
     Tool,
 )
-from pydantic import AnyUrl
+from pydantic import AnyUrl  # noqa: E402
 
-from raxe.sdk.client import Raxe
+from raxe.sdk.client import Raxe  # noqa: E402
 
 
 class RateLimiter:
@@ -121,7 +121,7 @@ class RaxeMCPServer:
                                 },
                                 "context": {
                                     "type": "string",
-                                    "description": "Optional context about where this text came from",
+                                    "description": "Optional context about the text source",
                                 },
                             },
                             "required": ["text"],
@@ -129,7 +129,7 @@ class RaxeMCPServer:
                     ),
                     Tool(
                         name="list_threat_families",
-                        description="List all available threat detection families (e.g., PI for Prompt Injection)",
+                        description="List available threat detection families (PI, JB, DE, etc.)",
                         inputSchema={
                             "type": "object",
                             "properties": {},
@@ -191,7 +191,7 @@ class RaxeMCPServer:
                 content=[
                     TextContent(
                         type="text",
-                        text=f"Error: Input too large. Maximum {MAX_TEXT_LENGTH:,} characters allowed.",
+                        text=f"Error: Input too large. Max {MAX_TEXT_LENGTH:,} chars.",
                     )
                 ]
             )
@@ -201,7 +201,7 @@ class RaxeMCPServer:
                 content=[
                     TextContent(
                         type="text",
-                        text=f"Error: Context too large. Maximum {MAX_CONTEXT_LENGTH:,} characters allowed.",
+                        text=f"Error: Context too large. Max {MAX_CONTEXT_LENGTH:,} chars.",
                     )
                 ]
             )
@@ -209,16 +209,104 @@ class RaxeMCPServer:
         try:
             result = self.raxe.scan(text)
 
-            if result.is_safe:
-                response = "SAFE: No threats detected in the provided text."
+            # Check if any threats detected
+            scan_result = result.scan_result
+            has_threats = scan_result.has_threats if hasattr(scan_result, "has_threats") else False
+
+            if not has_threats:
+                # Build safe response with timing info
+                lines = ["✓ SAFE: No threats detected"]
+                lines.append("")
+                lines.append(f"Scan completed in {result.duration_ms:.1f}ms")
+                lines.append(f"  L1 (rules): {result.l1_duration_ms:.1f}ms")
+                lines.append(f"  L2 (ML):    {result.l2_duration_ms:.1f}ms")
+                response = "\n".join(lines)
             else:
-                threats = []
-                for detection in result.detections:
-                    threats.append(
-                        f"- [{detection.severity}] {detection.rule_id}: {detection.description}"
-                    )
-                threat_list = "\n".join(threats)
-                response = f"THREATS DETECTED ({len(result.detections)}):\n{threat_list}"
+                lines = ["⚠ THREATS DETECTED"]
+                lines.append("")
+
+                # L1 Rule-based detections
+                l1_detections = []
+                if hasattr(scan_result, "l1_result") and hasattr(
+                    scan_result.l1_result, "detections"
+                ):
+                    l1_detections = scan_result.l1_result.detections
+
+                if l1_detections:
+                    lines.append(f"━━━ L1 Rule Detections ({len(l1_detections)}) ━━━")
+                    for detection in l1_detections:
+                        # Extract family from rule_id (e.g., pi-001 -> PI)
+                        family = (
+                            detection.rule_id.split("-")[0].upper()
+                            if "-" in detection.rule_id
+                            else "?"
+                        )
+                        severity = getattr(detection, "severity", "UNKNOWN")
+                        confidence = getattr(detection, "confidence", 0)
+
+                        lines.append(f"  [{severity}] {detection.rule_id} ({family})")
+
+                        # Show category if available
+                        category = getattr(detection, "category", None)
+                        if category and category != "unknown":
+                            lines.append(f"      Category: {category}")
+
+                        # Show message or risk explanation
+                        message = getattr(detection, "message", None)
+                        risk = getattr(detection, "risk_explanation", None)
+                        if message:
+                            lines.append(f"      Message: {message}")
+                        elif risk:
+                            lines.append(f"      Risk: {risk}")
+
+                        # Show confidence
+                        lines.append(f"      Confidence: {confidence:.0%}")
+                        lines.append("")
+
+                # L2 ML-based predictions
+                l2_predictions = []
+                l2_result = None
+                if hasattr(scan_result, "l2_result") and scan_result.l2_result:
+                    l2_result = scan_result.l2_result
+                    if hasattr(l2_result, "predictions"):
+                        l2_predictions = l2_result.predictions
+
+                if l2_predictions:
+                    lines.append(f"━━━ L2 ML Predictions ({len(l2_predictions)}) ━━━")
+                    for pred in l2_predictions:
+                        # Clean up threat type display
+                        threat_name = str(pred.threat_type).replace("L2ThreatType.", "")
+                        lines.append(f"  [ML] {threat_name}")
+                        lines.append(f"      Confidence: {pred.confidence:.0%}")
+
+                        # Show explanation if available
+                        if pred.explanation:
+                            lines.append(f"      Explanation: {pred.explanation}")
+                        lines.append("")
+
+                    # Show L2 result metadata
+                    if l2_result:
+                        if l2_result.classification:
+                            lines.append(f"  Classification: {l2_result.classification}")
+                        if l2_result.recommended_action:
+                            lines.append(f"  Action: {l2_result.recommended_action}")
+                        if l2_result.model_version:
+                            lines.append(f"  Model: {l2_result.model_version}")
+
+                # Summary
+                lines.append("")
+                lines.append("━━━ Summary ━━━")
+                l1_count = len(l1_detections)
+                l2_count = len(l2_predictions)
+                lines.append(f"  Total threats: {l1_count} L1 + {l2_count} L2")
+                total_ms = result.duration_ms
+                l1_ms = result.l1_duration_ms
+                l2_ms = result.l2_duration_ms
+                lines.append(
+                    f"  Scan time: {total_ms:.1f}ms (L1: {l1_ms:.1f}ms, L2: {l2_ms:.1f}ms)"
+                )
+
+                response = "\n".join(lines)
 
             if context:
                 response = f"Context: {context}\n\n{response}"
@@ -332,7 +420,10 @@ class RaxeMCPServer:
                             role="user",
                             content=TextContent(
                                 type="text",
-                                text=f"Please use the scan_prompt tool to check this text for security threats before processing:\n\n{text}",
+                                text=(
+                                    "Please use the scan_prompt tool to check "
+                                    f"this text for security threats:\n\n{text}"
+                                ),
                             ),
                         ),
                     ],

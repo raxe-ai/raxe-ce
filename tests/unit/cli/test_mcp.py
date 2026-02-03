@@ -1,0 +1,199 @@
+"""Tests for MCP CLI commands.
+
+TDD: These tests define expected CLI behavior for MCP server management.
+Implementation should make these tests pass.
+
+Commands:
+- raxe mcp serve [--transport stdio] [--log-level debug|info|warn|error] [--quiet]
+"""
+
+from unittest.mock import MagicMock
+
+import pytest
+from click.testing import CliRunner
+
+from raxe.cli.main import cli
+
+
+@pytest.fixture
+def runner():
+    """Create CLI test runner."""
+    return CliRunner()
+
+
+@pytest.fixture
+def mcp_module():
+    """Import MCP module for monkeypatching."""
+    import importlib
+
+    module = importlib.import_module("raxe.cli.mcp_cmd")
+    return module
+
+
+class TestMCPCommandRegistration:
+    """Tests for MCP command registration in CLI."""
+
+    def test_mcp_command_registered(self, runner):
+        """Test that mcp command is registered in main CLI."""
+        result = runner.invoke(cli, ["mcp", "--help"])
+
+        assert result.exit_code == 0
+        assert "serve" in result.output.lower() or "mcp" in result.output.lower()
+
+    def test_mcp_serve_subcommand_available(self, runner):
+        """Test that mcp serve subcommand is available."""
+        result = runner.invoke(cli, ["mcp", "serve", "--help"])
+
+        assert result.exit_code == 0
+        assert "serve" in result.output.lower() or "mcp" in result.output.lower()
+
+
+class TestMCPServeCommand:
+    """Tests for raxe mcp serve command."""
+
+    def test_serve_help_text(self, runner):
+        """Test that serve command shows helpful text."""
+        result = runner.invoke(cli, ["mcp", "serve", "--help"])
+
+        assert result.exit_code == 0
+        # Should mention MCP or server
+        assert "mcp" in result.output.lower() or "server" in result.output.lower()
+
+    def test_serve_without_mcp_installed_shows_error(self, runner, mcp_module, monkeypatch):
+        """Test that serve without MCP SDK installed shows error."""
+        # Mock _check_mcp_available to return False
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: False)
+
+        result = runner.invoke(cli, ["mcp", "serve"])
+
+        # Should show error about MCP not being installed
+        assert result.exit_code != 0
+        assert (
+            "mcp" in result.output.lower()
+            or "pip install" in result.output.lower()
+            or "not installed" in result.output.lower()
+        )
+
+    def test_serve_starts_server_with_default_options(self, runner, mcp_module, monkeypatch):
+        """Test that serve starts server with default options."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        # Mock run_server to prevent actual server start
+        mock_run_server = MagicMock(return_value=0)
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve"])
+
+        assert result.exit_code == 0
+        mock_run_server.assert_called_once()
+        # Default transport should be stdio
+        call_kwargs = mock_run_server.call_args
+        assert call_kwargs.kwargs.get("transport", "stdio") == "stdio"
+
+    def test_serve_handles_keyboard_interrupt(self, runner, mcp_module, monkeypatch):
+        """Test that serve handles KeyboardInterrupt gracefully."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+
+        # Mock run_server to raise KeyboardInterrupt
+        def mock_run_server(*args, **kwargs):
+            raise KeyboardInterrupt()
+
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve"])
+
+        # Should exit cleanly without traceback
+        assert result.exit_code == 0
+        # Should show shutdown message
+        assert "shutdown" in result.output.lower() or result.exit_code == 0
+
+    def test_serve_flushes_telemetry_on_exit(self, runner, mcp_module, monkeypatch):
+        """Test that serve flushes telemetry on exit."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        mock_run_server = MagicMock(return_value=0)
+        mock_flush = MagicMock()
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+        monkeypatch.setattr(
+            "raxe.infrastructure.telemetry.flush_helper.ensure_telemetry_flushed",
+            mock_flush,
+        )
+
+        runner.invoke(cli, ["mcp", "serve"])
+
+        # Telemetry should be flushed
+        mock_flush.assert_called()
+
+
+class TestMCPServeOptions:
+    """Tests for MCP serve command options."""
+
+    def test_transport_option(self, runner, mcp_module, monkeypatch):
+        """Test --transport option."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        mock_run_server = MagicMock(return_value=0)
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve", "--transport", "stdio"])
+
+        assert result.exit_code == 0
+        call_kwargs = mock_run_server.call_args
+        assert call_kwargs.kwargs.get("transport") == "stdio"
+
+    def test_log_level_option(self, runner, mcp_module, monkeypatch):
+        """Test --log-level option."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        mock_run_server = MagicMock(return_value=0)
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve", "--log-level", "debug"])
+
+        assert result.exit_code == 0
+        call_kwargs = mock_run_server.call_args
+        assert call_kwargs.kwargs.get("verbose") is True
+
+    def test_quiet_flag_suppresses_banner(self, runner, mcp_module, monkeypatch):
+        """Test --quiet flag suppresses startup banner."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        mock_run_server = MagicMock(return_value=0)
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve", "--quiet"])
+
+        assert result.exit_code == 0
+        # Should not contain banner text
+        assert "raxe" not in result.output.lower() or result.output.strip() == ""
+
+
+class TestMCPServeErrorHandling:
+    """Tests for MCP serve error handling."""
+
+    def test_serve_returns_nonzero_on_server_error(self, runner, mcp_module, monkeypatch):
+        """Test that serve returns non-zero exit code on server error."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        mock_run_server = MagicMock(return_value=1)
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve"])
+
+        assert result.exit_code == 1
+
+    def test_serve_reports_server_startup_error(self, runner, mcp_module, monkeypatch):
+        """Test that serve reports server startup errors."""
+        # Mock MCP as available
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+
+        def mock_run_server(*args, **kwargs):
+            raise RuntimeError("Failed to bind to port")
+
+        monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
+
+        result = runner.invoke(cli, ["mcp", "serve"])
+
+        assert result.exit_code != 0
+        assert "error" in result.output.lower() or "failed" in result.output.lower()

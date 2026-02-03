@@ -1,6 +1,36 @@
 # CHANGELOG
 
 
+## v0.9.1 (2026-02-03)
+
+### Features
+
+- **mssp**: Add MSSP/Partner ecosystem with CEF/SIEM integration
+  - Multi-tenant architecture: MSSP → Customer → Application → Agent hierarchy
+  - Dual-send telemetry: metadata to RAXE, full data to MSSP webhook
+  - SIEM adapters: Splunk HEC, CrowdStrike Falcon LogScale, Microsoft Sentinel
+  - CEF format support over HTTP, UDP, and TCP/TLS syslog
+  - ArcSight SmartConnector integration
+  - Per-customer SIEM routing via SIEMDispatcher
+
+- **cli**: Add JSON-RPC server for partner integrations
+  - `raxe jsonrpc serve` command for stdio-based JSON-RPC 2.0
+  - Methods: scan, scan_fast, health, version
+  - Rate limiting and input validation
+
+- **integrations**: Add OpenClaw personal AI assistant integration
+  - MCP server integration via MCPorter workaround
+  - Documentation for hook-based integration (pending OpenClaw event implementation)
+  - Detailed MCPorter setup guide with scan examples
+
+### Documentation
+
+- Add comprehensive MSSP integration guide
+- Add OpenClaw integration documentation with MCPorter workaround
+- Update integrations index with visual showcase
+- Add SIEM configuration CLI commands
+
+
 ## v0.9.0 (2026-01-28)
 
 ### Bug Fixes

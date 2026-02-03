@@ -1,34 +1,91 @@
 # CHANGELOG
 
 
-## v0.9.1 (2026-02-03)
+## v0.10.0 (2026-02-03)
 
-### Features
+### Chores
 
-- **mssp**: Add MSSP/Partner ecosystem with CEF/SIEM integration
-  - Multi-tenant architecture: MSSP → Customer → Application → Agent hierarchy
-  - Dual-send telemetry: metadata to RAXE, full data to MSSP webhook
-  - SIEM adapters: Splunk HEC, CrowdStrike Falcon LogScale, Microsoft Sentinel
-  - CEF format support over HTTP, UDP, and TCP/TLS syslog
-  - ArcSight SmartConnector integration
-  - Per-customer SIEM routing via SIEMDispatcher
+- Bump version to 0.9.1
+  ([`0e5801c`](https://github.com/raxe-ai/raxe-ce/commit/0e5801ca0fbe40af1d409902215c5a274b5f6f9c))
 
-- **cli**: Add JSON-RPC server for partner integrations
-  - `raxe jsonrpc serve` command for stdio-based JSON-RPC 2.0
-  - Methods: scan, scan_fast, health, version
-  - Rate limiting and input validation
-
-- **integrations**: Add OpenClaw personal AI assistant integration
-  - MCP server integration via MCPorter workaround
-  - Documentation for hook-based integration (pending OpenClaw event implementation)
-  - Detailed MCPorter setup guide with scan examples
+- Update version in pyproject.toml and src/raxe/__init__.py - Add CHANGELOG entry for v0.9.1 with
+  MSSP/SIEM, JSON-RPC, and OpenClaw features - Version locations managed by semantic-release config
+  (single source of truth)
 
 ### Documentation
 
-- Add comprehensive MSSP integration guide
-- Add OpenClaw integration documentation with MCPorter workaround
-- Update integrations index with visual showcase
-- Add SIEM configuration CLI commands
+- Add OpenClaw integration guide and JSON-RPC API reference
+  ([`6c95905`](https://github.com/raxe-ai/raxe-ce/commit/6c95905a2c75fffb310b55ab09131a84eaedffa4))
+
+Add comprehensive documentation for integrating RAXE with OpenClaw:
+
+docs/integrations/OPENCLAW.md: - Overview of threat protection capabilities - Architecture diagram
+  showing integration flow - Step-by-step installation instructions - Hook configuration
+  (handler.ts, HOOK.md) - Block vs warn mode configuration - JSON-RPC API usage examples - Testing
+  and troubleshooting guide - Performance benchmarks
+
+docs/JSON_RPC_API.md: - Complete API reference for all methods - Request/response formats with
+  examples - Error codes and handling - Code examples in Python, Node.js, Go, and shell - Privacy
+  and performance documentation
+
+### Features
+
+- **cli**: Add JSON-RPC server for partner integrations
+  ([`fe0bcec`](https://github.com/raxe-ai/raxe-ce/commit/fe0bcece329867cfeeb74f484295abf35386d625))
+
+Add `raxe serve` command implementing JSON-RPC 2.0 over stdio for integration with AI platforms like
+  OpenClaw.
+
+Methods: - scan: Full L1+L2 threat detection - scan_fast: L1-only for low-latency scenarios -
+  scan_batch: Process multiple prompts in one request - scan_tool_call: Validate tool invocations
+  for command injection - version: Get RAXE version - health: Server health check - stats: Scan
+  statistics
+
+Architecture (Clean Architecture): - Domain layer: JsonRpcRequest, JsonRpcResponse, error codes -
+  Application layer: Handlers, dispatcher, privacy-safe serializers - Infrastructure layer:
+  StdioTransport, JsonRpcServer orchestrator
+
+Privacy: - Never exposes raw prompts or matched_text in responses - Returns only prompt_hash and
+  detection metadata
+
+Tests: - 317 unit tests (domain, application, infrastructure, CLI) - 48 integration tests (stdio
+  transport, threat detection) - Manual test for pre-release OpenClaw integration verification
+
+Usage: raxe serve --quiet echo '{"jsonrpc":"2.0","id":1,"method":"scan","params":{"prompt":"test"}}'
+  | raxe serve --quiet
+
+- **mssp**: Add MSSP/Partner ecosystem with CEF/SIEM integration
+  ([`b66e91f`](https://github.com/raxe-ai/raxe-ce/commit/b66e91f68d99164fd826ed3df041598e4c564acb))
+
+- Add MSSP hierarchy: MSSP → Customer → Agent model - Implement dual-send telemetry (RAXE metadata +
+  MSSP webhook) - Add per-customer data privacy controls (full/privacy_safe modes) - Add SIEM
+  adapters: Splunk HEC, CrowdStrike, Sentinel, CEF/ArcSight - Add agent heartbeat tracking and
+  status monitoring - Add CLI commands: raxe mssp, raxe customer, raxe agent - Replace
+  customer-specific "bunny" references with generic names - Add mssp_data/ to .gitignore for
+  sensitive partner data
+
+Telemetry schema updated to v3.0.0 with _mssp_context block.
+
+- **mssp**: Add SSL skip option and webhook test server for development
+  ([`8faaeb9`](https://github.com/raxe-ai/raxe-ce/commit/8faaeb9449b4fbf3f9d9b13a4d6f99f3ddca01db))
+
+- Add RAXE_SKIP_SSL_VERIFY env var for testing with self-signed certs - Add webhook test server with
+  auto-generated certificates - Document MSSP tiers and local testing workflow
+
+- **openclaw**: Add OpenClaw integration with MCPorter workaround
+  ([`0d41f0e`](https://github.com/raxe-ai/raxe-ce/commit/0d41f0ed2db8d3ccf179f494bbf6e14a538f9ac8))
+
+- Add OpenClaw CLI commands (install/uninstall/status) - Add infrastructure for hook and config
+  management - Enhance MCP server with detailed L1/L2 threat output - Add MCP CLI command (raxe mcp
+  serve) - Document confirmed limitation: message event hooks not yet implemented - Document working
+  MCPorter integration as recommended workaround - Add comprehensive test suite for OpenClaw
+  integration - Add setup script for isolated testing environment - Add QA test plan for OpenClaw
+  integration
+
+Key findings from testing: - OpenClaw hook events message:inbound/sent/received are "planned" but
+  NOT implemented - MCPorter skill provides working MCP server integration - Agent can call
+  raxe.scan_prompt via mcporter for threat detection - Scan latency: ~12ms (clean), ~17ms (threats),
+  ~20ms (encoded attacks)
 
 
 ## v0.9.0 (2026-01-28)
@@ -186,7 +243,7 @@ Now the SDK explicitly tracks when lookups fail and sets boolean flags that the 
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
-- **ux**: Improve multi-tenant policy UX for partner use cases
+- **ux**: Improve multi-tenant policy UX for Bunny.net use case
   ([`daabb89`](https://github.com/raxe-ai/raxe-ce/commit/daabb8981c53d6185c13c0e15f8c79874fda27c1))
 
 Bug fixes: - Fix severity case mismatch in blocking logic (severity.value is lowercase, but

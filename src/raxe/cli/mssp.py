@@ -9,6 +9,7 @@ Commands:
 """
 
 import json
+import os
 import sys
 
 import click
@@ -329,11 +330,19 @@ def test_webhook(mssp_id: str):
     headers["Content-Type"] = "application/json"
 
     try:
+        # Allow skipping SSL verification for testing with self-signed certs
+        verify_ssl = os.environ.get("RAXE_SKIP_SSL_VERIFY", "").lower() != "true"
+        if not verify_ssl:
+            # Suppress InsecureRequestWarning when SSL verification is intentionally disabled
+            import urllib3
+
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         response = requests.post(
             webhook_url,
             data=body,
             headers=headers,
             timeout=mssp_obj.webhook_config.timeout_seconds,
+            verify=verify_ssl,
         )
 
         if response.ok:

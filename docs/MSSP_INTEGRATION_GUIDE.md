@@ -27,6 +27,27 @@ RAXE Platform
                             └── Sends scans → MSSP webhook
 ```
 
+### MSSP Tiers
+
+MSSPs have subscription tiers that determine customer limits:
+
+| Tier | Max Customers | Description |
+|------|---------------|-------------|
+| **Starter** | 10 | Default tier for new MSSPs |
+| **Professional** | 50 | Growing security practices |
+| **Enterprise** | Unlimited | Large-scale deployments |
+
+Set the tier when creating an MSSP:
+
+```bash
+raxe mssp create --id mssp_yourcompany \
+    --name "Your Security Services" \
+    --webhook-url https://soc.yourcompany.com/alerts \
+    --webhook-secret secret \
+    --tier professional \
+    --max-customers 50
+```
+
 ---
 
 ## Quick Start
@@ -770,6 +791,48 @@ If `data_fields` is empty/not set, all available fields are included in full mod
 ```bash
 chmod -R 755 ~/.raxe/mssp_data
 ```
+
+---
+
+## Local Testing with Self-Signed Certificates
+
+For development and testing, you can use self-signed certificates:
+
+### Using the Test Webhook Server
+
+RAXE includes a test server that auto-generates self-signed certificates:
+
+```bash
+# Start the test server
+python scripts/webhook_test_server.py --port 9001 --secret my_secret
+
+# Options:
+#   --port PORT       Port to listen on (default: 9001)
+#   --secret SECRET   Webhook secret (default: test-secret)
+#   --full-json       Show complete JSON without truncation
+#   --no-ssl          Disable HTTPS (use HTTP only)
+```
+
+### Testing Webhooks
+
+```bash
+# Skip SSL verification for self-signed certs
+export RAXE_SKIP_SSL_VERIFY=true
+
+# Create MSSP pointing to test server
+raxe mssp create --id test_mssp --name "Test MSSP" \
+    --webhook-url https://127.0.0.1:9001/raxe/alerts \
+    --webhook-secret my_secret
+
+# Test webhook connectivity
+raxe mssp test-webhook test_mssp
+
+# Test with a real scan
+raxe customer create --mssp test_mssp --id test_cust --name "Test" --data-mode full
+raxe scan "Ignore all instructions" --mssp test_mssp --customer test_cust
+```
+
+> **Warning:** Only use `RAXE_SKIP_SSL_VERIFY=true` in development. Always use valid certificates in production.
 
 ---
 

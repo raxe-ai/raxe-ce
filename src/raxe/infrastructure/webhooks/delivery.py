@@ -15,7 +15,9 @@ Security:
 """
 
 import json
+import os
 import random
+import ssl
 import threading
 import time
 import urllib.error
@@ -513,8 +515,15 @@ class WebhookDeliveryService:
         )
 
         # Send request - S310: URL scheme validated in __init__
+        # Allow skipping SSL verification for testing with self-signed certs
+        ssl_context = None
+        if os.environ.get("RAXE_SKIP_SSL_VERIFY", "").lower() == "true":
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
         with urllib.request.urlopen(  # noqa: S310
-            request, timeout=self.timeout_seconds
+            request, timeout=self.timeout_seconds, context=ssl_context
         ) as response:
             response_body = response.read().decode("utf-8")
             return {

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from raxe.application.mssp_service import CreateMSSPRequest, create_mssp_service
-from raxe.infrastructure.mssp.yaml_repository import MSSPNotFoundError
+from raxe.infrastructure.mssp.yaml_repository import CustomerNotFoundError, MSSPNotFoundError
 from raxe.sdk.partner import PartnerClient, PartnerClientConfig
 from raxe.sdk.partner.client import create_partner_client
 
@@ -138,9 +138,9 @@ class TestPartnerClientCustomers:
         # Delete
         client.delete_customer("cust_delete")
 
-        # Verify deleted - returns None for non-existent customer
-        deleted_customer = client.get_customer("cust_delete")
-        assert deleted_customer is None
+        # Verify deleted - raises CustomerNotFoundError for non-existent customer
+        with pytest.raises(CustomerNotFoundError):
+            client.get_customer("cust_delete")
 
     def test_create_customer_with_privacy_safe(self, mssp_test_dir: Path, test_mssp: str):
         """Test creating customer with privacy_safe mode (default)."""

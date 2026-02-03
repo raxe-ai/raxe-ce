@@ -676,10 +676,10 @@ def configure_siem(
 
         # Update customer with SIEM config
         # Since MSSPCustomer is frozen, create a new instance
-        from raxe.infrastructure.config.yaml_config import get_config_path
+        from raxe.infrastructure.mssp import get_mssp_base_path
         from raxe.infrastructure.mssp.yaml_repository import YamlCustomerRepository
 
-        base_path = get_config_path() / "mssp"
+        base_path = get_mssp_base_path()
         repo = YamlCustomerRepository(base_path, mssp_id)
 
         updated_customer = replace(customer_obj, siem_config=siem_config)

@@ -1,6 +1,33 @@
 # CHANGELOG
 
 
+## v0.10.1 (2026-02-04)
+
+### Bug Fixes
+
+- **mssp**: Use correct path function in SIEM configure CLI
+  ([`c4333f1`](https://github.com/raxe-ai/raxe-ce/commit/c4333f1fe897849db94584544fa9e49e337b59bc))
+
+- Use get_mssp_base_path() instead of get_config_path() / "mssp" in siem configure command to
+  respect test fixtures - Fix test_delete_customer to expect CustomerNotFoundError instead of None
+  for deleted customers
+
+### Documentation
+
+- Comprehensive documentation review and improvements
+  ([`aaf6cd5`](https://github.com/raxe-ai/raxe-ce/commit/aaf6cd5c006e1e3db2f42dee1801dc76dedf7d22))
+
+- Delete deprecated QUICKSTART.md (content merged to getting-started.md) - Standardize rule count to
+  515+ across all documentation - Add missing integration docs: LiteLLM, DSPy, HuggingFace - Add
+  Anthropic and VertexAI wrapper documentation - Create Plugin API reference documentation - Add
+  cross-references between POLICIES ↔ SUPPRESSIONS - Add ERROR_CODES reference to troubleshooting.md
+  - Add MSSP section to configuration.md - Fix broken reference in RULE_SUBMISSION.md - Update
+  CODE_OF_CONDUCT.md date - Create GitHub issue template config (disable blank issues) - Enhance
+  bug_report.md with severity/component fields - Enhance feature_request.md with acceptance criteria
+  - Enhance PR template with golden tests and MSSP checkboxes - Update changelog with v0.8.0,
+  v0.9.0, v0.9.1 entries - Fix .raxeignore reference to use suppressions.yaml
+
+
 ## v0.10.0 (2026-02-03)
 
 ### Chores

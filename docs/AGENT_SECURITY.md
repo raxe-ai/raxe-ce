@@ -296,7 +296,7 @@ Input → L1 (Rules) → L2 (ML) → Decision
 
 **L1: 515+ Pattern Rules**
 - Regex-based detection for known attack patterns
-- 11 threat families including 4 agentic families
+- 14 threat families
 - ~3ms latency
 
 **L2: 5-Head ML Ensemble**

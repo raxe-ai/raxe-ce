@@ -159,7 +159,7 @@ Purpose-built scanning for autonomous AI agent workflows:
 │   ┌────────────────────────┐      ┌────────────────────────────────────┐   │
 │   │   L1: Pattern Rules    │      │     L2: On-Device ML Ensemble      │   │
 │   │  • 515+ detection rules│      │  • 5-head neural network classifier│   │
-│   │  • 11 threat families  │      │  • Weighted voting engine          │   │
+│   │  • 14 threat families  │      │  • Weighted voting engine          │   │
 │   │  • <5ms execution      │      │  • Novel attack detection          │   │
 │   └────────────────────────┘      └────────────────────────────────────┘   │
 │                                                                            │

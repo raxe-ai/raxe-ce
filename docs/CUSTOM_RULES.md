@@ -185,6 +185,12 @@ metrics:
 
 ### Threat Families
 
+> **Note:** RAXE uses TWO classification systems:
+> - **L1 (Rule-based)**: 7 threat families (PI, JB, PII, CMD, ENC, HC, RAG)
+> - **L2 (ML-based)**: 14 threat families, 35 attack techniques, 10 harm types
+>
+> The table below shows the L1 rule-based families used for custom rules.
+
 Valid `family` values:
 
 | Code | Name | Description |

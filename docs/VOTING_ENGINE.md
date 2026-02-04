@@ -41,7 +41,7 @@ The Gemma L2 detector uses 5 specialized classifier heads:
 | Head | Description | Weight | Signal Quality |
 |------|-------------|--------|----------------|
 | **binary** | Is threat? (yes/no) | 1.0 | Baseline |
-| **family** | Threat category (15 classes) | 1.2 | Strong |
+| **family** | Threat category (14 classes) | 1.2 | Strong |
 | **severity** | Threat level (none/moderate/severe) | 1.5 | Highest |
 | **technique** | Attack technique (35 classes) | 1.0 | Good |
 | **harm** | Harm types (10 labels, multilabel) | 0.8 | Prone to FPs |

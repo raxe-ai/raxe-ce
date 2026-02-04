@@ -127,7 +127,11 @@ def check_threat(prompt: str) -> bool:
 
 ## Dual-Layer Detection System
 
-RAXE uses a two-layer detection approach for comprehensive threat coverage:
+RAXE uses a two-layer detection approach for comprehensive threat coverage.
+
+> **Note:** RAXE uses TWO classification systems:
+> - **L1 (Rule-based)**: 7 threat families (PI, JB, PII, CMD, ENC, HC, RAG)
+> - **L2 (ML-based)**: 14 threat families, 35 attack techniques, 10 harm types
 
 ### L1: Rule-Based Detection
 

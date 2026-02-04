@@ -103,7 +103,7 @@ All fields in this schema have been reviewed for privacy compliance per `CLAUDE.
       },
 
       "family": {
-        "prediction": "<string: 15-class enum>",
+        "prediction": "<string: 14-class enum>",
         "confidence": "<float: max probability>",
         "top3": [
           {"label": "<string>", "probability": "<float>"}

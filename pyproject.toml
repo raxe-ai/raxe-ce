@@ -78,6 +78,11 @@ config-tools = [
     "tomli-w>=1.0,<2.0",
 ]
 
+# MCP (Model Context Protocol) server and gateway
+mcp = [
+    "mcp>=1.0.0,<2.0",
+]
+
 # Optional LLM client wrappers
 wrappers = [
     "openai>=1.0",
@@ -139,6 +144,7 @@ all = [
     "dspy>=2.0",
     "prompt-toolkit>=3.0,<4.0",
     "tomli-w>=1.0,<2.0",
+    "mcp>=1.0.0,<2.0",
 ]
 
 [project.urls]

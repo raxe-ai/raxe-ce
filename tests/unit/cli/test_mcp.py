@@ -61,8 +61,10 @@ class TestMCPServeCommand:
 
     def test_serve_without_mcp_installed_shows_error(self, runner, mcp_module, monkeypatch):
         """Test that serve without MCP SDK installed shows error."""
-        # Mock _check_mcp_available to return False
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: False)
+        # Mock _check_mcp_available to return (False, error_message)
+        monkeypatch.setattr(
+            mcp_module, "_check_mcp_available", lambda: (False, "MCP SDK not installed")
+        )
 
         result = runner.invoke(cli, ["mcp", "serve"])
 
@@ -77,7 +79,7 @@ class TestMCPServeCommand:
     def test_serve_starts_server_with_default_options(self, runner, mcp_module, monkeypatch):
         """Test that serve starts server with default options."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
         # Mock run_server to prevent actual server start
         mock_run_server = MagicMock(return_value=0)
         monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
@@ -93,7 +95,7 @@ class TestMCPServeCommand:
     def test_serve_handles_keyboard_interrupt(self, runner, mcp_module, monkeypatch):
         """Test that serve handles KeyboardInterrupt gracefully."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
 
         # Mock run_server to raise KeyboardInterrupt
         def mock_run_server(*args, **kwargs):
@@ -111,7 +113,7 @@ class TestMCPServeCommand:
     def test_serve_flushes_telemetry_on_exit(self, runner, mcp_module, monkeypatch):
         """Test that serve flushes telemetry on exit."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
         mock_run_server = MagicMock(return_value=0)
         mock_flush = MagicMock()
         monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
@@ -132,7 +134,7 @@ class TestMCPServeOptions:
     def test_transport_option(self, runner, mcp_module, monkeypatch):
         """Test --transport option."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
         mock_run_server = MagicMock(return_value=0)
         monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
 
@@ -145,7 +147,7 @@ class TestMCPServeOptions:
     def test_log_level_option(self, runner, mcp_module, monkeypatch):
         """Test --log-level option."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
         mock_run_server = MagicMock(return_value=0)
         monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
 
@@ -158,7 +160,7 @@ class TestMCPServeOptions:
     def test_quiet_flag_suppresses_banner(self, runner, mcp_module, monkeypatch):
         """Test --quiet flag suppresses startup banner."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
         mock_run_server = MagicMock(return_value=0)
         monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
 
@@ -175,7 +177,7 @@ class TestMCPServeErrorHandling:
     def test_serve_returns_nonzero_on_server_error(self, runner, mcp_module, monkeypatch):
         """Test that serve returns non-zero exit code on server error."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
         mock_run_server = MagicMock(return_value=1)
         monkeypatch.setattr(mcp_module, "run_server", mock_run_server)
 
@@ -186,7 +188,7 @@ class TestMCPServeErrorHandling:
     def test_serve_reports_server_startup_error(self, runner, mcp_module, monkeypatch):
         """Test that serve reports server startup errors."""
         # Mock MCP as available
-        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: True)
+        monkeypatch.setattr(mcp_module, "_check_mcp_available", lambda: (True, None))
 
         def mock_run_server(*args, **kwargs):
             raise RuntimeError("Failed to bind to port")

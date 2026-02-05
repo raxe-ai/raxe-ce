@@ -524,7 +524,9 @@ def test_cli_scan():
             ["raxe", "scan", text],
             capture_output=True, text=True
         )
-        has_threat = "THREAT" in result.stdout.upper()
+        # Check for actual threat detection (not "No threats detected")
+        output_upper = result.stdout.upper()
+        has_threat = "THREAT DETECTED" in output_upper or "🔴" in result.stdout
 
         if has_threat == expect_threat:
             print(f"✅ {name}")

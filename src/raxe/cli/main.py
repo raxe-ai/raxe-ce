@@ -35,8 +35,10 @@ from raxe.cli.expiry_warning import (
 from raxe.cli.export import export
 from raxe.cli.help import help_command
 from raxe.cli.history import history
+from raxe.cli.mcp_cmd import mcp
 from raxe.cli.models import models
 from raxe.cli.mssp import mssp
+from raxe.cli.openclaw import openclaw
 from raxe.cli.output import console, display_error, display_scan_result, display_success
 from raxe.cli.policy import policy
 from raxe.cli.privacy import privacy_command
@@ -467,6 +469,7 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
 )
 @click.option(
     "--format",
+    "output_format",
     type=click.Choice(["text", "json", "yaml", "table"]),
     default="text",
     help="Output format (default: text)",
@@ -552,7 +555,7 @@ def scan(
     ctx,
     text: str | None,
     stdin: bool,
-    format: str,
+    output_format: str,
     ci: bool,
     profile: bool,
     l1_only: bool,
@@ -613,17 +616,17 @@ def scan(
     no_color = ctx.obj.get("no_color", False) or ci  # CI mode implies no color
 
     # Auto-enable quiet mode for JSON/YAML formats to prevent progress contamination
-    if format in ("json", "yaml"):
+    if output_format in ("json", "yaml"):
         quiet = True
 
     # Override format to JSON if quiet mode
-    if quiet and format == "text":
-        format = "json"
+    if quiet and output_format == "text":
+        output_format = "json"
 
     # Show compact logo (for visual consistency)
     from raxe.cli.branding import print_logo
 
-    if format == "text" and not quiet:  # Only show for text output when not quiet
+    if output_format == "text" and not quiet:  # Only show for text output when not quiet
         print_logo(console, compact=True)
         console.print()
         # Check and display first-run temp key notice (once per installation)
@@ -849,7 +852,7 @@ def scan(
         )
 
     # Output based on format
-    if format == "json" and not profile:
+    if output_format == "json" and not profile:
         # Collect L1 detections
         l1_detections = []
         for d in result.scan_result.l1_result.detections:
@@ -933,7 +936,7 @@ def scan(
 
         click.echo(json.dumps(output, indent=2))
 
-    elif format == "yaml" and not profile:
+    elif output_format == "yaml" and not profile:
         try:
             import yaml
 
@@ -1002,7 +1005,7 @@ def scan(
             display_error("PyYAML not installed", "Use --format json instead")
             sys.exit(EXIT_CONFIG_ERROR)
 
-    elif format == "text" and not profile:
+    elif output_format == "text" and not profile:
         # Use rich output
         no_color = ctx.obj.get("no_color", False)
         display_scan_result(result, no_color=no_color, explain=explain)
@@ -1197,7 +1200,7 @@ def batch_scan(
                         if fail_fast:
                             console.print()
                             console.print(
-                                f"[red bold]Critical threat found at line {i + 1}. Stopping.[/red bold]"
+                                f"[red bold]Critical threat at line {i + 1}. Stopping.[/red bold]"
                             )
                             break
 
@@ -1435,7 +1438,8 @@ _raxe_completion() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="init setup scan batch test stats export repl rules doctor pack plugins privacy profile suppress telemetry tune validate-rule auth completion --help --version"
+    opts="init setup scan batch test stats export repl rules doctor pack"
+    opts="$opts plugins privacy profile suppress telemetry tune auth completion"
 
     COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
     return 0
@@ -1476,7 +1480,8 @@ _raxe
     elif shell == "fish":
         script = """
 # RAXE fish completion
-complete -c raxe -f -a "init setup scan batch test stats export repl rules doctor pack plugins privacy profile suppress telemetry tune validate-rule auth completion"
+complete -c raxe -f -a "init setup scan batch test stats export repl rules"
+complete -c raxe -f -a "doctor pack plugins privacy profile suppress telemetry tune auth"
 complete -c raxe -f -a "init" -d "Initialize RAXE configuration"
 complete -c raxe -f -a "setup" -d "Interactive setup wizard"
 complete -c raxe -f -a "scan" -d "Scan text for threats"
@@ -1502,7 +1507,11 @@ complete -c raxe -f -a "auth" -d "Manage authentication and API keys"
 # RAXE PowerShell completion
 Register-ArgumentCompleter -Native -CommandName raxe -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    $commands = @('init', 'setup', 'scan', 'batch', 'test', 'stats', 'export', 'repl', 'rules', 'doctor', 'pack', 'plugins', 'privacy', 'profile', 'suppress', 'telemetry', 'tune', 'validate-rule', 'auth', 'completion')
+    $commands = @(
+        'init', 'setup', 'scan', 'batch', 'test', 'stats', 'export', 'repl',
+        'rules', 'doctor', 'pack', 'plugins', 'privacy', 'profile', 'suppress',
+        'telemetry', 'tune', 'auth', 'completion'
+    )
     $commands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
@@ -1540,6 +1549,7 @@ cli.add_command(help_command)
 cli.add_command(dashboard)
 cli.add_command(monitor)
 cli.add_command(serve)
+cli.add_command(mcp)
 
 # Top-level alias for 'raxe link ABC123' (same as 'raxe auth link ABC123')
 cli.add_command(auth_link, name="link")
@@ -1548,6 +1558,9 @@ cli.add_command(auth_link, name="link")
 cli.add_command(mssp)
 cli.add_command(customer)
 cli.add_command(agent)
+
+# OpenClaw integration
+cli.add_command(openclaw)
 
 
 if __name__ == "__main__":

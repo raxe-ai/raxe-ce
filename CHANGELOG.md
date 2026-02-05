@@ -1,6 +1,58 @@
 # CHANGELOG
 
 
+## v0.11.0 (2026-02-05)
+
+### Bug Fixes
+
+- **cli**: Update test mocks to match _check_mcp_available return type
+  ([`c3a25b9`](https://github.com/raxe-ai/raxe-ce/commit/c3a25b9f7e053e701f6e864483c177f9a54a0d02))
+
+Update all test mocks to return tuple (is_available, error_message) instead of just boolean,
+  matching the updated function signature.
+
+Also add MCP optional dependency group to pyproject.toml.
+
+- **test**: Correct threat detection check in MCP QA script
+  ([`b6483a2`](https://github.com/raxe-ai/raxe-ce/commit/b6483a2c2a8220bb0afa0c36cfeb30137bab7a08))
+
+The test was incorrectly detecting threats in benign cases because 'No threats detected' contains
+  the word 'threats' which matched 'THREAT' when converted to uppercase.
+
+Changed to check for 'THREAT DETECTED' or the red emoji indicator.
+
+### Documentation
+
+- **mcp**: Add testing section and performance notes to integration guide
+  ([`3feb458`](https://github.com/raxe-ai/raxe-ce/commit/3feb45856d0238d8157d9a2b8950028cdccae2cd))
+
+### Features
+
+- **mcp**: Add MCP Security Gateway for transparent traffic inspection
+  ([`82989fd`](https://github.com/raxe-ai/raxe-ce/commit/82989fd6dfb4a17ef1afb2d0e6ee6e12e95d4a9c))
+
+- Add MCP Security Gateway that proxies between MCP clients and servers - Intercept and scan tool
+  calls, responses, resources for threats - Support configurable policies: log, block, warn with
+  severity thresholds - Add CLI commands: gateway, audit, generate-config - Fix
+  _check_mcp_available() to catch all exceptions and show actual errors - Add comprehensive
+  documentation and QA testing guide - Add unit tests for gateway, interceptors, config, severity
+  modules
+
+The gateway enables transparent protection for ANY MCP server by scanning all JSON-RPC traffic for
+  prompt injection, jailbreak, and data exfiltration.
+
+### Performance Improvements
+
+- **test**: Optimize MCP QA test suite
+  ([`0afd818`](https://github.com/raxe-ai/raxe-ce/commit/0afd818b899b8cf48fac1c187a82d5c814078ca9))
+
+- Use L1-only scanning (sufficient for threat detection QA) - Reuse single Raxe client across tests
+  - Use Python API instead of CLI subprocess calls - Add performance notes documenting startup vs
+  scan time - Add quick smoke test commands for fast sanity checks
+
+Startup: ~5s (rule loading), Scan: ~5ms per prompt
+
+
 ## v0.10.2 (2026-02-05)
 
 ### Bug Fixes

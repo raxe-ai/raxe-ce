@@ -1,6 +1,34 @@
 # CHANGELOG
 
 
+## v0.10.2 (2026-02-05)
+
+### Bug Fixes
+
+- **cli**: Resolve builtin shadowing lint errors in scan command
+  ([`dcda412`](https://github.com/raxe-ai/raxe-ce/commit/dcda4123b71ee6b85a4b41ed423e201f67a99957))
+
+- Rename `format` parameter to `output_format` to avoid shadowing Python builtin - Fix line-too-long
+  errors in shell completion scripts by splitting long strings - Bash/Fish/PowerShell completion
+  scripts now within 100 char limit
+
+### Documentation
+
+- Restructure README for first-impression optimization
+  ([`85a8cef`](https://github.com/raxe-ai/raxe-ce/commit/85a8cefbab7b3fe47c2ae66a39a03d06534948f5))
+
+- Move credentials from line 507 to header (line 18) - Simplify headline: "Threat Detection for AI
+  Agents" - Reduce badges from 6 to 4 (PyPI, latency, privacy, activity) - Add "What is RAXE?"
+  section with Snort/Falco analogy - Add "Try These Attacks" section with 4 copy-paste examples -
+  Add "Enterprise & Compliance" section with SIEM integrations - Add collapsible FAQ section (3
+  common questions) - Remove duplicate code snippets (now in docs.raxe.ai) - Add Python 3.10+
+  requirement near install command - Add methodology link for researchers - Add single LangChain
+  example to prove "3-5 lines" claim - Add enterprise contact link for CISO persona
+
+Reduces README from 600+ lines to 278 lines while improving user journey for all personas
+  (developers, security, DevOps, CISO).
+
+
 ## v0.10.1 (2026-02-04)
 
 ### Bug Fixes

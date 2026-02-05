@@ -27,4 +27,18 @@ Modules (to be implemented):
     - validators.py: Input validation
 """
 
-__all__ = []
+from raxe.domain.severity import (
+    SEVERITY_ORDER,
+    compare_severity,
+    get_highest_severity,
+    get_severity_value,
+    is_severity_at_least,
+)
+
+__all__ = [
+    "SEVERITY_ORDER",
+    "compare_severity",
+    "get_highest_severity",
+    "get_severity_value",
+    "is_severity_at_least",
+]

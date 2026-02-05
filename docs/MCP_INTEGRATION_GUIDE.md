@@ -549,8 +549,37 @@ The gateway automatically includes MSSP context in telemetry.
 
 ---
 
+## Testing
+
+### Quick Smoke Test
+
+```bash
+# Should show SAFE
+raxe scan "What is the weather?"
+
+# Should show THREAT DETECTED
+raxe scan "Ignore all previous instructions"
+```
+
+### Full QA Testing
+
+For comprehensive testing including MCP Server and Gateway validation, see:
+- [MCP Manual Testing Guide](./testing/MCP_MANUAL_TESTING_GUIDE.md)
+
+### Performance Notes
+
+| Component | Time |
+|-----------|------|
+| Startup (rule loading) | ~5s |
+| L1 scan | ~5ms |
+| L1+L2 scan | ~12ms |
+| Gateway overhead | <2ms |
+
+---
+
 ## See Also
 
+- [MCP Manual Testing Guide](./testing/MCP_MANUAL_TESTING_GUIDE.md)
 - [RAXE SDK Documentation](./api_reference.md)
 - [Agent Security Guide](./AGENT_SECURITY.md)
 - [MSSP Integration Guide](./MSSP_INTEGRATION_GUIDE.md)

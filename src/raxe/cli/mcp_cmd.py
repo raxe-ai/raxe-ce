@@ -156,14 +156,13 @@ def serve(transport: str, log_level: str, quiet: bool) -> None:
         console.print(f"[red]Error:[/red] {e}")
         exit_code = EXIT_SCAN_ERROR
     finally:
-        # Always flush telemetry on exit
+        # Flush before sys.exit (result_callback won't run after SystemExit)
         try:
             from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
 
             ensure_telemetry_flushed(timeout_seconds=2.0)
         except Exception:  # noqa: S110
             pass
-
     sys.exit(exit_code)
 
 
@@ -331,13 +330,6 @@ def gateway(
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
         sys.exit(EXIT_SCAN_ERROR)
-    finally:
-        try:
-            from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
-
-            ensure_telemetry_flushed(timeout_seconds=2.0)
-        except Exception:  # noqa: S110
-            pass
 
 
 @mcp.command("audit")
@@ -378,7 +370,7 @@ def audit(config_file: str, json_output: bool) -> None:
     issues = _audit_mcp_config(config_data)
 
     if json_output:
-        console.print(json.dumps({"issues": issues, "total": len(issues)}, indent=2))
+        click.echo(json.dumps({"issues": issues, "total": len(issues)}, indent=2))
     else:
         _display_audit_results(config_path, issues)
 

@@ -81,13 +81,16 @@ def repl() -> None:
 
     from raxe.cli.branding import print_logo
 
-    # Show compact logo
-    print_logo(console, compact=True)
-    console.print()
+    # Show compact logo (suppress in quiet mode)
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
-    console.print("[bold cyan]RAXE Interactive Shell[/bold cyan]")
-    console.print("Type 'help' for commands, 'exit' to quit")
-    console.print()
+        console.print("[bold cyan]RAXE Interactive Shell[/bold cyan]")
+        console.print("Type 'help' for commands, 'exit' to quit")
+        console.print()
 
     # Setup autocomplete
     completer = WordCompleter(
@@ -171,18 +174,6 @@ def repl() -> None:
         except Exception as e:
             display_error("Command failed", str(e))
             console.print()
-
-    # Auto-flush telemetry at end of REPL session
-    # This ensures all scan events from the session are sent before exit
-    try:
-        from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
-
-        ensure_telemetry_flushed(
-            timeout_seconds=5.0,  # Allow more time for REPL sessions
-            end_session=True,
-        )
-    except Exception:  # noqa: S110 - Never let telemetry affect REPL exit
-        pass
 
     console.print("[cyan]Goodbye![/cyan]")
 

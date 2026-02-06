@@ -230,12 +230,12 @@ def fetch_event_from_portal(event_id: str, show_prompt: bool = False) -> EventDa
 
     # Make API request
     try:
-        req = urllib.request.Request(api_url, method="GET")
+        req = urllib.request.Request(api_url, method="GET")  # noqa: S310
         req.add_header("Authorization", f"Bearer {credentials.api_key}")
         req.add_header("Content-Type", "application/json")
         req.add_header("User-Agent", "raxe-cli/event-lookup")
 
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:  # noqa: S310
             data = json.loads(response.read().decode("utf-8"))
             return EventData.from_api_response(data)
 
@@ -293,7 +293,8 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
         console.print("[bold]  Detections:[/bold]   [green]No threats found[/green]")
     else:
         console.print(
-            f"[bold]  Detections:[/bold]   [yellow]{detection_count} threat{'s' if detection_count != 1 else ''} found[/yellow]"
+            "[bold]  Detections:[/bold]   [yellow]"
+            f"{detection_count} threat{'s' if detection_count != 1 else ''} found[/yellow]"
         )
 
     if event.scan_duration_ms is not None:
@@ -308,7 +309,8 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
     # L1 Detections table
     if l1_detections:
         console.print(
-            f"[bold blue]  L1 RULE-BASED DETECTIONS[/bold blue] [dim]({len(l1_detections)} rules matched)[/dim]"
+            "[bold blue]  L1 RULE-BASED DETECTIONS[/bold blue]"
+            f" [dim]({len(l1_detections)} rules matched)[/dim]"
         )
         console.print("  " + "-" * 70)
 
@@ -363,7 +365,8 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
                 f"{confidence * 100:.0f}%" if isinstance(confidence, float) else str(confidence)
             )
 
-            # Extract threat type from rule_id (e.g., "L2-context_manipulation" -> "Context Manipulation")
+            # Extract threat type from rule_id
+            # e.g., "L2-context_manipulation" -> "Context Manipulation"
             rule_id = detection.get("rule_id", "-")
             threat_type = rule_id.replace("L2-", "").replace("_", " ").title()
 
@@ -461,7 +464,8 @@ def display_event_rich(event: EventData, show_prompt: bool = False) -> None:
     if event.detections:
         first_rule_id = event.detections[0].get("rule_id", "RULE_ID")
         console.print(
-            f'  [bold]Suppress:[/bold]  [cyan]raxe suppress add {first_rule_id} --reason "..."[/cyan]'
+            "  [bold]Suppress:[/bold]  [cyan]raxe suppress add "
+            f'{first_rule_id} --reason "..."[/cyan]'
         )
 
     console.print()
@@ -509,7 +513,7 @@ def display_event_json(event: EventData) -> None:
     if event.prompt_text:
         output["prompt_text"] = event.prompt_text
 
-    console.print(json.dumps(output, indent=2))
+    click.echo(json.dumps(output, indent=2))
 
 
 @click.group()
@@ -632,7 +636,8 @@ def _display_privacy_footer(source: str) -> None:
         )
     else:
         console.print(
-            "[dim]  Privacy: Prompt text is not available - only metadata is sent to the cloud.[/dim]"
+            "[dim]  Privacy: Prompt text is not available"
+            " - only metadata is sent to the cloud.[/dim]"
         )
         console.print("[dim]  Run the scan locally to store prompts for later retrieval.[/dim]")
     console.print()

@@ -87,7 +87,7 @@ def list_presets(output: str):
 
     if output == "json":
         data = [_policy_to_dict(p) for p in presets]
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         table = Table(title="Global Policy Presets", show_header=True)
         table.add_column("ID", style="cyan", no_wrap=True)
@@ -144,7 +144,7 @@ def list_policies(tenant_id: str | None, output: str):
         presets = list(GLOBAL_PRESETS.values())
         if output == "json":
             data = [_policy_to_dict(p) for p in presets]
-            console.print(json.dumps(data, indent=2))
+            click.echo(json.dumps(data, indent=2, default=str))
         else:
             table = Table(title="Global Policy Presets", show_header=True)
             table.add_column("ID", style="cyan", no_wrap=True)
@@ -178,7 +178,7 @@ def list_policies(tenant_id: str | None, output: str):
 
     if output == "json":
         data = [_policy_to_dict(p) for p in all_policies]
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         # Show available policies (presets + custom)
         table = Table(title=f"Available Policies for {tenant_id}", show_header=True)
@@ -261,7 +261,7 @@ def show_policy(policy_id: str, tenant_id: str | None, output: str):
         sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
-        console.print(json.dumps(_policy_to_dict(policy_obj), indent=2))
+        click.echo(json.dumps(_policy_to_dict(policy_obj), indent=2, default=str))
     else:
         console.print()
         console.print("[bold]Policy Details[/bold]")
@@ -755,7 +755,7 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
             "block_severity_threshold": resolution.policy.block_severity_threshold,
             "block_confidence_threshold": resolution.policy.block_confidence_threshold,
         }
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         console.print()
         console.print("[bold]Policy Resolution Explanation[/bold]")

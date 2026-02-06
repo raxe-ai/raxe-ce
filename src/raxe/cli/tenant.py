@@ -108,7 +108,7 @@ def list_tenants(output: str):
 
     if not tenants:
         if output == "json":
-            console.print("[]")
+            click.echo("[]")
         else:
             console.print("[yellow]No tenants found[/yellow]")
             console.print()
@@ -127,7 +127,7 @@ def list_tenants(output: str):
             }
             for t in tenants
         ]
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         table = Table(title=f"Tenants ({len(tenants)})", show_header=True)
         table.add_column("ID", style="cyan", no_wrap=True)
@@ -183,7 +183,7 @@ def show_tenant(tenant_id: str, output: str):
             "partner_id": tenant_obj.partner_id,
             "created_at": tenant_obj.created_at,
         }
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         console.print()
         console.print("[bold]Tenant Details[/bold]")

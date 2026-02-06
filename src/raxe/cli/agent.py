@@ -89,7 +89,7 @@ def list_agents(mssp_id: str, customer_id: str | None, output: str):
 
     if not agents:
         if output == "json":
-            console.print("[]")
+            click.echo("[]")
         else:
             console.print("[yellow]No agents found[/yellow]")
             console.print()
@@ -98,7 +98,7 @@ def list_agents(mssp_id: str, customer_id: str | None, output: str):
         return
 
     if output == "json":
-        console.print(json.dumps(agents, indent=2))
+        click.echo(json.dumps(agents, indent=2, default=str))
     else:
         table = Table(title=f"Agents ({len(agents)})", show_header=True)
         table.add_column("Agent ID", style="cyan", no_wrap=True)
@@ -191,7 +191,7 @@ def agent_status(mssp_id: str, customer_id: str, agent_id: str, output: str):
         sys.exit(EXIT_INVALID_INPUT)
 
     if output == "json":
-        console.print(json.dumps(agent_data, indent=2))
+        click.echo(json.dumps(agent_data, indent=2, default=str))
     else:
         # Display as formatted table
         table = Table(title=f"Agent Status: {agent_id}", show_header=False)

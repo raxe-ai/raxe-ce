@@ -140,7 +140,7 @@ def list_rules(ctx, family: str | None, severity: str | None, output_format: str
             }
             for r in filtered_rules
         ]
-        console.print(json.dumps(rules_data, indent=2))
+        click.echo(json.dumps(rules_data, indent=2))
 
     # Summary
     if output_format != "json":

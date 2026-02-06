@@ -255,7 +255,7 @@ def list_suppressions(tenant_id: str | None, config: str | None, output_format: 
             }
             for s in suppressions
         ]
-        console.print(json.dumps(output, indent=2))
+        click.echo(json.dumps(output, indent=2))
 
     else:  # table
         table = Table(title=f"Active Suppressions ({len(suppressions)})", show_header=True)

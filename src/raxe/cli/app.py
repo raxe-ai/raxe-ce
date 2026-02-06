@@ -221,7 +221,7 @@ def list_apps(tenant_id: str, output: str):
 
     if not apps:
         if output == "json":
-            console.print("[]")
+            click.echo("[]")
         else:
             console.print(f"[yellow]No apps found in tenant '{tenant_id}'[/yellow]")
             console.print()
@@ -240,7 +240,7 @@ def list_apps(tenant_id: str, output: str):
             }
             for a in apps
         ]
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         table = Table(title=f"Apps in Tenant '{tenant_id}' ({len(apps)})", show_header=True)
         table.add_column("ID", style="cyan", no_wrap=True)
@@ -307,7 +307,7 @@ def show_app(app_id: str, tenant_id: str, output: str):
             "default_policy_id": app_obj.default_policy_id,
             "created_at": app_obj.created_at,
         }
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         console.print()
         console.print("[bold]App Details[/bold]")

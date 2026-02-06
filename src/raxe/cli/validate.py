@@ -203,7 +203,7 @@ def _output_json(result, rule_path: str) -> None:
         ],
     }
 
-    console.print(json.dumps(output, indent=2))
+    click.echo(json.dumps(output, indent=2))
 
 
 def _get_severity_style(severity: str) -> str:

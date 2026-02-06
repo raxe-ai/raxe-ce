@@ -142,7 +142,7 @@ def list_mssps(output: str):
 
     if not mssps:
         if output == "json":
-            console.print("[]")
+            click.echo("[]")
         else:
             console.print("[yellow]No MSSPs found[/yellow]")
             console.print()
@@ -160,7 +160,7 @@ def list_mssps(output: str):
             }
             for m in mssps
         ]
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         table = Table(title=f"MSSPs ({len(mssps)})", show_header=True)
         table.add_column("ID", style="cyan", no_wrap=True)
@@ -216,7 +216,7 @@ def show_mssp(mssp_id: str, output: str):
             "created_at": mssp_obj.created_at,
             "updated_at": mssp_obj.updated_at,
         }
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         console.print()
         console.print("[bold]MSSP Details[/bold]")

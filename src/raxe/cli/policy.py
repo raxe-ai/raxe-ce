@@ -33,7 +33,7 @@ from raxe.application import (
     create_tenant_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.domain.tenants.models import TenantPolicy
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 
@@ -434,8 +434,7 @@ def create_policy(
         )
         sys.exit(EXIT_INVALID_INPUT)
 
-    console.print(f"[green]✓[/green] Created policy '{policy_obj.name}'")
-    console.print()
+    display_success(f"Created policy '{policy_obj.name}'")
     console.print(f"  ID: [cyan]{policy_obj.policy_id}[/cyan]")
     console.print(f"  Tenant: {policy_obj.tenant_id}")
     console.print(f"  Mode: [yellow]{policy_obj.mode.value}[/yellow]")
@@ -519,8 +518,7 @@ def delete_policy(policy_id: str, tenant_id: str, force: bool):
         console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
         sys.exit(EXIT_CONFIG_ERROR)
 
-    console.print(f"[green]✓[/green] Deleted policy '{policy_id}'")
-    console.print()
+    display_success(f"Deleted policy '{policy_id}'")
 
 
 @policy.command("update")
@@ -652,8 +650,7 @@ def update_policy(
         console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
         sys.exit(EXIT_CONFIG_ERROR)
 
-    console.print(f"[green]✓[/green] Updated policy '{policy_id}'")
-    console.print()
+    display_success(f"Updated policy '{policy_id}'")
     console.print(f"  Version: {existing.version} → [cyan]{updated_policy.version}[/cyan]")
     if name is not None:
         console.print(f"  Name: {existing.name} → [cyan]{updated_policy.name}[/cyan]")

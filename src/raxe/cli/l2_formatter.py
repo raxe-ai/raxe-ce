@@ -208,6 +208,16 @@ class L2ResultFormatter:
         return filled * filled_count + empty * empty_count
 
     @staticmethod
+    def _bar(value: float, width: int, console: Console) -> str:
+        """Create a progress bar with automatic ASCII fallback.
+
+        Uses Unicode block chars by default, ASCII '#'/'-' when no_color is set.
+        """
+        if getattr(console, "no_color", False):
+            return L2ResultFormatter._make_progress_bar(value, width, "#", "-")
+        return L2ResultFormatter._make_progress_bar(value, width)
+
+    @staticmethod
     def format_predictions(
         l2_result: L2Result,
         console: Console,
@@ -279,7 +289,7 @@ class L2ResultFormatter:
         harm_types = classification_result.get("harm_types", {})
 
         # Main threat score
-        threat_bar = L2ResultFormatter._make_progress_bar(threat_prob, width=20)
+        threat_bar = L2ResultFormatter._bar(threat_prob, 20, console)
         threat_color = "yellow" if threat_prob >= 0.3 else "green"
 
         threat_line = Text()
@@ -307,7 +317,7 @@ class L2ResultFormatter:
         console.print("  Confidence:", style="white bold")
 
         def print_conf_row(label: str, value: float, color: str) -> None:
-            bar = L2ResultFormatter._make_progress_bar(value, width=12)
+            bar = L2ResultFormatter._bar(value, 12, console)
             line = Text()
             line.append(f"    {label:<16}")
             line.append(bar, style=color)
@@ -332,7 +342,7 @@ class L2ResultFormatter:
                 console.print("  Notable Harm Signals:", style="white bold")
                 for harm_name, prob in notable[:3]:
                     threshold = thresholds.get(harm_name, 0.5)
-                    bar = L2ResultFormatter._make_progress_bar(prob, width=10)
+                    bar = L2ResultFormatter._bar(prob, 10, console)
                     harm_display = harm_name.replace("_", " ").title()
                     color = "yellow" if prob >= threshold * 0.7 else "dim"
                     line = Text()
@@ -458,7 +468,7 @@ class L2ResultFormatter:
             console.print()
 
             # Main threat score with large progress bar
-            threat_bar = L2ResultFormatter._make_progress_bar(binary_conf, width=20)
+            threat_bar = L2ResultFormatter._bar(binary_conf, 20, console)
             threat_color = (
                 "green" if binary_conf >= 0.8 else "yellow" if binary_conf >= 0.5 else "red"
             )
@@ -511,7 +521,7 @@ class L2ResultFormatter:
 
             # Helper for aligned confidence rows
             def print_conf_row(label: str, value: float, color: str) -> None:
-                bar = L2ResultFormatter._make_progress_bar(value, width=12)
+                bar = L2ResultFormatter._bar(value, 12, console)
                 line = Text()
                 line.append(f"    {label:<16}")
                 line.append(bar, style=color)
@@ -567,7 +577,7 @@ class L2ResultFormatter:
                     console.print("  Harm Categories:", style="white bold")
                     for label in active_labels:
                         prob = probabilities.get(label, 0)
-                        bar = L2ResultFormatter._make_progress_bar(prob, width=10)
+                        bar = L2ResultFormatter._bar(prob, 10, console)
                         label_display = label.replace("_", " ").title()
                         line = Text()
                         line.append(f"    ⚠ {label_display:<26}")
@@ -628,7 +638,8 @@ class L2ResultFormatter:
 
         console.print("  Vote Summary:", style="white bold")
         console.print(
-            f"    🔴 THREAT: {threat_votes}  •  🟢 SAFE: {safe_votes}  •  ⚪ ABSTAIN: {abstain_votes}",
+            f"    🔴 THREAT: {threat_votes}  •  🟢 SAFE: {safe_votes}"
+            f"  •  ⚪ ABSTAIN: {abstain_votes}",
             style="dim",
         )
         console.print()
@@ -692,7 +703,8 @@ class L2ResultFormatter:
 
         console.print("  Weighted Scores:", style="white bold")
         console.print(
-            f"    Threat: {weighted_threat:.1f}  •  Safe: {weighted_safe:.1f}  •  Ratio: {ratio:.2f}",
+            f"    Threat: {weighted_threat:.1f}  •  Safe: {weighted_safe:.1f}"
+            f"  •  Ratio: {ratio:.2f}",
             style="dim",
         )
         console.print()

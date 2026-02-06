@@ -21,7 +21,7 @@ from raxe.application import (
     create_tenant_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 from raxe.infrastructure.tenants import get_tenants_base_path
 
@@ -72,8 +72,7 @@ def create_tenant(name: str, tenant_id: str | None, policy: str):
         )
         tenant_obj = service.create_tenant(request)
 
-        console.print(f"[green]✓[/green] Created tenant '{tenant_obj.name}'")
-        console.print()
+        display_success(f"Created tenant '{tenant_obj.name}'")
         console.print(f"  ID: [cyan]{tenant_obj.tenant_id}[/cyan]")
         console.print(f"  Name: {tenant_obj.name}")
         console.print(f"  Default Policy: [yellow]{tenant_obj.default_policy_id}[/yellow]")
@@ -246,8 +245,7 @@ def delete_tenant(tenant_id: str, force: bool):
     # Delete tenant through service
     service.delete_tenant(tenant_id)
 
-    console.print(f"[green]✓[/green] Deleted tenant '{tenant_id}'")
-    console.print()
+    display_success(f"Deleted tenant '{tenant_id}'")
 
 
 @tenant.command("set-policy")
@@ -277,8 +275,7 @@ def set_tenant_policy(tenant_id: str, policy: str):
         # Update tenant default policy
         service.set_tenant_policy(tenant_id, policy)
 
-        console.print(f"[green]✓[/green] Updated default policy for '{tenant_id}'")
-        console.print()
+        display_success(f"Updated default policy for '{tenant_id}'")
         console.print(f"  Old policy: [dim]{old_policy}[/dim]")
         console.print(f"  New policy: [yellow]{policy}[/yellow]")
         console.print()

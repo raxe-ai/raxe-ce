@@ -51,8 +51,9 @@ def tune() -> None:
     type=click.Path(exists=True),
     help="Test file with prompts (one per line)",
 )
+@click.pass_context
 def tune_threshold(
-    min_threshold: float, max_threshold: float, step: float, test_file: str | None
+    ctx, min_threshold: float, max_threshold: float, step: float, test_file: str | None
 ) -> None:
     """Tune confidence threshold interactively.
 
@@ -64,11 +65,12 @@ def tune_threshold(
       raxe tune threshold --min 0.3 --max 0.7 --step 0.05
       raxe tune threshold --test-file test_prompts.txt
     """
-    from raxe.cli.branding import print_logo
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        from raxe.cli.branding import print_logo
 
-    # Show compact logo
-    print_logo(console, compact=True)
-    console.print()
+        print_logo(console, compact=True)
+        console.print()
 
     try:
         raxe = Raxe()
@@ -301,14 +303,14 @@ def benchmark_modes(iterations: int, text: str) -> None:
         balanced = mode_results["balanced"]
         avg_lat = balanced["avg_latency"]
         console.print(
-            f"  [cyan]Balanced:[/cyan] Default mode for most use cases" f" (avg: {avg_lat:.2f}ms)"
+            f"  [cyan]Balanced:[/cyan] Default mode for most use cases (avg: {avg_lat:.2f}ms)"
         )
 
     if "thorough" in mode_results:
         thorough = mode_results["thorough"]
         avg_lat_t = thorough["avg_latency"]
         console.print(
-            f"  [cyan]Thorough:[/cyan] Maximum detection coverage" f" (avg: {avg_lat_t:.2f}ms)"
+            f"  [cyan]Thorough:[/cyan] Maximum detection coverage (avg: {avg_lat_t:.2f}ms)"
         )
 
 

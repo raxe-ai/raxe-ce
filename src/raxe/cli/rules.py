@@ -56,7 +56,8 @@ def rules() -> None:
     default="table",
     help="Output format (default: table)",
 )
-def list_rules(family: str | None, severity: str | None, output_format: str) -> None:
+@click.pass_context
+def list_rules(ctx, family: str | None, severity: str | None, output_format: str) -> None:
     """
     List all available detection rules.
 
@@ -70,10 +71,10 @@ def list_rules(family: str | None, severity: str | None, output_format: str) -> 
       raxe rules list --severity high
       raxe rules list --format tree
     """
-    from raxe.cli.branding import print_logo
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if output_format in ("table", "tree") and not quiet:
+        from raxe.cli.branding import print_logo
 
-    # Show compact logo for text output
-    if output_format in ("table", "tree"):
         print_logo(console, compact=True)
         console.print()
 
@@ -455,9 +456,7 @@ def _display_rules_tree(rules: list) -> None:
         for rule in sorted(family_rules, key=lambda r: r.rule_id):
             severity_color = get_severity_color(rule.severity)
             sev_val = rule.severity.value.upper()
-            rule_text = (
-                f"[cyan]{rule.rule_id}[/cyan]  {rule.name}" f"  [{severity_color}]{sev_val}[/]"
-            )
+            rule_text = f"[cyan]{rule.rule_id}[/cyan]  {rule.name}  [{severity_color}]{sev_val}[/]"
             family_branch.add(rule_text)
 
     console.print(root)

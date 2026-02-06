@@ -20,7 +20,7 @@ from raxe.application.mssp_service import (
     create_mssp_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.domain.mssp.models import DataMode
 from raxe.infrastructure.mssp.yaml_repository import (
     CustomerNotFoundError,
@@ -103,8 +103,7 @@ def create_customer(
         )
         customer_obj = service.create_customer(request)
 
-        console.print(f"[green]✓[/green] Created customer '{customer_obj.name}'")
-        console.print()
+        display_success(f"Created customer '{customer_obj.name}'")
         console.print(f"  ID: [cyan]{customer_obj.customer_id}[/cyan]")
         console.print(f"  MSSP: {customer_obj.mssp_id}")
         console.print(f"  Name: {customer_obj.name}")
@@ -374,8 +373,7 @@ def configure_customer(
         )
         customer_obj = service.configure_customer(request)
 
-        console.print(f"[green]✓[/green] Updated customer '{customer_obj.customer_id}'")
-        console.print()
+        display_success(f"Updated customer '{customer_obj.customer_id}'")
         console.print(f"  Data Mode: [yellow]{customer_obj.data_mode.value}[/yellow]")
         if customer_obj.data_fields:
             console.print(f"  Data Fields: {', '.join(customer_obj.data_fields)}")
@@ -436,8 +434,7 @@ def delete_customer(mssp_id: str, customer_id: str, force: bool):
             return
 
     service.delete_customer(mssp_id, customer_id)
-    console.print(f"[green]✓[/green] Deleted customer '{customer_id}'")
-    console.print()
+    display_success(f"Deleted customer '{customer_id}'")
 
 
 # SIEM Subgroup
@@ -684,8 +681,7 @@ def configure_siem(
         updated_customer = replace(customer_obj, siem_config=siem_config)
         repo.update(updated_customer)
 
-        console.print(f"[green]✓[/green] Configured SIEM for customer '{customer_id}'")
-        console.print()
+        display_success(f"Configured SIEM for customer '{customer_id}'")
         console.print(f"  Type: [cyan]{siem_type}[/cyan]")
         console.print(f"  Endpoint: {endpoint_url}")
         console.print(f"  Batch Size: {batch_size}")
@@ -823,7 +819,7 @@ def test_siem(mssp_id: str, customer_id: str):
         adapter.close()
 
         if is_healthy:
-            console.print("[green]✓[/green] SIEM endpoint is reachable")
+            display_success("SIEM endpoint is reachable")
             console.print(f"  Endpoint: {siem_config.endpoint_url}")
         else:
             console.print("[red]✗[/red] SIEM endpoint health check failed")
@@ -890,7 +886,7 @@ def disable_siem(mssp_id: str, customer_id: str, force: bool):
     updated_customer = replace(customer_obj, siem_config=None)
     repo.update(updated_customer)
 
-    console.print(f"[green]✓[/green] Disabled SIEM for customer '{customer_id}'")
+    display_success(f"Disabled SIEM for customer '{customer_id}'")
 
 
 # Export the group

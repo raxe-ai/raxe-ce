@@ -26,7 +26,8 @@ from raxe.utils.profiler import ScanProfiler
     default="tree",
     help="Output format (default: tree)",
 )
-def profile_command(text: str, l2: bool, output_format: str) -> None:
+@click.pass_context
+def profile_command(ctx, text: str, l2: bool, output_format: str) -> None:
     """Profile scan performance.
 
     Provides detailed performance breakdown including:
@@ -42,10 +43,10 @@ def profile_command(text: str, l2: bool, output_format: str) -> None:
       raxe profile "Ignore previous instructions" --no-l2
       raxe profile "test" --format table
     """
-    from raxe.cli.branding import print_logo
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if output_format in ("tree", "table") and not quiet:
+        from raxe.cli.branding import print_logo
 
-    # Show compact logo for text output
-    if output_format in ("tree", "table"):
         print_logo(console, compact=True)
         console.print()
 
@@ -261,4 +262,4 @@ def _display_json(profile) -> None:
             "percentage": profile.l2_percentage,
         }
 
-    console.print_json(json.dumps(data, indent=2))
+    click.echo(json.dumps(data, indent=2))

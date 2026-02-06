@@ -15,6 +15,7 @@ Example usage:
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -59,7 +60,7 @@ def _get_api_credentials() -> tuple[str | None, str | None, str | None]:
         credential_store = CredentialStore()
         credentials = credential_store.get_or_create(raise_on_expired=False)
         installation_id = credentials.installation_id
-    except Exception:
+    except Exception:  # noqa: S110 - best-effort credential loading
         pass
 
     # Priority 1: Environment variable for API key
@@ -76,7 +77,7 @@ def _get_api_credentials() -> tuple[str | None, str | None, str | None]:
             if credentials and credentials.api_key:
                 api_key = credentials.api_key
                 source = "credentials"
-        except Exception:
+        except Exception:  # noqa: S110 - best-effort credential loading
             pass
 
     # Priority 3: Config file
@@ -86,7 +87,7 @@ def _get_api_credentials() -> tuple[str | None, str | None, str | None]:
             if config.core.api_key:
                 api_key = config.core.api_key
                 source = "config"
-        except Exception:
+        except Exception:  # noqa: S110 - best-effort config loading
             pass
 
     return api_key, installation_id, source
@@ -365,7 +366,7 @@ def status(output_format: str, verbose: bool) -> None:
             credentials = credential_store.load()
             if credentials:
                 tier_from_credentials = credentials.tier
-        except Exception:
+        except Exception:  # noqa: S110 - best-effort tier detection
             pass
 
     # Get queue stats
@@ -429,7 +430,7 @@ def status(output_format: str, verbose: bool) -> None:
     queue.close()
 
     if output_format == "json":
-        console.print_json(data=status_data)
+        click.echo(json.dumps(status_data, indent=2))
         return
 
     # Text output with tree-style formatting
@@ -542,7 +543,7 @@ def dlq_list(output_format: str, limit: int) -> None:
     queue.close()
 
     if output_format == "json":
-        console.print_json(data={"events": events, "count": len(events)})
+        click.echo(json.dumps({"events": events, "count": len(events)}, indent=2))
         return
 
     # Text output
@@ -635,7 +636,7 @@ def dlq_show(event_id: str, output_format: str) -> None:
         return
 
     if output_format == "json":
-        console.print_json(data=event)
+        click.echo(json.dumps(event, indent=2))
         return
 
     # Text output
@@ -675,7 +676,7 @@ def dlq_show(event_id: str, output_format: str) -> None:
     payload = event.get("payload", {})
     if payload:
         console.print("[bold cyan]Payload (sanitized):[/bold cyan]")
-        console.print_json(data=payload)
+        click.echo(json.dumps(payload, indent=2))
         console.print()
 
 
@@ -843,15 +844,18 @@ def flush(output_format: str) -> None:
 
     if total_before == 0:
         if output_format == "json":
-            console.print_json(
-                data={
-                    "status": "ok",
-                    "message": "No events to flush",
-                    "critical_shipped": 0,
-                    "standard_shipped": 0,
-                    "total_shipped": 0,
-                    "duration_seconds": 0,
-                }
+            click.echo(
+                json.dumps(
+                    {
+                        "status": "ok",
+                        "message": "No events to flush",
+                        "critical_shipped": 0,
+                        "standard_shipped": 0,
+                        "total_shipped": 0,
+                        "duration_seconds": 0,
+                    },
+                    indent=2,
+                )
             )
         else:
             console.print("[green]No events to flush - queues are empty[/green]")
@@ -863,11 +867,14 @@ def flush(output_format: str) -> None:
 
     if not config.telemetry.enabled:
         if output_format == "json":
-            console.print_json(
-                data={
-                    "status": "error",
-                    "message": "Telemetry is disabled",
-                }
+            click.echo(
+                json.dumps(
+                    {
+                        "status": "error",
+                        "message": "Telemetry is disabled",
+                    },
+                    indent=2,
+                )
             )
         else:
             display_warning("Telemetry is disabled. Enable it to flush events.")
@@ -951,15 +958,18 @@ def flush(output_format: str) -> None:
     total_shipped = critical_shipped + standard_shipped
 
     if output_format == "json":
-        console.print_json(
-            data={
-                "status": "ok" if not errors else "partial",
-                "critical_shipped": critical_shipped,
-                "standard_shipped": standard_shipped,
-                "total_shipped": total_shipped,
-                "duration_seconds": round(duration, 2),
-                "errors": errors if errors else None,
-            }
+        click.echo(
+            json.dumps(
+                {
+                    "status": "ok" if not errors else "partial",
+                    "critical_shipped": critical_shipped,
+                    "standard_shipped": standard_shipped,
+                    "total_shipped": total_shipped,
+                    "duration_seconds": round(duration, 2),
+                    "errors": errors if errors else None,
+                },
+                indent=2,
+            )
         )
         return
 
@@ -1162,7 +1172,7 @@ def endpoint_show(output_format: str) -> None:
     info = get_endpoint_info()
 
     if output_format == "json":
-        console.print_json(data=info)
+        click.echo(json.dumps(info, indent=2))
         return
 
     # Text output
@@ -1290,7 +1300,7 @@ def endpoint_test(timeout: float, output_format: str) -> None:
             }
             for ep, status in results.items()
         }
-        console.print_json(data=json_data)
+        click.echo(json.dumps(json_data, indent=2))
         return
 
     # Text output

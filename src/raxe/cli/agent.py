@@ -13,7 +13,7 @@ from rich.table import Table
 
 from raxe.application.mssp_service import create_mssp_service
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.infrastructure.agent.registry import get_agent_registry
 from raxe.infrastructure.mssp.yaml_repository import (
     CustomerNotFoundError,
@@ -310,8 +310,7 @@ def register_agent(
         threats=0,
     )
 
-    console.print(f"[green]✓[/green] Registered agent '{agent_id}'")
-    console.print()
+    display_success(f"Registered agent '{agent_id}'")
     console.print(f"  MSSP: {mssp_id}")
     console.print(f"  Customer: {customer_id}")
     if version:
@@ -367,8 +366,7 @@ def send_heartbeat(agent_id: str, scans: int, threats: int):
         threats=threats,
     )
 
-    console.print(f"[green]✓[/green] Heartbeat sent for '{agent_id}'")
-    console.print()
+    display_success(f"Heartbeat sent for '{agent_id}'")
     console.print("  Status: [green]online[/green]")
     console.print(f"  Uptime: {uptime:.0f}s")
 
@@ -408,7 +406,7 @@ def unregister_agent(agent_id: str, force: bool):
     removed = registry.remove_agent(agent_id)
 
     if removed:
-        console.print(f"[green]✓[/green] Unregistered agent '{agent_id}'")
+        display_success(f"Unregistered agent '{agent_id}'")
     else:
         console.print("[red]Error:[/red] Failed to unregister agent")
         sys.exit(EXIT_SCAN_ERROR)

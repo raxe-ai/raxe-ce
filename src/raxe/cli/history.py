@@ -6,7 +6,7 @@ from pathlib import Path
 import click
 from rich.table import Table
 
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.infrastructure.database.scan_history import ScanHistoryDB
 from raxe.utils.logging import get_logger
 
@@ -190,7 +190,7 @@ def export(scan_id: int, output: Path | None, output_format: str) -> None:
 
             if output:
                 output.write_text(json_str)
-                console.print(f"[green]✓[/green] Exported to {output}")
+                display_success(f"Exported to {output}")
             else:
                 console.print(json_str)
 
@@ -216,7 +216,7 @@ def export(scan_id: int, output: Path | None, output_format: str) -> None:
 
             if output:
                 output.write_text(csv_str)
-                console.print(f"[green]✓[/green] Exported to {output}")
+                display_success(f"Exported to {output}")
             else:
                 console.print(csv_str)
 
@@ -237,7 +237,7 @@ def clean(days: int) -> None:
         db = ScanHistoryDB()
         count = db.cleanup_old_scans(retention_days=days)
 
-        console.print(f"[green]✓[/green] Deleted {count} scans older than {days} days")
+        display_success(f"Deleted {count} scans older than {days} days")
 
         logger.info("history_clean_completed", deleted_count=count, retention_days=days)
 

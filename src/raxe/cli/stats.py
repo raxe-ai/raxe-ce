@@ -38,7 +38,8 @@ from raxe.utils.error_sanitizer import sanitize_error_message
     type=click.Path(),
     help="Export stats to JSON file",
 )
-def stats(output_format: str, show_global: bool, retention: bool, export: str | None) -> None:
+@click.pass_context
+def stats(ctx, output_format: str, show_global: bool, retention: bool, export: str | None) -> None:
     """
     Show local RAXE statistics and analytics.
 
@@ -57,8 +58,9 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
       raxe stats --format json      # Output as JSON
       raxe stats --export stats.json # Export to file
     """
-    # Show compact logo for text output
-    if output_format == "text":
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    # Show compact logo for text output (unless quiet)
+    if output_format == "text" and not quiet:
         from raxe.cli.branding import print_logo
 
         print_logo(console, compact=True)
@@ -78,7 +80,7 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
             # Show global statistics
             stats_data = engine.get_global_stats()
             if output_format == "json":
-                console.print_json(data=stats_data)
+                click.echo(json.dumps(stats_data, indent=2))
             else:
                 _display_global_stats(stats_data)
         elif retention:
@@ -87,7 +89,7 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
             cohort_date = datetime.now().date() - timedelta(days=30)
             retention_data = engine.calculate_retention(cohort_date)
             if output_format == "json":
-                console.print_json(data=retention_data)
+                click.echo(json.dumps(retention_data, indent=2))
             else:
                 _display_retention_stats(retention_data)
         else:
@@ -122,7 +124,7 @@ def stats(output_format: str, show_global: bool, retention: bool, export: str | 
                     json.dump(stats_data, f, indent=2)
                 console.print(f"[green]Stats exported to {export}[/green]")
             elif output_format == "json":
-                console.print_json(data=stats_data)
+                click.echo(json.dumps(stats_data, indent=2))
             else:
                 _display_user_stats(user_stats, streak_info, progress, unlocked)
 
@@ -224,9 +226,10 @@ def _display_user_stats(user_stats, streak_info: dict, progress: dict, unlocked:
 
     # Achievements
     console.print("[bold]Achievements[/bold]")
-    console.print(
-        f"  └─ Unlocked: {progress['unlocked']}/{progress['total_achievements']} ({progress['completion_percentage']:.0f}%)"
-    )
+    unlocked_ct = progress["unlocked"]
+    total_ach = progress["total_achievements"]
+    pct = progress["completion_percentage"]
+    console.print(f"  └─ Unlocked: {unlocked_ct}/{total_ach} ({pct:.0f}%)")
     console.print(f"  └─ Total points: {progress['total_points']}")
 
     if unlocked:
@@ -254,9 +257,9 @@ def _display_global_stats(stats_data: dict) -> None:
     # Threats
     threats = stats_data.get("threats", {})
     console.print("[bold]Threats Detected[/bold]")
-    console.print(
-        f"  └─ Total: {threats.get('total_detected', 0):,} ({threats.get('detection_rate', 0):.1f}%)"
-    )
+    total_det = threats.get("total_detected", 0)
+    det_rate = threats.get("detection_rate", 0)
+    console.print(f"  └─ Total: {total_det:,} ({det_rate:.1f}%)")
     console.print(f"  └─ Critical threats: {threats.get('critical_threats', 0):,}")
 
     severity_breakdown = threats.get("by_severity", {})

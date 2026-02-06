@@ -31,7 +31,8 @@ from raxe.cli.output import console, create_progress_bar, display_error, display
     default=30,
     help="Days of history to export (default: 30)",
 )
-def export(output_format: str, output: str | None, days: int) -> None:
+@click.pass_context
+def export(ctx, output_format: str, output: str | None, days: int) -> None:
     """
     Export scan history to JSON or CSV.
 
@@ -47,11 +48,12 @@ def export(output_format: str, output: str | None, days: int) -> None:
       raxe export --format csv --output scans.csv
       raxe export --days 7 --format json
     """
-    from raxe.cli.branding import print_logo
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        from raxe.cli.branding import print_logo
 
-    # Show compact logo
-    print_logo(console, compact=True)
-    console.print()
+        print_logo(console, compact=True)
+        console.print()
 
     try:
         # Determine output file

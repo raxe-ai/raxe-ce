@@ -20,7 +20,7 @@ from raxe.application.mssp_service import (
     create_mssp_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.domain.mssp.models import MSSPTier
 from raxe.infrastructure.mssp import get_mssp_base_path
 from raxe.infrastructure.mssp.yaml_repository import (
@@ -102,8 +102,7 @@ def create_mssp(
         )
         mssp_obj = service.create_mssp(request)
 
-        console.print(f"[green]✓[/green] Created MSSP '{mssp_obj.name}'")
-        console.print()
+        display_success(f"Created MSSP '{mssp_obj.name}'")
         console.print(f"  ID: [cyan]{mssp_obj.mssp_id}[/cyan]")
         console.print(f"  Name: {mssp_obj.name}")
         console.print(f"  Tier: [yellow]{mssp_obj.tier.value}[/yellow]")
@@ -276,8 +275,7 @@ def delete_mssp(mssp_id: str, force: bool):
             return
 
     service.delete_mssp(mssp_id)
-    console.print(f"[green]✓[/green] Deleted MSSP '{mssp_id}'")
-    console.print()
+    display_success(f"Deleted MSSP '{mssp_id}'")
 
 
 @mssp.command("test-webhook")
@@ -345,7 +343,7 @@ def test_webhook(mssp_id: str):
         )
 
         if response.ok:
-            console.print(f"[green]✓[/green] Webhook test successful (HTTP {response.status_code})")
+            display_success(f"Webhook test successful (HTTP {response.status_code})")
         else:
             console.print(f"[red]✗[/red] Webhook test failed (HTTP {response.status_code})")
             console.print(f"  Response: {response.text[:200]}")
@@ -416,7 +414,7 @@ def cleanup_retention(retention_days: int, dry_run: bool):
         deleted = logger.cleanup_old_logs(retention_days=retention_days)
 
         if deleted > 0:
-            console.print(f"[green]✓[/green] Deleted {deleted} audit log file(s)")
+            display_success(f"Deleted {deleted} audit log file(s)")
         else:
             console.print(f"[dim]No audit logs older than {retention_days} days[/dim]")
 

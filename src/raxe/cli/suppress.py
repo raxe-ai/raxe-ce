@@ -20,7 +20,7 @@ import click
 from rich.table import Table
 
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 from raxe.domain.suppression import SuppressionAction, SuppressionValidationError
 from raxe.domain.suppression_factory import (
     create_suppression_manager,
@@ -175,7 +175,7 @@ def add_suppression(
         # Always save to file (YAML format auto-saves)
         manager.save_to_file()
 
-        console.print(f"[green]✓[/green] Added suppression and saved to {manager.config_path}")
+        display_success(f"Added suppression and saved to {manager.config_path}")
 
         # Show details
         console.print()
@@ -329,7 +329,7 @@ def remove_suppression(pattern: str, tenant_id: str | None, config: str | None):
 
     # Always save to file
     manager.save_to_file()
-    console.print(f"[green]✓[/green] Removed suppression: {pattern}")
+    display_success(f"Removed suppression: {pattern}")
     console.print(f"  Saved to: {manager.config_path}")
     console.print()
 
@@ -442,7 +442,7 @@ def clear_suppressions(tenant_id: str | None, config: str | None):
 
     # Always save to file
     manager.save_to_file()
-    console.print(f"[green]✓[/green] Cleared {count} suppressions")
+    display_success(f"Cleared {count} suppressions")
     console.print(f"  Saved to: {manager.config_path}")
 
 

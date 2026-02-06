@@ -45,7 +45,8 @@ class HealthCheck:
     type=click.Path(),
     help="Export diagnostic report to file",
 )
-def doctor(fix: bool, export: str | None) -> None:
+@click.pass_context
+def doctor(ctx, fix: bool, export: str | None) -> None:
     """
     Run comprehensive system health checks.
 
@@ -63,11 +64,13 @@ def doctor(fix: bool, export: str | None) -> None:
       raxe doctor --fix
       raxe doctor --export report.txt
     """
-    from raxe.cli.branding import print_logo
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        from raxe.cli.branding import print_logo
 
-    # Show compact logo
-    print_logo(console, compact=True)
-    console.print()
+        # Show compact logo
+        print_logo(console, compact=True)
+        console.print()
 
     console.print("[bold cyan]RAXE Health Check[/bold cyan]")
     console.print()

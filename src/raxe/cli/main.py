@@ -39,7 +39,13 @@ from raxe.cli.mcp_cmd import mcp
 from raxe.cli.models import models
 from raxe.cli.mssp import mssp
 from raxe.cli.openclaw import openclaw
-from raxe.cli.output import console, display_error, display_scan_result, display_success
+from raxe.cli.output import (
+    console,
+    display_error,
+    display_scan_result,
+    display_scan_result_table,
+    display_success,
+)
 from raxe.cli.policy import policy
 from raxe.cli.privacy import privacy_command
 from raxe.cli.profiler import profile_command
@@ -55,8 +61,7 @@ from raxe.cli.tune import tune
 from raxe.cli.validate import validate_rule_command
 from raxe.sdk.client import Raxe
 
-# Note: Telemetry flush is now handled by the unified helper:
-# from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
+# Note: Telemetry flush is handled globally by cli.result_callback below
 
 
 def _show_minimal_help(ctx, param, value):
@@ -185,6 +190,18 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool, no_wizard: bool):
         from raxe.utils.logging import setup_logging
 
         setup_logging(enable_console_logging=True)
+
+
+@cli.result_callback()
+@click.pass_context
+def _flush_telemetry_on_exit(ctx, *args, **kwargs):
+    """Ensure telemetry is flushed after any CLI command."""
+    try:
+        from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
+
+        ensure_telemetry_flushed(timeout_seconds=2.0, end_session=True)
+    except Exception:  # noqa: S110
+        pass
 
 
 @cli.command()
@@ -552,7 +569,7 @@ def _collect_detections(result) -> dict:
 @click.option(
     "--format",
     "output_format",
-    type=click.Choice(["text", "json", "yaml"]),
+    type=click.Choice(["text", "json", "yaml", "table"]),
     default="text",
     help="Output format (default: text)",
 )
@@ -705,8 +722,8 @@ def scan(
         display_error("Cannot use both --l1-only and --l2-only simultaneously")
         sys.exit(EXIT_INVALID_INPUT)
 
-    # Auto-enable quiet mode for JSON/YAML formats to prevent progress contamination
-    if output_format in ("json", "yaml"):
+    # Auto-enable quiet mode for structured formats to prevent progress contamination
+    if output_format in ("json", "yaml", "table"):
         quiet = True
 
     # Override format to JSON if quiet mode
@@ -956,6 +973,9 @@ def scan(
             display_error("PyYAML not installed", "Use --format json instead")
             sys.exit(EXIT_CONFIG_ERROR)
 
+    elif output_format == "table" and not profile:
+        display_scan_result_table(result)
+
     elif output_format == "text" and not profile:
         # Use rich output
         no_color = ctx.obj.get("no_color", False)
@@ -970,15 +990,6 @@ def scan(
         console.print()
         console.print("[yellow]  Dry run mode: Results not saved to database[/yellow]")
         console.print()
-
-    # Auto-flush telemetry at end of scan using unified helper
-    # This ends the session and flushes all queued events
-    try:
-        from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
-
-        ensure_telemetry_flushed(timeout_seconds=2.0, end_session=True)
-    except Exception:  # noqa: S110
-        pass  # Never let telemetry affect scan completion
 
     # Exit with appropriate code for CI/CD (quiet mode)
     # In CI mode, exit 1 if ANY threats detected (not policy-dependent)
@@ -1179,7 +1190,7 @@ def batch_scan(
             Path(output).write_text(json.dumps(output_data, indent=2))
             display_success(f"Results written to {output}")
         else:
-            console.print(json.dumps(output_data, indent=2))
+            click.echo(json.dumps(output_data, indent=2))
 
     elif output_format == "csv":
         if not output:
@@ -1254,23 +1265,17 @@ def batch_scan(
 
         console.print()
 
-    # Auto-flush telemetry at end of batch scan
-    # Use generous timeout and batches for batch operations (many events)
-    # Each HTTP batch takes ~0.5-1s, so 1000 prompts needs ~40s+ for full flush
+    # Pre-flush with generous timeout for batch operations (many events)
+    # The global result_callback handles end_session, but batch needs more time
     try:
         from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
 
-        # Calculate appropriate timeout based on number of prompts
-        # ~0.05s per prompt accounts for HTTP latency, capped at 120s
         timeout = min(5.0 + len(prompts) * 0.05, 120.0)
-        # Allow 2x batches to handle both critical and standard queues
-        # Each queue might have up to len(prompts) events
         max_batches = max(20, (len(prompts) // 50 + 1) * 2)
 
         ensure_telemetry_flushed(
             timeout_seconds=timeout,
             max_batches=max_batches,
-            end_session=True,
         )
     except Exception:  # noqa: S110
         pass  # Never let telemetry affect batch completion
@@ -1361,118 +1366,33 @@ def plugins():
 @cli.command("completion")
 @click.argument(
     "shell",
-    type=click.Choice(["bash", "zsh", "fish", "powershell"]),
+    type=click.Choice(["bash", "zsh", "fish"]),
 )
 def completion(shell: str):
-    """
-    Generate shell completion script.
+    """Generate shell completion script (auto-discovers all commands and options).
 
     \b
     Installation:
       # Bash
-      raxe completion bash > /etc/bash_completion.d/raxe
+      eval "$(_RAXE_COMPLETE=bash_source raxe)"
+      # Or persist:
+      _RAXE_COMPLETE=bash_source raxe > ~/.raxe-complete.bash
+      echo 'source ~/.raxe-complete.bash' >> ~/.bashrc
 
       # Zsh
-      raxe completion zsh > ~/.zsh/completions/_raxe
+      _RAXE_COMPLETE=zsh_source raxe > ~/.raxe-complete.zsh
+      echo 'source ~/.raxe-complete.zsh' >> ~/.zshrc
 
       # Fish
-      raxe completion fish > ~/.config/fish/completions/raxe.fish
-
-      # PowerShell
-      raxe completion powershell >> $PROFILE
+      _RAXE_COMPLETE=fish_source raxe > ~/.config/fish/completions/raxe.fish
     """
-    if shell == "bash":
-        script = """
-# RAXE bash completion
-_raxe_completion() {
-    local cur prev opts
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="init setup scan batch test stats export repl rules doctor pack"
-    opts="$opts plugins privacy profile suppress telemetry tune auth completion"
+    from click.shell_completion import get_completion_class
 
-    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-    return 0
-}
-complete -F _raxe_completion raxe
-"""
-    elif shell == "zsh":
-        script = """
-#compdef raxe
-_raxe() {
-    local -a commands
-    commands=(
-        'init:Initialize RAXE configuration'
-        'setup:Interactive setup wizard'
-        'scan:Scan text for threats'
-        'batch:Batch scan prompts from file'
-        'test:Test configuration and connectivity'
-        'stats:Show local statistics'
-        'export:Export scan history'
-        'repl:Interactive shell'
-        'rules:Manage and inspect detection rules'
-        'doctor:Run system health checks'
-        'pack:Manage rule packs'
-        'plugins:List installed plugins'
-        'privacy:Show privacy guarantees'
-        'profile:Profile scan performance'
-        'suppress:Manage false positive suppressions'
-        'telemetry:Manage telemetry settings'
-        'tune:Tune detection parameters'
-        'validate-rule:Validate a rule file'
-        'auth:Manage authentication and API keys'
-        'completion:Generate shell completion'
-    )
-    _describe 'command' commands
-}
-_raxe
-"""
-    elif shell == "fish":
-        script = """
-# RAXE fish completion
-complete -c raxe -f -a "init setup scan batch test stats export repl rules"
-complete -c raxe -f -a "doctor pack plugins privacy profile suppress telemetry tune auth"
-complete -c raxe -f -a "init" -d "Initialize RAXE configuration"
-complete -c raxe -f -a "setup" -d "Interactive setup wizard"
-complete -c raxe -f -a "scan" -d "Scan text for threats"
-complete -c raxe -f -a "batch" -d "Batch scan prompts from file"
-complete -c raxe -f -a "test" -d "Test configuration"
-complete -c raxe -f -a "stats" -d "Show statistics"
-complete -c raxe -f -a "export" -d "Export scan history"
-complete -c raxe -f -a "repl" -d "Interactive shell"
-complete -c raxe -f -a "rules" -d "Manage detection rules"
-complete -c raxe -f -a "doctor" -d "Run health checks"
-complete -c raxe -f -a "pack" -d "Manage rule packs"
-complete -c raxe -f -a "plugins" -d "List installed plugins"
-complete -c raxe -f -a "privacy" -d "Show privacy guarantees"
-complete -c raxe -f -a "profile" -d "Profile scan performance"
-complete -c raxe -f -a "suppress" -d "Manage suppressions"
-complete -c raxe -f -a "telemetry" -d "Manage telemetry settings"
-complete -c raxe -f -a "tune" -d "Tune detection parameters"
-complete -c raxe -f -a "validate-rule" -d "Validate a rule file"
-complete -c raxe -f -a "auth" -d "Manage authentication and API keys"
-"""
-    elif shell == "powershell":
-        script = """
-# RAXE PowerShell completion
-Register-ArgumentCompleter -Native -CommandName raxe -ScriptBlock {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    $commands = @(
-        'init', 'setup', 'scan', 'batch', 'test', 'stats', 'export', 'repl',
-        'rules', 'doctor', 'pack', 'plugins', 'privacy', 'profile', 'suppress',
-        'telemetry', 'tune', 'auth', 'completion'
-    )
-    $commands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-    }
-}
-"""
-    else:
-        raise click.BadParameter(
-            f"Unsupported shell: {shell}. Supported: bash, zsh, fish, powershell"
-        )
-    click.echo(script)
+    comp_cls = get_completion_class(shell)
+    if comp_cls is None:
+        raise click.ClickException(f"Completion not supported for shell: {shell}")
+    comp = comp_cls(cli, {}, "raxe", "_RAXE_COMPLETE")
+    click.echo(comp.source())
 
 
 # Register new commands

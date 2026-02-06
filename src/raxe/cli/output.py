@@ -446,3 +446,89 @@ def display_info(message: str, details: str | None = None) -> None:
         console.print(f"[dim]{details}[/dim]")
 
     console.print()
+
+
+def display_scan_result_table(result: ScanPipelineResult) -> None:
+    """Display scan result as a table.
+
+    Shows a detections table when threats are found, or a summary row when safe.
+
+    Args:
+        result: Scan pipeline result from Raxe client
+    """
+    scan_result = result.scan_result
+    l1_result = scan_result.l1_result
+    l2_result = scan_result.l2_result
+
+    detections = list(l1_result.detections)
+
+    # Collect L2 predictions as pseudo-detections
+    l2_entries = []
+    if l2_result and l2_result.has_predictions:
+        for p in l2_result.predictions:
+            l2_entries.append(p)
+
+    if scan_result.has_threats and (detections or l2_entries):
+        # Detections table
+        table = Table(title="Scan Results", show_lines=True)
+        table.add_column("Rule ID", style="bold")
+        table.add_column("Severity")
+        table.add_column("Confidence", justify="right")
+        table.add_column("Layer")
+        table.add_column("Description")
+
+        for d in detections:
+            sev = d.severity
+            sev_color = get_severity_color(sev)
+            conf_str = f"{d.confidence * 100:.1f}%"
+            msg = getattr(d, "message", "") or ""
+            table.add_row(
+                d.rule_id,
+                Text(sev.value, style=sev_color),
+                conf_str,
+                "L1",
+                msg,
+            )
+
+        for p in l2_entries:
+            if p.confidence >= 0.8:
+                sev_str = "HIGH"
+                sev_color = "red"
+            elif p.confidence >= 0.6:
+                sev_str = "MEDIUM"
+                sev_color = "yellow"
+            else:
+                sev_str = "LOW"
+                sev_color = "blue"
+            conf_str = f"{p.confidence * 100:.1f}%"
+            msg = p.explanation or f"{p.threat_type.value} detected"
+            table.add_row(
+                f"L2-{p.threat_type.value}",
+                Text(sev_str, style=sev_color),
+                conf_str,
+                "L2",
+                msg,
+            )
+
+        console.print(table)
+    else:
+        # Summary table for safe result
+        table = Table(show_lines=True)
+        table.add_column("Status")
+        table.add_column("Severity")
+        table.add_column("Detections", justify="right")
+        table.add_column("L1 Time", justify="right")
+        table.add_column("Total Time", justify="right")
+
+        l1_time = f"{l1_result.scan_duration_ms:.1f}ms"
+        total_time = f"{result.duration_ms:.1f}ms"
+
+        table.add_row(
+            Text("SAFE", style="green bold"),
+            "NONE",
+            "0",
+            l1_time,
+            total_time,
+        )
+
+        console.print(table)

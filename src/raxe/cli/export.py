@@ -15,6 +15,7 @@ from raxe.cli.output import console, create_progress_bar, display_error, display
 @click.command()
 @click.option(
     "--format",
+    "output_format",
     type=click.Choice(["json", "csv"]),
     default="json",
     help="Output format (default: json)",
@@ -55,7 +56,7 @@ def export(output_format: str, output: str | None, days: int) -> None:
     try:
         # Determine output file
         if output is None:
-            output = f"raxe_export.{format}"
+            output = f"raxe_export.{output_format}"
 
         output_path = Path(output)
 
@@ -82,7 +83,7 @@ def export(output_format: str, output: str | None, days: int) -> None:
         console.print()
         display_success(
             f"Exported {len(data)} scans to {output_path}",
-            f"Format: {format.upper()}, Period: {days} days",
+            f"Format: {output_format.upper()}, Period: {days} days",
         )
 
     except Exception as e:
@@ -104,9 +105,10 @@ def _load_scan_history(days: int) -> list[dict]:
     # In production, this would query the SQLite database
     # For now, return sample data
 
-    datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
     # TODO: Integrate with actual telemetry database
+    _ = cutoff_date  # Will be used when real database is integrated
     # from raxe.infrastructure.telemetry.queue import TelemetryQueue
     # queue = TelemetryQueue()
     # return queue.get_history(since=cutoff_date)

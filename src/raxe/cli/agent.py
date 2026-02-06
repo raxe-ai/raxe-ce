@@ -9,17 +9,16 @@ import json
 import sys
 
 import click
-from rich.console import Console
 from rich.table import Table
 
 from raxe.application.mssp_service import create_mssp_service
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
+from raxe.cli.output import console
 from raxe.infrastructure.agent.registry import get_agent_registry
 from raxe.infrastructure.mssp.yaml_repository import (
     CustomerNotFoundError,
     MSSPNotFoundError,
 )
-
-console = Console()
 
 
 class AgentNotFoundError(Exception):
@@ -74,7 +73,7 @@ def list_agents(mssp_id: str, customer_id: str | None, output: str):
         service.get_mssp(mssp_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Verify customer exists if specified
     if customer_id:
@@ -82,7 +81,7 @@ def list_agents(mssp_id: str, customer_id: str | None, output: str):
             service.get_customer(mssp_id, customer_id)
         except CustomerNotFoundError as e:
             console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-            sys.exit(1)
+            sys.exit(EXIT_CONFIG_ERROR)
 
     # Get agents from registry (populated by heartbeat service)
     registry = get_agent_registry()
@@ -161,14 +160,14 @@ def agent_status(mssp_id: str, customer_id: str, agent_id: str, output: str):
         service.get_mssp(mssp_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Verify customer exists
     try:
         service.get_customer(mssp_id, customer_id)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Look up agent from registry
     registry = get_agent_registry()
@@ -179,17 +178,17 @@ def agent_status(mssp_id: str, customer_id: str, agent_id: str, output: str):
         console.print()
         console.print("Agents are registered when they send heartbeats.")
         console.print("Ensure the agent is deployed and configured with the correct API key.")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Verify agent belongs to the specified MSSP/customer
     if agent_data.get("mssp_id") != mssp_id:
         console.print(f"[red]Error:[/red] Agent '{agent_id}' does not belong to MSSP '{mssp_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
     if agent_data.get("customer_id") != customer_id:
         console.print(
             f"[red]Error:[/red] Agent '{agent_id}' does not belong to customer '{customer_id}'"
         )
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     if output == "json":
         console.print(json.dumps(agent_data, indent=2))
@@ -282,14 +281,14 @@ def register_agent(
         service.get_mssp(mssp_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Verify customer exists
     try:
         service.get_customer(mssp_id, customer_id)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Use current platform if not specified
     if not platform:
@@ -348,7 +347,7 @@ def send_heartbeat(agent_id: str, scans: int, threats: int):
         console.print(f"[red]Error:[/red] Agent '{agent_id}' not found")
         console.print()
         console.print("Register the agent first with: raxe agent register")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Send heartbeat with current uptime
     from datetime import datetime, timezone
@@ -395,7 +394,7 @@ def unregister_agent(agent_id: str, force: bool):
 
     if not record:
         console.print(f"[red]Error:[/red] Agent '{agent_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not force:
         console.print(f"About to unregister agent '{agent_id}'")
@@ -412,7 +411,7 @@ def unregister_agent(agent_id: str, force: bool):
         console.print(f"[green]✓[/green] Unregistered agent '{agent_id}'")
     else:
         console.print("[red]Error:[/red] Failed to unregister agent")
-        sys.exit(1)
+        sys.exit(EXIT_SCAN_ERROR)
 
 
 # Export the group

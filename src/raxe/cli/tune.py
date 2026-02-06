@@ -28,12 +28,14 @@ def tune() -> None:
 @tune.command("threshold")
 @click.option(
     "--min",
+    "min_threshold",
     type=float,
     default=0.1,
     help="Minimum threshold to test (default: 0.1)",
 )
 @click.option(
     "--max",
+    "max_threshold",
     type=float,
     default=0.9,
     help="Maximum threshold to test (default: 0.9)",
@@ -90,7 +92,7 @@ def tune_threshold(
         Panel.fit(
             f"[bold cyan]Confidence Threshold Tuning[/bold cyan]\n\n"
             f"Testing {len(test_prompts)} prompts\n"
-            f"Threshold range: {min} to {max} (step: {step})",
+            f"Threshold range: {min_threshold} to {max_threshold} (step: {step})",
             title="RAXE Tune",
         )
     )
@@ -98,10 +100,13 @@ def tune_threshold(
     # Test each threshold
     results = []
     thresholds = []
-    current = min
+    current = min_threshold
 
     with Progress() as progress:
-        task = progress.add_task("[cyan]Testing thresholds...", total=int((max - min) / step) + 1)
+        task = progress.add_task(
+            "[cyan]Testing thresholds...",
+            total=int((max_threshold - min_threshold) / step) + 1,
+        )
 
         while current <= max_threshold:
             thresholds.append(current)
@@ -115,7 +120,7 @@ def tune_threshold(
                     result = raxe.scan(prompt, confidence_threshold=current, entry_point="cli")
                     total_scans += 1
                     total_detections += result.total_detections
-                except Exception:
+                except Exception:  # noqa: S110 - skip failed scans during tuning
                     pass
 
             detection_rate = total_detections / total_scans if total_scans > 0 else 0
@@ -223,7 +228,7 @@ def benchmark_modes(iterations: int, text: str) -> None:
                     result = raxe.scan(text, mode=mode, entry_point="cli")
                     latencies.append(result.duration_ms)
                     detection_counts.append(result.total_detections)
-                except Exception:
+                except Exception:  # noqa: S110 - skip failed scans during benchmarking
                     pass
 
                 progress.update(task, advance=1)
@@ -294,14 +299,16 @@ def benchmark_modes(iterations: int, text: str) -> None:
 
     if "balanced" in mode_results:
         balanced = mode_results["balanced"]
+        avg_lat = balanced["avg_latency"]
         console.print(
-            f"  [cyan]Balanced:[/cyan] Default mode for most use cases (avg: {balanced['avg_latency']:.2f}ms)"
+            f"  [cyan]Balanced:[/cyan] Default mode for most use cases" f" (avg: {avg_lat:.2f}ms)"
         )
 
     if "thorough" in mode_results:
         thorough = mode_results["thorough"]
+        avg_lat_t = thorough["avg_latency"]
         console.print(
-            f"  [cyan]Thorough:[/cyan] Maximum detection coverage (avg: {thorough['avg_latency']:.2f}ms)"
+            f"  [cyan]Thorough:[/cyan] Maximum detection coverage" f" (avg: {avg_lat_t:.2f}ms)"
         )
 
 

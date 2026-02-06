@@ -12,16 +12,15 @@ import json
 import sys
 
 import click
-from rich.console import Console
 
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
+from raxe.cli.output import console
 from raxe.infrastructure.openclaw import (
     ConfigLoadError,
     OpenClawConfigManager,
     OpenClawHookManager,
 )
 from raxe.infrastructure.openclaw.models import OpenClawPaths as _OpenClawPathsClass
-
-console = Console()
 
 
 def _get_openclaw_paths() -> _OpenClawPathsClass:
@@ -74,13 +73,13 @@ def install(force: bool, no_backup: bool) -> None:
             f"[red]Error:[/red] OpenClaw not found. Expected config at: {paths.config_file}"
         )
         console.print("\n[dim]Make sure OpenClaw is installed and configured.[/dim]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Check if already configured
     if config_manager.is_raxe_configured() and not force:
         console.print("[yellow]Warning:[/yellow] RAXE is already configured in OpenClaw.")
         console.print("\nUse [bold]--force[/bold] to reinstall.")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     try:
         # Create backup unless disabled
@@ -101,10 +100,10 @@ def install(force: bool, no_backup: bool) -> None:
 
     except ConfigLoadError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except OSError as e:
         console.print(f"[red]Error:[/red] Failed to write files: {e}")
-        sys.exit(1)
+        sys.exit(EXIT_SCAN_ERROR)
 
 
 @openclaw.command("uninstall")
@@ -144,7 +143,7 @@ def uninstall(force: bool) -> None:
     if not force:
         if not click.confirm("Remove RAXE security hook from OpenClaw?"):
             console.print("[yellow]Aborted.[/yellow]")
-            sys.exit(1)
+            return
 
     try:
         # Remove hook files
@@ -161,10 +160,10 @@ def uninstall(force: bool) -> None:
 
     except ConfigLoadError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except OSError as e:
         console.print(f"[red]Error:[/red] Failed to remove files: {e}")
-        sys.exit(1)
+        sys.exit(EXIT_SCAN_ERROR)
 
 
 @openclaw.command("status")

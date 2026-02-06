@@ -3,14 +3,13 @@
 from pathlib import Path
 
 import click
-from rich.console import Console
 from rich.table import Table
 
+from raxe.cli.output import console
 from raxe.infrastructure.config.yaml_config import RaxeConfig, create_default_config
 from raxe.utils.logging import get_logger
 
 logger = get_logger(__name__)
-console = Console()
 
 
 def _send_key_upgrade_event(old_api_key: str | None, new_api_key: str) -> None:
@@ -230,7 +229,8 @@ def set_value(key: str, value: str, path: Path | None) -> None:
         if key == "core.api_key":
             _send_key_upgrade_event(old_api_key, value)
 
-        console.print(f"[green]✓[/green] Set {key} = {value}")
+        display_value = f"****{value[-4:]}" if "api_key" in key and len(value) > 4 else value
+        console.print(f"[green]✓[/green] Set {key} = {display_value}")
         logger.info("config_set_completed", key=key)
 
     except ValueError as e:

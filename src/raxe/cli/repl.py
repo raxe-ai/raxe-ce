@@ -75,7 +75,7 @@ def repl() -> None:
         console.print()
         console.print("[bold]Alternatives for non-interactive use:[/bold]")
         console.print('  • [cyan]raxe scan "your prompt"[/cyan]  - Single scan command')
-        console.print("  • [cyan]raxe scan --file input.txt[/cyan]  - Scan from file")
+        console.print("  • [cyan]raxe scan --stdin < input.txt[/cyan]  - Scan from file")
         console.print('  • [cyan]echo "prompt" | raxe scan -[/cyan]  - Pipe input')
         raise SystemExit(EXIT_CONFIG_ERROR)
 
@@ -181,8 +181,8 @@ def repl() -> None:
             timeout_seconds=5.0,  # Allow more time for REPL sessions
             end_session=True,
         )
-    except Exception:
-        pass  # Never let telemetry affect REPL exit
+    except Exception:  # noqa: S110 - Never let telemetry affect REPL exit
+        pass
 
     console.print("[cyan]Goodbye![/cyan]")
 

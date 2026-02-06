@@ -12,9 +12,10 @@ import json
 import sys
 
 import click
-from rich.console import Console
 from rich.table import Table
 
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
+from raxe.cli.output import console
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 from raxe.infrastructure.tenants import (
     YamlAppRepository,
@@ -22,8 +23,6 @@ from raxe.infrastructure.tenants import (
     YamlTenantRepository,
     get_tenants_base_path,
 )
-
-console = Console()
 
 
 def _slugify(name: str) -> str:
@@ -135,7 +134,7 @@ def create_app(tenant_id: str, name: str, app_id: str | None, policy: str | None
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Generate app_id if not provided
     if not app_id:
@@ -148,7 +147,7 @@ def create_app(tenant_id: str, name: str, app_id: str | None, policy: str | None
     existing = repo.get_app(app_id, tenant_id)
     if existing:
         console.print(f"[red]Error:[/red] App '{app_id}' already exists in tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Validate policy if provided
     if policy:
@@ -156,7 +155,7 @@ def create_app(tenant_id: str, name: str, app_id: str | None, policy: str | None
         if policy not in available_policies:
             console.print(f"[red]Error:[/red] Invalid policy '{policy}'")
             console.print(f"Valid policies: {', '.join(available_policies)}")
-            sys.exit(1)
+            sys.exit(EXIT_INVALID_INPUT)
 
     # Create app
     now = datetime.now(timezone.utc).isoformat()
@@ -213,7 +212,7 @@ def list_apps(tenant_id: str, output: str):
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     base_path = get_tenants_base_path()
     repo = YamlAppRepository(base_path)
@@ -289,7 +288,7 @@ def show_app(app_id: str, tenant_id: str, output: str):
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     base_path = get_tenants_base_path()
     repo = YamlAppRepository(base_path)
@@ -298,7 +297,7 @@ def show_app(app_id: str, tenant_id: str, output: str):
 
     if not app_obj:
         console.print(f"[red]Error:[/red] App '{app_id}' not found in tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
         data = {
@@ -350,7 +349,7 @@ def delete_app(app_id: str, tenant_id: str, force: bool):
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     base_path = get_tenants_base_path()
     repo = YamlAppRepository(base_path)
@@ -359,14 +358,14 @@ def delete_app(app_id: str, tenant_id: str, force: bool):
     app_obj = repo.get_app(app_id, tenant_id)
     if not app_obj:
         console.print(f"[red]Error:[/red] App '{app_id}' not found in tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not force:
         msg = f"This will delete app '{app_obj.name}' from tenant '{tenant_id}'."
         console.print(f"[yellow]Warning:[/yellow] {msg}")
         if not click.confirm("Are you sure?"):
             console.print("[dim]Aborted[/dim]")
-            sys.exit(1)
+            return
 
     # Delete app
     repo.delete_app(app_id, tenant_id)
@@ -400,7 +399,7 @@ def set_app_policy(app_id: str, policy: str, tenant_id: str):
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     base_path = get_tenants_base_path()
     repo = YamlAppRepository(base_path)
@@ -409,7 +408,7 @@ def set_app_policy(app_id: str, policy: str, tenant_id: str):
     app_obj = repo.get_app(app_id, tenant_id)
     if not app_obj:
         console.print(f"[red]Error:[/red] App '{app_id}' not found in tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Handle 'inherit' to remove policy override
     new_policy: str | None = None
@@ -420,7 +419,7 @@ def set_app_policy(app_id: str, policy: str, tenant_id: str):
             console.print(f"[red]Error:[/red] Invalid policy '{policy}'")
             console.print(f"Valid policies: {', '.join(available_policies)}")
             console.print("Use 'inherit' to remove policy override")
-            sys.exit(1)
+            sys.exit(EXIT_INVALID_INPUT)
         new_policy = policy
 
     old_policy = app_obj.default_policy_id

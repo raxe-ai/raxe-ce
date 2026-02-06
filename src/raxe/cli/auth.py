@@ -769,6 +769,7 @@ def auth_status(remote: bool) -> None:
     # 3. credentials.json (auto-generated from raxe auth)
     api_key = None
     api_key_source = None
+    config = None
 
     # Priority 1: Environment variable
     env_api_key = os.environ.get("RAXE_API_KEY", "").strip()

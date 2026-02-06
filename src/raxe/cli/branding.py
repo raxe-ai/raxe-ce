@@ -106,6 +106,17 @@ COMMAND_CATEGORIES = {
         ("models", "List ML model information"),
         ("event", "Send custom telemetry events"),
         ("serve", "Start JSON-RPC server for AI platforms"),
+        ("mcp", "MCP security gateway commands"),
+        ("openclaw", "OpenClaw integration commands"),
+        ("dashboard", "Launch monitoring dashboard"),
+    ],
+    "enterprise": [
+        ("tenant", "Manage multi-tenant isolation"),
+        ("policy", "Manage detection policies"),
+        ("mssp", "Manage MSSP/partner configuration"),
+        ("customer", "Manage MSSP customers"),
+        ("agent", "Manage deployed agents"),
+        ("app", "Manage customer applications"),
     ],
     "reference": [
         ("privacy", "Show privacy guarantees"),
@@ -254,11 +265,12 @@ def print_full_help(console: Console):
         "common": "COMMON",
         "power": "POWER USER",
         "advanced": "ADVANCED",
+        "enterprise": "ENTERPRISE / MULTI-TENANT",
         "reference": "REFERENCE",
     }
 
     # Print each category
-    for category_key in ["essential", "common", "power", "advanced", "reference"]:
+    for category_key in ["essential", "common", "power", "advanced", "enterprise", "reference"]:
         commands = COMMAND_CATEGORIES[category_key]
         title = category_titles[category_key]
 

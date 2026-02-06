@@ -21,6 +21,7 @@ from raxe.utils.profiler import ScanProfiler
 )
 @click.option(
     "--format",
+    "output_format",
     type=click.Choice(["tree", "table", "json"]),
     default="tree",
     help="Output format (default: tree)",
@@ -44,7 +45,7 @@ def profile_command(text: str, l2: bool, output_format: str) -> None:
     from raxe.cli.branding import print_logo
 
     # Show compact logo for text output
-    if format in ("tree", "table"):
+    if output_format in ("tree", "table"):
         print_logo(console, compact=True)
         console.print()
 

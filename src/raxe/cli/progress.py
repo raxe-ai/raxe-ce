@@ -306,7 +306,10 @@ class SimpleProgress(ProgressIndicator):
 
     def _log(self, message: str) -> None:
         """Print timestamped message to stderr."""
-        time.strftime("%Y-%m-%d %H:%M:%S")
+        import click
+
+        timestamp = time.strftime("%H:%M:%S")
+        click.echo(f"[{timestamp}] {message}", err=True)
 
     def _get_label(self, name: str, metadata: dict | None = None) -> str:
         """Get simple label for component."""
@@ -348,7 +351,9 @@ class QuietProgress(ProgressIndicator):
 
     def error(self, component: str, message: str) -> None:
         # Errors must always be shown
-        pass
+        import click
+
+        click.echo(f"Error [{component}]: {message}", err=True)
 
 
 def create_progress_indicator(mode: str) -> ProgressIndicator:

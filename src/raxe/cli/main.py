@@ -460,6 +460,88 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
     return pattern, "SUPPRESS"
 
 
+def _collect_detections(result) -> dict:
+    """Collect scan detections into a structured dict for JSON/YAML output."""
+    # Collect L1 detections
+    l1_detections = []
+    for d in result.scan_result.l1_result.detections:
+        detection_dict = {
+            "rule_id": d.rule_id,
+            "severity": d.severity.value,
+            "confidence": d.confidence,
+            "layer": "L1",
+            "message": getattr(d, "message", ""),
+        }
+        if getattr(d, "is_flagged", False):
+            detection_dict["is_flagged"] = True
+            if getattr(d, "suppression_reason", None):
+                detection_dict["flag_reason"] = d.suppression_reason
+        l1_detections.append(detection_dict)
+
+    # Collect L2 predictions
+    l2_detections = []
+    if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
+        for p in result.scan_result.l2_result.predictions:
+            if p.confidence >= 0.8:
+                severity = "high"
+            elif p.confidence >= 0.6:
+                severity = "medium"
+            else:
+                severity = "low"
+
+            family = p.metadata.get("family")
+            sub_family = p.metadata.get("sub_family")
+            scores = p.metadata.get("scores", {})
+            why_it_hit = p.metadata.get("why_it_hit", [])
+            recommended_action = p.metadata.get("recommended_action", [])
+
+            detection = {
+                "rule_id": f"L2-{p.threat_type.value}",
+                "severity": severity,
+                "confidence": p.confidence,
+                "layer": "L2",
+                "message": p.explanation or f"{p.threat_type.value} detected",
+            }
+
+            if family:
+                detection["family"] = family
+            if sub_family:
+                detection["sub_family"] = sub_family
+            if scores:
+                detection["scores"] = scores
+            if why_it_hit:
+                detection["why_it_hit"] = why_it_hit
+            if recommended_action:
+                detection["recommended_action"] = recommended_action
+
+            l2_detections.append(detection)
+
+    output = {
+        "has_detections": result.scan_result.has_threats,
+        "detections": l1_detections + l2_detections,
+        "duration_ms": result.duration_ms,
+        "l1_count": len(l1_detections),
+        "l2_count": len(l2_detections),
+    }
+
+    # Add policy attribution if available (multi-tenant mode)
+    if result.metadata:
+        if result.metadata.get("effective_policy_id"):
+            output["policy"] = {
+                "effective_policy_id": result.metadata.get("effective_policy_id"),
+                "effective_policy_mode": result.metadata.get("effective_policy_mode"),
+                "resolution_source": result.metadata.get("resolution_source"),
+            }
+        if result.metadata.get("tenant_id"):
+            output["tenant_id"] = result.metadata.get("tenant_id")
+        if result.metadata.get("app_id"):
+            output["app_id"] = result.metadata.get("app_id")
+        if result.metadata.get("event_id"):
+            output["event_id"] = result.metadata.get("event_id")
+
+    return output
+
+
 @cli.command()
 @click.argument("text", required=False)
 @click.option(
@@ -470,7 +552,7 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
 @click.option(
     "--format",
     "output_format",
-    type=click.Choice(["text", "json", "yaml", "table"]),
+    type=click.Choice(["text", "json", "yaml"]),
     default="text",
     help="Output format (default: text)",
 )
@@ -503,7 +585,7 @@ def parse_suppress_pattern(pattern: str) -> tuple[str, str]:
 )
 @click.option(
     "--confidence",
-    type=float,
+    type=click.FloatRange(0.0, 1.0),
     help="Minimum confidence threshold (0.0-1.0)",
 )
 @click.option(
@@ -575,31 +657,34 @@ def scan(
     Scan text for security threats.
 
     \b
+    INPUT:
+      TEXT argument, --stdin flag, or pipe input
+
+    \b
+    OUTPUT OPTIONS:
+      --format text|json|yaml    Output format
+      --explain                  Show detection explanations
+      --ci                       CI/CD mode (JSON + exit code 1)
+
+    \b
+    DETECTION TUNING:
+      --l1-only / --l2-only      Limit detection layers
+      --confidence 0.0-1.0       Minimum confidence threshold
+      --mode fast|balanced|thorough
+      --suppress RULE            Suppress rules for this scan
+
+    \b
+    MULTI-TENANT:
+      --tenant / --app / --policy / --mssp / --customer
+
+    \b
     Examples:
       raxe scan "Ignore all previous instructions"
       echo "test" | raxe scan --stdin
       raxe scan "prompt" --format json
       raxe scan "text" --l1-only --mode fast
-      raxe scan "text" --confidence 0.8 --explain
-      raxe scan "text" --ci  # CI/CD mode (JSON, exit 1 on threats)
-      raxe --quiet scan "text"  # Same as --ci
-
-    \b
-    Suppression Examples:
-      raxe scan "text" --suppress pi-001                  # Suppress single rule
-      raxe scan "text" --suppress pi-001 --suppress jb-*  # Multiple suppressions
-      raxe scan "text" --suppress "pi-001:FLAG"           # Flag instead of suppress
-
-    \b
-    Multi-Tenant Examples:
-      raxe scan "text" --tenant acme                      # Use tenant's default policy
-      raxe scan "text" --tenant acme --app chatbot        # Use app's policy override
-      raxe scan "text" --tenant acme --policy strict      # Override with specific policy
-
-    \b
-    MSSP/Partner Examples:
-      raxe scan "text" --mssp mssp_partner --customer cust_acme  # Scan with MSSP context
-      # Alerts are sent to MSSP webhook with customer-specific data mode
+      raxe scan "text" --tenant acme --policy strict
+      raxe scan "text" --mssp mssp_partner --customer cust_acme
 
     \b
     Exit Codes (for CI/CD integration):
@@ -614,6 +699,11 @@ def scan(
     quiet = ctx.obj.get("quiet", False) or ci
     verbose = ctx.obj.get("verbose", False) and not ci  # CI mode overrides verbose
     no_color = ctx.obj.get("no_color", False) or ci  # CI mode implies no color
+
+    # Validate mutually exclusive flags
+    if l1_only and l2_only:
+        display_error("Cannot use both --l1-only and --l2-only simultaneously")
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Auto-enable quiet mode for JSON/YAML formats to prevent progress contamination
     if output_format in ("json", "yaml"):
@@ -763,7 +853,7 @@ def scan(
                 )
 
                 # Show scan result first
-                if format == "text":
+                if output_format == "text":
                     no_color = ctx.obj.get("no_color", False)
                     display_scan_result(result, no_color=no_color, explain=explain)
 
@@ -853,153 +943,14 @@ def scan(
 
     # Output based on format
     if output_format == "json" and not profile:
-        # Collect L1 detections
-        l1_detections = []
-        for d in result.scan_result.l1_result.detections:
-            detection_dict = {
-                "rule_id": d.rule_id,
-                "severity": d.severity.value,
-                "confidence": d.confidence,
-                "layer": "L1",
-                "message": getattr(d, "message", ""),
-            }
-            # Include flag status if flagged
-            if getattr(d, "is_flagged", False):
-                detection_dict["is_flagged"] = True
-                if getattr(d, "suppression_reason", None):
-                    detection_dict["flag_reason"] = d.suppression_reason
-            l1_detections.append(detection_dict)
-
-        # Collect L2 predictions
-        l2_detections = []
-        if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
-            for p in result.scan_result.l2_result.predictions:
-                # Map confidence to severity
-                if p.confidence >= 0.8:
-                    severity = "high"
-                elif p.confidence >= 0.6:
-                    severity = "medium"
-                else:
-                    severity = "low"
-
-                # Extract family/subfamily from bundle metadata if available
-                family = p.metadata.get("family")
-                sub_family = p.metadata.get("sub_family")
-                scores = p.metadata.get("scores", {})
-                why_it_hit = p.metadata.get("why_it_hit", [])
-                recommended_action = p.metadata.get("recommended_action", [])
-
-                detection = {
-                    "rule_id": f"L2-{p.threat_type.value}",
-                    "severity": severity,
-                    "confidence": p.confidence,
-                    "layer": "L2",
-                    "message": p.explanation or f"{p.threat_type.value} detected",
-                }
-
-                # Add ML model metadata fields if available
-                if family:
-                    detection["family"] = family
-                if sub_family:
-                    detection["sub_family"] = sub_family
-                if scores:
-                    detection["scores"] = scores
-                if why_it_hit:
-                    detection["why_it_hit"] = why_it_hit
-                if recommended_action:
-                    detection["recommended_action"] = recommended_action
-
-                l2_detections.append(detection)
-
-        output = {
-            "has_detections": result.scan_result.has_threats,
-            "detections": l1_detections + l2_detections,
-            "duration_ms": result.duration_ms,
-            "l1_count": len(l1_detections),
-            "l2_count": len(l2_detections),
-        }
-
-        # Add policy attribution if available (multi-tenant mode)
-        if result.metadata:
-            if result.metadata.get("effective_policy_id"):
-                output["policy"] = {
-                    "effective_policy_id": result.metadata.get("effective_policy_id"),
-                    "effective_policy_mode": result.metadata.get("effective_policy_mode"),
-                    "resolution_source": result.metadata.get("resolution_source"),
-                }
-            if result.metadata.get("tenant_id"):
-                output["tenant_id"] = result.metadata.get("tenant_id")
-            if result.metadata.get("app_id"):
-                output["app_id"] = result.metadata.get("app_id")
-            if result.metadata.get("event_id"):
-                output["event_id"] = result.metadata.get("event_id")
-
+        output = _collect_detections(result)
         click.echo(json.dumps(output, indent=2))
 
     elif output_format == "yaml" and not profile:
         try:
             import yaml
 
-            # Collect L1 detections
-            l1_detections = []
-            for d in result.scan_result.l1_result.detections:
-                detection_dict = {
-                    "rule_id": d.rule_id,
-                    "severity": d.severity.value,
-                    "confidence": d.confidence,
-                    "layer": "L1",
-                    "message": getattr(d, "message", ""),
-                }
-                # Include flag status if flagged
-                if getattr(d, "is_flagged", False):
-                    detection_dict["is_flagged"] = True
-                    if getattr(d, "suppression_reason", None):
-                        detection_dict["flag_reason"] = d.suppression_reason
-                l1_detections.append(detection_dict)
-
-            # Collect L2 predictions
-            l2_detections = []
-            if result.scan_result.l2_result and result.scan_result.l2_result.has_predictions:
-                for p in result.scan_result.l2_result.predictions:
-                    # Map confidence to severity
-                    if p.confidence >= 0.8:
-                        severity = "high"
-                    elif p.confidence >= 0.6:
-                        severity = "medium"
-                    else:
-                        severity = "low"
-
-                    l2_detections.append(
-                        {
-                            "rule_id": f"L2-{p.threat_type.value}",
-                            "severity": severity,
-                            "confidence": p.confidence,
-                            "layer": "L2",
-                            "message": p.explanation or f"{p.threat_type.value} detected",
-                        }
-                    )
-
-            output = {
-                "has_detections": result.scan_result.has_threats,
-                "detections": l1_detections + l2_detections,
-                "duration_ms": result.duration_ms,
-                "l1_count": len(l1_detections),
-                "l2_count": len(l2_detections),
-            }
-
-            # Add policy attribution if available (multi-tenant mode)
-            if result.metadata:
-                if result.metadata.get("effective_policy_id"):
-                    output["policy"] = {
-                        "effective_policy_id": result.metadata.get("effective_policy_id"),
-                        "effective_policy_mode": result.metadata.get("effective_policy_mode"),
-                        "resolution_source": result.metadata.get("resolution_source"),
-                    }
-                if result.metadata.get("tenant_id"):
-                    output["tenant_id"] = result.metadata.get("tenant_id")
-                if result.metadata.get("app_id"):
-                    output["app_id"] = result.metadata.get("app_id")
-
+            output = _collect_detections(result)
             click.echo(yaml.dump(output))
         except ImportError:
             display_error("PyYAML not installed", "Use --format json instead")

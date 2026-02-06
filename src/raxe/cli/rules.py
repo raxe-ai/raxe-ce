@@ -10,7 +10,7 @@ from rich.table import Table
 from rich.text import Text
 
 from raxe.cli.custom_rules import custom_rules
-from raxe.cli.output import console, display_error
+from raxe.cli.output import console, display_error, get_severity_color
 from raxe.domain.rules.models import RuleFamily, Severity
 from raxe.sdk.client import Raxe
 from raxe.utils.error_sanitizer import sanitize_error_message
@@ -319,9 +319,8 @@ def test_rule(rule_id: str, text: str) -> None:
                 console.print(f"  Position: chars {detail['start']}-{detail['end']}")
                 console.print()
 
-            console.print(
-                f"[bold]Severity:[/bold] [{_get_severity_color(rule.severity)}]{rule.severity.value}[/]"
-            )
+            sev_color = get_severity_color(rule.severity)
+            console.print(f"[bold]Severity:[/bold] [{sev_color}]{rule.severity.value}[/]")
             console.print(f"[bold]Confidence:[/bold] {rule.confidence * 100:.1f}%")
         else:
             console.print("[yellow bold]✗ NO MATCH[/yellow bold]")
@@ -401,7 +400,7 @@ def rules_stats() -> None:
         count = stats_by_severity.get(severity, 0)
         if count > 0:
             pct = (count / len(all_rules)) * 100
-            color = _get_severity_color(Severity(severity))
+            color = get_severity_color(Severity(severity))
             console.print(f"  [{color}]{severity.upper():8s}[/] {count:3d} rules ({pct:5.1f}%)")
     console.print()
 
@@ -416,7 +415,7 @@ def _display_rules_table(rules: list) -> None:
     table.add_column("Confidence", justify="right", no_wrap=True)
 
     for rule in sorted(rules, key=lambda r: (r.family.value, r.rule_id)):
-        severity_color = _get_severity_color(rule.severity)
+        severity_color = get_severity_color(rule.severity)
         severity_text = Text(rule.severity.value.upper(), style=severity_color)
         confidence_pct = f"{rule.confidence * 100:.0f}%"
 
@@ -454,8 +453,11 @@ def _display_rules_tree(rules: list) -> None:
         family_branch = root.add(f"[bold blue]{family}[/bold blue] ({len(family_rules)} rules)")
 
         for rule in sorted(family_rules, key=lambda r: r.rule_id):
-            severity_color = _get_severity_color(rule.severity)
-            rule_text = f"[cyan]{rule.rule_id}[/cyan]  {rule.name}  [{severity_color}]{rule.severity.value.upper()}[/]"
+            severity_color = get_severity_color(rule.severity)
+            sev_val = rule.severity.value.upper()
+            rule_text = (
+                f"[cyan]{rule.rule_id}[/cyan]  {rule.name}" f"  [{severity_color}]{sev_val}[/]"
+            )
             family_branch.add(rule_text)
 
     console.print(root)
@@ -465,7 +467,7 @@ def _display_rule_details(rule) -> None:
     """Display detailed information about a rule."""
 
     # Header panel
-    severity_color = _get_severity_color(rule.severity)
+    severity_color = get_severity_color(rule.severity)
     header = Text()
     header.append(f"{rule.rule_id}@{rule.version}", style="cyan bold")
     header.append(" - ", style="dim")
@@ -529,18 +531,6 @@ def _display_rule_details(rule) -> None:
         if rule.metrics.f1_score:
             console.print(f"  F1 Score: {rule.metrics.f1_score * 100:.1f}%")
         console.print()
-
-
-def _get_severity_color(severity: Severity) -> str:
-    """Get rich color for severity level."""
-    color_map = {
-        Severity.CRITICAL: "red bold",
-        Severity.HIGH: "red",
-        Severity.MEDIUM: "yellow",
-        Severity.LOW: "blue",
-        Severity.INFO: "green",
-    }
-    return color_map.get(severity, "white")
 
 
 # Add custom rules subcommand

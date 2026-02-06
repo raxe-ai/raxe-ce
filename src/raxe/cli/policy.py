@@ -20,7 +20,6 @@ import json
 import sys
 
 import click
-from rich.console import Console
 from rich.table import Table
 
 from raxe.application import (
@@ -33,10 +32,10 @@ from raxe.application import (
     UpdatePolicyRequest,
     create_tenant_service,
 )
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
+from raxe.cli.output import console
 from raxe.domain.tenants.models import TenantPolicy
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
-
-console = Console()
 
 
 def _policy_to_dict(p: TenantPolicy) -> dict:
@@ -170,7 +169,7 @@ def list_policies(tenant_id: str | None, output: str):
         tenant = service.get_tenant(tenant_id)
     except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     policies = service.list_policies(tenant_id)
 
@@ -259,7 +258,7 @@ def show_policy(policy_id: str, tenant_id: str | None, output: str):
         console.print(f"[red]Error:[/red] Policy '{policy_id}' not found")
         if not tenant_id:
             console.print("[dim]Tip: Use --tenant <id> for tenant-specific policies[/dim]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
         console.print(json.dumps(_policy_to_dict(policy_obj), indent=2))
@@ -428,12 +427,12 @@ def create_policy(
         console.print()
         console.print("Create a tenant first with:")
         console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except DuplicateEntityError as e:
         console.print(
             f"[red]Error:[/red] Policy '{e.entity_id}' already exists for tenant '{tenant_id}'"
         )
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     console.print(f"[green]✓[/green] Created policy '{policy_obj.name}'")
     console.print()
@@ -498,27 +497,27 @@ def delete_policy(policy_id: str, tenant_id: str, force: bool):
             console.print(
                 f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'"
             )
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not force:
         msg = f"This will delete policy '{policy_obj.name}' ({policy_id})."
         console.print(f"[yellow]Warning:[/yellow] {msg}")
         if not click.confirm("Are you sure?"):
             console.print("[dim]Aborted[/dim]")
-            sys.exit(1)
+            return
 
     try:
         service.delete_policy(policy_id, tenant_id)
     except ImmutablePresetError:
         console.print(f"[red]Error:[/red] Cannot delete global preset '{policy_id}'")
         console.print("[dim]Global presets are immutable system policies[/dim]")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
     except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except PolicyNotFoundError:
         console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     console.print(f"[green]✓[/green] Deleted policy '{policy_id}'")
     console.print()
@@ -607,7 +606,7 @@ def update_policy(
     if not any(updates):
         console.print("[yellow]Warning:[/yellow] No updates specified")
         console.print("[dim]Use --help to see available options[/dim]")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Get existing policy for displaying change summary
     try:
@@ -623,7 +622,7 @@ def update_policy(
             console.print(
                 f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'"
             )
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Build update request
     request = UpdatePolicyRequest(
@@ -645,13 +644,13 @@ def update_policy(
         console.print("[dim]Global presets are immutable. Create a custom policy instead:[/dim]")
         cmd = f"raxe policy create --tenant {tenant_id} --mode {policy_id} --name 'My Custom'"
         console.print(f"  [cyan]{cmd}[/cyan]")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
     except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except PolicyNotFoundError:
         console.print(f"[red]Error:[/red] Policy '{policy_id}' not found for tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     console.print(f"[green]✓[/green] Updated policy '{policy_id}'")
     console.print()
@@ -744,10 +743,10 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
         console.print()
         console.print("Create a tenant first with:")
         console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except AppNotFoundError:
         console.print(f"[red]Error:[/red] App '{app_id}' not found in tenant '{tenant_id}'")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
         data = {

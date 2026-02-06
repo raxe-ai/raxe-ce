@@ -998,10 +998,10 @@ def display_first_run_message(console: Console) -> None:
     message.append("\n\n", style="")
     message.append("It looks like this is your first time using RAXE.\n\n", style="white")
     message.append("Run '", style="dim")
-    message.append("raxe setup", style="cyan bold")
+    message.append("raxe init", style="cyan bold")
     message.append("' for interactive setup, or:\n", style="dim")
     message.append("  - ", style="dim")
-    message.append("raxe init", style="cyan")
+    message.append("raxe init --quick", style="cyan")
     message.append("     Quick initialization\n", style="dim")
     message.append("  - ", style="dim")
     message.append("raxe --help", style="cyan")
@@ -1184,7 +1184,7 @@ def _quick_init(console: Console) -> None:
     message.append("Try your first scan:\n", style="white")
     message.append('  raxe scan "your text here"\n\n', style="cyan")
     message.append("Or run ", style="dim")
-    message.append("raxe setup", style="cyan")
+    message.append("raxe init", style="cyan")
     message.append(" anytime for full configuration.", style="dim")
 
     console.print(

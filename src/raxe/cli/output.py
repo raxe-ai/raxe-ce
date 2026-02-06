@@ -37,15 +37,30 @@ SEVERITY_ICONS = {
     Severity.INFO: "🟢",
 }
 
+SEVERITY_ICONS_PLAIN = {
+    Severity.CRITICAL: "[!!]",
+    Severity.HIGH: "[!]",
+    Severity.MEDIUM: "[~]",
+    Severity.LOW: "[.]",
+    Severity.INFO: "[+]",
+}
+
 
 def get_severity_color(severity: Severity) -> str:
     """Get rich color string for severity level."""
     return SEVERITY_COLORS.get(severity, "white")
 
 
-def get_severity_icon(severity: Severity) -> str:
-    """Get icon for severity level."""
-    return SEVERITY_ICONS.get(severity, "⚪")
+def get_severity_icon(severity: Severity, use_emoji: bool = True) -> str:
+    """Get icon for severity level.
+
+    Args:
+        severity: Severity level
+        use_emoji: Use emoji icons (True) or ASCII fallbacks (False)
+    """
+    icons = SEVERITY_ICONS if use_emoji else SEVERITY_ICONS_PLAIN
+    default = "⚪" if use_emoji else "[?]"
+    return icons.get(severity, default)
 
 
 def display_scan_result(
@@ -64,17 +79,21 @@ def display_scan_result(
     else:
         console = Console()
 
+    use_emoji = not no_color
     if result.scan_result.has_threats:
-        _display_threat_detected(result, console, explain=explain)
+        _display_threat_detected(result, console, explain=explain, use_emoji=use_emoji)
     else:
-        _display_safe(result, console)
+        _display_safe(result, console, use_emoji=use_emoji)
 
     # Add privacy footer (always visible)
-    _display_privacy_footer(console)
+    _display_privacy_footer(console, use_emoji=use_emoji)
 
 
 def _display_threat_detected(
-    result: ScanPipelineResult, console: Console, explain: bool = False
+    result: ScanPipelineResult,
+    console: Console,
+    explain: bool = False,
+    use_emoji: bool = True,
 ) -> None:
     """Display threat detection results.
 
@@ -85,7 +104,7 @@ def _display_threat_detected(
     """
     # Header
     highest = result.scan_result.combined_severity
-    icon = get_severity_icon(highest)
+    icon = get_severity_icon(highest, use_emoji=use_emoji)
     color = get_severity_color(highest)
 
     header = Text()
@@ -214,11 +233,12 @@ def _display_threat_detected(
     console.print()
 
 
-def _display_safe(result: ScanPipelineResult, console: Console) -> None:
+def _display_safe(result: ScanPipelineResult, console: Console, use_emoji: bool = True) -> None:
     """Display safe scan results."""
     # Create content with scan details
+    safe_icon = "🟢 " if use_emoji else "[+] "
     content = Text()
-    content.append("🟢 ", style="green bold")
+    content.append(safe_icon, style="green bold")
     content.append("SAFE", style="green bold")
     content.append("\n\n", style="")
     content.append("No threats detected", style="green")
@@ -292,10 +312,11 @@ def _display_detection_explanations(detections: list, console: Console) -> None:
         console.print()
 
 
-def _display_privacy_footer(console: Console) -> None:
+def _display_privacy_footer(console: Console, use_emoji: bool = True) -> None:
     """Display privacy guarantee footer."""
+    lock_icon = "🔒 " if use_emoji else "[*] "
     privacy_text = Text()
-    privacy_text.append("🔒 ", style="cyan")
+    privacy_text.append(lock_icon, style="cyan")
     privacy_text.append(
         "Your data stayed private - scanned locally, nothing sent to cloud.", style="cyan"
     )

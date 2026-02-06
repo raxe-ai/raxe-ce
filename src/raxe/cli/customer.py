@@ -12,7 +12,6 @@ import json
 import sys
 
 import click
-from rich.console import Console
 from rich.table import Table
 
 from raxe.application.mssp_service import (
@@ -20,14 +19,14 @@ from raxe.application.mssp_service import (
     CreateCustomerRequest,
     create_mssp_service,
 )
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
+from raxe.cli.output import console
 from raxe.domain.mssp.models import DataMode
 from raxe.infrastructure.mssp.yaml_repository import (
     CustomerNotFoundError,
     DuplicateCustomerError,
     MSSPNotFoundError,
 )
-
-console = Console()
 
 
 @click.group()
@@ -115,14 +114,14 @@ def create_customer(
         console.print()
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except DuplicateCustomerError as e:
         msg = f"Customer '{e.customer_id}' already exists in MSSP '{e.mssp_id}'"
         console.print(f"[red]Error:[/red] {msg}")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
 
 @customer.command("list")
@@ -156,7 +155,7 @@ def list_customers(mssp_id: str, output: str):
         customers = service.list_customers(mssp_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not customers:
         if output == "json":
@@ -236,10 +235,10 @@ def show_customer(mssp_id: str, customer_id: str, output: str):
         customer_obj = service.get_customer(mssp_id, customer_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
         data = {
@@ -333,17 +332,17 @@ def configure_customer(
     # Validate retention days
     if retention_days is not None and not (1 <= retention_days <= 365):
         console.print("[red]Error:[/red] retention-days must be between 1 and 365")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Validate heartbeat threshold
     if heartbeat_threshold is not None and not (60 <= heartbeat_threshold <= 3600):
         console.print("[red]Error:[/red] heartbeat-threshold must be between 60 and 3600")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Validate webhook config
     if webhook_url and not webhook_secret:
         console.print("[red]Error:[/red] --webhook-secret is required when --webhook-url is set")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Validate webhook URL is HTTPS
     if webhook_url:
@@ -355,7 +354,7 @@ def configure_customer(
         )
         if parsed.scheme != "https" and not is_localhost:
             console.print("[red]Error:[/red] Webhook URL must use HTTPS (except localhost)")
-            sys.exit(1)
+            sys.exit(EXIT_INVALID_INPUT)
 
     try:
         # Parse data fields
@@ -387,13 +386,13 @@ def configure_customer(
         console.print()
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
 
 @customer.command("delete")
@@ -424,17 +423,17 @@ def delete_customer(mssp_id: str, customer_id: str, force: bool):
         customer_obj = service.get_customer(mssp_id, customer_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not force:
         msg = f"This will delete customer '{customer_obj.name}'."
         console.print(f"[yellow]Warning:[/yellow] {msg}")
         if not click.confirm("Are you sure?"):
             console.print("[dim]Aborted[/dim]")
-            sys.exit(1)
+            return
 
     service.delete_customer(mssp_id, customer_id)
     console.print(f"[green]✓[/green] Deleted customer '{customer_id}'")
@@ -697,13 +696,13 @@ def configure_siem(
 
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
 
 @customer_siem.command("show")
@@ -735,10 +734,10 @@ def show_siem(mssp_id: str, customer_id: str, output: str):
         customer_obj = service.get_customer(mssp_id, customer_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     siem_config = customer_obj.siem_config
 
@@ -804,15 +803,15 @@ def test_siem(mssp_id: str, customer_id: str):
         customer_obj = service.get_customer(mssp_id, customer_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     siem_config = customer_obj.siem_config
     if siem_config is None:
         console.print(f"[yellow]No SIEM configured for {customer_id}[/yellow]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     from raxe.infrastructure.siem import create_siem_adapter
 
@@ -829,10 +828,10 @@ def test_siem(mssp_id: str, customer_id: str):
         else:
             console.print("[red]✗[/red] SIEM endpoint health check failed")
             console.print(f"  Endpoint: {siem_config.endpoint_url}")
-            sys.exit(1)
+            sys.exit(EXIT_SCAN_ERROR)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_SCAN_ERROR)
 
 
 @customer_siem.command("disable")
@@ -866,10 +865,10 @@ def disable_siem(mssp_id: str, customer_id: str, force: bool):
         customer_obj = service.get_customer(mssp_id, customer_id)
     except MSSPNotFoundError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
     except CustomerNotFoundError as e:
         console.print(f"[red]Error:[/red] Customer '{e.customer_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if customer_obj.siem_config is None:
         console.print(f"[yellow]No SIEM configured for {customer_id}[/yellow]")

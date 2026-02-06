@@ -17,17 +17,16 @@ import sys
 from pathlib import Path
 
 import click
-from rich.console import Console
 from rich.table import Table
 
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
+from raxe.cli.output import console
 from raxe.domain.suppression import SuppressionAction, SuppressionValidationError
 from raxe.domain.suppression_factory import (
     create_suppression_manager,
     create_suppression_manager_with_yaml,
 )
 from raxe.infrastructure.tenants import get_tenants_base_path
-
-console = Console()
 
 
 def _get_tenant_suppression_path(tenant_id: str) -> Path:
@@ -76,7 +75,7 @@ def _get_suppression_config_path(config: str | None, tenant_id: str | None) -> P
             console.print()
             console.print("Create a tenant first with:")
             console.print(f"  [cyan]raxe tenant create --name 'My Tenant' --id {tenant_id}[/cyan]")
-            sys.exit(1)
+            sys.exit(EXIT_CONFIG_ERROR)
         return _get_tenant_suppression_path(tenant_id)
     return None
 
@@ -191,10 +190,10 @@ def add_suppression(
     except SuppressionValidationError as e:
         console.print(f"[red]Error:[/red] {e}")
         console.print(PATTERN_EXAMPLES)
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
 
 @suppress.command("list")
@@ -365,7 +364,7 @@ def show_suppression(pattern: str, tenant_id: str | None, config: str | None):
 
     if not suppression:
         console.print(f"[yellow]Suppression not found:[/yellow] {pattern}")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Show details
     console.print()

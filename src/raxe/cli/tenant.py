@@ -12,7 +12,6 @@ import json
 import sys
 
 import click
-from rich.console import Console
 from rich.table import Table
 
 from raxe.application import (
@@ -21,10 +20,10 @@ from raxe.application import (
     TenantNotFoundError,
     create_tenant_service,
 )
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
+from raxe.cli.output import console
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 from raxe.infrastructure.tenants import get_tenants_base_path
-
-console = Console()
 
 
 @click.group()
@@ -82,7 +81,7 @@ def create_tenant(name: str, tenant_id: str | None, policy: str):
         console.print()
     except DuplicateEntityError as e:
         console.print(f"[red]Error:[/red] Tenant '{e.entity_id}' already exists")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
 
 @tenant.command("list")
@@ -174,7 +173,7 @@ def show_tenant(tenant_id: str, output: str):
         tenant_obj = service.get_tenant(tenant_id)
     except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
         data = {
@@ -235,14 +234,14 @@ def delete_tenant(tenant_id: str, force: bool):
         tenant_obj = service.get_tenant(tenant_id)
     except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not force:
         msg = f"This will delete tenant '{tenant_obj.name}' and all its data."
         console.print(f"[yellow]Warning:[/yellow] {msg}")
         if not click.confirm("Are you sure?"):
             console.print("[dim]Aborted[/dim]")
-            sys.exit(1)
+            return
 
     # Delete tenant through service
     service.delete_tenant(tenant_id)
@@ -273,7 +272,7 @@ def set_tenant_policy(tenant_id: str, policy: str):
         if policy not in GLOBAL_PRESETS:
             console.print(f"[red]Error:[/red] Invalid policy '{policy}'")
             console.print(f"Valid policies: {', '.join(GLOBAL_PRESETS.keys())}")
-            sys.exit(1)
+            sys.exit(EXIT_INVALID_INPUT)
 
         # Update tenant default policy
         service.set_tenant_policy(tenant_id, policy)
@@ -285,7 +284,7 @@ def set_tenant_policy(tenant_id: str, policy: str):
         console.print()
     except TenantNotFoundError:
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
 
 # Export the group

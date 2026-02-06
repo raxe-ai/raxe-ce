@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any
 
 import click
-from rich.console import Console
 from rich.table import Table
 
-console = Console()
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
+from raxe.cli.output import console
 
 
 def _check_mcp_available() -> tuple[bool, str | None]:
@@ -132,7 +132,7 @@ def serve(transport: str, log_level: str, quiet: bool) -> None:
             console.print()
         console.print("Install with: [cyan]pip install raxe[mcp][/cyan]")
         console.print("  or: [cyan]pip install mcp[/cyan]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     verbose = log_level == "debug"
 
@@ -154,7 +154,7 @@ def serve(transport: str, log_level: str, quiet: bool) -> None:
         exit_code = 0
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        exit_code = 1
+        exit_code = EXIT_SCAN_ERROR
     finally:
         # Always flush telemetry on exit
         try:
@@ -262,7 +262,7 @@ def gateway(
             console.print(f"[dim]Details: {mcp_error}[/dim]")
             console.print()
         console.print("Install with: [cyan]pip install raxe[mcp][/cyan]")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     from raxe.mcp.config import GatewayConfig, UpstreamConfig
     from raxe.mcp.gateway import RaxeMCPGateway
@@ -295,7 +295,7 @@ def gateway(
         console.print()
         console.print("Specify upstream with: [cyan]--upstream 'command args'[/cyan]")
         console.print("  or provide: [cyan]--config mcp-security.yaml[/cyan]")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
     # Show startup info
     console.print("[bold cyan]RAXE MCP Security Gateway[/bold cyan]")
@@ -330,7 +330,7 @@ def gateway(
             console.print(f"  Total scan time: {stats['total_scan_time_ms']:.1f}ms")
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_SCAN_ERROR)
     finally:
         try:
             from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
@@ -372,7 +372,7 @@ def audit(config_file: str, json_output: bool) -> None:
                 config_data = json.load(f)
     except Exception as e:
         console.print(f"[red]Error loading config:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     # Audit the configuration
     issues = _audit_mcp_config(config_data)

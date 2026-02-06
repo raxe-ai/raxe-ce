@@ -6,13 +6,11 @@ Provides the 'raxe validate-rule' command for community rule authors.
 from pathlib import Path
 
 import click
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from raxe.cli.output import console
 from raxe.domain.rules.validator import RuleValidator
-
-console = Console()
 
 
 @click.command("validate-rule")

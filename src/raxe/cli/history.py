@@ -4,14 +4,13 @@ import json
 from pathlib import Path
 
 import click
-from rich.console import Console
 from rich.table import Table
 
+from raxe.cli.output import console
 from raxe.infrastructure.database.scan_history import ScanHistoryDB
 from raxe.utils.logging import get_logger
 
 logger = get_logger(__name__)
-console = Console()
 
 
 @click.group()
@@ -179,7 +178,7 @@ def stats(days: int) -> None:
     type=click.Path(path_type=Path),
     help="Output file path (default: stdout)",
 )
-@click.option("--format", type=click.Choice(["json", "csv"]), default="json")
+@click.option("--format", "output_format", type=click.Choice(["json", "csv"]), default="json")
 def export(scan_id: int, output: Path | None, output_format: str) -> None:
     """Export scan to JSON or CSV."""
     try:
@@ -221,7 +220,7 @@ def export(scan_id: int, output: Path | None, output_format: str) -> None:
             else:
                 console.print(csv_str)
 
-        logger.info("history_export_completed", scan_id=scan_id, output_format=format)
+        logger.info("history_export_completed", scan_id=scan_id, output_format=output_format)
 
     except Exception as e:
         console.print(f"[red]Error exporting scan:[/red] {e}")

@@ -13,21 +13,20 @@ import os
 import sys
 
 import click
-from rich.console import Console
 from rich.table import Table
 
 from raxe.application.mssp_service import (
     CreateMSSPRequest,
     create_mssp_service,
 )
+from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
+from raxe.cli.output import console
 from raxe.domain.mssp.models import MSSPTier
 from raxe.infrastructure.mssp import get_mssp_base_path
 from raxe.infrastructure.mssp.yaml_repository import (
     DuplicateMSSPError,
     MSSPNotFoundError,
 )
-
-console = Console()
 
 
 @click.group()
@@ -114,10 +113,10 @@ def create_mssp(
         console.print()
     except DuplicateMSSPError as e:
         console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' already exists")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        sys.exit(EXIT_INVALID_INPUT)
 
 
 @mssp.command("list")
@@ -206,7 +205,7 @@ def show_mssp(mssp_id: str, output: str):
         mssp_obj = service.get_mssp(mssp_id)
     except MSSPNotFoundError:
         console.print(f"[red]Error:[/red] MSSP '{mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if output == "json":
         data = {
@@ -267,14 +266,14 @@ def delete_mssp(mssp_id: str, force: bool):
         mssp_obj = service.get_mssp(mssp_id)
     except MSSPNotFoundError:
         console.print(f"[red]Error:[/red] MSSP '{mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not force:
         msg = f"This will delete MSSP '{mssp_obj.name}' and all its customers."
         console.print(f"[yellow]Warning:[/yellow] {msg}")
         if not click.confirm("Are you sure?"):
             console.print("[dim]Aborted[/dim]")
-            sys.exit(1)
+            return
 
     service.delete_mssp(mssp_id)
     console.print(f"[green]✓[/green] Deleted MSSP '{mssp_id}'")
@@ -304,11 +303,11 @@ def test_webhook(mssp_id: str):
         mssp_obj = service.get_mssp(mssp_id)
     except MSSPNotFoundError:
         console.print(f"[red]Error:[/red] MSSP '{mssp_id}' not found")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     if not mssp_obj.webhook_config:
         console.print(f"[red]Error:[/red] MSSP '{mssp_id}' has no webhook configured")
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
     webhook_url = mssp_obj.webhook_config.url
     webhook_secret = mssp_obj.webhook_config.secret
@@ -350,10 +349,10 @@ def test_webhook(mssp_id: str):
         else:
             console.print(f"[red]✗[/red] Webhook test failed (HTTP {response.status_code})")
             console.print(f"  Response: {response.text[:200]}")
-            sys.exit(1)
+            sys.exit(EXIT_SCAN_ERROR)
     except requests.RequestException as e:
         console.print(f"[red]✗[/red] Webhook test failed: {e}")
-        sys.exit(1)
+        sys.exit(EXIT_SCAN_ERROR)
 
 
 @mssp.command("cleanup")
@@ -411,7 +410,7 @@ def cleanup_retention(retention_days: int, dry_run: bool):
         if would_delete > 0:
             console.print(f"\n[yellow]Would delete {would_delete} file(s)[/yellow]")
         else:
-            console.print("[green]No files older than {retention_days} days[/green]")
+            console.print(f"[green]No files older than {retention_days} days[/green]")
     else:
         # Actually delete
         deleted = logger.cleanup_old_logs(retention_days=retention_days)

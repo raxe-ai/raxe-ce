@@ -8,7 +8,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from raxe.cli.output import console
+from raxe.cli.output import console, display_success
 
 
 @click.group()
@@ -123,7 +123,8 @@ def list_models(status: str, runtime: str):
     experimental_count = len([m for m in models_list if m.is_experimental])
 
     console.print(
-        f"[dim]Total: {len(models_list)} models  |  Active: {active_count}  |  Experimental: {experimental_count}[/dim]"
+        f"[dim]Total: {len(models_list)} models  |  Active: {active_count}"
+        f"  |  Experimental: {experimental_count}[/dim]"
     )
     console.print()
 
@@ -382,11 +383,15 @@ def compare_models(model_ids: tuple[str, ...]):
 
     console.print("[bold]Recommendations:[/bold]")
     console.print(
-        f"  ⚡ Fastest: [cyan]{best_latency.model_id}[/cyan] ({best_latency.performance.p95_latency_ms:.1f}ms)"
+        "  ⚡ Fastest: "
+        f"[cyan]{best_latency.model_id}[/cyan]"
+        f" ({best_latency.performance.p95_latency_ms:.1f}ms)"
     )
     if best_accuracy:
         console.print(
-            f"  🎯 Most Accurate: [cyan]{best_accuracy.model_id}[/cyan] ({best_accuracy.accuracy.binary_f1 * 100:.1f}%)"
+            "  🎯 Most Accurate: "
+            f"[cyan]{best_accuracy.model_id}[/cyan]"
+            f" ({best_accuracy.accuracy.binary_f1 * 100:.1f}%)"
         )
     console.print()
 
@@ -482,7 +487,7 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
 
         # Check if already installed
         if is_model_installed(model_id) and not force:
-            console.print(f"[green]✓[/green] {metadata['name']} already installed")
+            display_success(f"{metadata['name']} already installed")
             continue
 
         # Get actual file size from server (fallback to metadata estimate)
@@ -511,17 +516,17 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
                 initial_total = int(metadata["size_mb"]) * 1024 * 1024
             task = progress.add_task(f"Downloading {model_id}...", total=initial_total)
 
-            def update_progress(downloaded: int, total: int) -> None:
+            def update_progress(downloaded: int, total: int, _task: object = task) -> None:
                 if total > 0:
-                    progress.update(task, completed=downloaded, total=total)
+                    progress.update(_task, completed=downloaded, total=total)
                 else:
-                    progress.update(task, completed=downloaded)
+                    progress.update(_task, completed=downloaded)
 
             try:
                 model_path = download_model(
                     model_id, progress_callback=update_progress, force=force
                 )
-                console.print(f"[green]✓[/green] Installed to: {model_path}")
+                display_success(f"Installed to: {model_path}")
                 console.print()
             except Exception as e:
                 console.print(f"[red]✗[/red] Download failed: {e}")

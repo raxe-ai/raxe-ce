@@ -289,7 +289,7 @@ def validate(path: Path | None) -> None:
                 console.print(f"  ✗ {error}")
             raise click.Abort()
         else:
-            console.print("[green]✓ Configuration is valid[/green]")
+            display_success("Configuration is valid")
 
         logger.info("config_validate_completed")
 

@@ -30,7 +30,7 @@ def mock_mssp_path(tmp_path, monkeypatch):
     """Mock MSSP config path to use temp directory."""
     mssp_path = tmp_path / "mssp"
     mssp_path.mkdir()
-    # Patch both infrastructure layer and application layer (where it's imported via 'from ... import')
+    # Patch both infrastructure and application layer imports
     monkeypatch.setattr("raxe.infrastructure.mssp.get_mssp_base_path", lambda: mssp_path)
     monkeypatch.setattr("raxe.application.mssp_service.get_mssp_base_path", lambda: mssp_path)
     return mssp_path
@@ -656,3 +656,41 @@ class TestCustomerSIEMConfigure:
         # Verify output shows the configured type
         assert "arcsight" in result.output.lower()
         assert "configured siem" in result.output.lower()
+
+    def test_help_output_shows_option_groups(self, runner):
+        """Test that --help output displays grouped SIEM options."""
+        result = runner.invoke(customer, ["siem", "configure", "--help"])
+
+        assert result.exit_code == 0
+        help_text = result.output
+        # Verify all option group headers are present
+        assert "Required SIEM Options" in help_text
+        assert "General Options" in help_text
+        assert "Splunk Options" in help_text
+        assert "Azure Sentinel Options" in help_text
+        assert "CrowdStrike LogScale Options" in help_text
+        assert "CEF Transport Options" in help_text
+        assert "ArcSight SmartConnector Options" in help_text
+
+    def test_help_output_groups_options_under_correct_headers(self, runner):
+        """Test that platform-specific options appear after their group header."""
+        result = runner.invoke(customer, ["siem", "configure", "--help"])
+
+        assert result.exit_code == 0
+        help_text = result.output
+        # Options should appear after their respective group header
+        splunk_pos = help_text.index("Splunk Options")
+        assert help_text.index("--index", splunk_pos) > splunk_pos
+        assert help_text.index("--source", splunk_pos) > splunk_pos
+
+        sentinel_pos = help_text.index("Azure Sentinel Options")
+        assert help_text.index("--workspace-id", sentinel_pos) > sentinel_pos
+        assert help_text.index("--log-type", sentinel_pos) > sentinel_pos
+
+        cef_pos = help_text.index("CEF Transport Options")
+        assert help_text.index("--transport", cef_pos) > cef_pos
+        assert help_text.index("--tls", cef_pos) > cef_pos
+
+        arcsight_pos = help_text.index("ArcSight SmartConnector Options")
+        assert help_text.index("--smart-connector-id", arcsight_pos) > arcsight_pos
+        assert help_text.index("--device-vendor", arcsight_pos) > arcsight_pos

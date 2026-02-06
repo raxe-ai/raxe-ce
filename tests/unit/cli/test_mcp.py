@@ -124,7 +124,7 @@ class TestMCPServeCommand:
 
         runner.invoke(cli, ["mcp", "serve"])
 
-        # Telemetry should be flushed
+        # Telemetry should be flushed before sys.exit
         mock_flush.assert_called()
 
 

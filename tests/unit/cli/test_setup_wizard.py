@@ -432,41 +432,32 @@ class TestCompletionInCLI:
         """Create CLI test runner."""
         return CliRunner()
 
-    def test_bash_completion_includes_setup(self, runner):
-        """Test bash completion includes setup command."""
+    def test_bash_completion_generates_output(self, runner):
+        """Test bash completion generates Click-based script."""
         from raxe.cli.main import cli
 
         result = runner.invoke(cli, ["completion", "bash"])
 
         assert result.exit_code == 0
-        assert "setup" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
-    def test_zsh_completion_includes_setup(self, runner):
-        """Test zsh completion includes setup command."""
+    def test_zsh_completion_generates_output(self, runner):
+        """Test zsh completion generates Click-based script."""
         from raxe.cli.main import cli
 
         result = runner.invoke(cli, ["completion", "zsh"])
 
         assert result.exit_code == 0
-        assert "setup" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
-    def test_fish_completion_includes_setup(self, runner):
-        """Test fish completion includes setup command."""
+    def test_fish_completion_generates_output(self, runner):
+        """Test fish completion generates Click-based script."""
         from raxe.cli.main import cli
 
         result = runner.invoke(cli, ["completion", "fish"])
 
         assert result.exit_code == 0
-        assert "setup" in result.output
-
-    def test_powershell_completion_includes_setup(self, runner):
-        """Test PowerShell completion includes setup command."""
-        from raxe.cli.main import cli
-
-        result = runner.invoke(cli, ["completion", "powershell"])
-
-        assert result.exit_code == 0
-        assert "setup" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
 
 class TestAutoLaunchFirstRun:

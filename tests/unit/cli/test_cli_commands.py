@@ -99,37 +99,22 @@ class TestCLICommands:
         assert "interactive" in result.output.lower() or "REPL" in result.output
 
     def test_completion_bash(self, runner):
-        """Test bash completion generation."""
+        """Test bash completion generation (Click built-in)."""
         result = runner.invoke(cli, ["completion", "bash"])
         assert result.exit_code == 0
-        assert "_raxe_completion" in result.output
-        assert "rules" in result.output
-        assert "doctor" in result.output
-        assert "batch" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
     def test_completion_zsh(self, runner):
-        """Test zsh completion generation."""
+        """Test zsh completion generation (Click built-in)."""
         result = runner.invoke(cli, ["completion", "zsh"])
         assert result.exit_code == 0
-        assert "#compdef raxe" in result.output
-        assert "rules" in result.output
-        assert "doctor" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
     def test_completion_fish(self, runner):
-        """Test fish completion generation."""
+        """Test fish completion generation (Click built-in)."""
         result = runner.invoke(cli, ["completion", "fish"])
         assert result.exit_code == 0
-        assert "complete -c raxe" in result.output
-        assert "rules" in result.output
-        assert "doctor" in result.output
-
-    def test_completion_powershell(self, runner):
-        """Test powershell completion generation."""
-        result = runner.invoke(cli, ["completion", "powershell"])
-        assert result.exit_code == 0
-        assert "Register-ArgumentCompleter" in result.output
-        assert "rules" in result.output
-        assert "doctor" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
 
 class TestScanCommand:

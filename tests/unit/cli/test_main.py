@@ -418,7 +418,7 @@ class TestPackCommands:
 
 
 class TestCompletions:
-    """Test shell completion generation."""
+    """Test shell completion generation (uses Click's built-in completion)."""
 
     def test_bash_completion(self):
         """Test bash completion generation."""
@@ -426,8 +426,8 @@ class TestCompletions:
         result = runner.invoke(cli, ["completion", "bash"])
 
         assert result.exit_code == 0
-        assert "bash completion" in result.output.lower()
-        assert "_raxe_completion" in result.output
+        assert "_RAXE_COMPLETE" in result.output
+        assert len(result.output) > 50  # Should generate substantial script
 
     def test_zsh_completion(self):
         """Test zsh completion generation."""
@@ -435,7 +435,7 @@ class TestCompletions:
         result = runner.invoke(cli, ["completion", "zsh"])
 
         assert result.exit_code == 0
-        assert "#compdef raxe" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
     def test_fish_completion(self):
         """Test fish completion generation."""
@@ -443,16 +443,7 @@ class TestCompletions:
         result = runner.invoke(cli, ["completion", "fish"])
 
         assert result.exit_code == 0
-        assert "fish completion" in result.output.lower()
-
-    def test_powershell_completion(self):
-        """Test powershell completion generation."""
-        runner = CliRunner()
-        result = runner.invoke(cli, ["completion", "powershell"])
-
-        assert result.exit_code == 0
-        assert "PowerShell" in result.output
-        assert "Register-ArgumentCompleter" in result.output
+        assert "_RAXE_COMPLETE" in result.output
 
     def test_completion_invalid_shell(self):
         """Test completion with invalid shell."""

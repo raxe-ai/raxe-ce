@@ -12,6 +12,7 @@ import json
 import sys
 
 import click
+from click_option_group import optgroup
 from rich.table import Table
 
 from raxe.application.mssp_service import (
@@ -158,7 +159,7 @@ def list_customers(mssp_id: str, output: str):
 
     if not customers:
         if output == "json":
-            console.print("[]")
+            click.echo("[]")
         else:
             console.print("[yellow]No customers found[/yellow]")
             console.print()
@@ -179,7 +180,7 @@ def list_customers(mssp_id: str, output: str):
             }
             for c in customers
         ]
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         table = Table(title=f"Customers for {mssp_id} ({len(customers)})", show_header=True)
         table.add_column("ID", style="cyan", no_wrap=True)
@@ -252,7 +253,7 @@ def show_customer(mssp_id: str, customer_id: str, output: str):
             "created_at": customer_obj.created_at,
             "updated_at": customer_obj.updated_at,
         }
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         console.print()
         console.print("[bold]Customer Details[/bold]")
@@ -455,94 +456,99 @@ def customer_siem():
     help="Parent MSSP identifier",
 )
 @click.argument("customer_id")
-@click.option(
+@optgroup.group("Required SIEM Options", help="Core SIEM connection settings")
+@optgroup.option(
     "--type",
     "siem_type",
     required=True,
     type=click.Choice(["splunk", "crowdstrike", "sentinel", "cef", "arcsight"]),
     help="SIEM platform type",
 )
-@click.option(
+@optgroup.option(
     "--url",
     "endpoint_url",
     required=True,
     help="SIEM ingestion endpoint URL",
 )
-@click.option(
+@optgroup.option(
     "--token",
     "auth_token",
     required=True,
     help="Authentication token for the SIEM",
 )
-@click.option(
+@optgroup.group("General Options", help="Common settings for all SIEM platforms")
+@optgroup.option(
     "--batch-size",
     type=int,
     default=100,
     help="Maximum events per batch (default: 100)",
 )
-@click.option(
+@optgroup.group("Splunk Options", help="Splunk HEC-specific settings")
+@optgroup.option(
     "--index",
-    help="Splunk index name (Splunk only)",
+    help="Splunk index name",
 )
-@click.option(
+@optgroup.option(
     "--source",
-    help="Splunk source identifier (Splunk only)",
+    help="Splunk source identifier",
 )
-@click.option(
+@optgroup.group("Azure Sentinel Options", help="Microsoft Sentinel-specific settings")
+@optgroup.option(
     "--workspace-id",
-    help="Azure Log Analytics workspace ID (Sentinel only)",
+    help="Azure Log Analytics workspace ID",
 )
-@click.option(
+@optgroup.option(
     "--log-type",
-    help="Custom log type name (Sentinel only, default: RaxeThreatDetection)",
+    help="Custom log type name (default: RaxeThreatDetection)",
 )
-@click.option(
+@optgroup.group("CrowdStrike LogScale Options", help="CrowdStrike Falcon LogScale settings")
+@optgroup.option(
     "--repository",
-    help="LogScale repository name (CrowdStrike only)",
+    help="LogScale repository name",
 )
-@click.option(
+@optgroup.option(
     "--parser",
-    help="LogScale parser name (CrowdStrike only, default: raxe)",
+    help="LogScale parser name (default: raxe)",
 )
-# CEF-specific options
-@click.option(
+@optgroup.group("CEF Transport Options", help="CEF protocol and transport settings")
+@optgroup.option(
     "--transport",
     type=click.Choice(["http", "tcp", "udp"]),
     default="http",
-    help="CEF transport protocol (CEF only, default: http)",
+    help="CEF transport protocol (default: http)",
 )
-@click.option(
+@optgroup.option(
     "--port",
     "syslog_port",
     type=int,
-    help="Syslog port for CEF (CEF only, default: 514 for UDP, 6514 for TLS)",
+    help="Syslog port (default: 514 for UDP, 6514 for TLS)",
 )
-@click.option(
+@optgroup.option(
     "--tls",
     "use_tls",
     is_flag=True,
-    help="Use TLS for TCP transport (CEF only)",
+    help="Use TLS for TCP transport",
 )
-@click.option(
+@optgroup.option(
     "--facility",
     type=int,
     default=16,
-    help="Syslog facility code (CEF only, default: 16 = local0)",
+    help="Syslog facility code (default: 16 = local0)",
 )
-# ArcSight-specific options
-@click.option(
+@optgroup.group("ArcSight SmartConnector Options", help="ArcSight-specific settings")
+@optgroup.option(
     "--smart-connector-id",
-    help="ArcSight SmartConnector ID (ArcSight only)",
+    help="ArcSight SmartConnector ID",
 )
-@click.option(
+@optgroup.option(
     "--device-vendor",
     default="RAXE",
-    help="ArcSight device vendor (ArcSight only, default: RAXE)",
+    help="ArcSight device vendor (default: RAXE)",
 )
-@click.option(
+@optgroup.option(
     "--device-product",
     default="ThreatDetection",
-    help="ArcSight device product (ArcSight only, default: ThreatDetection)",
+    help="ArcSight device product (default: ThreatDetection)",
 )
 def configure_siem(
     mssp_id: str,
@@ -739,7 +745,7 @@ def show_siem(mssp_id: str, customer_id: str, output: str):
 
     if siem_config is None:
         if output == "json":
-            console.print(json.dumps({"configured": False}))
+            click.echo(json.dumps({"configured": False}, indent=2))
         else:
             console.print(f"[yellow]No SIEM configured for {customer_id}[/yellow]")
             console.print()
@@ -759,7 +765,7 @@ def show_siem(mssp_id: str, customer_id: str, output: str):
             "flush_interval_seconds": siem_config.flush_interval_seconds,
             "extra": siem_config.extra,
         }
-        console.print(json.dumps(data, indent=2))
+        click.echo(json.dumps(data, indent=2, default=str))
     else:
         console.print()
         console.print(f"[bold]SIEM Configuration for {customer_id}[/bold]")

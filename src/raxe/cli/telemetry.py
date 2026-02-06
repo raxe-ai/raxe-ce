@@ -436,8 +436,11 @@ def status(output_format: str, verbose: bool) -> None:
     # Text output with tree-style formatting
     from raxe.cli.branding import print_logo
 
-    print_logo(console, compact=True)
-    console.print()
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
     console.print("[bold cyan]Telemetry Status[/bold cyan]")
     console.print()
@@ -549,8 +552,11 @@ def dlq_list(output_format: str, limit: int) -> None:
     # Text output
     from raxe.cli.branding import print_logo
 
-    print_logo(console, compact=True)
-    console.print()
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
     if not events:
         console.print("[green]Dead Letter Queue is empty[/green]")
@@ -642,8 +648,11 @@ def dlq_show(event_id: str, output_format: str) -> None:
     # Text output
     from raxe.cli.branding import print_logo
 
-    print_logo(console, compact=True)
-    console.print()
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
     console.print(f"[bold cyan]Event: {event.get('event_id')}[/bold cyan]")
     console.print()
@@ -976,8 +985,11 @@ def flush(output_format: str) -> None:
     # Text output
     from raxe.cli.branding import print_logo
 
-    print_logo(console, compact=True)
-    console.print()
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
     console.print("[bold cyan]Flushing telemetry queues...[/bold cyan]")
     console.print()
@@ -1178,8 +1190,11 @@ def endpoint_show(output_format: str) -> None:
     # Text output
     from raxe.cli.branding import print_logo
 
-    print_logo(console, compact=True)
-    console.print()
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
     console.print("[bold cyan]Endpoint Configuration[/bold cyan]")
     console.print()
@@ -1306,8 +1321,11 @@ def endpoint_test(timeout: float, output_format: str) -> None:
     # Text output
     from raxe.cli.branding import print_logo
 
-    print_logo(console, compact=True)
-    console.print()
+    ctx = click.get_current_context()
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if not quiet:
+        print_logo(console, compact=True)
+        console.print()
 
     console.print("[bold cyan]Endpoint Connectivity Test[/bold cyan]")
     console.print()

@@ -100,8 +100,9 @@ class TestDataAggregator:
 
     def test_get_daily_rollup_no_data(self, aggregator):
         """Test daily rollup with no data."""
-        start_date = date.today() - timedelta(days=60)
-        end_date = date.today() - timedelta(days=30)
+        utc_today = datetime.now(timezone.utc).date()
+        start_date = utc_today - timedelta(days=60)
+        end_date = utc_today - timedelta(days=30)
 
         rollups = aggregator.get_daily_rollup(start_date, end_date)
 
@@ -111,8 +112,9 @@ class TestDataAggregator:
 
     def test_get_daily_rollup_with_data(self, aggregator, sample_events):
         """Test daily rollup with sample data."""
-        start_date = date.today() - timedelta(days=6)
-        end_date = date.today()
+        utc_today = datetime.now(timezone.utc).date()
+        start_date = utc_today - timedelta(days=6)
+        end_date = utc_today
 
         rollups = aggregator.get_daily_rollup(start_date, end_date)
 
@@ -128,8 +130,8 @@ class TestDataAggregator:
 
     def test_daily_rollup_metrics(self, aggregator, sample_events):
         """Test daily rollup calculates correct metrics."""
-        today = date.today()
-        rollups = aggregator.get_daily_rollup(today, today)
+        utc_today = datetime.now(timezone.utc).date()
+        rollups = aggregator.get_daily_rollup(utc_today, utc_today)
 
         if rollups and rollups[0].total_scans > 0:
             rollup = rollups[0]

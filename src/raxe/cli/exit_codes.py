@@ -12,13 +12,13 @@ Exit Code Reference:
 
 Usage in CI/CD:
     # Check for threats
-    raxe scan "prompt" --quiet
+    raxe scan "prompt"
     if [ $? -eq 1 ]; then
         echo "Threat detected!"
     fi
 
     # Handle different error types
-    raxe scan "prompt" --quiet
+    raxe scan "prompt"
     case $? in
         0) echo "Clean" ;;
         1) echo "Threat detected" ;;
@@ -31,7 +31,7 @@ Usage in CI/CD:
 # Success - no threats detected, command completed normally
 EXIT_SUCCESS: int = 0
 
-# Threat detected during scan (used with --quiet mode for CI/CD)
+# Threat detected during scan
 EXIT_THREAT_DETECTED: int = 1
 
 # Invalid input - bad command usage, missing required arguments

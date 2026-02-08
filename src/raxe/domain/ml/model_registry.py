@@ -42,20 +42,30 @@ class ModelRegistry:
         detector = registry.create_detector("v1.0_onnx_int8")
     """
 
-    def __init__(self, models_dir: Path | None = None):
+    def __init__(
+        self,
+        models_dir: Path | None = None,
+        extra_dirs: list[Path] | None = None,
+    ):
         """Initialize registry.
 
         Args:
-            models_dir: Optional custom models directory
+            models_dir: Primary models directory
                        (default: src/raxe/domain/ml/models)
+            extra_dirs: Additional directories to search for models
+                       (e.g., ~/.raxe/models/)
         """
         if models_dir is None:
             # Default to package models directory
             models_dir = Path(__file__).parent / "models"
 
         self.models_dir = models_dir
+        self._extra_dirs = extra_dirs or []
         self._models: dict[str, ModelMetadata] = {}
         self._discover_models()
+        # Also discover from extra directories
+        for extra_dir in self._extra_dirs:
+            self._discover_models_in_dir(extra_dir)
 
     def _discover_models(self) -> None:
         """Auto-discover all models using three-tier priority discovery.
@@ -176,6 +186,109 @@ class ModelRegistry:
             )
         else:
             logger.warning(f"No models discovered in {self.models_dir}")
+
+    def _discover_models_in_dir(self, directory: Path) -> None:
+        """Discover models in an additional directory.
+
+        Finds models by:
+        1. manifest.yaml in subdirectories (same as primary)
+        2. model_metadata.json in subdirectories (Gemma ONNX format)
+
+        Args:
+            directory: Directory to search for models
+        """
+        if not directory.exists():
+            return
+
+        for item in directory.iterdir():
+            if not item.is_dir():
+                continue
+
+            # Skip if model_id already discovered
+            model_id = item.name
+            if model_id in self._models:
+                continue
+
+            # Try manifest.yaml first
+            manifest_file = item / "manifest.yaml"
+            if manifest_file.exists():
+                try:
+                    model = self._load_manifest_model(item, manifest_file)
+                    if model:
+                        self._models[model.model_id] = model
+                        logger.info(f"Loaded manifest model from extra dir: {model.model_id}")
+                        continue
+                except Exception as e:
+                    logger.error(f"Failed to load manifest from {item.name}: {e}")
+
+            # Try model_metadata.json (Gemma ONNX format)
+            metadata_file = item / "model_metadata.json"
+            if metadata_file.exists():
+                try:
+                    metadata = self._load_gemma_model(item, metadata_file)
+                    if metadata:
+                        self._models[metadata.model_id] = metadata
+                        logger.info(f"Loaded Gemma model from extra dir: {metadata.model_id}")
+                except Exception as e:
+                    logger.error(f"Failed to load Gemma model from {item.name}: {e}")
+
+    def _load_gemma_model(self, folder: Path, metadata_file: Path) -> ModelMetadata | None:
+        """Load a Gemma ONNX model from model_metadata.json.
+
+        Args:
+            folder: Model folder path
+            metadata_file: Path to model_metadata.json
+
+        Returns:
+            ModelMetadata or None if loading failed
+        """
+        from raxe.domain.ml.model_metadata import (
+            FileInfo,
+            ModelRuntime,
+            ModelStatus,
+            PerformanceMetrics,
+            Requirements,
+        )
+
+        with open(metadata_file) as f:
+            data = json.load(f)
+
+        model_type = data.get("model_type", "unknown")
+        variant = data.get("variant", "unknown")
+        model_id = folder.name
+
+        # Compute total ONNX size
+        size_mb = 0.0
+        for onnx_file in folder.glob("*.onnx"):
+            size_mb += onnx_file.stat().st_size / (1024 * 1024)
+
+        # Build a human-readable name
+        # e.g. "embeddinggemma_threat_classifier" → "Gemma Threat Classifier"
+        display_name = model_type.replace("embeddinggemma_", "Gemma ").replace("_", " ").title()
+        if variant and variant != "unknown":
+            display_name += f" ({variant})"
+
+        return ModelMetadata(
+            model_id=model_id,
+            name=display_name,
+            version=data.get("version", "1.0"),
+            variant=variant,
+            description=(
+                f"Gemma-based threat classifier with "
+                f"{len(data.get('classifiers', {}))} classifier heads"
+            ),
+            file_info=FileInfo(
+                filename=folder.name,
+                size_mb=size_mb,
+            ),
+            performance=PerformanceMetrics(
+                target_latency_ms=50.0,
+            ),
+            requirements=Requirements(runtime=ModelRuntime.ONNX_INT8),
+            status=ModelStatus.ACTIVE,
+            file_path=folder,
+            tags=["gemma", "onnx", variant],
+        )
 
     def _create_default_metadata(self, model_id: str, file_path: Path) -> ModelMetadata:
         """Create default metadata for model without JSON file."""
@@ -760,10 +873,15 @@ _registry: ModelRegistry | None = None
 def get_registry() -> ModelRegistry:
     """Get global model registry instance.
 
+    Searches both the package models directory and the user models
+    directory (~/.raxe/models/).
+
     Returns:
         Singleton ModelRegistry instance
     """
     global _registry
     if _registry is None:
-        _registry = ModelRegistry()
+        user_models_dir = Path.home() / ".raxe" / "models"
+        extra_dirs = [user_models_dir] if user_models_dir.exists() else []
+        _registry = ModelRegistry(extra_dirs=extra_dirs)
     return _registry

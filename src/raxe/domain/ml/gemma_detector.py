@@ -164,8 +164,14 @@ class GemmaL2Detector:
             try:
                 with open(metadata_path) as f:
                     self._model_metadata = json.load(f)
-                model_id = self._model_metadata.get("model_id", "unknown")
-                model_ver = self._model_metadata.get("model_version", "0.0.0")
+                model_id = (
+                    self._model_metadata.get("model_id")
+                    or self._model_metadata.get("model_type")
+                    or self.model_dir.name
+                )
+                model_ver = self._model_metadata.get("model_version") or self._model_metadata.get(
+                    "variant", "0.0.0"
+                )
                 self._model_version = f"{model_id}-v{model_ver}"
                 # Read embedding_dim from metadata (single source of truth)
                 self._embedding_dim = self._model_metadata.get("embedding_dim", self.EMBEDDING_DIM)
@@ -401,30 +407,39 @@ class GemmaL2Detector:
             - token_count: number of tokens after tokenization (max 512)
             - tokens_truncated: True if input was truncated to 512 tokens
         """
-        # Always tokenize to get token count (needed for telemetry)
-        # This is fast (<1ms) even on cache hit
-        inputs = self._tokenizer(
-            text,
-            padding=True,
-            truncation=True,
-            max_length=512,
-            return_tensors="np",
-        )
-
-        # Extract token count info (excluding padding tokens)
-        attention_mask = inputs["attention_mask"][0]
-        token_count = int(np.sum(attention_mask))
-
-        # Check if truncation occurred by tokenizing without truncation
-        # to get the original length
-        inputs_no_truncate = self._tokenizer(
+        # Single tokenization: get full token count, then truncate manually
+        inputs_full = self._tokenizer(
             text,
             padding=False,
             truncation=False,
             return_tensors="np",
         )
-        original_token_count = len(inputs_no_truncate["input_ids"][0])
+        original_token_count = inputs_full["input_ids"].shape[1]
         tokens_truncated = original_token_count > 512
+
+        # Truncate to max_length
+        input_ids = inputs_full["input_ids"][:, :512]
+        token_count = input_ids.shape[1]
+
+        # Pad to 512 with proper attention mask (matches training distribution)
+        pad_length = 512 - token_count
+        if pad_length > 0:
+            pad_id = self._tokenizer.pad_token_id or 0
+            input_ids = np.concatenate(
+                [input_ids, np.full((1, pad_length), pad_id, dtype=np.int64)],
+                axis=1,
+            )
+            attention_mask = np.concatenate(
+                [
+                    np.ones((1, token_count), dtype=np.int64),
+                    np.zeros((1, pad_length), dtype=np.int64),
+                ],
+                axis=1,
+            )
+        else:
+            attention_mask = np.ones((1, token_count), dtype=np.int64)
+
+        inputs = {"input_ids": input_ids, "attention_mask": attention_mask}
 
         # Check cache
         if self._cache_enabled and self._embedding_cache:

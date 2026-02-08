@@ -346,6 +346,24 @@ class EagerL2Detector:
                 families=model_info.get("families", []),
             )
 
+            # Warmup inference: pay ONNX JIT cost now instead of on first scan
+            try:
+                warmup_start = time.perf_counter()
+                dummy_l1 = ScanResult(
+                    detections=[],
+                    scanned_at="",
+                    text_length=0,
+                    rules_checked=0,
+                    scan_duration_ms=0.0,
+                )
+                self._detector.analyze("warmup", dummy_l1)
+                warmup_ms = (time.perf_counter() - warmup_start) * 1000
+                self._init_stats["warmup_time_ms"] = warmup_ms
+                logger.info("l2_warmup_complete", warmup_time_ms=warmup_ms)
+            except Exception as e:
+                logger.debug(f"L2 warmup inference failed (non-fatal): {e}")
+                self._init_stats["warmup_time_ms"] = 0.0
+
         except Exception as e:
             # Fallback to stub on errors
             logger.error(

@@ -48,7 +48,10 @@ class TestStreakData:
     def test_streak_data_creation(self):
         """Test creating StreakData object."""
         data = StreakData(
-            current_streak=5, longest_streak=10, last_scan_date=date.today(), total_scan_days=20
+            current_streak=5,
+            longest_streak=10,
+            last_scan_date=datetime.now(timezone.utc).date(),
+            total_scan_days=20,
         )
 
         assert data.current_streak == 5
@@ -57,7 +60,9 @@ class TestStreakData:
 
     def test_streak_data_to_dict(self):
         """Test converting StreakData to dictionary."""
-        data = StreakData(current_streak=5, longest_streak=10, last_scan_date=date.today())
+        data = StreakData(
+            current_streak=5, longest_streak=10, last_scan_date=datetime.now(timezone.utc).date()
+        )
 
         result = data.to_dict()
         assert result["current_streak"] == 5
@@ -153,7 +158,7 @@ class TestStreakTracker:
 
     def test_consecutive_scans_build_streak(self, streak_tracker):
         """Test consecutive scans build streak."""
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         # Record scans for 5 consecutive days
         for i in range(5):
@@ -166,7 +171,7 @@ class TestStreakTracker:
 
     def test_missed_day_breaks_streak(self, streak_tracker):
         """Test missing a day breaks the streak."""
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         # Build a 5-day streak
         for i in range(5):
@@ -184,7 +189,7 @@ class TestStreakTracker:
 
     def test_same_day_scans_dont_increase_streak(self, streak_tracker):
         """Test multiple scans on same day don't increase streak."""
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         streak_tracker.record_scan(today)
         assert streak_tracker.streak_data.current_streak == 1
@@ -196,7 +201,7 @@ class TestStreakTracker:
 
     def test_streak_7_achievement_unlocks(self, streak_tracker):
         """Test 7-day streak achievement unlocks."""
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         # Build a 7-day streak
         for i in range(7):
@@ -209,7 +214,7 @@ class TestStreakTracker:
 
     def test_streak_30_achievement_unlocks(self, streak_tracker):
         """Test 30-day streak achievement unlocks."""
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         # Build a 30-day streak
         for i in range(30):
@@ -367,17 +372,17 @@ class TestStreakTracker:
         assert not streak_tracker._is_streak_active()
 
         # Scan today
-        streak_tracker.record_scan(date.today())
+        streak_tracker.record_scan(datetime.now(timezone.utc).date())
         assert streak_tracker._is_streak_active()
 
         # Scan yesterday
         tracker2 = StreakTracker()
-        tracker2.record_scan(date.today() - timedelta(days=1))
+        tracker2.record_scan(datetime.now(timezone.utc).date() - timedelta(days=1))
         assert tracker2._is_streak_active()
 
         # Scan 2 days ago (streak broken)
         tracker3 = StreakTracker()
-        tracker3.record_scan(date.today() - timedelta(days=2))
+        tracker3.record_scan(datetime.now(timezone.utc).date() - timedelta(days=2))
         assert not tracker3._is_streak_active()
 
 

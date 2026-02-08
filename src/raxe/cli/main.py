@@ -291,7 +291,7 @@ def init(
             skip_test_scan=skip_test_scan,
         )
         if not success:
-            sys.exit(1)
+            sys.exit(EXIT_CONFIG_ERROR)
         return
 
     # Quick non-interactive init
@@ -445,7 +445,7 @@ def setup():
     success = run_setup_wizard(console)
 
     if not success:
-        sys.exit(1)
+        sys.exit(EXIT_CONFIG_ERROR)
 
 
 def parse_suppress_pattern(pattern: str) -> tuple[str, str]:

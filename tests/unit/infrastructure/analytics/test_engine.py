@@ -9,7 +9,7 @@ Tests the analytics calculation engine including:
 """
 
 import tempfile
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -155,7 +155,7 @@ class TestAnalyticsEngine:
 
     def test_calculate_retention_no_cohort(self, analytics_engine):
         """Test retention calculation with no users in cohort."""
-        cohort_date = date.today() - timedelta(days=60)
+        cohort_date = datetime.now(timezone.utc).date() - timedelta(days=60)
         retention = analytics_engine.calculate_retention(cohort_date)
 
         assert retention["cohort_size"] == 0
@@ -239,8 +239,8 @@ class TestAnalyticsEngine:
 
     def test_generate_report(self, analytics_engine, sample_events):
         """Test report generation."""
-        start_date = date.today() - timedelta(days=30)
-        end_date = date.today()
+        start_date = datetime.now(timezone.utc).date() - timedelta(days=30)
+        end_date = datetime.now(timezone.utc).date()
 
         report = analytics_engine.generate_report(start_date, end_date)
 

@@ -11,7 +11,7 @@ meet performance requirements:
 import tempfile
 import time
 import tracemalloc
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -173,7 +173,7 @@ class TestQueryPerformance:
         aggregator = DataAggregator(db_path=temp_db)
 
         # Query 30 days of data
-        end_date = date.today()
+        end_date = datetime.now(timezone.utc).date()
         start_date = end_date - timedelta(days=30)
 
         start = time.perf_counter()
@@ -284,7 +284,7 @@ class TestBatchOperations:
 
         # Calculate retention for multiple users in one query
         user_ids = [customer_id, "user_2", "user_3"]
-        cohort_date = date.today() - timedelta(days=7)
+        cohort_date = datetime.now(timezone.utc).date() - timedelta(days=7)
 
         start = time.perf_counter()
         results = analytics_engine.calculate_retention_batch(user_ids, cohort_date)
@@ -316,7 +316,8 @@ class TestPerformanceRegression:
         # Load all dashboard metrics
         analytics_engine.get_user_stats(customer_id)
         analytics_engine.get_global_stats()
-        aggregator.get_daily_rollup(date.today() - timedelta(days=7), date.today())
+        utc_today = datetime.now(timezone.utc).date()
+        aggregator.get_daily_rollup(utc_today - timedelta(days=7), utc_today)
         aggregator.get_detection_breakdown(days=7)
 
         elapsed = time.perf_counter() - start

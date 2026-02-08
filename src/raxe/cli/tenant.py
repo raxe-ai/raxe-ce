@@ -21,7 +21,7 @@ from raxe.application import (
     create_tenant_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console, display_success
+from raxe.cli.output import console, display_success, json_option
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 from raxe.infrastructure.tenants import get_tenants_base_path
 
@@ -94,15 +94,18 @@ def create_tenant(name: str, tenant_id: str | None, policy: str):
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def list_tenants(output: str):
+@json_option
+def list_tenants(output: str, use_json: bool):
     """List all tenants.
 
     \b
     Examples:
         raxe tenant list
+        raxe tenant list --json
         raxe tenant list --output json
-        raxe tenant list --format json
     """
+    if use_json:
+        output = "json"
     service = create_tenant_service()
     tenants = service.list_tenants()
 
@@ -156,15 +159,17 @@ def list_tenants(output: str):
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def show_tenant(tenant_id: str, output: str):
+@json_option
+def show_tenant(tenant_id: str, output: str, use_json: bool):
     """Show details of a specific tenant.
 
     \b
     Examples:
         raxe tenant show acme
-        raxe tenant show acme --output json
-        raxe tenant show acme --format json
+        raxe tenant show acme --json
     """
+    if use_json:
+        output = "json"
     service = create_tenant_service()
     base_path = get_tenants_base_path()
 

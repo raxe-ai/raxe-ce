@@ -7,12 +7,14 @@ import click
 from rich.table import Table
 from rich.tree import Tree
 
-from raxe.cli.output import console, display_error
+from raxe.cli.output import console, display_error, no_color_option, quiet_option
 from raxe.sdk.client import Raxe
 from raxe.utils.profiler import ScanProfiler
 
 
 @click.command(name="profile")
+@no_color_option
+@quiet_option
 @click.argument("text")
 @click.option(
     "--l2/--no-l2",

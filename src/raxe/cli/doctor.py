@@ -11,7 +11,14 @@ from pathlib import Path
 
 import click
 
-from raxe.cli.output import console, display_error, display_success, display_warning
+from raxe.cli.output import (
+    console,
+    display_error,
+    display_success,
+    display_warning,
+    no_color_option,
+    quiet_option,
+)
 from raxe.utils.error_sanitizer import sanitize_error_message
 
 
@@ -35,6 +42,8 @@ class HealthCheck:
 
 
 @click.command()
+@no_color_option
+@quiet_option
 @click.option(
     "--fix",
     is_flag=True,
@@ -108,11 +117,12 @@ def doctor(ctx, fix: bool, export: str | None) -> None:
     _display_check_results(checks[-2:])  # Last 2 checks
     console.print()
 
-    # 5. Performance checks
-    console.print("[bold]Performance[/bold]")
-    checks.extend(_check_performance())
-    _display_check_results(checks[-2:])  # Last 2 checks
-    console.print()
+    # 5. Performance checks (skip in quiet mode — runs 11 scans)
+    if not quiet:
+        console.print("[bold]Performance[/bold]")
+        checks.extend(_check_performance())
+        _display_check_results(checks[-2:])  # Last 2 checks
+        console.print()
 
     # Summary
     _display_summary(checks)
@@ -450,7 +460,7 @@ def _check_rule_packs() -> list[HealthCheck]:
     try:
         from raxe.sdk.client import Raxe
 
-        raxe = Raxe()
+        raxe = Raxe(l2_enabled=False)  # Only need rules, not ML model
         rules = raxe.get_all_rules()
         packs = raxe.list_rule_packs()
 

@@ -10,7 +10,13 @@ from rich.table import Table
 from rich.text import Text
 
 from raxe.cli.custom_rules import custom_rules
-from raxe.cli.output import console, display_error, get_severity_color
+from raxe.cli.output import (
+    console,
+    display_error,
+    get_severity_color,
+    no_color_option,
+    quiet_option,
+)
 from raxe.domain.rules.models import RuleFamily, Severity
 from raxe.sdk.client import Raxe
 from raxe.utils.error_sanitizer import sanitize_error_message
@@ -39,6 +45,8 @@ def rules() -> None:
 
 
 @rules.command("list")
+@no_color_option
+@quiet_option
 @click.option(
     "--family",
     type=click.Choice(["PI", "JB", "PII", "SEC", "QUAL", "CUSTOM"], case_sensitive=False),
@@ -79,7 +87,7 @@ def list_rules(ctx, family: str | None, severity: str | None, output_format: str
         console.print()
 
     try:
-        raxe = Raxe()
+        raxe = Raxe(l2_enabled=False)  # Rules list doesn't need ML model
     except Exception as e:
         display_error("Failed to initialize RAXE", sanitize_error_message(e))
         console.print("Try running: [cyan]raxe init[/cyan]")

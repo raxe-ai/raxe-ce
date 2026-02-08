@@ -9,10 +9,19 @@ from pathlib import Path
 
 import click
 
-from raxe.cli.output import console, create_progress_bar, display_error, display_success
+from raxe.cli.output import (
+    console,
+    create_progress_bar,
+    display_error,
+    display_success,
+    no_color_option,
+    quiet_option,
+)
 
 
 @click.command()
+@no_color_option
+@quiet_option
 @click.option(
     "--format",
     "output_format",

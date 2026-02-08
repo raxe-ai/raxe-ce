@@ -20,7 +20,7 @@ import click
 from rich.table import Table
 
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console, display_success
+from raxe.cli.output import console, display_success, json_option
 from raxe.domain.suppression import SuppressionAction, SuppressionValidationError
 from raxe.domain.suppression_factory import (
     create_suppression_manager,
@@ -210,13 +210,18 @@ def add_suppression(
 )
 @click.option(
     "--output",
+    "--format",
     "-o",
+    "-f",
     "output_format",
     type=click.Choice(["table", "json"]),
     default="table",
-    help="Output format (default: table)",
+    help="Output format (default: table). Both --output and --format work.",
 )
-def list_suppressions(tenant_id: str | None, config: str | None, output_format: str):
+@json_option
+def list_suppressions(
+    tenant_id: str | None, config: str | None, output_format: str, use_json: bool
+):
     """List all active suppressions from config.
 
     \b
@@ -226,6 +231,8 @@ def list_suppressions(tenant_id: str | None, config: str | None, output_format: 
         raxe suppress list --tenant acme
         raxe suppress list --tenant acme --output json
     """
+    if use_json:
+        output_format = "json"
     # Determine config path (handles tenant-scoping)
     config_path = _get_suppression_config_path(config, tenant_id)
     manager = create_suppression_manager_with_yaml(yaml_path=config_path)

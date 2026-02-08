@@ -15,7 +15,7 @@ import click
 from rich.table import Table
 
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console
+from raxe.cli.output import console, json_option
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 from raxe.infrastructure.tenants import (
     YamlAppRepository,
@@ -200,15 +200,17 @@ def create_app(tenant_id: str, name: str, app_id: str | None, policy: str | None
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def list_apps(tenant_id: str, output: str):
+@json_option
+def list_apps(tenant_id: str, output: str, use_json: bool):
     """List all apps in a tenant.
 
     \\b
     Examples:
         raxe app list --tenant acme
-        raxe app list --tenant acme --output json
-        raxe app list --tenant acme --format json
+        raxe app list --tenant acme --json
     """
+    if use_json:
+        output = "json"
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")
@@ -276,15 +278,17 @@ def list_apps(tenant_id: str, output: str):
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def show_app(app_id: str, tenant_id: str, output: str):
+@json_option
+def show_app(app_id: str, tenant_id: str, output: str, use_json: bool):
     """Show details of a specific app.
 
     \\b
     Examples:
         raxe app show chatbot --tenant acme
-        raxe app show chatbot --tenant acme --output json
-        raxe app show chatbot --tenant acme --format json
+        raxe app show chatbot --tenant acme --json
     """
+    if use_json:
+        output = "json"
     # Verify tenant exists
     if not _verify_tenant_exists(tenant_id):
         console.print(f"[red]Error:[/red] Tenant '{tenant_id}' not found")

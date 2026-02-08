@@ -4,8 +4,10 @@ Rich output formatting utilities for RAXE CLI.
 Provides beautiful, colored terminal output for scan results and other CLI commands.
 """
 
+import re
 from typing import Any
 
+import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
@@ -16,8 +18,76 @@ from raxe.cli.l2_formatter import L2ResultFormatter
 from raxe.domain.rules.models import Severity
 from raxe.sdk.client import ScanPipelineResult
 
-# Global console instance
+# Global console instance — mutated by configure_console() when --no-color is set
 console = Console()
+
+
+def configure_console(*, no_color: bool = False) -> None:
+    """Configure the global console instance for --no-color mode.
+
+    Mutates the existing ``console`` object so that all modules which already
+    imported it via ``from raxe.cli.output import console`` see the change.
+    """
+    console.no_color = no_color
+
+
+def _handle_no_color_option(ctx: click.Context, param: click.Parameter, value: bool) -> bool:
+    """Eager callback for --no-color on subcommands."""
+    if not value or ctx.resilient_parsing:
+        return value
+    ctx.ensure_object(dict)
+    ctx.obj["no_color"] = True
+    configure_console(no_color=True)
+    return value
+
+
+def _handle_quiet_option(ctx: click.Context, param: click.Parameter, value: bool) -> bool:
+    """Eager callback for --quiet on subcommands."""
+    if not value or ctx.resilient_parsing:
+        return value
+    ctx.ensure_object(dict)
+    ctx.obj["quiet"] = True
+    ctx.obj["no_color"] = True  # Quiet implies no color
+    configure_console(no_color=True)
+    return value
+
+
+# ---------------------------------------------------------------------------
+# Reusable Click decorators for global flags on subcommands.
+#
+# Click group options (--no-color, --quiet) must be placed *before* the
+# subcommand on the command line.  These decorators add the same flags to
+# individual subcommands so users can place them *after* the subcommand too
+# (e.g. ``raxe scan "text" --quiet``).
+# ---------------------------------------------------------------------------
+
+no_color_option = click.option(
+    "--no-color",
+    is_flag=True,
+    is_eager=True,
+    expose_value=False,
+    callback=_handle_no_color_option,
+    help="Disable colored output",
+    envvar="RAXE_NO_COLOR",
+)
+
+quiet_option = click.option(
+    "--quiet",
+    is_flag=True,
+    is_eager=True,
+    expose_value=False,
+    callback=_handle_quiet_option,
+    help="Suppress all visual output (for CI/CD)",
+    envvar="RAXE_QUIET",
+)
+
+json_option = click.option(
+    "--json",
+    "use_json",
+    is_flag=True,
+    default=False,
+    help="Output as JSON (shorthand for --output json)",
+)
 
 
 # Severity color mapping
@@ -46,6 +116,38 @@ SEVERITY_ICONS_PLAIN = {
 }
 
 
+def _format_model_display_name(raw: str) -> str:
+    """Format raw model version string for human-readable display.
+
+    Transforms internal identifiers like 'embeddinggemma_threat_classifier-vcompact'
+    into readable names like 'Gemma Threat Classifier (compact)'.
+
+    Args:
+        raw: Raw model version string from detector metadata.
+
+    Returns:
+        Formatted display name, or the raw string if pattern doesn't match.
+    """
+    # Match pattern: {prefix}_{descriptive_name}-v{version_or_variant}
+    m = re.match(r"^embeddinggemma_(.+)-v(.+)$", raw)
+    if not m:
+        return raw
+
+    name_part = m.group(1)  # e.g. "threat_classifier"
+    version_part = m.group(2)  # e.g. "compact" or "0.4.0"
+
+    # Convert underscores to spaces and title-case
+    display_name = name_part.replace("_", " ").title()
+
+    # Format version: semver stays as-is, single words become parenthetical
+    if re.match(r"^\d+\.\d+", version_part):
+        version_display = f"v{version_part}"
+    else:
+        version_display = version_part
+
+    return f"Gemma {display_name} ({version_display})"
+
+
 def get_severity_color(severity: Severity) -> str:
     """Get rich color string for severity level."""
     return SEVERITY_COLORS.get(severity, "white")
@@ -71,15 +173,10 @@ def display_scan_result(
 
     Args:
         result: Scan pipeline result from Raxe client
-        no_color: Disable colored output
+        no_color: Disable colored output (uses global console setting if not specified)
         explain: Show detailed explanations for detections (default: False)
     """
-    if no_color:
-        console = Console(no_color=True, force_terminal=False)
-    else:
-        console = Console()
-
-    use_emoji = not no_color
+    use_emoji = not (no_color or console.no_color)
     if result.scan_result.has_threats:
         _display_threat_detected(result, console, explain=explain, use_emoji=use_emoji)
     else:
@@ -223,11 +320,15 @@ def _display_threat_detected(
             summary.append("ALLOWED", style="green bold")
             summary.append(f" ({policy_mode} mode)", style="dim")
 
-    summary.append(f" • Scan time: {result.duration_ms:.2f}ms", style="dim")
+    scan_time_str = f" • Scan time: {result.duration_ms:.2f}ms"
+    if result.l2_duration_ms > 0:
+        scan_time_str += f" (L1: {result.l1_duration_ms:.2f}ms, L2: {result.l2_duration_ms:.2f}ms)"
+    summary.append(scan_time_str, style="dim")
 
     # Show L2 model version if available
     if result.scan_result.l2_result:
-        summary.append(f" • Model: {result.scan_result.l2_result.model_version}", style="dim")
+        model_name = _format_model_display_name(result.scan_result.l2_result.model_version)
+        summary.append(f" • Model: {model_name}", style="dim")
 
     console.print(summary)
     console.print()
@@ -243,11 +344,15 @@ def _display_safe(result: ScanPipelineResult, console: Console, use_emoji: bool 
     content.append("\n\n", style="")
     content.append("No threats detected", style="green")
     content.append("\n", style="")
-    content.append(f"Scan time: {result.duration_ms:.2f}ms", style="dim")
+    scan_time_str = f"Scan time: {result.duration_ms:.2f}ms"
+    if result.l2_duration_ms > 0:
+        scan_time_str += f" (L1: {result.l1_duration_ms:.2f}ms, L2: {result.l2_duration_ms:.2f}ms)"
+    content.append(scan_time_str, style="dim")
 
     # Show L2 model version if available
     if result.scan_result.l2_result:
-        content.append(f" • Model: {result.scan_result.l2_result.model_version}", style="dim")
+        model_name = _format_model_display_name(result.scan_result.l2_result.model_version)
+        content.append(f" • Model: {model_name}", style="dim")
 
     console.print(Panel(content, border_style="green", width=80, padding=(1, 2)))
     console.print()

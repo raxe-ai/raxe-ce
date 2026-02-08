@@ -22,10 +22,11 @@ import time
 from abc import ABC, abstractmethod
 from typing import ClassVar, Literal
 
-from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 from rich.text import Text
+
+from raxe.cli.output import console as _global_console
 
 ComponentStatus = Literal["loading", "complete", "error"]
 
@@ -135,12 +136,13 @@ class InteractiveProgress(ProgressIndicator):
     }
 
     def __init__(self):
-        self.console = Console()
+        self.console = _global_console
         self.components = {}
         self.live = None
         self.start_time = None
         self.main_message = ""
         self.rules_count = 0  # Track for display
+        self.slow_init = False  # Track slow model initialization
 
     def start(self, message: str) -> None:
         """Start showing progress with live updates."""
@@ -177,10 +179,12 @@ class InteractiveProgress(ProgressIndicator):
         self.components[name]["status"] = status
         self.components[name]["duration_ms"] = duration_ms
 
-        # Store metadata for display (e.g., rules count)
+        # Store metadata for display (e.g., rules count, slow init)
         if metadata:
             if name == "rules" and "count" in metadata:
                 self.rules_count = metadata["count"]
+            if name == "ml_model" and metadata.get("slow_init"):
+                self.slow_init = True
 
         if self.live:
             self.live.update(self._render())
@@ -193,9 +197,6 @@ class InteractiveProgress(ProgressIndicator):
         # Update to completion state
         final_render = self._render_complete(total_duration_ms)
         self.live.update(final_render)
-
-        # Wait for user to read (500ms)
-        time.sleep(0.5)
 
         # Stop live display (transient will auto-clear)
         self.live.stop()
@@ -263,6 +264,10 @@ class InteractiveProgress(ProgressIndicator):
         # Format with variables (e.g., rules count)
         if name == "rules" and status == "complete":
             return label_template.format(count=self.rules_count)
+
+        # Show cold start hint when model init was slow
+        if name == "ml_model" and status == "complete" and self.slow_init:
+            return f"{label_template} (one-time setup)"
 
         return label_template
 

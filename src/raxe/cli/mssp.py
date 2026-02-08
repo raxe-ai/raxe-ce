@@ -20,7 +20,7 @@ from raxe.application.mssp_service import (
     create_mssp_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console, display_success
+from raxe.cli.output import console, display_success, json_option
 from raxe.domain.mssp.models import MSSPTier
 from raxe.infrastructure.mssp import get_mssp_base_path
 from raxe.infrastructure.mssp.yaml_repository import (
@@ -129,14 +129,18 @@ def create_mssp(
     default="table",
     help="Output format (default: table)",
 )
-def list_mssps(output: str):
+@json_option
+def list_mssps(output: str, use_json: bool):
     """List all MSSPs.
 
     \b
     Examples:
         raxe mssp list
+        raxe mssp list --json
         raxe mssp list --output json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
     mssps = service.list_mssps()
 
@@ -189,14 +193,18 @@ def list_mssps(output: str):
     default="table",
     help="Output format (default: table)",
 )
-def show_mssp(mssp_id: str, output: str):
+@json_option
+def show_mssp(mssp_id: str, output: str, use_json: bool):
     """Show details of a specific MSSP.
 
     \b
     Examples:
         raxe mssp show mssp_yourcompany
+        raxe mssp show mssp_yourcompany --json
         raxe mssp show mssp_yourcompany --output json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
     base_path = get_mssp_base_path()
 

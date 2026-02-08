@@ -27,7 +27,7 @@ def mock_mssp_path(tmp_path, monkeypatch):
     """Mock MSSP config path to use temp directory."""
     mssp_path = tmp_path / "mssp"
     mssp_path.mkdir()
-    # Patch both infrastructure layer and application layer (where it's imported via 'from ... import')
+    # Patch both infrastructure and application layer paths
     monkeypatch.setattr("raxe.infrastructure.mssp.get_mssp_base_path", lambda: mssp_path)
     monkeypatch.setattr("raxe.application.mssp_service.get_mssp_base_path", lambda: mssp_path)
     return mssp_path
@@ -102,12 +102,12 @@ class TestAgentList:
         data = json.loads(result.output)
         assert isinstance(data, list)
 
-    def test_list_agents_requires_mssp(self, runner, mock_mssp_path):
-        """Test that list requires --mssp flag."""
+    def test_list_agents_without_mssp_succeeds(self, runner, mock_mssp_path):
+        """Test that list works without --mssp (lists all agents)."""
         result = runner.invoke(agent, ["list"])
 
-        # Should fail without --mssp
-        assert result.exit_code != 0
+        # Should succeed — lists all agents (or shows empty message)
+        assert result.exit_code == 0
 
 
 class TestAgentStatus:

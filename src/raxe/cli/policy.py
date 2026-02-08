@@ -33,7 +33,7 @@ from raxe.application import (
     create_tenant_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT
-from raxe.cli.output import console, display_success
+from raxe.cli.output import console, display_success, json_option
 from raxe.domain.tenants.models import TenantPolicy
 from raxe.domain.tenants.presets import GLOBAL_PRESETS
 
@@ -74,7 +74,8 @@ def policy():
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def list_presets(output: str):
+@json_option
+def list_presets(output: str, use_json: bool):
     """List global policy presets (monitor, balanced, strict).
 
     \\b
@@ -83,6 +84,8 @@ def list_presets(output: str):
         raxe policy presets --output json
         raxe policy presets --format json
     """
+    if use_json:
+        output = "json"
     presets = list(GLOBAL_PRESETS.values())
 
     if output == "json":
@@ -129,7 +132,8 @@ def list_presets(output: str):
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def list_policies(tenant_id: str | None, output: str):
+@json_option
+def list_policies(tenant_id: str | None, output: str, use_json: bool):
     """List policies for a tenant or global presets.
 
     \\b
@@ -139,6 +143,8 @@ def list_policies(tenant_id: str | None, output: str):
         raxe policy list --tenant acme --output json
         raxe policy list --tenant acme --format json
     """
+    if use_json:
+        output = "json"
     if tenant_id is None:
         # Show global presets
         presets = list(GLOBAL_PRESETS.values())
@@ -240,7 +246,8 @@ def list_policies(tenant_id: str | None, output: str):
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def show_policy(policy_id: str, tenant_id: str | None, output: str):
+@json_option
+def show_policy(policy_id: str, tenant_id: str | None, output: str, use_json: bool):
     """Show details of a specific policy.
 
     \\b
@@ -250,6 +257,8 @@ def show_policy(policy_id: str, tenant_id: str | None, output: str):
         raxe policy show strict --output json
         raxe policy show strict --format json
     """
+    if use_json:
+        output = "json"
     service = create_tenant_service()
 
     try:
@@ -715,7 +724,10 @@ def update_policy(
     default="table",
     help="Output format (default: table). Both --output and --format work.",
 )
-def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, output: str):
+@json_option
+def explain_policy(
+    tenant_id: str, app_id: str | None, policy_id: str | None, output: str, use_json: bool
+):
     """Explain which policy would be used for a given context.
 
     Shows the policy resolution path without performing a scan.
@@ -727,6 +739,8 @@ def explain_policy(tenant_id: str, app_id: str | None, policy_id: str | None, ou
         raxe policy explain --tenant acme --app chatbot
         raxe policy explain --tenant acme --policy strict
     """
+    if use_json:
+        output = "json"
     service = create_tenant_service()
 
     try:

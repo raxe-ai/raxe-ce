@@ -13,7 +13,7 @@ from rich.table import Table
 
 from raxe.application.mssp_service import create_mssp_service
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console, display_success
+from raxe.cli.output import console, display_success, json_option
 from raxe.infrastructure.agent.registry import get_agent_registry
 from raxe.infrastructure.mssp.yaml_repository import (
     CustomerNotFoundError,
@@ -39,8 +39,7 @@ def agent():
 @click.option(
     "--mssp",
     "mssp_id",
-    required=True,
-    help="MSSP identifier",
+    help="MSSP identifier (lists all agents if not specified)",
 )
 @click.option(
     "--customer",
@@ -57,26 +56,35 @@ def agent():
     default="table",
     help="Output format (default: table)",
 )
-def list_agents(mssp_id: str, customer_id: str | None, output: str):
+@json_option
+def list_agents(mssp_id: str | None, customer_id: str | None, output: str, use_json: bool):
     """List agents for an MSSP or customer.
 
     \b
     Examples:
+        raxe agent list
+        raxe agent list --json
         raxe agent list --mssp mssp_yourcompany
         raxe agent list --mssp mssp_yourcompany --customer cust_acme
         raxe agent list --mssp mssp_yourcompany --output json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
 
-    # Verify MSSP exists
-    try:
-        service.get_mssp(mssp_id)
-    except MSSPNotFoundError as e:
-        console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
-        sys.exit(EXIT_CONFIG_ERROR)
+    # Verify MSSP exists if specified
+    if mssp_id:
+        try:
+            service.get_mssp(mssp_id)
+        except MSSPNotFoundError as e:
+            console.print(f"[red]Error:[/red] MSSP '{e.mssp_id}' not found")
+            sys.exit(EXIT_CONFIG_ERROR)
 
     # Verify customer exists if specified
     if customer_id:
+        if not mssp_id:
+            console.print("[red]Error:[/red] --customer requires --mssp")
+            sys.exit(EXIT_INVALID_INPUT)
         try:
             service.get_customer(mssp_id, customer_id)
         except CustomerNotFoundError as e:
@@ -145,14 +153,17 @@ def list_agents(mssp_id: str, customer_id: str | None, output: str):
     default="table",
     help="Output format (default: table)",
 )
-def agent_status(mssp_id: str, customer_id: str, agent_id: str, output: str):
+@json_option
+def agent_status(mssp_id: str, customer_id: str, agent_id: str, output: str, use_json: bool):
     """Show status of a specific agent.
 
     \b
     Examples:
         raxe agent status --mssp mssp_yourcompany --customer cust_acme agent_xyz
-        raxe agent status --mssp mssp_yourcompany --customer cust_acme agent_xyz --output json
+        raxe agent status --mssp mssp_yourcompany --customer cust_acme agent_xyz --json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
 
     # Verify MSSP exists

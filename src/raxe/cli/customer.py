@@ -21,7 +21,7 @@ from raxe.application.mssp_service import (
     create_mssp_service,
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console, display_success
+from raxe.cli.output import console, display_success, json_option
 from raxe.domain.mssp.models import DataMode
 from raxe.infrastructure.mssp.yaml_repository import (
     CustomerNotFoundError,
@@ -141,14 +141,18 @@ def create_customer(
     default="table",
     help="Output format (default: table)",
 )
-def list_customers(mssp_id: str, output: str):
+@json_option
+def list_customers(mssp_id: str, output: str, use_json: bool):
     """List all customers for an MSSP.
 
     \b
     Examples:
         raxe customer list --mssp mssp_yourcompany
+        raxe customer list --mssp mssp_yourcompany --json
         raxe customer list --mssp mssp_yourcompany --output json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
 
     try:
@@ -221,14 +225,17 @@ def list_customers(mssp_id: str, output: str):
     default="table",
     help="Output format (default: table)",
 )
-def show_customer(mssp_id: str, customer_id: str, output: str):
+@json_option
+def show_customer(mssp_id: str, customer_id: str, output: str, use_json: bool):
     """Show details of a specific customer.
 
     \b
     Examples:
         raxe customer show --mssp mssp_yourcompany cust_acme
-        raxe customer show --mssp mssp_yourcompany cust_acme --output json
+        raxe customer show --mssp mssp_yourcompany cust_acme --json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
 
     try:
@@ -722,14 +729,17 @@ def configure_siem(
     default="table",
     help="Output format (default: table)",
 )
-def show_siem(mssp_id: str, customer_id: str, output: str):
+@json_option
+def show_siem(mssp_id: str, customer_id: str, output: str, use_json: bool):
     """Show SIEM configuration for a customer.
 
     \b
     Examples:
         raxe customer siem show --mssp mssp_yourcompany cust_acme
-        raxe customer siem show --mssp mssp_yourcompany cust_acme --output json
+        raxe customer siem show --mssp mssp_yourcompany cust_acme --json
     """
+    if use_json:
+        output = "json"
     service = create_mssp_service()
 
     try:

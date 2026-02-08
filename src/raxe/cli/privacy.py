@@ -5,14 +5,14 @@ Displays RAXE's privacy guarantees and user data handling practices.
 """
 
 import click
-from rich.console import Console
 from rich.text import Text
+
+from raxe.cli.output import console
 
 
 @click.command("privacy")
 def privacy_command():
     """Show RAXE privacy guarantees and data handling."""
-    console = Console()
 
     # Title
     title = Text()
@@ -79,7 +79,7 @@ def privacy_command():
 
     # Compliance Notice
     compliance = Text()
-    compliance.append("ℹ️  ", style="blue")
+    compliance.append("i  ", style="blue bold")
     compliance.append("For more information about RAXE's privacy practices, visit: ", style="dim")
     compliance.append("https://docs.raxe.ai/privacy", style="blue underline")
     console.print(compliance)

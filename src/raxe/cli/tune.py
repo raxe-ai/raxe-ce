@@ -8,7 +8,7 @@ from rich.panel import Panel
 from rich.progress import Progress
 from rich.table import Table
 
-from raxe.cli.output import console, display_error
+from raxe.cli.output import console, display_error, no_color_option, quiet_option
 from raxe.sdk.client import Raxe
 
 
@@ -26,6 +26,8 @@ def tune() -> None:
 
 
 @tune.command("threshold")
+@no_color_option
+@quiet_option
 @click.option(
     "--min",
     "min_threshold",

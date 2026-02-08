@@ -382,11 +382,14 @@ def compare_models(model_ids: tuple[str, ...]):
     )
 
     console.print("[bold]Recommendations:[/bold]")
-    console.print(
-        "  ⚡ Fastest: "
-        f"[cyan]{best_latency.model_id}[/cyan]"
-        f" ({best_latency.performance.p95_latency_ms:.1f}ms)"
-    )
+    if best_latency.performance.p95_latency_ms is not None:
+        console.print(
+            "  ⚡ Fastest: "
+            f"[cyan]{best_latency.model_id}[/cyan]"
+            f" ({best_latency.performance.p95_latency_ms:.1f}ms)"
+        )
+    else:
+        console.print(f"  ⚡ Fastest: [cyan]{best_latency.model_id}[/cyan] (no latency data)")
     if best_accuracy:
         console.print(
             "  🎯 Most Accurate: "

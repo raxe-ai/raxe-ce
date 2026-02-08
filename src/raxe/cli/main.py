@@ -40,11 +40,14 @@ from raxe.cli.models import models
 from raxe.cli.mssp import mssp
 from raxe.cli.openclaw import openclaw
 from raxe.cli.output import (
+    configure_console,
     console,
     display_error,
     display_scan_result,
     display_scan_result_table,
     display_success,
+    no_color_option,
+    quiet_option,
 )
 from raxe.cli.policy import policy
 from raxe.cli.privacy import privacy_command
@@ -143,9 +146,13 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool, no_wizard: bool):
 
     # Ensure ctx.obj exists for sub-commands
     ctx.ensure_object(dict)
-    ctx.obj["no_color"] = no_color or quiet  # Quiet implies no color
+    effective_no_color = no_color or quiet  # Quiet implies no color
+    ctx.obj["no_color"] = effective_no_color
     ctx.obj["verbose"] = verbose and not quiet  # Quiet overrides verbose
     ctx.obj["quiet"] = quiet
+
+    # Configure the global console for --no-color / --quiet mode
+    configure_console(no_color=effective_no_color)
 
     # Show welcome banner if no command provided (unless quiet)
     if ctx.invoked_subcommand is None:
@@ -195,13 +202,8 @@ def cli(ctx, no_color: bool, verbose: bool, quiet: bool, no_wizard: bool):
 @cli.result_callback()
 @click.pass_context
 def _flush_telemetry_on_exit(ctx, *args, **kwargs):
-    """Ensure telemetry is flushed after any CLI command."""
-    try:
-        from raxe.infrastructure.telemetry.flush_helper import ensure_telemetry_flushed
-
-        ensure_telemetry_flushed(timeout_seconds=2.0, end_session=True)
-    except Exception:  # noqa: S110
-        pass
+    """Telemetry flush handled by Raxe._atexit_flush() — no action needed here."""
+    pass
 
 
 @cli.command()
@@ -560,6 +562,8 @@ def _collect_detections(result) -> dict:
 
 
 @cli.command()
+@no_color_option
+@quiet_option
 @click.argument("text", required=False)
 @click.option(
     "--stdin",
@@ -576,7 +580,7 @@ def _collect_detections(result) -> dict:
 @click.option(
     "--ci",
     is_flag=True,
-    help="CI/CD mode: JSON output, no banner, exit code 1 on threats",
+    help="CI/CD mode: JSON output, no banner",
     envvar="RAXE_CI",
 )
 @click.option(
@@ -704,9 +708,9 @@ def scan(
       raxe scan "text" --mssp mssp_partner --customer cust_acme
 
     \b
-    Exit Codes (for CI/CD integration):
+    Exit Codes:
       0  Success - scan completed, no threats detected
-      1  Threat detected (with --ci or --quiet mode)
+      1  Threat detected
       2  Invalid input - no text provided or bad arguments
       3  Configuration error - RAXE not initialized
       4  Scan error - execution failed
@@ -991,10 +995,9 @@ def scan(
         console.print("[yellow]  Dry run mode: Results not saved to database[/yellow]")
         console.print()
 
-    # Exit with appropriate code for CI/CD (quiet mode)
-    # In CI mode, exit 1 if ANY threats detected (not policy-dependent)
-    # This allows CI to detect threats regardless of policy mode
-    if quiet and result.has_threats:
+    # Exit with code 1 if threats detected (any mode)
+    # This allows scripts and CI/CD to check exit code reliably
+    if result.has_threats:
         sys.exit(EXIT_THREAT_DETECTED)
 
 
@@ -1279,6 +1282,10 @@ def batch_scan(
         )
     except Exception:  # noqa: S110
         pass  # Never let telemetry affect batch completion
+
+    # Exit with code 1 if any threats detected
+    if threats_found > 0:
+        sys.exit(EXIT_THREAT_DETECTED)
 
 
 @cli.group()

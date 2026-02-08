@@ -8,7 +8,14 @@ import click
 from rich.table import Table
 
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR
-from raxe.cli.output import console, display_error, display_scan_result, display_stats
+from raxe.cli.output import (
+    console,
+    display_error,
+    display_scan_result,
+    display_stats,
+    no_color_option,
+    quiet_option,
+)
 from raxe.cli.terminal_context import get_terminal_context
 from raxe.sdk.client import Raxe, ScanPipelineResult
 
@@ -24,6 +31,8 @@ except ImportError:
 
 
 @click.command()
+@no_color_option
+@quiet_option
 def repl() -> None:
     """
     Launch interactive REPL mode.

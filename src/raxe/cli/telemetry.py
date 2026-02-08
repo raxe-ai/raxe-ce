@@ -27,7 +27,14 @@ from rich.table import Table
 from rich.text import Text
 
 from raxe.cli.error_handler import handle_cli_error
-from raxe.cli.output import console, display_error, display_success, display_warning
+from raxe.cli.output import (
+    console,
+    display_error,
+    display_success,
+    display_warning,
+    no_color_option,
+    quiet_option,
+)
 from raxe.infrastructure.config.yaml_config import RaxeConfig
 from raxe.infrastructure.telemetry.dual_queue import DualQueue
 from raxe.infrastructure.telemetry.sender import BatchSender
@@ -167,6 +174,13 @@ def _format_relative_time(timestamp_str: str | None) -> str:
 
     except (ValueError, TypeError):
         return "unknown"
+
+
+def _get_schema_version() -> str:
+    """Get the canonical telemetry schema version."""
+    from raxe.domain.telemetry.scan_telemetry_builder import SCHEMA_VERSION
+
+    return SCHEMA_VERSION
 
 
 def _mask_api_key(api_key: str | None) -> str:
@@ -321,6 +335,8 @@ def telemetry() -> None:
 
 
 @telemetry.command("status")
+@no_color_option
+@quiet_option
 @click.option(
     "--format",
     "output_format",
@@ -400,7 +416,7 @@ def status(output_format: str, verbose: bool) -> None:
     # Build status data
     status_data: dict[str, Any] = {
         "endpoint": endpoint,
-        "schema_version": "0.0.1",
+        "schema_version": _get_schema_version(),
         "api_key": _mask_api_key(api_key),
         "tier": tier_display,
         "telemetry_enabled": config.telemetry.enabled,
@@ -451,7 +467,7 @@ def status(output_format: str, verbose: bool) -> None:
 
     content = Text()
     content.append(f"Endpoint: {endpoint_display} ({connection_status})\n", style="white")
-    content.append("Schema Version: 1.0.0\n", style="white")
+    content.append(f"Schema Version: {_get_schema_version()}\n", style="white")
     api_key_display = _mask_api_key(api_key)
     content.append(f"API Key: {api_key_display} ({tier_display})\n", style="white")
     telemetry_status = "Enabled" if config.telemetry.enabled else "Disabled"
@@ -821,6 +837,8 @@ def dlq_retry(event_id: str | None, retry_all: bool) -> None:
 
 
 @telemetry.command("flush")
+@no_color_option
+@quiet_option
 @click.option(
     "--format",
     "output_format",
@@ -1162,6 +1180,8 @@ def endpoint() -> None:
 
 
 @endpoint.command("show")
+@no_color_option
+@quiet_option
 @click.option(
     "--format",
     "output_format",
@@ -1275,6 +1295,8 @@ def endpoint_reset() -> None:
 
 
 @endpoint.command("test")
+@no_color_option
+@quiet_option
 @click.option(
     "--timeout",
     type=float,

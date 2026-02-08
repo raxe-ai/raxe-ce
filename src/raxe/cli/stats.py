@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import click
 
-from raxe.cli.output import console, display_error
+from raxe.cli.output import console, display_error, no_color_option, quiet_option
 from raxe.infrastructure.analytics.aggregator import DataAggregator
 from raxe.infrastructure.analytics.engine import AnalyticsEngine
 from raxe.infrastructure.analytics.streaks import StreakTracker
@@ -15,6 +15,8 @@ from raxe.utils.error_sanitizer import sanitize_error_message
 
 
 @click.command()
+@no_color_option
+@quiet_option
 @click.option(
     "--format",
     "output_format",  # Map --format to output_format parameter

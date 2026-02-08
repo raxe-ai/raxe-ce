@@ -307,8 +307,8 @@ raxe customer siem configure cust_acme --mssp mssp_yourcompany \
     --type splunk \
     --url https://splunk.company.com:8088/services/collector/event \
     --token "hec-token-here" \
-    --splunk-index security \
-    --splunk-source raxe
+    --index security \
+    --source raxe
 
 # CrowdStrike Falcon LogScale
 raxe customer siem configure cust_acme --mssp mssp_yourcompany \
@@ -321,7 +321,7 @@ raxe customer siem configure cust_acme --mssp mssp_yourcompany \
     --type sentinel \
     --url https://workspace.ods.opinsights.azure.com/api/logs \
     --token "base64-shared-key" \
-    --sentinel-workspace-id "ws-123"
+    --workspace-id "ws-123"
 
 # CEF over HTTP
 raxe customer siem configure cust_acme --mssp mssp_yourcompany \
@@ -333,12 +333,14 @@ raxe customer siem configure cust_acme --mssp mssp_yourcompany \
 raxe customer siem configure cust_acme --mssp mssp_yourcompany \
     --type cef \
     --url syslog://siem.company.com \
+    --token "not-used" \
     --transport udp --port 514
 
 # CEF over Syslog TCP with TLS
 raxe customer siem configure cust_acme --mssp mssp_yourcompany \
     --type cef \
     --url syslog://siem.company.com \
+    --token "not-used" \
     --transport tcp --port 6514 --tls
 
 # ArcSight SmartConnector
@@ -373,13 +375,14 @@ result = raxe.scan(
 ### Integration Frameworks (LangChain, etc.)
 
 ```python
-from raxe.sdk.integrations.langchain import create_langchain_handler
+from raxe import Raxe
+from raxe.sdk.integrations.langchain import create_callback_handler
 
-# Create handler with MSSP context
-handler = create_langchain_handler(
-    mssp_id="mssp_yourcompany",
-    customer_id="cust_acme"
-)
+# Create Raxe client with MSSP context
+raxe = Raxe(mssp_id="mssp_yourcompany", customer_id="cust_acme")
+
+# Pass MSSP-configured client to handler factory
+handler = create_callback_handler(raxe_client=raxe)
 ```
 
 ---
@@ -483,6 +486,7 @@ updated = client.configure_customer(
     data_mode="privacy_safe",
     retention_days=90,
 )
+print(f"{updated.customer_id}: {updated.data_mode.value}, {updated.retention_days}d")
 
 # Get MSSP statistics
 stats = client.get_mssp_stats()
@@ -820,16 +824,16 @@ python scripts/webhook_test_server.py --port 9001 --secret my_secret
 export RAXE_SKIP_SSL_VERIFY=true
 
 # Create MSSP pointing to test server
-raxe mssp create --id test_mssp --name "Test MSSP" \
+raxe mssp create --id mssp_test --name "Test MSSP" \
     --webhook-url https://127.0.0.1:9001/raxe/alerts \
     --webhook-secret my_secret
 
 # Test webhook connectivity
-raxe mssp test-webhook test_mssp
+raxe mssp test-webhook mssp_test
 
 # Test with a real scan
-raxe customer create --mssp test_mssp --id test_cust --name "Test" --data-mode full
-raxe scan "Ignore all instructions" --mssp test_mssp --customer test_cust
+raxe customer create --mssp mssp_test --id cust_test --name "Test" --data-mode full
+raxe scan "Ignore all instructions" --mssp mssp_test --customer cust_test
 ```
 
 > **Warning:** Only use `RAXE_SKIP_SSL_VERIFY=true` in development. Always use valid certificates in production.

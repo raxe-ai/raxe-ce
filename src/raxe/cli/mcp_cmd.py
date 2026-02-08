@@ -1,6 +1,7 @@
 """CLI commands for MCP (Model Context Protocol) server and gateway.
 
 Commands:
+- raxe mcp status [--json] [--output json|table]
 - raxe mcp serve [--transport stdio] [--log-level debug|info|warn|error] [--quiet]
 - raxe mcp gateway --upstream <command> [--config <file>] [--on-threat log|block]
 - raxe mcp audit <config-file>
@@ -18,7 +19,7 @@ import click
 from rich.table import Table
 
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
-from raxe.cli.output import console
+from raxe.cli.output import console, json_option, no_color_option, quiet_option
 
 
 def _check_mcp_available() -> tuple[bool, str | None]:
@@ -78,6 +79,174 @@ def mcp() -> None:
        scanning ALL traffic for threats. Protects any MCP server.
     """
     pass
+
+
+@mcp.command("status")
+@click.option(
+    "--output",
+    "-o",
+    "output_format",
+    type=click.Choice(["table", "json"], case_sensitive=False),
+    default="table",
+    help="Output format (default: table)",
+)
+@json_option
+@no_color_option
+@quiet_option
+def status(output_format: str, use_json: bool) -> None:
+    """Show MCP integration status and configuration.
+
+    Displays MCP SDK availability, detected configuration files,
+    and available MCP tools.
+
+    \b
+    Examples:
+        raxe mcp status             # Rich table output
+        raxe mcp status --json      # JSON output
+    """
+    if use_json:
+        output_format = "json"
+
+    status_info = _collect_mcp_status()
+
+    if output_format == "json":
+        click.echo(json.dumps(status_info, indent=2))
+    else:
+        _display_mcp_status(status_info)
+
+
+def _collect_mcp_status() -> dict[str, Any]:
+    """Collect MCP status information.
+
+    Returns:
+        Dictionary with MCP status data.
+    """
+    from raxe import __version__
+
+    info: dict[str, Any] = {
+        "raxe_version": __version__,
+        "mcp_sdk": {"installed": False, "version": None, "error": None},
+        "server": {"available": False, "tools": []},
+        "gateway": {"config_found": False, "config_path": None},
+        "claude_desktop": {"config_found": False, "config_path": None, "raxe_configured": False},
+    }
+
+    # Check MCP SDK
+    mcp_available, mcp_error = _check_mcp_available()
+    info["mcp_sdk"]["installed"] = mcp_available
+    if mcp_error:
+        info["mcp_sdk"]["error"] = mcp_error
+
+    if mcp_available:
+        try:
+            import importlib.metadata
+
+            info["mcp_sdk"]["version"] = importlib.metadata.version("mcp")
+        except Exception:  # noqa: S110
+            pass
+
+    # Check if RAXE MCP server module is available
+    try:
+        from raxe.mcp.server import run_server  # noqa: F401
+
+        info["server"]["available"] = True
+        info["server"]["tools"] = ["scan_prompt", "check_threat", "get_rules"]
+    except ImportError:
+        info["server"]["available"] = False
+
+    # Check for gateway config in current directory
+    for config_name in ("mcp-security.yaml", "mcp-security.yml"):
+        config_path = Path.cwd() / config_name
+        if config_path.exists():
+            info["gateway"]["config_found"] = True
+            info["gateway"]["config_path"] = str(config_path)
+            break
+
+    # Check for Claude Desktop configuration
+    claude_configs = [
+        Path.home() / ".config" / "claude" / "claude_desktop_config.json",
+        Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
+    ]
+    for config_path in claude_configs:
+        if config_path.exists():
+            info["claude_desktop"]["config_found"] = True
+            info["claude_desktop"]["config_path"] = str(config_path)
+            # Check if RAXE is configured in it
+            try:
+                with open(config_path) as f:
+                    config_data = json.load(f)
+                mcp_servers = config_data.get("mcpServers", {})
+                for _name, server_cfg in mcp_servers.items():
+                    cmd = server_cfg.get("command", "")
+                    args = server_cfg.get("args", [])
+                    if "raxe" in cmd.lower() or any("raxe" in str(a).lower() for a in args):
+                        info["claude_desktop"]["raxe_configured"] = True
+                        break
+            except Exception:  # noqa: S110
+                pass
+            break
+
+    return info
+
+
+def _display_mcp_status(info: dict[str, Any]) -> None:
+    """Display MCP status in rich table format.
+
+    Args:
+        info: Status information dictionary.
+    """
+    console.print("[bold]MCP Integration Status[/bold]")
+    console.print()
+
+    table = Table(show_header=False, padding=(0, 2))
+    table.add_column("Component", style="bold")
+    table.add_column("Status")
+
+    # RAXE version
+    table.add_row("RAXE Version", info["raxe_version"])
+
+    # MCP SDK
+    sdk = info["mcp_sdk"]
+    if sdk["installed"]:
+        version_str = sdk.get("version") or "unknown"
+        table.add_row("MCP SDK", f"[green]Installed[/green] (v{version_str})")
+    else:
+        error_hint = ""
+        if sdk.get("error"):
+            error_hint = f" — {sdk['error']}"
+        table.add_row("MCP SDK", f"[red]Not installed[/red]{error_hint}")
+
+    # Server
+    server = info["server"]
+    if server["available"]:
+        tools = ", ".join(server["tools"]) if server["tools"] else "none"
+        table.add_row("MCP Server", f"[green]Available[/green] (tools: {tools})")
+    else:
+        table.add_row("MCP Server", "[yellow]Not available[/yellow]")
+
+    # Gateway config
+    gw = info["gateway"]
+    if gw["config_found"]:
+        table.add_row("Gateway Config", f"[green]Found[/green] ({gw['config_path']})")
+    else:
+        table.add_row("Gateway Config", "[dim]Not found[/dim]")
+
+    # Claude Desktop
+    cd = info["claude_desktop"]
+    if cd["config_found"]:
+        raxe_note = " [green](RAXE configured)[/green]" if cd["raxe_configured"] else ""
+        table.add_row("Claude Desktop", f"[green]Config found[/green]{raxe_note}")
+    else:
+        table.add_row("Claude Desktop", "[dim]Config not found[/dim]")
+
+    console.print(table)
+    console.print()
+
+    # Installation hint
+    if not sdk["installed"]:
+        console.print("Install MCP support: [cyan]pip install raxe[mcp][/cyan]")
+    elif not cd.get("raxe_configured", False) and cd.get("config_found", False):
+        console.print("Add RAXE to Claude Desktop: [cyan]raxe mcp generate-config[/cyan]")
 
 
 @mcp.command("serve")

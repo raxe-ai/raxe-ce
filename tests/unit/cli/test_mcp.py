@@ -4,9 +4,11 @@ TDD: These tests define expected CLI behavior for MCP server management.
 Implementation should make these tests pass.
 
 Commands:
+- raxe mcp status [--json] [--output json|table]
 - raxe mcp serve [--transport stdio] [--log-level debug|info|warn|error] [--quiet]
 """
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
@@ -199,3 +201,65 @@ class TestMCPServeErrorHandling:
 
         assert result.exit_code != 0
         assert "error" in result.output.lower() or "failed" in result.output.lower()
+
+
+class TestMCPStatusCommand:
+    """Tests for raxe mcp status command."""
+
+    def test_status_exits_zero(self, runner):
+        """Test that status command exits cleanly."""
+        result = runner.invoke(cli, ["mcp", "status"])
+
+        assert result.exit_code == 0
+
+    def test_status_shows_raxe_version(self, runner):
+        """Test that status displays RAXE version."""
+        result = runner.invoke(cli, ["mcp", "status"])
+
+        assert result.exit_code == 0
+        assert "raxe version" in result.output.lower() or "0." in result.output
+
+    def test_status_shows_mcp_sdk_info(self, runner):
+        """Test that status displays MCP SDK availability."""
+        result = runner.invoke(cli, ["mcp", "status"])
+
+        assert result.exit_code == 0
+        assert "mcp sdk" in result.output.lower() or "mcp_sdk" in result.output.lower()
+
+    def test_status_json_output(self, runner):
+        """Test that status --json produces valid JSON."""
+        result = runner.invoke(cli, ["mcp", "status", "--json"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "raxe_version" in data
+        assert "mcp_sdk" in data
+        assert "server" in data
+        assert "gateway" in data
+        assert "claude_desktop" in data
+
+    def test_status_json_sdk_fields(self, runner):
+        """Test that JSON output includes MCP SDK details."""
+        result = runner.invoke(cli, ["mcp", "status", "--json"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        sdk = data["mcp_sdk"]
+        assert "installed" in sdk
+        assert "version" in sdk
+        assert isinstance(sdk["installed"], bool)
+
+    def test_status_json_via_output_flag(self, runner):
+        """Test that --output json also produces JSON."""
+        result = runner.invoke(cli, ["mcp", "status", "--output", "json"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "raxe_version" in data
+
+    def test_status_help_text(self, runner):
+        """Test that status command has help text."""
+        result = runner.invoke(cli, ["mcp", "status", "--help"])
+
+        assert result.exit_code == 0
+        assert "status" in result.output.lower()

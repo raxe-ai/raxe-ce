@@ -1,11 +1,26 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 4,
   "detections": [
     {
+      "rule_id": "agent-014",
+      "severity": "critical",
+      "confidence": 0.7968
+    },
+    {
       "rule_id": "cmd-033",
-      "family": "CMD",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.7644
+    },
+    {
+      "rule_id": "pi-006",
+      "severity": "critical",
+      "confidence": 0.8063999999999999
+    },
+    {
+      "rule_id": "pi-202",
+      "severity": "high",
+      "confidence": 0.714
     }
   ]
 }

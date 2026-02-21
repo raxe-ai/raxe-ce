@@ -482,7 +482,7 @@ ERROR_CATALOG: dict[str, ErrorInfo] = {
         description="Failed to load ML model for L2 detection.",
         causes=("Model file missing", "Corrupted model", "Insufficient memory"),
         remediation="raxe doctor",
-        additional_steps=("Check models: raxe models list", "Reinstall: pip install raxe[ml]"),
+        additional_steps=("Check models: raxe models list", "Reinstall: pip install raxe"),
         see_also=("INFRA-504",),
     ),
     "INFRA-506": ErrorInfo(

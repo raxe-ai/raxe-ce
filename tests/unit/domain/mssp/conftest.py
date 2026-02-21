@@ -58,7 +58,7 @@ def sample_mssp_enterprise() -> MSSP:
         mssp_id="mssp_bigcorp",
         name="BigCorp Enterprise Security",
         tier=MSSPTier.ENTERPRISE,
-        max_customers=1000,
+        max_customers=0,  # 0 = unlimited
         api_key_hash="sha256:def456",
         webhook_config=WebhookConfig(
             url="https://soc.bigcorp.com/alerts",

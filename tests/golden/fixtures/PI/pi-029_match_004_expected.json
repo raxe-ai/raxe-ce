@@ -1,11 +1,5 @@
 {
-  "has_detections": true,
-  "detection_count": 1,
-  "detections": [
-    {
-      "rule_id": "pi-029",
-      "family": "PI",
-      "severity": "medium"
-    }
-  ]
+  "has_detections": false,
+  "detection_count": 0,
+  "detections": []
 }

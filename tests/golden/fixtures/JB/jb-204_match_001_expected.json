@@ -1,11 +1,16 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 2,
   "detections": [
     {
-      "rule_id": "jb-204",
-      "family": "JB",
-      "severity": "critical"
+      "rule_id": "pi-022",
+      "severity": "high",
+      "confidence": 0.77352
+    },
+    {
+      "rule_id": "rag-201",
+      "severity": "high",
+      "confidence": 0.7541599999999999
     }
   ]
 }

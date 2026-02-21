@@ -342,6 +342,21 @@ class AgentRegistry:
 
         return result
 
+    def count_active_agents(self, mssp_id: str, customer_id: str | None = None) -> int:
+        """Count agents with online or degraded status for an MSSP.
+
+        Args:
+            mssp_id: MSSP identifier to filter by
+            customer_id: Optional customer filter
+
+        Returns:
+            Count of active (online or degraded) agents
+        """
+        agents = self.list_agents(mssp_id=mssp_id, customer_id=customer_id)
+        return sum(
+            1 for agent in agents if self.get_agent_status(agent.agent_id) in ("online", "degraded")
+        )
+
     def remove_agent(self, agent_id: str) -> bool:
         """Remove an agent from registry.
 

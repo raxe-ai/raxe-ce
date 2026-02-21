@@ -1,11 +1,156 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 30,
   "detections": [
     {
+      "rule_id": "cmd-209",
+      "severity": "critical",
+      "confidence": 0.9107999999999999
+    },
+    {
+      "rule_id": "cmd-210",
+      "severity": "critical",
+      "confidence": 0.828
+    },
+    {
+      "rule_id": "cmd-211",
+      "severity": "critical",
+      "confidence": 0.8371999999999999
+    },
+    {
+      "rule_id": "cmd-212",
+      "severity": "critical",
+      "confidence": 0.8463999999999999
+    },
+    {
+      "rule_id": "cmd-213",
+      "severity": "critical",
+      "confidence": 0.8556
+    },
+    {
+      "rule_id": "cmd-214",
+      "severity": "critical",
+      "confidence": 0.8647999999999999
+    },
+    {
+      "rule_id": "cmd-215",
+      "severity": "critical",
+      "confidence": 0.8739999999999999
+    },
+    {
+      "rule_id": "cmd-216",
+      "severity": "critical",
+      "confidence": 0.8831999999999999
+    },
+    {
+      "rule_id": "cmd-217",
+      "severity": "critical",
+      "confidence": 0.8923999999999999
+    },
+    {
+      "rule_id": "cmd-218",
+      "severity": "critical",
+      "confidence": 0.9016
+    },
+    {
+      "rule_id": "cmd-219",
+      "severity": "critical",
+      "confidence": 0.9107999999999999
+    },
+    {
+      "rule_id": "cmd-220",
+      "severity": "critical",
+      "confidence": 0.828
+    },
+    {
+      "rule_id": "cmd-221",
+      "severity": "critical",
+      "confidence": 0.8371999999999999
+    },
+    {
+      "rule_id": "cmd-222",
+      "severity": "critical",
+      "confidence": 0.8463999999999999
+    },
+    {
+      "rule_id": "cmd-223",
+      "severity": "critical",
+      "confidence": 0.8556
+    },
+    {
+      "rule_id": "cmd-224",
+      "severity": "critical",
+      "confidence": 0.8647999999999999
+    },
+    {
+      "rule_id": "cmd-225",
+      "severity": "critical",
+      "confidence": 0.8739999999999999
+    },
+    {
+      "rule_id": "cmd-226",
+      "severity": "critical",
+      "confidence": 0.8831999999999999
+    },
+    {
+      "rule_id": "cmd-227",
+      "severity": "critical",
+      "confidence": 0.8923999999999999
+    },
+    {
+      "rule_id": "cmd-228",
+      "severity": "critical",
+      "confidence": 0.9016
+    },
+    {
+      "rule_id": "cmd-229",
+      "severity": "critical",
+      "confidence": 0.9107999999999999
+    },
+    {
+      "rule_id": "cmd-230",
+      "severity": "critical",
+      "confidence": 0.828
+    },
+    {
+      "rule_id": "cmd-231",
+      "severity": "critical",
+      "confidence": 0.8371999999999999
+    },
+    {
+      "rule_id": "cmd-232",
+      "severity": "critical",
+      "confidence": 0.8463999999999999
+    },
+    {
+      "rule_id": "cmd-233",
+      "severity": "critical",
+      "confidence": 0.8556
+    },
+    {
       "rule_id": "cmd-234",
-      "family": "CMD",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.8647999999999999
+    },
+    {
+      "rule_id": "cmd-235",
+      "severity": "critical",
+      "confidence": 0.8739999999999999
+    },
+    {
+      "rule_id": "cmd-236",
+      "severity": "critical",
+      "confidence": 0.8831999999999999
+    },
+    {
+      "rule_id": "cmd-237",
+      "severity": "critical",
+      "confidence": 0.8923999999999999
+    },
+    {
+      "rule_id": "cmd-238",
+      "severity": "critical",
+      "confidence": 0.9016
     }
   ]
 }

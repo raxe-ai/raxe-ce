@@ -214,42 +214,55 @@ class PipelinePreloader:
         l2_model_type = "none"
 
         if config.enable_l2:
-            # EAGER LOADING to avoid timeout issues
-            # EagerL2Detector loads model during __init__() to avoid first-scan timeouts
-            # Uses ONNX-first strategy for fast loading (~500ms vs ~5s for bundle)
+            from raxe.domain.ml import is_ml_available
 
-            # Update progress: loading ML model
-            self._progress.update_component("ml_model", "loading", 0)
+            if is_ml_available():
+                # EAGER LOADING to avoid timeout issues
+                # EagerL2Detector loads model during __init__() to avoid first-scan timeouts
+                # Uses ONNX-first strategy for fast loading (~500ms vs ~5s for bundle)
 
-            from raxe.application.eager_l2 import EagerL2Detector
+                # Update progress: loading ML model
+                self._progress.update_component("ml_model", "loading", 0)
 
-            l2_init_start = time.perf_counter()
-            l2_detector = EagerL2Detector(
-                config=config,
-                use_production=config.use_production_l2,
-                confidence_threshold=config.l2_confidence_threshold,
-                voting_preset=self.voting_preset,
-            )
-            l2_init_time_ms = (time.perf_counter() - l2_init_start) * 1000
+                from raxe.application.eager_l2 import EagerL2Detector
 
-            # Get model type from initialization stats
-            l2_init_stats = l2_detector.initialization_stats
-            l2_model_type = l2_init_stats.get("model_type", "unknown")
+                l2_init_start = time.perf_counter()
+                l2_detector = EagerL2Detector(
+                    config=config,
+                    use_production=config.use_production_l2,
+                    confidence_threshold=config.l2_confidence_threshold,
+                    voting_preset=self.voting_preset,
+                )
+                l2_init_time_ms = (time.perf_counter() - l2_init_start) * 1000
 
-            # Report ML model loading completion (with slow_init hint for cold starts)
-            ml_metadata = {"slow_init": True} if l2_init_time_ms > 1500 else None
-            self._progress.update_component(
-                "ml_model", "complete", l2_init_time_ms, metadata=ml_metadata
-            )
+                # Get model type from initialization stats
+                l2_init_stats = l2_detector.initialization_stats
+                l2_model_type = l2_init_stats.get("model_type", "unknown")
 
-            # Report warmup completion (timing tracked inside EagerL2Detector)
-            warmup_time_ms = l2_init_stats.get("warmup_time_ms", 0)
-            self._progress.update_component("warmup", "complete", warmup_time_ms)
+                # Report ML model loading completion (with slow_init hint for cold starts)
+                ml_metadata = {"slow_init": True} if l2_init_time_ms > 1500 else None
+                self._progress.update_component(
+                    "ml_model", "complete", l2_init_time_ms, metadata=ml_metadata
+                )
 
-            logger.info(
-                f"L2 detector initialized: {l2_model_type} in {l2_init_time_ms:.1f}ms "
-                f"(Stub: {l2_init_stats.get('is_stub', False)})"
-            )
+                # Report warmup completion (timing tracked inside EagerL2Detector)
+                warmup_time_ms = l2_init_stats.get("warmup_time_ms", 0)
+                self._progress.update_component("warmup", "complete", warmup_time_ms)
+
+                logger.info(
+                    f"L2 detector initialized: {l2_model_type} in {l2_init_time_ms:.1f}ms "
+                    f"(Stub: {l2_init_stats.get('is_stub', False)})"
+                )
+            else:
+                # ML deps not installed, gracefully downgrade to L1-only
+                logger.warning(
+                    "L2 ML detection requested but ML dependencies not installed. "
+                    "Reinstall with: pip install raxe. Falling back to L1-only mode."
+                )
+                l2_detector = StubL2Detector()
+                self._progress.update_component("ml_model", "complete", 0)
+                self._progress.update_component("warmup", "complete", 0)
+                l2_model_type = "stub (ml deps not installed)"
         else:
             # Use stub detector — skips ONNX model loading entirely
             l2_detector = StubL2Detector()

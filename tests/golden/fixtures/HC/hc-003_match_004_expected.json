@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "hc-003",
-      "family": "HC",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.8133999999999999
     }
   ]
 }

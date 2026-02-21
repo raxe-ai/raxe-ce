@@ -4,7 +4,7 @@ Privacy-first threat detection for LLM applications.
 
 RAXE provides developer-friendly, privacy-first AI security with:
 - Local-first scanning (PII never leaves your machine)
-- <10ms scan latency (P95)
+- <5ms L1 rule scan latency (P95)
 - Community-driven threat detection
 - Drop-in LLM client wrappers
 

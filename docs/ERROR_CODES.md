@@ -761,7 +761,7 @@ Free up disk space.
 
 **Remediation:**
 ```bash
-pip install raxe[ml]  # Install ML dependencies
+pip install raxe  # Reinstall to get ML dependencies
 ```
 
 ---
@@ -908,7 +908,7 @@ A: Run `raxe init` to initialize rule packs.
 A: Close other terminal sessions running RAXE.
 
 **Q: INFRA-505 model load failed**
-A: Install ML dependencies: `pip install raxe[ml]`
+A: Reinstall RAXE: `pip install raxe`
 
 ### Getting Help
 

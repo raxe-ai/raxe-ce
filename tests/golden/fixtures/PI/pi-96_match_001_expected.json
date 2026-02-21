@@ -1,11 +1,41 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 7,
   "detections": [
     {
-      "rule_id": "pi-96",
-      "family": "PI",
-      "severity": "critical"
+      "rule_id": "agent-013",
+      "severity": "critical",
+      "confidence": 0.7801999999999999
+    },
+    {
+      "rule_id": "enc-019",
+      "severity": "medium",
+      "confidence": 0.7543999999999998
+    },
+    {
+      "rule_id": "pi-001",
+      "severity": "critical",
+      "confidence": 0.7979999999999999
+    },
+    {
+      "rule_id": "pi-022",
+      "severity": "high",
+      "confidence": 0.77352
+    },
+    {
+      "rule_id": "pi-202",
+      "severity": "high",
+      "confidence": 0.714
+    },
+    {
+      "rule_id": "pi-79",
+      "severity": "critical",
+      "confidence": 0.9107999999999999
+    },
+    {
+      "rule_id": "rag-201",
+      "severity": "high",
+      "confidence": 0.7541599999999999
     }
   ]
 }

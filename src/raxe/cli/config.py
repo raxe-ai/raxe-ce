@@ -48,6 +48,7 @@ def _send_key_upgrade_event(old_api_key: str | None, new_api_key: str) -> None:
             "temporary": "temp",
             "live": "community",
             "test": "community",
+            "nfr": "nfr",
         }
 
         new_tier = key_type_to_tier.get(new_key_type, "community")

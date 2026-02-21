@@ -1,11 +1,21 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 3,
   "detections": [
     {
+      "rule_id": "agent-013",
+      "severity": "critical",
+      "confidence": 0.7801999999999999
+    },
+    {
       "rule_id": "pi-3026",
-      "family": "PI",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.8083999999999999
+    },
+    {
+      "rule_id": "pi-3027",
+      "severity": "critical",
+      "confidence": 0.7745599999999999
     }
   ]
 }

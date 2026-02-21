@@ -220,6 +220,19 @@ class Raxe:
         self.config.telemetry.enabled = telemetry
         self.config.enable_l2 = l2_enabled
 
+        # Auto-downgrade L2 when ML dependencies are not installed
+        if self.config.enable_l2:
+            from raxe.domain.ml import is_ml_available
+
+            if not is_ml_available():
+                logger.warning(
+                    "l2_auto_downgrade",
+                    reason="ml_deps_not_installed",
+                    message="L2 ML detection requested but dependencies not installed. "
+                    "Reinstall with: pip install raxe. Running in L1-only mode.",
+                )
+                self.config.enable_l2 = False
+
         # Store voting preset for L2 detector initialization
         self._voting_preset = voting_preset
 
@@ -386,7 +399,7 @@ class Raxe:
                 )
 
                 flush_stale_telemetry_async()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass  # Never block on stale flush
 
             # Start the orchestrator (lazy initialization)
@@ -401,7 +414,7 @@ class Raxe:
                     feature="sdk_scan",
                     action="invoked",
                 )
-        except Exception:
+        except Exception:  # noqa: S110
             # Never let telemetry break SDK initialization
             pass
 
@@ -511,7 +524,7 @@ class Raxe:
                 payload=telemetry_payload,
                 event_id=event_id,
             )
-        except Exception:
+        except Exception:  # noqa: S110
             # Never let telemetry break SDK functionality
             pass
 
@@ -1289,7 +1302,7 @@ class Raxe:
                                 mssp_customer_name = customer.name
                                 mssp_data_mode = customer.data_mode.value
                                 mssp_data_fields = customer.data_fields
-                    except Exception:
+                    except Exception:  # noqa: S110
                         # Don't fail scan if MSSP resolution fails
                         pass
 
@@ -1892,7 +1905,7 @@ class Raxe:
                     end_session=True,
                 )
                 Raxe._flushed = True
-            except Exception:
+            except Exception:  # noqa: S110
                 pass  # Never fail on telemetry cleanup
 
     @classmethod
@@ -1913,7 +1926,7 @@ class Raxe:
                     end_session=True,
                 )
                 cls._flushed = True
-            except Exception:
+            except Exception:  # noqa: S110
                 pass  # Never fail on atexit
 
     @classmethod

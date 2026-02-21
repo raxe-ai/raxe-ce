@@ -1,5 +1,11 @@
 {
-  "has_detections": false,
-  "detection_count": 0,
-  "detections": []
+  "has_detections": true,
+  "detection_count": 1,
+  "detections": [
+    {
+      "rule_id": "pii-041",
+      "severity": "critical",
+      "confidence": 0.7857
+    }
+  ]
 }

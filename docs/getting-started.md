@@ -4,6 +4,8 @@
 
 # Getting Started with RAXE
 
+> **Note:** This guide has been consolidated into [Start Here](start-here.md). This file is kept for backward compatibility.
+
 This guide will get you from zero to protecting your LLM applications in under 5 minutes.
 
 ## Prerequisites
@@ -29,9 +31,6 @@ uv pip install raxe
 ### Option 3: Install with Optional Features
 
 ```bash
-# Install with ML detection support
-pip install raxe[ml]
-
 # Install with LLM client wrappers
 pip install raxe[wrappers]
 
@@ -385,9 +384,9 @@ raxe init
 
 **Issue**: ML detection not working
 
-**Solution**: Install ML dependencies:
+**Solution**: Reinstall RAXE (ML deps are included):
 ```bash
-pip install raxe[ml]
+pip install raxe
 ```
 
 ---

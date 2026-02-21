@@ -93,7 +93,14 @@ def doctor(ctx, fix: bool, export: str | None) -> None:
     _display_check_results(checks[-3:])  # Last 3 checks
     console.print()
 
-    # 2. API Key checks
+    # 2. ML/L2 Detection checks
+    console.print("[bold]ML/L2 Detection[/bold]")
+    ml_checks = _check_ml_status()
+    checks.extend(ml_checks)
+    _display_check_results(ml_checks)
+    console.print()
+
+    # 3. API Key checks
     console.print("[bold]API Key[/bold]")
     checks.extend(_check_api_key())
     _display_check_results(checks[-1:])  # Last 1 check
@@ -217,6 +224,68 @@ def _check_installation() -> list[HealthCheck]:
                 message=f"Missing: {', '.join(missing_deps)}",
                 details="Run: pip install raxe[dev]",
                 fix_available=True,
+            )
+        )
+
+    return checks
+
+
+def _check_ml_status() -> list[HealthCheck]:
+    """Check ML/L2 detection dependency status."""
+    checks = []
+
+    from raxe.domain.ml import get_ml_import_error, is_ml_available
+
+    if is_ml_available():
+        checks.append(
+            HealthCheck(
+                name="ML Dependencies",
+                status="ok",
+                message="All ML dependencies installed (L2 detection available)",
+            )
+        )
+    else:
+        error = get_ml_import_error()
+        checks.append(
+            HealthCheck(
+                name="ML Dependencies",
+                status="warning",
+                message="ML dependencies not installed (L1-only mode)",
+                details=f"Reinstall with: pip install raxe\nMissing: {error}",
+            )
+        )
+
+    # Check individual ML deps
+    ml_deps = [
+        ("onnxruntime", "ONNX Runtime"),
+        ("sentence_transformers", "Sentence Transformers"),
+        ("numpy", "NumPy"),
+        ("sklearn", "scikit-learn"),
+    ]
+    installed = []
+    missing = []
+    for module, name in ml_deps:
+        try:
+            __import__(module)
+            installed.append(name)
+        except ImportError:
+            missing.append(name)
+
+    if missing:
+        checks.append(
+            HealthCheck(
+                name="ML Packages",
+                status="warning",
+                message=f"Missing: {', '.join(missing)}",
+                details="These are needed for L2 ML-based detection",
+            )
+        )
+    else:
+        checks.append(
+            HealthCheck(
+                name="ML Packages",
+                status="ok",
+                message=f"All installed: {', '.join(installed)}",
             )
         )
 

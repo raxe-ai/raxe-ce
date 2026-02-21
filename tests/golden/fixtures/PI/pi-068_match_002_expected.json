@@ -1,11 +1,21 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 3,
   "detections": [
     {
+      "rule_id": "jb-105",
+      "severity": "critical",
+      "confidence": 0.7789099999999999
+    },
+    {
+      "rule_id": "jb-110",
+      "severity": "high",
+      "confidence": 0.6983199999999999
+    },
+    {
       "rule_id": "pi-068",
-      "family": "PI",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.7979999999999999
     }
   ]
 }

@@ -42,7 +42,7 @@ def _get_console_keys_url() -> str:
 
 
 # API key format pattern: raxe_{type}_{random32}
-API_KEY_PATTERN = re.compile(r"^raxe_(live|test|temp)_[a-zA-Z0-9]{20,}$")
+API_KEY_PATTERN = re.compile(r"^raxe_(live|test|temp|nfr)_[a-zA-Z0-9]{20,}$")
 
 
 @dataclass
@@ -417,16 +417,25 @@ def ask_detection_settings(console: Console) -> tuple[bool, bool]:
     console.print("[bold cyan]Step 2: Detection Settings[/bold cyan]")
     console.print()
 
-    # L2 (ML) Detection
-    console.print("[bold]L2 (ML) Detection:[/bold]")
-    console.print("[dim]Uses machine learning for advanced threat detection.[/dim]")
-    console.print("[dim]Slightly slower but catches more sophisticated attacks.[/dim]")
-    console.print()
+    # L2 (ML) Detection - only ask if ML deps are installed
+    from raxe.domain.ml import is_ml_available
 
-    l2_enabled = Confirm.ask(
-        "Enable L2 (ML) detection?",
-        default=True,
-    )
+    if is_ml_available():
+        console.print("[bold]L2 (ML) Detection:[/bold]")
+        console.print("[dim]Uses machine learning for advanced threat detection.[/dim]")
+        console.print("[dim]Slightly slower but catches more sophisticated attacks.[/dim]")
+        console.print()
+
+        l2_enabled = Confirm.ask(
+            "Enable L2 (ML) detection?",
+            default=True,
+        )
+    else:
+        console.print("[bold]L2 (ML) Detection:[/bold]")
+        console.print("[yellow]ML dependencies not installed. L2 detection unavailable.[/yellow]")
+        console.print("[dim]Reinstall with: pip install raxe[/dim]")
+        console.print("[dim]Continuing with L1 rule-based detection only.[/dim]")
+        l2_enabled = False
 
     console.print()
 
@@ -515,6 +524,7 @@ def _send_key_upgrade_event_from_setup(new_api_key: str) -> None:
             "temporary": "temp",
             "live": "community",
             "test": "community",
+            "nfr": "nfr",
         }
 
         new_tier = key_type_to_tier.get(new_key_type, "community")

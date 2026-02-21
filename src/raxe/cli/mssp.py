@@ -21,6 +21,7 @@ from raxe.application.mssp_service import (
 )
 from raxe.cli.exit_codes import EXIT_CONFIG_ERROR, EXIT_INVALID_INPUT, EXIT_SCAN_ERROR
 from raxe.cli.output import console, display_success, json_option
+from raxe.cli.usage import usage
 from raxe.domain.mssp.models import MSSPTier
 from raxe.infrastructure.mssp import get_mssp_base_path
 from raxe.infrastructure.mssp.yaml_repository import (
@@ -67,8 +68,8 @@ def mssp():
 @click.option(
     "--max-customers",
     type=int,
-    default=10,
-    help="Maximum number of customers (default: 10)",
+    default=None,
+    help="Maximum customers (default: based on tier)",
 )
 def create_mssp(
     mssp_id: str,
@@ -76,7 +77,7 @@ def create_mssp(
     webhook_url: str,
     webhook_secret: str,
     tier: str,
-    max_customers: int,
+    max_customers: int | None,
 ):
     """Create a new MSSP.
 
@@ -106,7 +107,10 @@ def create_mssp(
         console.print(f"  ID: [cyan]{mssp_obj.mssp_id}[/cyan]")
         console.print(f"  Name: {mssp_obj.name}")
         console.print(f"  Tier: [yellow]{mssp_obj.tier.value}[/yellow]")
-        console.print(f"  Max Customers: {mssp_obj.max_customers}")
+        console.print(
+            f"  Max Customers: "
+            f"{'Unlimited' if mssp_obj.max_customers == 0 else mssp_obj.max_customers}"
+        )
         console.print(f"  Webhook URL: {webhook_url}")
         console.print(f"  Path: {base_path / mssp_obj.mssp_id}")
         console.print()
@@ -175,7 +179,8 @@ def list_mssps(output: str, use_json: bool):
 
         for m in sorted(mssps, key=lambda x: x.mssp_id):
             created = m.created_at[:10] if m.created_at else "Unknown"
-            table.add_row(m.mssp_id, m.name, m.tier.value, str(m.max_customers), created)
+            max_cust = "Unlimited" if m.max_customers == 0 else str(m.max_customers)
+            table.add_row(m.mssp_id, m.name, m.tier.value, max_cust, created)
 
         console.print(table)
         console.print()
@@ -232,7 +237,10 @@ def show_mssp(mssp_id: str, output: str, use_json: bool):
         console.print(f"  ID: [cyan]{mssp_obj.mssp_id}[/cyan]")
         console.print(f"  Name: {mssp_obj.name}")
         console.print(f"  Tier: [yellow]{mssp_obj.tier.value}[/yellow]")
-        console.print(f"  Max Customers: {mssp_obj.max_customers}")
+        console.print(
+            f"  Max Customers: "
+            f"{'Unlimited' if mssp_obj.max_customers == 0 else mssp_obj.max_customers}"
+        )
         if mssp_obj.webhook_config:
             console.print(f"  Webhook URL: {mssp_obj.webhook_config.url}")
         created = mssp_obj.created_at[:10] if mssp_obj.created_at else "Unknown"
@@ -426,6 +434,9 @@ def cleanup_retention(retention_days: int, dry_run: bool):
         else:
             console.print(f"[dim]No audit logs older than {retention_days} days[/dim]")
 
+
+# Register subcommands from other modules
+mssp.add_command(usage)
 
 # Export the group
 __all__ = ["mssp"]

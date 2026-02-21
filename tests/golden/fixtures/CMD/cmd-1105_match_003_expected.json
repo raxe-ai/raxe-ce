@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "cmd-1105",
-      "family": "CMD",
-      "severity": "high"
+      "severity": "high",
+      "confidence": 0.7637999999999999
     }
   ]
 }

@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "hc-106",
-      "family": "HC",
-      "severity": "medium"
+      "severity": "medium",
+      "confidence": 0.6794
     }
   ]
 }

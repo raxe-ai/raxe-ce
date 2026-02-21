@@ -557,8 +557,8 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
     else:
         console.print("[yellow]ML dependencies not installed.[/yellow]")
         console.print()
-        console.print("To enable L2 ML detection, install the ml extras:")
-        console.print("  [cyan]pip install 'raxe[ml]'[/cyan]")
+        console.print("To enable L2 ML detection, reinstall RAXE:")
+        console.print("  [cyan]pip install raxe[/cyan]")
         console.print()
         console.print("L1 rule-based detection (460+ rules) works without ML dependencies.")
 

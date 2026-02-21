@@ -10,9 +10,6 @@ Complete API documentation for RAXE Python SDK.
 # Core SDK
 pip install raxe
 
-# With ML detection (L2)
-pip install raxe[ml]
-
 # With specific LLM wrappers
 pip install raxe openai     # For RaxeOpenAI
 pip install raxe anthropic  # For RaxeAnthropic

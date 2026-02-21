@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "pi-202",
-      "family": "PI",
-      "severity": "high"
+      "severity": "high",
+      "confidence": 0.7819999999999999
     }
   ]
 }

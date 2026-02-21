@@ -1,11 +1,16 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 2,
   "detections": [
     {
+      "rule_id": "hc-116",
+      "severity": "critical",
+      "confidence": 0.7852799999999999
+    },
+    {
       "rule_id": "hc-117",
-      "family": "HC",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.8050999999999999
     }
   ]
 }

@@ -63,6 +63,15 @@ class TestKeyPatterns:
         for key in valid_keys:
             assert KEY_PATTERNS["test"].match(key), f"Should match: {key}"
 
+    def test_nfr_key_pattern_valid(self) -> None:
+        """Test valid NFR key format."""
+        valid_keys = [
+            "raxe_nfr_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+            "raxe_nfr_00000000000000000000000000000000",
+        ]
+        for key in valid_keys:
+            assert KEY_PATTERNS["nfr"].match(key), f"Should match: {key}"
+
     def test_invalid_key_patterns(self) -> None:
         """Test invalid key formats are rejected."""
         invalid_keys = [
@@ -96,6 +105,11 @@ class TestValidateKeyFormat:
         """Test validating test key returns correct type."""
         key = "raxe_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
         assert validate_key_format(key) == "test"
+
+    def test_validate_nfr_key(self) -> None:
+        """Test validating NFR key returns correct type."""
+        key = "raxe_nfr_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+        assert validate_key_format(key) == "nfr"
 
     def test_validate_empty_key_raises(self) -> None:
         """Test empty key raises InvalidKeyFormatError."""
@@ -141,6 +155,20 @@ class TestCredentials:
             first_seen_at=None,
         )
         assert creds.is_temporary() is True
+
+    def test_nfr_key_credentials(self) -> None:
+        """Test creating credentials with NFR key type."""
+        creds = Credentials(
+            api_key="raxe_nfr_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+            key_type="nfr",
+            installation_id="inst_abc123def456gh",
+            created_at="2025-01-26T10:00:00Z",
+            expires_at=None,
+            first_seen_at=None,
+        )
+        assert creds.key_type == "nfr"
+        assert creds.is_temporary() is False
+        assert creds.is_expired() is False
 
     def test_is_temporary_false_for_live(self) -> None:
         """Test is_temporary returns False for live keys."""
@@ -512,6 +540,19 @@ class TestCredentialStore:
 
         assert creds.api_key == new_key
         assert creds.key_type == "test"
+        assert creds.expires_at is None
+
+    def test_upgrade_key_nfr(self, tmp_path: Path) -> None:
+        """Test upgrading to NFR key."""
+        creds_file = tmp_path / "creds.json"
+        store = CredentialStore(credential_path=creds_file)
+        store.get_or_create()
+
+        new_key = "raxe_nfr_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+        creds = store.upgrade_key(new_key, "nfr")
+
+        assert creds.api_key == new_key
+        assert creds.key_type == "nfr"
         assert creds.expires_at is None
 
     def test_upgrade_key_type_mismatch_raises(self, tmp_path: Path) -> None:
@@ -1165,22 +1206,25 @@ class TestComputeKeyId:
         assert re.match(r"^[a-f0-9]{12}$", suffix)
 
     def test_works_with_all_key_types(self) -> None:
-        """Test compute_key_id works with temp, live, and test keys."""
+        """Test compute_key_id works with temp, live, test, and nfr keys."""
         temp_key = "raxe_temp_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
         live_key = "raxe_live_x9y8z7w6v5u4t3s2r1q0p9o8n7m6l5k4"
         test_key = "raxe_test_m1n2o3p4q5r6s7t8u9v0w1x2y3z4a5b6"
+        nfr_key = "raxe_nfr_q1w2e3r4t5y6u7i8o9p0a1s2d3f4g5h6"
 
         temp_id = compute_key_id(temp_key)
         live_id = compute_key_id(live_key)
         test_id = compute_key_id(test_key)
+        nfr_id = compute_key_id(nfr_key)
 
         # All should have the correct format
         assert temp_id.startswith("key_") and len(temp_id) == 16
         assert live_id.startswith("key_") and len(live_id) == 16
         assert test_id.startswith("key_") and len(test_id) == 16
+        assert nfr_id.startswith("key_") and len(nfr_id) == 16
 
         # All should be different
-        assert len({temp_id, live_id, test_id}) == 3
+        assert len({temp_id, live_id, test_id, nfr_id}) == 4
 
 
 class TestKeyUpgradeInfo:

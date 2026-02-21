@@ -1,5 +1,7 @@
 # RAXE Quick Start Guide
 
+> **Note:** This guide has been consolidated into [Start Here](start-here.md). This file is kept for backward compatibility.
+
 Get up and running with RAXE in less than 60 seconds.
 
 ## Installation

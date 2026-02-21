@@ -432,6 +432,8 @@ def _save_new_credentials(
             old_key_type = "community"
         elif old_credentials.api_key.startswith("raxe_test_"):
             old_key_type = "test"
+        elif old_credentials.api_key.startswith("raxe_nfr_"):
+            old_key_type = "nfr"
         else:
             old_key_type = "temp"
         # Calculate days on previous key
@@ -449,11 +451,14 @@ def _save_new_credentials(
         new_key_type = "community"
     elif api_key.startswith("raxe_test_"):
         new_key_type = "test"
+    elif api_key.startswith("raxe_nfr_"):
+        new_key_type = "nfr"
     else:
         new_key_type = "community"  # Default for connected keys
 
     # Update credentials file
-    store.upgrade_key(api_key, "live" if new_key_type == "community" else "test")
+    _type_map = {"community": "live", "test": "test", "nfr": "nfr"}
+    store.upgrade_key(api_key, _type_map.get(new_key_type, "live"))
 
     # Send upgrade event (fire and forget)
     try:

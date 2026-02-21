@@ -16,7 +16,7 @@ L2 uses Gemma-based ONNX models containing:
 - Gemma tokenizer
 - Label configuration
 
-Note: ML features require optional dependencies: pip install raxe[ml]
+Note: ML features are included with pip install raxe
 """
 
 # Protocol and base types (no ML dependencies required)
@@ -78,8 +78,8 @@ except ImportError as e:
     def create_gemma_detector(*args, **kwargs):  # type: ignore[misc]
         """Stub: ML dependencies not installed."""
         raise ImportError(
-            f"ML features require optional dependencies. "
-            f"Install with: pip install raxe[ml]\n"
+            f"ML dependencies missing. "
+            f"Reinstall with: pip install raxe\n"
             f"Original error: {_ML_IMPORT_ERROR}"
         )
 

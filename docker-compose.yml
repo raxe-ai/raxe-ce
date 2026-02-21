@@ -1,0 +1,5 @@
+services:
+  raxe:
+    build:
+      context: .
+    image: raxe:latest

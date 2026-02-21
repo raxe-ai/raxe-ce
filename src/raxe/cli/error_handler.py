@@ -267,7 +267,10 @@ ERROR_HELP_MAP: dict[ErrorCode, ErrorHelp] = {
     ),
     ErrorCode.INFRA_RATE_LIMITED: ErrorHelp(
         title="Rate limit exceeded",
-        suggested_fix="Wait and retry with backoff.\n  Get a permanent key for higher limits via: raxe auth login",
+        suggested_fix=(
+            "Wait and retry with backoff.\n"
+            "  Get a permanent key for higher limits via: raxe auth login"
+        ),
         learn_more_suffix="INFRA-503",
     ),
     ErrorCode.INFRA_DISK_FULL: ErrorHelp(
@@ -277,7 +280,7 @@ ERROR_HELP_MAP: dict[ErrorCode, ErrorHelp] = {
     ),
     ErrorCode.INFRA_MODEL_LOAD_FAILED: ErrorHelp(
         title="Failed to load ML model",
-        suggested_fix="Run: pip install raxe[ml]  # to install ML dependencies",
+        suggested_fix="Run: pip install raxe  # to install ML dependencies",
         learn_more_suffix="INFRA-505",
     ),
     ErrorCode.INFRA_CIRCUIT_BREAKER_OPEN: ErrorHelp(

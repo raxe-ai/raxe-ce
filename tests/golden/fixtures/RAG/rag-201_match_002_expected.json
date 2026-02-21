@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "rag-201",
-      "family": "RAG",
-      "severity": "high"
+      "severity": "high",
+      "confidence": 0.7541599999999999
     }
   ]
 }

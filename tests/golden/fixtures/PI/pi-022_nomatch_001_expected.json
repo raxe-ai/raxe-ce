@@ -1,5 +1,16 @@
 {
-  "has_detections": false,
-  "detection_count": 0,
-  "detections": []
+  "has_detections": true,
+  "detection_count": 2,
+  "detections": [
+    {
+      "rule_id": "pi-022",
+      "severity": "high",
+      "confidence": 0.76296
+    },
+    {
+      "rule_id": "rag-201",
+      "severity": "high",
+      "confidence": 0.7435999999999999
+    }
+  ]
 }

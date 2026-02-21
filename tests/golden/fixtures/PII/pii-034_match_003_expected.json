@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "pii-034",
-      "family": "PII",
-      "severity": "critical"
+      "severity": "critical",
+      "confidence": 0.8231999999999999
     }
   ]
 }

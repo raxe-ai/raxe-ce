@@ -1,11 +1,5 @@
 {
-  "has_detections": true,
-  "detection_count": 1,
-  "detections": [
-    {
-      "rule_id": "enc-96",
-      "family": "ENC",
-      "severity": "critical"
-    }
-  ]
+  "has_detections": false,
+  "detection_count": 0,
+  "detections": []
 }

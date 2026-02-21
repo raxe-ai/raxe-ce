@@ -247,7 +247,9 @@ def rule_invalid_pattern_error(rule_id: str, pattern: str, error: str) -> RaxeEr
             "pattern_preview": pattern[:50] + "..." if len(pattern) > 50 else pattern,
             "error": error,
         },
-        remediation="Fix the regex pattern syntax. Test patterns at regex101.com before adding to rules.",
+        remediation=(
+            "Fix the regex pattern syntax. Test patterns at regex101.com before adding to rules."
+        ),
     )
 
 
@@ -371,7 +373,7 @@ def credential_expired_error(
 # ============================================================================
 
 
-class RaxeException(Exception):
+class RaxeException(Exception):  # noqa: N818
     """Base exception for all RAXE errors.
 
     Can be initialized with either a simple message (for backwards compatibility)
@@ -785,7 +787,9 @@ def from_error_code(
         ErrorCode.SEC_SIGNATURE_INVALID: "Verify rule pack integrity",
         ErrorCode.SEC_AUTH_FAILED: "Get a permanent key at the console or run 'raxe auth login'",
         ErrorCode.SEC_PERMISSION_DENIED: "Contact administrator for access",
-        ErrorCode.SEC_CREDENTIAL_EXPIRED: "Get a permanent key at the console or run 'raxe auth login'",
+        ErrorCode.SEC_CREDENTIAL_EXPIRED: (
+            "Get a permanent key at the console or run 'raxe auth login'"
+        ),
         ErrorCode.DB_CONNECTION_FAILED: "Check database path and permissions",
         ErrorCode.DB_QUERY_FAILED: "Run 'raxe doctor' to check database health",
         ErrorCode.DB_MIGRATION_FAILED: "Backup data and reinitialize database",
@@ -803,9 +807,11 @@ def from_error_code(
         ErrorCode.INFRA_NETWORK_ERROR: "Check network connectivity",
         ErrorCode.INFRA_TIMEOUT: "Retry or increase timeout",
         ErrorCode.INFRA_SERVICE_UNAVAILABLE: "Service may be down - retry later",
-        ErrorCode.INFRA_RATE_LIMITED: "Wait and retry with backoff. Get higher limits via 'raxe auth login'",
+        ErrorCode.INFRA_RATE_LIMITED: (
+            "Wait and retry with backoff. Get higher limits via 'raxe auth login'"
+        ),
         ErrorCode.INFRA_DISK_FULL: "Free up disk space",
-        ErrorCode.INFRA_MODEL_LOAD_FAILED: "Reinstall ML models with 'pip install raxe[ml]'",
+        ErrorCode.INFRA_MODEL_LOAD_FAILED: "Reinstall ML models with 'pip install raxe'",
         ErrorCode.INFRA_CIRCUIT_BREAKER_OPEN: "Service recovering - retry in a few minutes",
     }
 

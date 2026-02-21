@@ -1,11 +1,16 @@
 {
   "has_detections": true,
-  "detection_count": 1,
+  "detection_count": 2,
   "detections": [
     {
       "rule_id": "pii-056",
-      "family": "PII",
-      "severity": "high"
+      "severity": "high",
+      "confidence": 0.71466
+    },
+    {
+      "rule_id": "pii-3066",
+      "severity": "critical",
+      "confidence": 0.7380099999999999
     }
   ]
 }

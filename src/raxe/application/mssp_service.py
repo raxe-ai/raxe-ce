@@ -42,7 +42,12 @@ class CreateMSSPRequest:
     webhook_url: str
     webhook_secret: str
     tier: MSSPTier = MSSPTier.STARTER
-    max_customers: int = 10
+    max_customers: int | None = None  # None = use tier default
+
+    def __post_init__(self) -> None:
+        """Apply tier default for max_customers if not explicitly set."""
+        if self.max_customers is None:
+            object.__setattr__(self, "max_customers", self.tier.default_max_customers)
 
 
 @dataclass
@@ -186,12 +191,20 @@ class MSSPService:
             ValueError: If validation fails
         """
         # Verify MSSP exists
-        if not self._mssp_repo.exists(request.mssp_id):
-            raise MSSPNotFoundError(request.mssp_id)
+        mssp = self._mssp_repo.get(request.mssp_id)
 
         # Validate customer_id format
         if not request.customer_id.startswith("cust_"):
             raise ValueError("customer_id must start with 'cust_'")
+
+        # Check customer limit for MSSP tier
+        customer_repo = get_customer_repo(request.mssp_id, self.base_path)
+        current_count = len(customer_repo.list())
+        if mssp.max_customers > 0 and current_count >= mssp.max_customers:
+            raise ValueError(
+                f"Customer limit reached ({mssp.max_customers}) for MSSP tier "
+                f"'{mssp.tier.value}'. Upgrade tier to add more customers."
+            )
 
         # Create customer entity
         customer = MSSPCustomer(
@@ -204,8 +217,6 @@ class MSSPService:
             heartbeat_threshold_seconds=request.heartbeat_threshold_seconds,
         )
 
-        # Get customer repo and create
-        customer_repo = get_customer_repo(request.mssp_id, self.base_path)
         return customer_repo.create(customer)
 
     def get_customer(self, mssp_id: str, customer_id: str) -> MSSPCustomer:

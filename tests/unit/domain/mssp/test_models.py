@@ -77,6 +77,12 @@ class TestMSSPTier:
         tiers = [MSSPTier.STARTER, MSSPTier.PROFESSIONAL, MSSPTier.ENTERPRISE]
         assert len(tiers) == 3
 
+    def test_mssp_tier_default_max_customers(self) -> None:
+        """Each tier has a default max_customers value."""
+        assert MSSPTier.STARTER.default_max_customers == 10
+        assert MSSPTier.PROFESSIONAL.default_max_customers == 50
+        assert MSSPTier.ENTERPRISE.default_max_customers == 0  # unlimited
+
 
 class TestWebhookConfig:
     """Tests for WebhookConfig dataclass."""
@@ -312,20 +318,20 @@ class TestMSSP:
                 api_key_hash="sha256:test",
             )
 
-    def test_mssp_validation_max_customers_positive(self) -> None:
-        """max_customers must be positive."""
-        with pytest.raises(ValueError, match="max_customers must be.*positive"):
-            MSSP(
-                mssp_id="mssp_test",
-                name="Test",
-                tier=MSSPTier.STARTER,
-                max_customers=0,
-                api_key_hash="sha256:test",
-            )
+    def test_mssp_validation_max_customers_zero_is_unlimited(self) -> None:
+        """max_customers=0 means unlimited."""
+        mssp = MSSP(
+            mssp_id="mssp_test",
+            name="Test",
+            tier=MSSPTier.ENTERPRISE,
+            max_customers=0,
+            api_key_hash="sha256:test",
+        )
+        assert mssp.max_customers == 0
 
     def test_mssp_validation_max_customers_negative(self) -> None:
         """max_customers cannot be negative."""
-        with pytest.raises(ValueError, match="max_customers must be.*positive"):
+        with pytest.raises(ValueError, match="max_customers must be.*non-negative"):
             MSSP(
                 mssp_id="mssp_test",
                 name="Test",

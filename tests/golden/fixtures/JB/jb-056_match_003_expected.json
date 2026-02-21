@@ -3,9 +3,9 @@
   "detection_count": 1,
   "detections": [
     {
-      "rule_id": "jb-056",
-      "family": "JB",
-      "severity": "critical"
+      "rule_id": "agent-012",
+      "severity": "high",
+      "confidence": 0.7719
     }
   ]
 }

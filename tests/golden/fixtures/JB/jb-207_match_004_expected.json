@@ -4,8 +4,8 @@
   "detections": [
     {
       "rule_id": "jb-207",
-      "family": "JB",
-      "severity": "high"
+      "severity": "high",
+      "confidence": 0.68973
     }
   ]
 }

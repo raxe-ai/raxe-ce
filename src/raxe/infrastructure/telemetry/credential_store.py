@@ -47,10 +47,11 @@ KEY_PATTERNS: dict[str, re.Pattern[str]] = {
     "temporary": re.compile(r"^raxe_temp_[a-zA-Z0-9_\-]{32}$"),
     "live": re.compile(r"^raxe_live_[a-zA-Z0-9_\-]{32}$"),
     "test": re.compile(r"^raxe_test_[a-zA-Z0-9_\-]{32}$"),
+    "nfr": re.compile(r"^raxe_nfr_[a-zA-Z0-9_\-]{32}$"),
 }
 
 # Combined pattern for any valid key
-ANY_KEY_PATTERN = re.compile(r"^raxe_(live|test|temp)_[a-zA-Z0-9_\-]{32}$")
+ANY_KEY_PATTERN = re.compile(r"^raxe_(live|test|temp|nfr)_[a-zA-Z0-9_\-]{32}$")
 
 # Temporary key expiry (14 days from creation)
 TEMP_KEY_EXPIRY_DAYS = 14
@@ -150,8 +151,8 @@ class KeyUpgradeInfo:
     Attributes:
         previous_key_id: BigQuery-compatible ID for previous key (e.g., "key_23cc2f9f21f9").
         new_key_id: BigQuery-compatible ID for new key (e.g., "key_7ce219b525f1").
-        previous_key_type: Previous key type ("temporary", "live", or "test").
-        new_key_type: New key type ("live" or "test").
+        previous_key_type: Previous key type ("temporary", "live", "test", or "nfr").
+        new_key_type: New key type ("live", "test", or "nfr").
         days_on_previous: Number of days the previous key was in use (if known).
         new_credentials: The newly saved Credentials object.
     """
@@ -171,8 +172,8 @@ class Credentials:
     Represents stored API credentials with type and expiry information.
 
     Attributes:
-        api_key: The RAXE API key (raxe_temp_*, raxe_live_*, or raxe_test_*)
-        key_type: Type of key - temporary, live, or test
+        api_key: The RAXE API key (raxe_temp_*, raxe_live_*, raxe_test_*, or raxe_nfr_*)
+        key_type: Type of key - temporary, live, test, or nfr
         installation_id: Unique installation identifier (inst_{hex16})
         created_at: ISO 8601 timestamp when credentials were created
         expires_at: ISO 8601 timestamp when key expires (temporary keys only)
@@ -184,7 +185,7 @@ class Credentials:
     """
 
     api_key: str
-    key_type: Literal["temporary", "live", "test"]
+    key_type: Literal["temporary", "live", "test", "nfr"]
     installation_id: str
     created_at: str  # ISO 8601
     expires_at: str | None  # For temp keys (14 days from creation)
@@ -334,14 +335,14 @@ class Credentials:
         )
 
 
-def validate_key_format(api_key: str) -> Literal["temporary", "live", "test"]:
+def validate_key_format(api_key: str) -> Literal["temporary", "live", "test", "nfr"]:
     """Validate API key format and return type.
 
     Args:
         api_key: The API key to validate.
 
     Returns:
-        The key type (temporary, live, or test).
+        The key type (temporary, live, test, or nfr).
 
     Raises:
         InvalidKeyFormatError: If the key format is invalid.
@@ -351,7 +352,7 @@ def validate_key_format(api_key: str) -> Literal["temporary", "live", "test"]:
 
     if not ANY_KEY_PATTERN.match(api_key):
         raise InvalidKeyFormatError(
-            "Invalid API key format. Expected: raxe_{live|test|temp}_{32 chars}"
+            "Invalid API key format. Expected: raxe_{live|test|temp|nfr}_{32 chars}"
         )
 
     # Determine key type
@@ -361,6 +362,8 @@ def validate_key_format(api_key: str) -> Literal["temporary", "live", "test"]:
         return "live"
     elif api_key.startswith("raxe_test_"):
         return "test"
+    elif api_key.startswith("raxe_nfr_"):
+        return "nfr"
     else:
         raise InvalidKeyFormatError("Unknown key type prefix")
 
@@ -621,7 +624,7 @@ class CredentialStore:
     def upgrade_key(
         self,
         new_api_key: str,
-        key_type: Literal["live", "test"],
+        key_type: Literal["live", "test", "nfr"],
     ) -> Credentials:
         """Upgrade from temporary to permanent key.
 
@@ -629,7 +632,7 @@ class CredentialStore:
 
         Args:
             new_api_key: The new permanent API key.
-            key_type: Type of the new key (live or test).
+            key_type: Type of the new key (live, test, or nfr).
 
         Returns:
             Updated credentials with the new key.
@@ -648,7 +651,7 @@ class CredentialStore:
     def upgrade_key_with_info(
         self,
         new_api_key: str,
-        key_type: Literal["live", "test"],
+        key_type: Literal["live", "test", "nfr"],
     ) -> KeyUpgradeInfo:
         """Upgrade from temporary to permanent key with full upgrade information.
 
@@ -658,7 +661,7 @@ class CredentialStore:
 
         Args:
             new_api_key: The new permanent API key.
-            key_type: Type of the new key (live or test).
+            key_type: Type of the new key (live, test, or nfr).
 
         Returns:
             KeyUpgradeInfo with old/new key IDs and the new credentials.
@@ -710,8 +713,9 @@ class CredentialStore:
             except (ValueError, TypeError):
                 days_on_previous = None
 
-        # Determine tier based on key type (live keys default to community tier)
-        tier = "community" if key_type == "live" else "test"
+        # Determine tier based on key type
+        tier_map = {"live": "community", "test": "test", "nfr": "nfr"}
+        tier = tier_map.get(key_type, key_type)
 
         credentials = Credentials(
             api_key=new_api_key,

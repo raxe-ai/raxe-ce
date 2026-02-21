@@ -45,14 +45,30 @@ class MSSPTier(str, Enum):
     Determines available features and customer limits.
 
     Attributes:
-        STARTER: Basic tier with limited customers
-        PROFESSIONAL: Mid-tier with more customers and features
-        ENTERPRISE: Full-featured tier with unlimited capabilities
+        STARTER: Basic tier with limited customers (default 10)
+        PROFESSIONAL: Mid-tier with more customers and features (default 50)
+        ENTERPRISE: Full-featured tier with unlimited capabilities (default 0 = unlimited)
     """
 
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
+
+    @property
+    def default_max_customers(self) -> int:
+        """Return default max_customers for this tier.
+
+        Returns:
+            Max customers (0 = unlimited).
+        """
+        return _TIER_MAX_CUSTOMERS[self]
+
+
+_TIER_MAX_CUSTOMERS: dict[MSSPTier, int] = {
+    MSSPTier.STARTER: 10,
+    MSSPTier.PROFESSIONAL: 50,
+    MSSPTier.ENTERPRISE: 0,
+}
 
 
 @dataclass(frozen=True)
@@ -159,9 +175,9 @@ class MSSP:
         if not self.api_key_hash:
             raise ValueError("api_key_hash cannot be empty")
 
-        # Validate max_customers is positive
-        if self.max_customers <= 0:
-            raise ValueError("max_customers must be a positive integer")
+        # Validate max_customers is non-negative (0 = unlimited)
+        if self.max_customers < 0:
+            raise ValueError("max_customers must be non-negative (0 = unlimited)")
 
 
 @dataclass(frozen=True)
@@ -178,6 +194,7 @@ class MSSPCustomer:
         data_fields: List of allowed telemetry fields (default empty list)
         retention_days: Data retention period in days (1-365, default 30)
         heartbeat_threshold_seconds: Agent heartbeat timeout (60-3600, default 300)
+        max_agents_per_customer: Maximum agents allowed (0 = unlimited, default 0)
         webhook_config: Optional customer-specific webhook override
         siem_config: Optional SIEM integration configuration for this customer
         created_at: ISO 8601 creation timestamp
@@ -208,6 +225,7 @@ class MSSPCustomer:
     data_fields: list[str] = field(default_factory=list)
     retention_days: int = 30
     heartbeat_threshold_seconds: int = 300
+    max_agents_per_customer: int = 0  # 0 = unlimited
     webhook_config: WebhookConfig | None = None
     siem_config: Any = None  # Type: SIEMConfig | None (Any to avoid circular import)
     created_at: str | None = None
@@ -242,6 +260,10 @@ class MSSPCustomer:
         # Validate heartbeat_threshold_seconds bounds (60-3600)
         if not 60 <= self.heartbeat_threshold_seconds <= 3600:
             raise ValueError("heartbeat_threshold_seconds must be between 60 and 3600")
+
+        # Validate max_agents_per_customer is non-negative
+        if self.max_agents_per_customer < 0:
+            raise ValueError("max_agents_per_customer must be non-negative")
 
 
 @dataclass(frozen=True)

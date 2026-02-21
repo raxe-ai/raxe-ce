@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## [Unreleased]
+
+### Features
+
+- **mssp**: Enforce tier-based customer limits per MSSP (Starter: 10, Professional: 50, Enterprise: unlimited)
+- **mssp**: Add `raxe mssp usage` CLI command with per-customer breakdown of active agents, scan volumes, and threat counts
+- **mssp**: Add `UsageMeteringService` for MSSP billing and usage reporting
+- **mssp**: Add `count_active_agents()` to AgentRegistry for MSSP-scoped agent counting
+- **mssp**: Add `max_agents_per_customer` field to MSSPCustomer domain model
+- **auth**: Add NFR (Not-For-Resale) license key type (`raxe_nfr_*`) for partner programs
+- **sdk**: Graceful L2 auto-downgrade to L1-only mode when ML dependencies are not installed
+- **cli**: Add ML dependency status checks to `raxe doctor`
+
+### Bug Fixes
+
+- **cli**: `raxe mssp usage` returns exit code 3 for MSSP not found (was 0)
+- **sdk**: `UsageMeteringService` uses `get_agent_registry()` singleton instead of creating new instance
+
+
 ## v0.12.0 (2026-02-09)
 
 ### Bug Fixes

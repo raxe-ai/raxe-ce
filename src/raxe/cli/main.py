@@ -761,8 +761,9 @@ def scan(
     progress = create_progress_indicator(progress_mode)
 
     # Create Raxe client (uses config if available)
+    # Pass l2_enabled=False when --l1-only to skip expensive ML model loading (~2.5s)
     try:
-        raxe = Raxe(progress_callback=progress)
+        raxe = Raxe(progress_callback=progress, l2_enabled=not l1_only)
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
         console.print("Try running: [cyan]raxe init[/cyan]")

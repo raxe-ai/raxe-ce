@@ -196,11 +196,16 @@ class PipelinePreloader:
         # 3. Initialize and warm up rule executor
         rule_executor = RuleExecutor()
 
-        # Warm up: compile all patterns
+        # Try to inject pre-compiled patterns from cache (fast path)
         patterns_compiled = 0
-        if all_rules:
+        cached_patterns = pack_registry.get_compiled_patterns()
+        if cached_patterns:
+            rule_executor.matcher.inject_compiled_patterns(cached_patterns)
+            patterns_compiled = len(cached_patterns)
+            logger.info(f"Injected {patterns_compiled} pre-compiled patterns from cache")
+        elif all_rules:
+            # Cache miss - compile patterns via warmup scan (slow path)
             try:
-                # Run a dummy scan to compile all patterns
                 warmup_text = "warmup scan to compile patterns"
                 rule_executor.execute_rules(warmup_text, all_rules)
                 patterns_compiled = sum(len(r.patterns) for r in all_rules)
@@ -209,7 +214,8 @@ class PipelinePreloader:
                 logger.warning(f"Failed to warm up rule executor: {e}")
 
         # 4. Initialize L2 detector
-        # When L2 is disabled (e.g. rules list, doctor), skip expensive model loading
+        # When L2 is disabled (e.g. --l1-only, rules list, doctor),
+        # skip expensive model loading entirely
         l2_init_time_ms = 0.0
         l2_model_type = "none"
 

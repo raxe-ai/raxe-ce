@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.13.2 (2026-02-23)
+
+### Performance Improvements
+
+- **packs**: Add rule and pattern caching to skip YAML parsing on startup
+  ([`d173d05`](https://github.com/raxe-ai/raxe-ce/commit/d173d051e960494ceb1899c83574a7c5e58c5183))
+
+Pre-compile 500+ YAML rules and regex patterns into cache files (rules_cache.json +
+  patterns_cache.pkl) that load in ~5ms instead of parsing from scratch. Cache is built via
+  scripts/build_rule_cache.py and ships with the package. Loader falls back to YAML parsing if cache
+  is missing or stale.
+
+
 ## v0.13.1 (2026-02-23)
 
 ### Performance Improvements

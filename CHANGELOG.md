@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v0.13.1 (2026-02-23)
+
+### Performance Improvements
+
+- **cli**: Skip ML model loading when --l1-only flag is set
+  ([`1e3ad62`](https://github.com/raxe-ai/raxe-ce/commit/1e3ad621766f6ee78844c640da1e791cbe41a81e))
+
+Pass l2_enabled=not l1_only to Raxe constructor so that --l1-only scans skip the expensive ONNX ML
+  model loading (~2.5s). Previously, the L2 model was always loaded at startup regardless of the
+  --l1-only flag, because the flag was only checked at scan time after initialization was complete.
+
+Also updated preloader to use pre-compiled pattern cache when available (fast path) instead of
+  always running a warmup scan to compile patterns.
+
+Timing impact (warm runs): - L1-only scans: ~4.5s → ~1.5s (ML model load eliminated) - L1+L2 scans:
+  unchanged (~4.5s init + ~200ms scan)
+
+Note: A LazyL2Detector approach was evaluated but rejected because it
+
+shifted model loading cost into the first scan, inflating reported scan times (3000ms vs actual
+  200ms inference). Eager loading with proper flag propagation gives honest metrics and simpler
+  code.
+
+
 ## v0.13.0 (2026-02-21)
 
 ### Features

@@ -168,6 +168,8 @@ raxe = [
     "py.typed",
     "packs/core/**/*.yaml",
     "packs/core/**/*.yml",
+    "packs/core/**/*.json",
+    "packs/core/**/*.pkl",
     "domain/ml/models/*.onnx",
     "domain/ml/models/*.json",
     "domain/ml/models/*.bundle",

@@ -203,6 +203,17 @@ class PatternMatcher:
 
         return all_matches
 
+    def inject_compiled_patterns(self, patterns: dict[str, RePattern[str]]) -> None:
+        """Inject pre-compiled patterns into cache.
+
+        Used by infrastructure layer to load cached compiled patterns
+        at startup, skipping expensive regex.compile() calls.
+
+        Args:
+            patterns: Dict mapping cache_key -> compiled regex pattern
+        """
+        self._compiled_cache.update(patterns)
+
     def clear_cache(self) -> None:
         """Clear compiled pattern cache.
 

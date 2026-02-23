@@ -2,9 +2,13 @@
 
 Handles loading rule packs from filesystem.
 Infrastructure layer - performs I/O operations.
+
+Uses a pre-compiled JSON cache to avoid parsing 500+ YAML files
+on every startup. Cache is validated against the pack manifest hash.
 """
 
 import logging
+import time
 from pathlib import Path
 
 import yaml
@@ -16,9 +20,23 @@ from raxe.domain.packs.models import (
     RulePack,
 )
 from raxe.domain.rules.models import Rule
+from raxe.infrastructure.packs.cache import (
+    _compute_manifest_hash,
+    find_cache_path,
+    find_patterns_cache_path,
+    read_cache,
+    read_patterns_cache,
+    write_cache,
+)
 from raxe.infrastructure.rules.yaml_loader import YAMLLoader, YAMLLoadError
 
 logger = logging.getLogger(__name__)
+
+# Use C-accelerated YAML loader when available (5-10x faster)
+try:
+    _YAMLLoader: type = yaml.CSafeLoader
+except AttributeError:
+    _YAMLLoader = yaml.SafeLoader
 
 
 class PackLoadError(Exception):
@@ -51,9 +69,14 @@ class PackLoader:
         """
         self.strict = strict
         self.rule_loader = YAMLLoader(strict=strict)
+        self._compiled_patterns: dict[str, object] = {}
 
     def load_pack(self, pack_dir: Path) -> RulePack:
         """Load a complete pack from directory.
+
+        Uses a pre-compiled JSON cache when available to avoid parsing
+        hundreds of YAML files. Falls back to YAML loading if cache is
+        missing or invalid, then writes a cache for next time.
 
         Args:
             pack_dir: Directory containing pack.yaml and rules
@@ -72,7 +95,7 @@ class PackLoader:
         if not pack_dir.is_dir():
             raise PackLoadError(f"Pack path is not a directory: {pack_dir}")
 
-        # Load manifest
+        # Load manifest (single YAML file, always fast)
         manifest_path = pack_dir / "pack.yaml"
         if not manifest_path.exists():
             raise FileNotFoundError(f"Pack manifest not found: {manifest_path}")
@@ -82,7 +105,80 @@ class PackLoader:
         except Exception as e:
             raise PackLoadError(f"Failed to load pack manifest from {manifest_path}: {e}") from e
 
-        # Load all rules referenced in manifest
+        # Try loading from cache (fast path)
+        manifest_hash = _compute_manifest_hash(manifest_path)
+        cache_path = find_cache_path(pack_dir, manifest_hash)
+        cached_rules = read_cache(cache_path, manifest_hash)
+
+        if cached_rules is not None and len(cached_rules) == len(manifest.rules):
+            # Also try to load compiled patterns cache
+            patterns_path = find_patterns_cache_path(pack_dir, manifest_hash)
+            compiled = read_patterns_cache(patterns_path, manifest_hash)
+            if compiled is not None:
+                self._compiled_patterns.update(compiled)
+
+            logger.info(
+                f"Loaded pack '{manifest.versioned_id}' from cache ({len(cached_rules)} rules)"
+            )
+            return RulePack(manifest=manifest, rules=cached_rules)
+
+        # Cache miss - load from YAML files (slow path)
+        load_start = time.perf_counter()
+        rules = self._load_rules_from_yaml(pack_dir, manifest)
+        load_ms = (time.perf_counter() - load_start) * 1000
+        logger.info(f"Loaded {len(rules)} rules from YAML in {load_ms:.0f}ms")
+
+        # Write cache for next startup
+        try:
+            write_cache(
+                rules,
+                manifest_hash,
+                cache_path,
+                pack_id=manifest.versioned_id,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to write rule cache: {e}")
+
+        # Create and return pack
+        try:
+            return RulePack(manifest=manifest, rules=rules)
+        except ValueError as e:
+            if not self.strict:
+                logger.warning(f"Pack validation failed but continuing in non-strict mode: {e}")
+                loaded_pack_rules = [
+                    pr
+                    for pr in manifest.rules
+                    if any(r.versioned_id == pr.versioned_id for r in rules)
+                ]
+                if not loaded_pack_rules and not rules:
+                    logger.warning("No rules successfully loaded from pack")
+                    raise PackLoadError(
+                        "Pack validation failed: No rules successfully loaded"
+                    ) from e
+
+                adjusted_manifest = PackManifest(
+                    id=manifest.id,
+                    version=manifest.version,
+                    name=manifest.name,
+                    pack_type=manifest.pack_type,
+                    schema_version=manifest.schema_version,
+                    rules=loaded_pack_rules,
+                    metadata=manifest.metadata,
+                    signature=manifest.signature,
+                    signature_algorithm=manifest.signature_algorithm,
+                )
+                return RulePack(manifest=adjusted_manifest, rules=rules)
+            raise PackLoadError(f"Pack validation failed: {e}") from e
+
+    def _load_rules_from_yaml(
+        self,
+        pack_dir: Path,
+        manifest: PackManifest,
+    ) -> list[Rule]:
+        """Load all rules from YAML files referenced in manifest.
+
+        This is the slow path - called only on cache miss.
+        """
         rules = []
         load_errors = []
 
@@ -100,10 +196,7 @@ class PackLoader:
 
             try:
                 rule = self.rule_loader.load_rule(rule_path)
-
-                # Verify rule matches manifest declaration
                 self._validate_rule_matches_manifest(rule, pack_rule, rule_path)
-
                 rules.append(rule)
 
             except YAMLLoadError as e:
@@ -123,51 +216,13 @@ class PackLoader:
                     raise PackLoadError(error_msg) from e
                 continue
 
-        # Log summary if there were errors in non-strict mode
         if load_errors and not self.strict:
             logger.warning(
-                f"Loaded pack '{manifest.versioned_id}' with {len(load_errors)} errors. "
+                f"Loaded pack with {len(load_errors)} errors. "
                 f"Successfully loaded {len(rules)}/{manifest.rule_count} rules."
             )
 
-        # Create and return pack (will validate rule count matches)
-        try:
-            return RulePack(manifest=manifest, rules=rules)
-        except ValueError as e:
-            # In non-strict mode, we may have partial rule loading
-            # which will fail RulePack validation
-            if not self.strict:
-                logger.warning(f"Pack validation failed but continuing in non-strict mode: {e}")
-                # Create a modified manifest with actual loaded rules
-                loaded_pack_rules = [
-                    pr
-                    for pr in manifest.rules
-                    if any(r.versioned_id == pr.versioned_id for r in rules)
-                ]
-
-                # If no rules loaded, create a dummy rule entry to satisfy validation
-                if not loaded_pack_rules and not rules:
-                    # Return None or raise in strict mode
-                    logger.warning("No rules successfully loaded from pack")
-                    # Create minimal valid manifest with no rules would fail
-                    # So we need to return something or raise
-                    raise PackLoadError(
-                        "Pack validation failed: No rules successfully loaded"
-                    ) from e
-
-                adjusted_manifest = PackManifest(
-                    id=manifest.id,
-                    version=manifest.version,
-                    name=manifest.name,
-                    pack_type=manifest.pack_type,
-                    schema_version=manifest.schema_version,
-                    rules=loaded_pack_rules,
-                    metadata=manifest.metadata,
-                    signature=manifest.signature,
-                    signature_algorithm=manifest.signature_algorithm,
-                )
-                return RulePack(manifest=adjusted_manifest, rules=rules)
-            raise PackLoadError(f"Pack validation failed: {e}") from e
+        return rules
 
     def _load_manifest(self, manifest_path: Path) -> PackManifest:
         """Load pack manifest from YAML file.
@@ -183,7 +238,7 @@ class PackLoader:
         """
         try:
             with open(manifest_path, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
+                data = yaml.load(f, Loader=_YAMLLoader)  # noqa: S506  # nosec B506
         except yaml.YAMLError as e:
             raise PackLoadError(f"Failed to parse manifest YAML: {e}") from e
         except Exception as e:

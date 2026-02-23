@@ -57,6 +57,7 @@ repos:
       - id: check-added-large-files
         args: ['--maxkb=1000']  # 1MB limit
       - id: detect-private-key
+        exclude: ^src/raxe/packs/.*/rules_cache\.json$  # Contains detection patterns for private keys (false positive)
       - id: check-case-conflict
 
       # Python specific

@@ -10,6 +10,12 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
+# Use C-accelerated YAML loader when available (5-10x faster)
+try:
+    _YAMLLoader: type = yaml.CSafeLoader
+except AttributeError:
+    _YAMLLoader = yaml.SafeLoader
+
 from raxe.domain.rules.models import (
     Pattern,
     Rule,
@@ -74,7 +80,7 @@ class YAMLLoader:
         # 2. Read and parse YAML
         try:
             with open(path, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
+                data = yaml.load(f, Loader=_YAMLLoader)  # noqa: S506  # nosec B506
         except yaml.YAMLError as e:
             raise YAMLLoadError(f"Failed to parse YAML from {path}: {e}") from e
         except Exception as e:

@@ -357,6 +357,15 @@ class PackRegistry:
 
         return info
 
+    def get_compiled_patterns(self) -> dict[str, object]:
+        """Get pre-compiled regex patterns loaded from cache.
+
+        Returns:
+            Dict mapping cache_key -> compiled regex.Pattern,
+            or empty dict if no patterns cache was loaded.
+        """
+        return self.loader._compiled_patterns
+
     def reload_all_packs(self) -> None:
         """Reload all packs from filesystem.
 

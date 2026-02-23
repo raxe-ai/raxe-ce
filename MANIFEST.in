@@ -8,7 +8,7 @@ include pyproject.toml
 
 # Include source code
 recursive-include src/raxe *.py
-recursive-include src/raxe/packs *.yaml *.yml
+recursive-include src/raxe/packs *.yaml *.yml *.json *.pkl
 
 # Include type hints marker
 include src/raxe/py.typed

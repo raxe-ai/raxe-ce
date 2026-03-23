@@ -17,7 +17,6 @@ Raxe(
     config_path: Optional[Path] = None,
     telemetry: bool = True,
     l2_enabled: bool = True,
-    performance_mode: str = "balanced",
     **kwargs
 )
 ```
@@ -30,7 +29,6 @@ Raxe(
 | `config_path` | `Optional[Path]` | `None` | Path to config file (overrides default) |
 | `telemetry` | `bool` | `True` | Enable privacy-preserving telemetry |
 | `l2_enabled` | `bool` | `True` | Enable L2 ML detection |
-| `performance_mode` | `str` | `"balanced"` | Performance mode: "fast", "balanced", "accurate" |
 | `**kwargs` | `Any` | - | Additional config options |
 
 #### Configuration Cascade
@@ -62,7 +60,6 @@ raxe = Raxe(
     api_key="raxe_test_...",
     telemetry=True,
     l2_enabled=True,
-    performance_mode="accurate"
 )
 ```
 
@@ -390,8 +387,12 @@ For high-throughput scenarios:
 # Option 1: Disable L2 for faster scans
 raxe = Raxe(l2_enabled=False)
 
-# Option 2: Use fast mode
-raxe = Raxe(performance_mode="fast")
+# Option 2: Use background scanning (non-blocking)
+# Scans run in a worker thread; the call returns in <1ms.
+# Note: incompatible with on_threat="block" (auto-corrects to sync with a warning).
+from raxe.sdk.agent_scanner import AgentScannerConfig, create_agent_scanner
+scanner = create_agent_scanner(raxe, AgentScannerConfig(execution_mode="background"))
+scanner.scan_prompt(text)  # Returns immediately
 
 # Option 3: Batch scans in parallel
 from concurrent.futures import ThreadPoolExecutor

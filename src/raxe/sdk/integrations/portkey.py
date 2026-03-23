@@ -98,6 +98,7 @@ class PortkeyGuardConfig:
         scan_outputs: Scan output responses (afterRequest)
         include_scan_details: Include detailed scan info in response data
         fail_open: Return true verdict on errors (Portkey default behavior)
+        execution_mode: Execution mode for scanning ("sync" or "background")
 
     Example:
         # Log-only mode (default)
@@ -116,6 +117,7 @@ class PortkeyGuardConfig:
     scan_outputs: bool = True
     include_scan_details: bool = True
     fail_open: bool = True  # Match Portkey's timeout behavior
+    execution_mode: str = "sync"
 
 
 # =============================================================================
@@ -599,11 +601,23 @@ class RaxePortkeyGuard:
         self.config = config
 
         # Create AgentScanner for unified scanning with integration telemetry
-        # Always use log mode - Portkey handles blocking with severity threshold
+        # Always use log mode - Portkey handles blocking via severity threshold
+        # Force sync when blocking is enabled: background mode returns a clean
+        # placeholder immediately, so Portkey's inline block check would miss threats.
+        effective_execution_mode = config.execution_mode
+        if config.block_on_threats and config.execution_mode == "background":
+            effective_execution_mode = "sync"
+            import logging as _logging
+
+            _logging.getLogger(__name__).warning(
+                "Portkey guard: execution_mode='background' is incompatible with "
+                "block_on_threats=True. Auto-correcting to 'sync'."
+            )
         scanner_config = AgentScannerConfig(
             scan_prompts=config.scan_inputs,
             scan_responses=config.scan_outputs,
             on_threat="log",  # Portkey controls blocking via severity threshold
+            execution_mode=effective_execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, scanner_config, integration_type="portkey")
 
@@ -795,6 +809,7 @@ def create_portkey_guard(
     *,
     block_on_threats: bool = False,
     block_severity_threshold: str = "HIGH",
+    execution_mode: str = "sync",
 ) -> RaxePortkeyGuard:
     """Create a Portkey client guard.
 
@@ -802,6 +817,7 @@ def create_portkey_guard(
         raxe: Raxe client. Created if not provided.
         block_on_threats: Whether to block on threat detection
         block_severity_threshold: Minimum severity to trigger blocking
+        execution_mode: Execution mode for scanning ("sync" or "background")
 
     Returns:
         Configured RaxePortkeyGuard
@@ -809,6 +825,7 @@ def create_portkey_guard(
     config = PortkeyGuardConfig(
         block_on_threats=block_on_threats,
         block_severity_threshold=block_severity_threshold,
+        execution_mode=execution_mode,
     )
     return RaxePortkeyGuard(raxe, config)
 

@@ -174,6 +174,7 @@ class _RaxeCallbackHandlerMixin:
         scan_tools: bool = True,
         scan_agent_actions: bool = True,
         on_threat: Any | None = None,
+        execution_mode: str = "sync",
     ) -> None:
         """Initialize RAXE callback handler.
 
@@ -186,6 +187,7 @@ class _RaxeCallbackHandlerMixin:
             scan_tools: Scan tool inputs/outputs (default: True)
             scan_agent_actions: Scan agent actions (default: True)
             on_threat: Optional callback for threat notifications
+            execution_mode: Execution mode for scanning ("sync" or "background")
         """
         # Store configuration
         self.block_on_prompt_threats = block_on_prompt_threats
@@ -208,6 +210,7 @@ class _RaxeCallbackHandlerMixin:
                 scan_tool_calls=scan_tools,
                 # Default to log-only mode for safety
                 on_threat="block" if block_on_prompt_threats else "log",
+                execution_mode=execution_mode,
             )
             self._scanner = create_agent_scanner(self._raxe, config, integration_type="langchain")
 
@@ -1042,6 +1045,7 @@ class RaxeCallbackHandler:
         scan_tools: bool = True,
         scan_agent_actions: bool = True,
         on_threat: Any | None = None,
+        execution_mode: str = "sync",
     ) -> None:
         # This __init__ is never called when __new__ returns a different class
         # The initialization is done in __new__ above
@@ -1059,6 +1063,7 @@ def create_callback_handler(
     tool_policy: ToolPolicy | None = None,
     block_on_prompt_threats: bool = False,
     block_on_response_threats: bool = False,
+    execution_mode: str = "sync",
     **kwargs: Any,
 ) -> RaxeCallbackHandler:
     """Factory function to create RaxeCallbackHandler.
@@ -1071,6 +1076,7 @@ def create_callback_handler(
         tool_policy: Policy for tool validation
         block_on_prompt_threats: Block on prompt threats
         block_on_response_threats: Block on response threats
+        execution_mode: Execution mode for scanning ("sync" or "background")
         **kwargs: Additional arguments passed to handler
 
     Returns:
@@ -1081,6 +1087,7 @@ def create_callback_handler(
         tool_policy=tool_policy,
         block_on_prompt_threats=block_on_prompt_threats,
         block_on_response_threats=block_on_response_threats,
+        execution_mode=execution_mode,
         **kwargs,
     )
 

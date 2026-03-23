@@ -100,6 +100,7 @@ class DSPyConfig:
     scan_lm_responses: bool = True
     scan_tool_calls: bool = True
     scan_tool_results: bool = True
+    execution_mode: str = "sync"
 
 
 # =============================================================================
@@ -158,6 +159,7 @@ class RaxeDSPyCallback:
             scan_prompts=True,
             scan_responses=True,
             on_threat="block" if self.config.block_on_threats else "log",
+            execution_mode=self.config.execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, scanner_config, integration_type="dspy")
 
@@ -543,8 +545,8 @@ class RaxeDSPyCallback:
         if value is not None:
             try:
                 return str(value)
-            except Exception:
-                pass
+            except Exception:  # noqa: S110
+                pass  # Best-effort conversion — return empty on failure
 
         return ""
 
@@ -731,8 +733,8 @@ class RaxeModuleGuard:
         if value is not None:
             try:
                 return str(value)
-            except Exception:
-                pass
+            except Exception:  # noqa: S110
+                pass  # Best-effort conversion — return empty on failure
 
         return ""
 
@@ -786,6 +788,7 @@ def create_dspy_callback(
     block_on_threats: bool = False,
     scan_lm_prompts: bool = True,
     scan_lm_responses: bool = True,
+    execution_mode: str = "sync",
 ) -> RaxeDSPyCallback:
     """Create a DSPy callback handler.
 
@@ -796,6 +799,7 @@ def create_dspy_callback(
         block_on_threats: Whether to block on threat detection.
         scan_lm_prompts: Whether to scan LM prompts.
         scan_lm_responses: Whether to scan LM responses.
+        execution_mode: Execution mode - "sync" or "background".
 
     Returns:
         Configured RaxeDSPyCallback
@@ -811,6 +815,7 @@ def create_dspy_callback(
         block_on_threats=block_on_threats,
         scan_lm_prompts=scan_lm_prompts,
         scan_lm_responses=scan_lm_responses,
+        execution_mode=execution_mode,
     )
     return RaxeDSPyCallback(raxe, config)
 

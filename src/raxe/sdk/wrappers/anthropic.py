@@ -67,6 +67,7 @@ class RaxeAnthropic:
         raxe: Raxe | None = None,
         raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
+        raxe_execution_mode: str = "sync",
         **kwargs,
     ):
         """Initialize RaxeAnthropic client.
@@ -123,6 +124,7 @@ class RaxeAnthropic:
             scan_prompts=True,
             scan_responses=raxe_scan_responses,
             on_threat="block" if raxe_block_on_threat else "log",
+            execution_mode=raxe_execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, config, integration_type="anthropic")
 

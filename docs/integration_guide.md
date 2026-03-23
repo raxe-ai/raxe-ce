@@ -158,8 +158,26 @@ config = AgentScannerConfig(
     scan_responses=True,
     scan_tool_calls=True,
     on_threat="log",
+    execution_mode="sync",  # "sync" (default) or "background"
 )
 scanner = create_agent_scanner(raxe, config, integration_type="custom")
+```
+
+#### Background Scan Mode
+
+Set `execution_mode="background"` for fire-and-forget scanning. Scans run in a
+worker thread and return in under 1 ms, which is useful in latency-sensitive
+pipelines where you want to monitor without adding overhead. Background mode is
+incompatible with `on_threat="block"` -- if both are set, RAXE auto-corrects to
+`"sync"` and logs a warning.
+
+```python
+config = AgentScannerConfig(
+    on_threat="log",
+    execution_mode="background",
+)
+scanner = create_agent_scanner(raxe, config, integration_type="custom")
+scanner.scan_prompt(text)  # Returns immediately
 ```
 
 ### Goal Hijack Detection

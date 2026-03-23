@@ -145,6 +145,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
         block_on_response_threats: bool = False,
         scan_retrieved_context: bool = False,
         scan_agent_actions: bool = True,
+        execution_mode: str = "sync",
     ) -> None:
         """Initialize RAXE callback handler for LlamaIndex.
 
@@ -156,6 +157,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             scan_retrieved_context: Scan retrieved RAG context (default: False)
                 NOTE: Placeholder for future RAG context validation
             scan_agent_actions: Scan agent tool inputs (default: True)
+            execution_mode: Execution mode ("sync" or "background", default: "sync")
 
         Example:
             # Log-only mode (default)
@@ -191,6 +193,7 @@ class RaxeLlamaIndexCallback(_LlamaIndexBaseHandler):
             scan_prompts=True,
             scan_responses=True,
             on_threat=on_threat,
+            execution_mode=execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, config, integration_type="llamaindex")
 
@@ -780,6 +783,7 @@ class RaxeSpanHandler:
         block_on_threats: bool = False,
         scan_llm_inputs: bool = True,
         scan_llm_outputs: bool = True,
+        execution_mode: str = "sync",
     ) -> None:
         """Initialize RAXE span handler.
 
@@ -788,6 +792,7 @@ class RaxeSpanHandler:
             block_on_threats: Block on any threats (default: False)
             scan_llm_inputs: Scan LLM inputs (default: True)
             scan_llm_outputs: Scan LLM outputs (default: True)
+            execution_mode: Execution mode ("sync" or "background", default: "sync")
         """
         raxe = raxe_client or Raxe()
         self.raxe = raxe
@@ -800,6 +805,7 @@ class RaxeSpanHandler:
             scan_prompts=scan_llm_inputs,
             scan_responses=scan_llm_outputs,
             on_threat="block" if block_on_threats else "log",
+            execution_mode=execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, config, integration_type="llamaindex")
 

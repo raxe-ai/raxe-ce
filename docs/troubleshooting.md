@@ -344,18 +344,25 @@ AttributeError: 'NoneType' object has no attribute 'detections'
    raxe = Raxe(l2_enabled=False)  # Faster L1-only
    ```
 
-3. **Use fast mode:**
+3. **Use background scanning (non-blocking):**
    ```python
-   raxe = Raxe(performance_mode="fast")
+   from raxe.sdk.agent_scanner import AgentScannerConfig, create_agent_scanner
+   scanner = create_agent_scanner(raxe, AgentScannerConfig(execution_mode="background"))
+   scanner.scan_prompt(text)  # Returns in <1ms, scan runs in background
    ```
 
-4. **Reduce text length:**
+4. **Use scan_fast() for L1-only inline scans:**
+   ```python
+   result = raxe.scan_fast(text)  # ~5-15ms, regex only
+   ```
+
+5. **Reduce text length:**
    ```python
    # Only scan first 1000 chars
    result = raxe.scan(text[:1000])
    ```
 
-5. **Parallel scanning:**
+6. **Parallel scanning:**
    ```python
    from concurrent.futures import ThreadPoolExecutor
 

@@ -89,6 +89,7 @@ class CrewGuardConfig:
         on_block: Callback when execution blocked
         wrap_tools: Automatically wrap tools for scanning
         tool_scan_mode: Scan mode specifically for tools
+        execution_mode: Execution mode - "sync" or "background" (default: "sync")
 
     Example:
         # Monitoring mode (default - safe for production)
@@ -133,6 +134,9 @@ class CrewGuardConfig:
     include_agent_context: bool = True  # Include agent name/role in scans
     include_task_context: bool = True  # Include task description in scans
     max_thought_length: int = 5000  # Max length of thoughts to scan
+
+    # Execution mode: "sync" (default) or "background" (fire-and-forget)
+    execution_mode: str = "sync"
 
     def _mode_to_on_threat(self) -> str:
         """Convert ScanMode to on_threat literal.
@@ -197,6 +201,7 @@ class CrewGuardConfig:
             scan_responses=self.scan_crew_outputs,
             on_threat_callback=threat_callback,
             on_block_callback=block_callback,
+            execution_mode=self.execution_mode,
         )
 
 
@@ -912,8 +917,8 @@ class RaxeCrewGuard:
             text = str(step_output)
             if text and len(text) < 10000:  # Sanity check
                 return text
-        except Exception:
-            pass
+        except Exception:  # noqa: S110
+            pass  # Best-effort text extraction — return None on failure
 
         return None
 
@@ -1236,8 +1241,9 @@ class RaxeCrewGuard:
                         },
                     )
 
+                    ctx = context  # Bind loop variable for lambda
                     result = await asyncio.get_event_loop().run_in_executor(
-                        None, lambda v=value: self._scanner.scan_message(v, context=context)
+                        None, lambda v=value, c=ctx: self._scanner.scan_message(v, context=c)
                     )
 
                     if result.should_block:
@@ -1320,6 +1326,7 @@ class RaxeCrewGuard:
 def create_crew_guard(
     raxe: Raxe | None = None,
     mode: ScanMode = ScanMode.LOG_ONLY,
+    execution_mode: str = "sync",
     **kwargs: Any,
 ) -> RaxeCrewGuard:
     """Create a RaxeCrewGuard with common defaults.
@@ -1329,6 +1336,7 @@ def create_crew_guard(
     Args:
         raxe: Optional RAXE client (creates default if None)
         mode: Scan mode (default: LOG_ONLY)
+        execution_mode: Execution mode - "sync" or "background" (default: "sync")
         **kwargs: Additional CrewGuardConfig parameters
 
     Returns:
@@ -1349,7 +1357,7 @@ def create_crew_guard(
     if raxe is None:
         raxe = Raxe()
 
-    config = CrewGuardConfig(mode=mode, **kwargs)
+    config = CrewGuardConfig(mode=mode, execution_mode=execution_mode, **kwargs)
     return RaxeCrewGuard(raxe, config)
 
 

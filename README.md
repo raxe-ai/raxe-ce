@@ -142,6 +142,15 @@ handler = create_callback_handler()
 llm = ChatOpenAI(callbacks=[handler])  # All prompts now protected
 ```
 
+```python
+# Example: Background scanning (zero latency overhead)
+from raxe import Raxe
+from raxe.sdk.agent_scanner import AgentScannerConfig, create_agent_scanner
+
+scanner = create_agent_scanner(Raxe(), AgentScannerConfig(execution_mode="background"))
+scanner.scan_prompt("user input")  # Returns in <1ms, scan runs in background
+```
+
 [View all integration guides →](https://docs.raxe.ai/integrations)
 
 ---
@@ -247,7 +256,7 @@ No. Your prompts never leave your device. All scanning runs 100% locally. RAXE d
 <details>
 <summary><strong>Will RAXE slow down my agent?</strong></summary>
 
-L1 rule-based detection completes in under 5ms (P95). With L2 ML detection (included by default), combined scans take ~45ms. Both are fast enough for real-time protection without impacting user experience.
+L1 rule-based detection completes in under 5ms (P95). With L2 ML detection, combined scans take ~45ms. For latency-sensitive apps, use **background scan mode** — the scan runs asynchronously while your code continues immediately (~0ms overhead). See [Background Scanning →](https://docs.raxe.ai/sdk/python#background-scanning)
 </details>
 
 <details>

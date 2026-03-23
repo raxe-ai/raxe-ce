@@ -107,6 +107,7 @@ class LiteLLMConfig:
     scan_inputs: bool = True
     scan_outputs: bool = True
     include_metadata: bool = True
+    execution_mode: str = "sync"
 
 
 # =============================================================================
@@ -166,6 +167,7 @@ class RaxeLiteLLMCallback(CustomLogger):
             scan_prompts=self.config.scan_inputs,
             scan_responses=self.config.scan_outputs,
             on_threat="block" if self.config.block_on_threats else "log",
+            execution_mode=self.config.execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, scanner_config, integration_type="litellm")
 
@@ -444,6 +446,7 @@ def create_litellm_handler(
     block_on_threats: bool = False,
     scan_inputs: bool = True,
     scan_outputs: bool = True,
+    execution_mode: str = "sync",
 ) -> RaxeLiteLLMCallback:
     """Create a LiteLLM callback handler.
 
@@ -454,6 +457,7 @@ def create_litellm_handler(
         block_on_threats: Whether to block on threat detection.
         scan_inputs: Whether to scan input messages.
         scan_outputs: Whether to scan LLM responses.
+        execution_mode: Execution mode for scanning ("sync" or "background").
 
     Returns:
         Configured RaxeLiteLLMCallback
@@ -469,5 +473,6 @@ def create_litellm_handler(
         block_on_threats=block_on_threats,
         scan_inputs=scan_inputs,
         scan_outputs=scan_outputs,
+        execution_mode=execution_mode,
     )
     return RaxeLiteLLMCallback(raxe, config)

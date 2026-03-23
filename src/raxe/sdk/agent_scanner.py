@@ -46,9 +46,12 @@ Version History:
 from __future__ import annotations
 
 import asyncio
+import atexit
+import concurrent.futures
 import hashlib
 import time
 import uuid
+import weakref
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -619,9 +622,14 @@ class AgentScannerConfig:
     telemetry_enabled: bool = True
 
     # Performance
-    timeout_ms: float = 100.0
+    timeout_ms: float = 500.0
     fail_open: bool = True
     max_prompt_length: int = 50000
+
+    # Execution mode: "sync" (default) or "background" (fire-and-forget)
+    # Background mode submits scans to a worker thread and returns immediately.
+    # Incompatible with on_threat="block" — auto-corrects to "sync" with warning.
+    execution_mode: Literal["sync", "background"] = "sync"
 
     # Multi-tenant policy context
     tenant_id: str | None = None
@@ -759,6 +767,26 @@ class AgentScanner:
         ...     raise SecurityError(result.message)
     """
 
+    # Class-level weak set of live instances for atexit cleanup.
+    # Uses weakrefs so GC'd scanners don't accumulate handlers.
+    _live_instances: weakref.WeakSet[AgentScanner] = weakref.WeakSet()
+    _atexit_registered: bool = False
+
+    @classmethod
+    def _register_instance(cls, instance: AgentScanner) -> None:
+        cls._live_instances.add(instance)
+        if not cls._atexit_registered:
+            atexit.register(cls._cleanup_all)
+            cls._atexit_registered = True
+
+    @classmethod
+    def _cleanup_all(cls) -> None:
+        for instance in list(cls._live_instances):
+            try:
+                instance.shutdown()
+            except Exception:  # noqa: S110
+                pass  # Suppress during interpreter shutdown
+
     def __init__(
         self,
         raxe_client: Raxe | None = None,
@@ -767,7 +795,7 @@ class AgentScanner:
         default_block: bool = False,
         scan_configs: dict[ScanType, ScanConfig] | None = None,
         on_threat: Callable[[AgentScanResult], None] | None = None,
-        timeout_ms: float = 100.0,
+        timeout_ms: float = 500.0,
         fail_open: bool = True,
         integration_type: str | None = None,
         config: AgentScannerConfig | None = None,
@@ -827,9 +855,23 @@ class AgentScanner:
             for scan_type, config in scan_configs.items():
                 self._scan_configs[scan_type] = config
 
+        # Shared scan executor — avoids per-call ThreadPoolExecutor which
+        # blocks past timeout due to shutdown(wait=True) in __exit__
+        self._scan_executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=2,
+            thread_name_prefix="raxe-scan",
+        )
+
+        # Background worker (set in Phase 2 when execution_mode="background")
+        self._background_worker: Any = None
+
         # Trace management
         self._current_trace_id: str | None = None
         self._step_counter: int = 0
+
+        # Track instance for cleanup at interpreter exit (weakref avoids
+        # preventing GC and accumulating handlers for short-lived scanners)
+        AgentScanner._register_instance(self)
 
         logger.debug(
             "AgentScanner initialized",
@@ -890,11 +932,17 @@ class AgentScanner:
         details: dict[str, Any] | None = None,
         policy_violation: bool = False,
         content: str | None = None,
+        trace_id_override: str | None = None,
+        step_id_override: int | None = None,
     ) -> AgentScanResult:
         """Build an AgentScanResult with trace context.
 
         Args:
             content: The scanned content (used for hash, NOT stored in result)
+            trace_id_override: If set, use this trace ID instead of the
+                current one (for background scans captured at submit time).
+            step_id_override: If set, use this step ID instead of
+                incrementing the counter.
         """
         # Compute privacy-preserving hash of content
         prompt_hash = ""
@@ -906,14 +954,17 @@ class AgentScanner:
         if has_threats:
             action_taken = "block" if should_block else "log"
 
+        trace_id = trace_id_override if trace_id_override is not None else self._get_trace_id()
+        step_id = step_id_override if step_id_override is not None else self._next_step()
+
         return AgentScanResult(
             scan_type=scan_type,
             has_threats=has_threats,
             should_block=should_block,
             severity=severity,
             detection_count=detection_count,
-            trace_id=self._get_trace_id(),
-            step_id=self._next_step(),
+            trace_id=trace_id,
+            step_id=step_id,
             duration_ms=duration_ms,
             message=message,
             details=details or {},
@@ -950,9 +1001,10 @@ class AgentScanner:
     ) -> tuple[Any, bool, str | None]:
         """Execute scan with timeout and fail-open/fail-closed handling.
 
-        This method wraps the actual scan call with:
-        - Configurable timeout (timeout_ms from AgentScannerConfig)
-        - Fail-open (default) or fail-closed behavior on errors/timeouts
+        Uses a shared ThreadPoolExecutor to avoid per-call executor creation.
+        The old pattern used ``with ThreadPoolExecutor() as executor:`` which
+        calls ``shutdown(wait=True)`` on exit, blocking the caller even after
+        a timeout fires.
 
         Args:
             text: Text to scan
@@ -970,37 +1022,35 @@ class AgentScanner:
             When fail_open=False (fail-closed):
                 - Timeout/error → block request (raise or return blocking result)
         """
-        import concurrent.futures
-
         timeout_seconds = self.timeout_ms / 1000.0
 
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(
-                    self.raxe.scan,
-                    text,
-                    block_on_threat=block_on_threat,
-                    integration_type=self.integration_type,
-                    tenant_id=self.config.tenant_id,
-                    app_id=self.config.app_id,
-                    policy_id=self.config.policy_id,
+            future = self._scan_executor.submit(
+                self.raxe.scan,
+                text,
+                block_on_threat=block_on_threat,
+                integration_type=self.integration_type,
+                l2_enabled=self.config.l2_enabled,
+                tenant_id=self.config.tenant_id,
+                app_id=self.config.app_id,
+                policy_id=self.config.policy_id,
+            )
+            try:
+                result = future.result(timeout=timeout_seconds)
+                return result, False, None
+            except concurrent.futures.TimeoutError:
+                logger.warning(
+                    "scan_timeout",
+                    extra={
+                        "timeout_ms": self.timeout_ms,
+                        "fail_open": self.fail_open,
+                    },
                 )
-                try:
-                    result = future.result(timeout=timeout_seconds)
-                    return result, False, None
-                except concurrent.futures.TimeoutError:
-                    # Scan timed out
-                    logger.warning(
-                        "scan_timeout",
-                        extra={
-                            "timeout_ms": self.timeout_ms,
-                            "fail_open": self.fail_open,
-                        },
-                    )
-                    return None, True, f"Scan timed out after {self.timeout_ms}ms"
+                return None, True, f"Scan timed out after {self.timeout_ms}ms"
 
+        except SecurityException:
+            raise  # Don't swallow blocking-mode exceptions
         except Exception as e:
-            # Scan failed due to error
             logger.error(
                 "scan_error",
                 extra={
@@ -1010,6 +1060,57 @@ class AgentScanner:
                 },
             )
             return None, False, f"Scan error: {e}"
+
+    def _submit_background_scan(
+        self,
+        text: str,
+        scan_type: ScanType,
+        metadata: dict[str, Any] | None,
+        block_on_threat: bool,
+    ) -> AgentScanResult:
+        """Submit a scan to the background worker and return a placeholder.
+
+        Captures trace_id and step_id at submit time so background execution
+        sees the correct trace context.
+        """
+        from raxe.sdk.background_scanner import _ScanRequest
+
+        trace_id = self._get_trace_id()
+        step_id = self._next_step()
+
+        request = _ScanRequest(
+            text=text,
+            scan_type=scan_type,
+            metadata=metadata,
+            trace_id=trace_id,
+            step_id=step_id,
+            block_on_threat=block_on_threat,
+            on_threat_callback=self.on_threat,
+        )
+        queued = self._background_worker.submit(request)
+
+        if queued:
+            message = f"{scan_type.value}: queued for background scan"
+        else:
+            message = f"{scan_type.value}: background scan dropped (queue full)"
+            logger.warning(
+                "background_scan_dropped_by_caller",
+                extra={"scan_type": scan_type.value},
+            )
+
+        return self._build_result(
+            scan_type=scan_type,
+            has_threats=False,
+            should_block=False,
+            severity=None,
+            detection_count=0,
+            duration_ms=0.0,
+            message=message,
+            details=metadata,
+            content=text,
+            trace_id_override=trace_id,
+            step_id_override=step_id,
+        )
 
     def scan_prompt(
         self,
@@ -1042,11 +1143,21 @@ class AgentScanner:
                 content=prompt,
             )
 
+        # Background mode: submit and return immediately
+        if self._background_worker is not None:
+            config = self._scan_configs[ScanType.PROMPT]
+            return self._submit_background_scan(
+                prompt,
+                ScanType.PROMPT,
+                metadata,
+                config.block_on_threat,
+            )
+
         start = time.perf_counter()
         config = self._scan_configs[ScanType.PROMPT]
 
         # Use timeout wrapper
-        result, timed_out, error_msg = self._scan_with_timeout(
+        result, _timed_out, error_msg = self._scan_with_timeout(
             prompt, block_on_threat=config.block_on_threat
         )
         duration_ms = (time.perf_counter() - start) * 1000
@@ -1126,11 +1237,21 @@ class AgentScanner:
                 content=response,
             )
 
+        # Background mode: submit and return immediately
+        if self._background_worker is not None:
+            config = self._scan_configs[ScanType.RESPONSE]
+            return self._submit_background_scan(
+                response,
+                ScanType.RESPONSE,
+                metadata,
+                config.block_on_threat,
+            )
+
         start = time.perf_counter()
         config = self._scan_configs[ScanType.RESPONSE]
 
         # Use timeout wrapper
-        result, timed_out, error_msg = self._scan_with_timeout(
+        result, _timed_out, error_msg = self._scan_with_timeout(
             response, block_on_threat=config.block_on_threat
         )
         duration_ms = (time.perf_counter() - start) * 1000
@@ -1176,6 +1297,35 @@ class AgentScanner:
             self.on_threat(agent_result)
 
         return agent_result
+
+    def scan(
+        self,
+        text: str,
+        *,
+        scan_type: ScanType = ScanType.PROMPT,
+        metadata: dict[str, Any] | None = None,
+    ) -> AgentScanResult:
+        """Generic scan that routes to the appropriate scan_* method.
+
+        This method provides a unified entry point for integrations like
+        LangChain that call ``scanner.scan(text, scan_type=...)``.
+
+        Args:
+            text: Text to scan
+            scan_type: Type of scan to perform
+            metadata: Optional metadata about the scan
+
+        Returns:
+            AgentScanResult with scan results
+        """
+        if scan_type == ScanType.PROMPT:
+            return self.scan_prompt(text, metadata=metadata)
+        elif scan_type == ScanType.RESPONSE:
+            return self.scan_response(text, metadata=metadata)
+        elif scan_type == ScanType.TOOL_RESULT:
+            return self.scan_tool_result("unknown", text, metadata=metadata)
+        else:
+            return self._scan_content(text, scan_type, metadata)
 
     def validate_tool(self, tool_name: str) -> tuple[bool, str]:
         """Validate a tool against the policy (without scanning arguments).
@@ -2138,6 +2288,16 @@ class AgentScanner:
                 content=content,
             )
 
+        # Background mode: submit and return immediately
+        if self._background_worker is not None:
+            config = self._scan_configs.get(scan_type, ScanConfig())
+            return self._submit_background_scan(
+                content,
+                scan_type,
+                metadata,
+                config.block_on_threat,
+            )
+
         start = time.perf_counter()
         config = self._scan_configs.get(scan_type, ScanConfig())
 
@@ -2146,6 +2306,7 @@ class AgentScanner:
                 content,
                 block_on_threat=config.block_on_threat,
                 integration_type=self.integration_type,
+                l2_enabled=self.config.l2_enabled,
                 tenant_id=self.config.tenant_id,
                 app_id=self.config.app_id,
                 policy_id=self.config.policy_id,
@@ -2171,6 +2332,8 @@ class AgentScanner:
 
             return agent_result
 
+        except SecurityException:
+            raise  # Don't swallow blocking-mode exceptions
         except Exception as e:
             duration_ms = (time.perf_counter() - start) * 1000
             logger.error(f"Scan error for {scan_type.value}: {e}")
@@ -2288,6 +2451,33 @@ class AgentScanner:
                 metadata=metadata,
             ),
         )
+
+    # =========================================================================
+    # Lifecycle Methods
+    # =========================================================================
+
+    def shutdown(self) -> None:
+        """Shut down the scanner's background resources.
+
+        Stops the background worker first (so it can drain queued scans),
+        then shuts down the shared scan executor.
+        Safe to call multiple times.
+        """
+        if self._background_worker is not None:
+            try:
+                self._background_worker.stop()
+            except Exception:
+                logger.debug("Error stopping background worker", exc_info=True)
+        try:
+            self._scan_executor.shutdown(wait=False)
+        except Exception:
+            logger.debug("Error shutting down scan executor", exc_info=True)
+
+    def __enter__(self) -> AgentScanner:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.shutdown()
 
     # =========================================================================
     # Telemetry Methods
@@ -2536,6 +2726,20 @@ def create_agent_scanner(
     """
     config = config or AgentScannerConfig()
 
+    # Validate: background + block is contradictory
+    if config.execution_mode == "background" and config.on_threat == "block":
+        logger.warning(
+            "execution_mode='background' is incompatible with on_threat='block'. "
+            "Auto-correcting to execution_mode='sync'."
+        )
+        # Create a copy with corrected mode
+        config = AgentScannerConfig(
+            **{
+                **{f.name: getattr(config, f.name) for f in config.__dataclass_fields__.values()},
+                "execution_mode": "sync",
+            }
+        )
+
     # Build ToolPolicy from ToolValidationConfig
     tool_config = config.tool_validation
     if tool_config.blocklist:
@@ -2562,7 +2766,7 @@ def create_agent_scanner(
             min_severity_to_block=config.block_severity_threshold,
         )
 
-    return AgentScanner(
+    scanner = AgentScanner(
         raxe_client=raxe,
         tool_policy=tool_policy,
         default_block=config.on_threat == "block",
@@ -2573,6 +2777,15 @@ def create_agent_scanner(
         integration_type=integration_type,
         config=config,
     )
+
+    # Wire up background worker if requested
+    if config.execution_mode == "background":
+        from raxe.sdk.background_scanner import BackgroundScanWorker
+
+        scanner._background_worker = BackgroundScanWorker(scanner)
+        scanner._background_worker.start()
+
+    return scanner
 
 
 # =============================================================================

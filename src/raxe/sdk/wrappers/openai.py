@@ -78,6 +78,7 @@ class RaxeOpenAI(OpenAI):
         raxe: Raxe | None = None,
         raxe_block_on_threat: bool = False,
         raxe_scan_responses: bool = True,
+        raxe_execution_mode: str = "sync",
         **kwargs,
     ):
         """Initialize RaxeOpenAI client.
@@ -122,6 +123,7 @@ class RaxeOpenAI(OpenAI):
             scan_prompts=True,
             scan_responses=raxe_scan_responses,
             on_threat="block" if raxe_block_on_threat else "log",
+            execution_mode=raxe_execution_mode,
         )
         self._scanner = create_agent_scanner(raxe, config, integration_type="openai")
 

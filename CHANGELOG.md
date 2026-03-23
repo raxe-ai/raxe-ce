@@ -1,6 +1,36 @@
 # CHANGELOG
 
 
+## v0.14.0 (2026-03-23)
+
+### Features
+
+- **sdk**: Add background scan mode and fix scan timeout bugs
+  ([`cac5938`](https://github.com/raxe-ai/raxe-ce/commit/cac5938109ee8b090830977fb3559493ba7e4b24))
+
+Add non-blocking background scan mode (execution_mode="background") for latency-sensitive
+  applications. Scans are submitted to a background worker thread and the caller returns in <1ms.
+  Threat detections fire via on_threat_callback asynchronously.
+
+Bug fixes: - Replace per-call ThreadPoolExecutor with shared instance to fix timeout blocking past
+  configured timeout_ms (shutdown(wait=True) in __exit__) - Wire l2_enabled config to raxe.scan() in
+  both _scan_with_timeout and _scan_content paths (was dead config) - Re-raise SecurityException in
+  both scan paths instead of swallowing it in broad except Exception handlers - Add generic
+  scan(text, scan_type=...) routing method for LangChain compatibility (12 call sites calling
+  non-existent method) - Raise default timeout_ms from 100ms to 500ms (L2 scans take ~200ms, old
+  default caused all L2 scans to silently fail-open) - Remove undocumented performance_mode
+  parameter from docs (was never implemented, silently swallowed by **kwargs)
+
+Background scan mode details: - Bounded queue (200 items) with explicit drop reporting - Dedicated
+  timeout executor prevents hung scans from stalling worker - Portkey guard auto-corrects to sync
+  when block_on_threats=True - Shutdown drains worker before executor (correct ordering) -
+  Class-level WeakSet atexit registry (no per-instance accumulation) - execution_mode surfaced in
+  all integration configs and factories
+
+New file: src/raxe/sdk/background_scanner.py Tests: 38 new tests (test_background_scanner.py), 613
+  total passing
+
+
 ## v0.13.2 (2026-02-23)
 
 ### Performance Improvements

@@ -300,3 +300,38 @@ def test_scan_with_custom_threshold_and_mode(scan_pipeline):
 
     assert result.metadata["mode"] == "fast"
     assert result.metadata["confidence_threshold"] == 0.7
+
+
+# ════════════════════════════════════════════════════════════════
+# Metadata truthfulness: l2_enabled reflects actual execution state
+# ════════════════════════════════════════════════════════════════
+
+
+def test_l2_metadata_false_when_pipeline_disabled(mock_registry, mock_executor, mock_l2_detector):
+    """l2_enabled metadata must be False when pipeline has enable_l2=False,
+    even if per-call l2_enabled=True."""
+    merger = ScanMerger()
+    pipeline = ScanPipeline(
+        pack_registry=mock_registry,
+        rule_executor=mock_executor,
+        l2_detector=mock_l2_detector,
+        scan_merger=merger,
+        enable_l2=False,
+    )
+    result = pipeline.scan("test", l2_enabled=True)
+    # Metadata must reflect actual execution (L2 did NOT run)
+    assert result.metadata["l2_enabled"] is False
+    mock_l2_detector.analyze.assert_not_called()
+
+
+def test_l2_metadata_true_when_both_enabled(scan_pipeline):
+    """l2_enabled metadata is True when both pipeline and per-call enable L2."""
+    result = scan_pipeline.scan("test", l2_enabled=True)
+    assert result.metadata["l2_enabled"] is True
+
+
+def test_l2_metadata_false_when_percall_disabled(scan_pipeline, mock_l2_detector):
+    """l2_enabled metadata is False when per-call disables L2."""
+    result = scan_pipeline.scan("test", l2_enabled=False)
+    assert result.metadata["l2_enabled"] is False
+    mock_l2_detector.analyze.assert_not_called()

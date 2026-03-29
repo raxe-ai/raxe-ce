@@ -581,7 +581,7 @@ class ScanPipeline:
             "input_length": input_length,
             "mode": mode,
             "l1_enabled": l1_enabled,
-            "l2_enabled": l2_enabled,
+            "l2_enabled": l2_enabled and self.enable_l2,
             "confidence_threshold": confidence_threshold,
             "explain": explain,
             "suppressed_count": suppressed_count,  # Track fully suppressed
@@ -754,7 +754,7 @@ class ScanPipeline:
             Tuple of (policy_decision, should_block)
         """
         from raxe.application.apply_policy import PolicySource
-        from raxe.domain.policies.models import PolicyAction as PA
+        from raxe.domain.policies.models import PolicyAction as PA  # noqa: N817
 
         # Collect all detections (L1 + mapped L2)
         all_detections = []
@@ -993,9 +993,8 @@ class ScanPipeline:
         # Send via telemetry hook
         try:
             self.telemetry_hook.send(payload)
-        except Exception:
+        except Exception:  # noqa: S110
             # Never fail scan due to telemetry errors
-            # Just log and continue (logging happens in hook)
             pass
 
     @property

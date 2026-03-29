@@ -61,7 +61,7 @@ class GemmaL2Detector:
     Performance targets:
     - P95 latency: <50ms (with cache miss)
     - P50 latency: <10ms (with cache hit)
-    - Memory: <400MB
+    - Memory: ~1GB (296MB model + ONNX arena + runtime overhead)
 
     Example:
         detector = GemmaL2Detector(model_dir="/path/to/models")
@@ -83,6 +83,7 @@ class GemmaL2Detector:
         cache_size: int = 1000,
         scorer: Any | None = None,
         l2_config: L2Config | None = None,
+        low_memory: bool = False,
     ):
         """Initialize Gemma L2 detector.
 
@@ -94,6 +95,7 @@ class GemmaL2Detector:
             cache_size: Size of embedding cache (0 to disable)
             scorer: Optional HierarchicalThreatScorer instance
             l2_config: L2 configuration (uses global config if not provided)
+            low_memory: Use shared ONNX arena and fewer threads to reduce RSS
         """
         self.model_dir = Path(model_dir)
         self._l2_config = l2_config or get_l2_config()
@@ -128,32 +130,29 @@ class GemmaL2Detector:
 
         # Lazy imports for ONNX runtime
         import onnxruntime as ort
-        from transformers import PreTrainedTokenizerFast
+        from tokenizers import Tokenizer
 
         self._ort = ort
 
         # Load tokenizer from tokenizer.json (portable format)
+        # Uses HuggingFace tokenizers library directly (~3MB) instead of
+        # transformers.PreTrainedTokenizerFast (~200MB due to torch dependency).
+        # Token IDs are bit-identical (validated via scripts/validate_tokenizer_parity.py).
         logger.info("Loading Gemma tokenizer", model_dir=str(self.model_dir))
         tokenizer_path = self.model_dir / "tokenizer.json"
         if not tokenizer_path.exists():
             raise FileNotFoundError(f"tokenizer.json not found in {self.model_dir}")
-        self._tokenizer = PreTrainedTokenizerFast(tokenizer_file=str(tokenizer_path))
+        self._tokenizer = Tokenizer.from_file(str(tokenizer_path))
 
         # Configure special tokens from config.json
+        self._pad_token_id: int = 0
         config_path = self.model_dir / "config.json"
         if config_path.exists():
             with open(config_path) as f:
                 config = json.load(f)
             # Set pad_token_id (Gemma uses id 0 for padding)
             if "pad_token_id" in config:
-                self._tokenizer.pad_token_id = config["pad_token_id"]
-                # Set pad_token if not already set
-                if self._tokenizer.pad_token is None:
-                    self._tokenizer.pad_token = self._tokenizer.decode([config["pad_token_id"]])
-            if "eos_token_id" in config:
-                self._tokenizer.eos_token_id = config["eos_token_id"]
-            if "bos_token_id" in config:
-                self._tokenizer.bos_token_id = config["bos_token_id"]
+                self._pad_token_id = config["pad_token_id"]
 
         # Load model metadata (single load, reused below)
         self._model_version = self.DEFAULT_VERSION
@@ -183,14 +182,39 @@ class GemmaL2Detector:
             except Exception as e:
                 logger.warning("Failed to load model_metadata.json", error=str(e))
 
+        # Register a shared ONNX arena allocator for all 6 sessions
+        # (1 embedding + 5 classifiers). This avoids each session maintaining
+        # a separate arena. Uses kSameAsRequested (strategy=1) to prevent
+        # power-of-2 over-allocation.
+        try:
+            arena_cfg = ort.OrtArenaCfg(0, 1, -1, -1)  # kSameAsRequested
+            mem_info = ort.OrtMemoryInfo(
+                "Cpu", ort.OrtAllocatorType.ORT_ARENA_ALLOCATOR, 0, ort.OrtMemType.DEFAULT
+            )
+            ort.create_and_register_allocator(mem_info, arena_cfg)
+            self._shared_arena_registered = True
+            logger.info("Shared ONNX arena allocator registered")
+        except RuntimeError as e:
+            if "already registered" in str(e).lower():
+                # Another detector in this process already registered — reuse it
+                self._shared_arena_registered = True
+                logger.debug("Shared ONNX arena already registered, reusing")
+            else:
+                # Genuine allocator setup failure — fall back to per-session arenas
+                self._shared_arena_registered = False
+                logger.warning("Shared ONNX arena registration failed", error=str(e))
+
         # Create session options
         sess_options = ort.SessionOptions()
         sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         sess_options.log_severity_level = 3  # ERROR only
-        sess_options.intra_op_num_threads = 4
+        sess_options.intra_op_num_threads = 2 if low_memory else 4
         sess_options.inter_op_num_threads = 1
         sess_options.enable_mem_pattern = True
-        sess_options.enable_cpu_mem_arena = True
+        if self._shared_arena_registered:
+            sess_options.add_session_config_entry("session.use_env_allocators", "1")
+        else:
+            sess_options.enable_cpu_mem_arena = True
 
         providers = ["CPUExecutionProvider"]
 
@@ -232,6 +256,31 @@ class GemmaL2Detector:
                 logger.info("Loaded feature scaler for handcrafted features")
             except Exception as e:
                 logger.warning("Failed to load feature_scaler.pkl", error=str(e))
+
+        # Load energy head for shadow-mode anomaly scoring (optional)
+        self._energy_session = None
+        self._energy_config = None
+        self._energy_load_status = "not_configured"
+
+        energy_config_path = self.model_dir / "energy_config.json"
+        if energy_config_path.exists():
+            with open(energy_config_path) as f:
+                self._energy_config = json.load(f)
+
+            energy_path = self.model_dir / "energy_head.onnx"
+            if energy_path.exists():
+                try:
+                    self._energy_session = ort.InferenceSession(
+                        str(energy_path), sess_options, providers=providers
+                    )
+                    self._energy_load_status = "loaded"
+                    logger.info("Energy head loaded", path=str(energy_path))
+                except Exception as e:
+                    self._energy_load_status = "load_failed"
+                    logger.warning("Failed to load energy head", error=str(e))
+            else:
+                self._energy_load_status = "missing_artifact"
+                logger.warning("energy_config.json found but energy_head.onnx missing")
 
         # Setup embedding cache
         self._cache_enabled = cache_size > 0
@@ -329,10 +378,54 @@ class GemmaL2Detector:
                 recommended_action = self._voting_decision_to_action(voting_result.decision)
                 decision_rationale = f"Voting rule: {voting_result.decision_rule_triggered}"
 
+            # Energy scoring (shadow mode — log only, no blocking influence)
+            energy_data = None
+            if self._energy_load_status == "loaded":
+                try:
+                    # Use raw embedding (256-dim, L2-normalized) BEFORE
+                    # handcrafted feature concatenation in _classify()
+                    energy_input = embeddings.astype(np.float32)
+                    energy_out = self._energy_session.run(None, {"features": energy_input})
+                    energy_score = float(energy_out[0][0][0])
+
+                    cfg = self._energy_config or {}
+                    shadow_cfg = cfg.get("thresholds", {}).get("shadow_mode", {})
+                    threshold = shadow_cfg.get("threshold", -5.2087)
+
+                    energy_data = {
+                        "status": "scored",
+                        "score": round(energy_score, 4),
+                        "threshold": round(threshold, 4),
+                        "above_threshold": energy_score >= threshold,
+                        "threshold_name": "shadow_mode",
+                        "model_variant": "compact_256dim",
+                        "calibration_source": shadow_cfg.get(
+                            "calibration_source", "val_deployment_fpr_0.01"
+                        ),
+                        "action": "review_escalation_only",
+                    }
+                except Exception as e:
+                    logger.warning("Energy scoring failed", error=str(e))
+                    energy_data = {"status": "score_failed"}
+            elif self._energy_load_status != "not_configured":
+                energy_data = {"status": self._energy_load_status}
+
             duration_ms = (time.perf_counter() - start_time) * 1000
 
             # Build voting metadata for telemetry
             voting_metadata = voting_result.to_dict() if voting_result else None
+
+            # Build metadata dict
+            metadata = {
+                "detector_type": "gemma",
+                "classification_result": classification.to_dict(),
+                "voting_enabled": self._voting_enabled,
+                # Token count info for telemetry (v2.4)
+                "token_count": token_count,
+                "tokens_truncated": tokens_truncated,
+            }
+            if energy_data is not None:
+                metadata["energy"] = energy_data
 
             return L2Result(
                 predictions=predictions,
@@ -344,14 +437,7 @@ class GemmaL2Detector:
                     "l1_detection_count": l1_results.detection_count,
                     "embedding_dim": self._embedding_dim,
                 },
-                metadata={
-                    "detector_type": "gemma",
-                    "classification_result": classification.to_dict(),
-                    "voting_enabled": self._voting_enabled,
-                    # Token count info for telemetry (v2.4)
-                    "token_count": token_count,
-                    "tokens_truncated": tokens_truncated,
-                },
+                metadata=metadata,
                 hierarchical_score=hierarchical_score,
                 classification=classification_label,
                 recommended_action=recommended_action,
@@ -407,26 +493,22 @@ class GemmaL2Detector:
             - token_count: number of tokens after tokenization (max 512)
             - tokens_truncated: True if input was truncated to 512 tokens
         """
-        # Single tokenization: get full token count, then truncate manually
-        inputs_full = self._tokenizer(
-            text,
-            padding=False,
-            truncation=False,
-            return_tensors="np",
-        )
-        original_token_count = inputs_full["input_ids"].shape[1]
+        # Tokenize using tokenizers library (produces identical IDs to PreTrainedTokenizerFast)
+        encoding = self._tokenizer.encode(text)
+        all_ids = encoding.ids
+        original_token_count = len(all_ids)
         tokens_truncated = original_token_count > 512
 
-        # Truncate to max_length
-        input_ids = inputs_full["input_ids"][:, :512]
-        token_count = input_ids.shape[1]
+        # Truncate to max_length and convert to numpy
+        ids_truncated = all_ids[:512]
+        token_count = len(ids_truncated)
+        input_ids = np.array([ids_truncated], dtype=np.int64)
 
         # Pad to 512 with proper attention mask (matches training distribution)
         pad_length = 512 - token_count
         if pad_length > 0:
-            pad_id = self._tokenizer.pad_token_id or 0
             input_ids = np.concatenate(
-                [input_ids, np.full((1, pad_length), pad_id, dtype=np.int64)],
+                [input_ids, np.full((1, pad_length), self._pad_token_id, dtype=np.int64)],
                 axis=1,
             )
             attention_mask = np.concatenate(
@@ -1008,6 +1090,7 @@ def create_gemma_detector(
     harm_thresholds: dict[str, float] | None = None,
     cache_size: int = 1000,
     scorer: Any | None = None,
+    low_memory: bool = False,
 ) -> GemmaL2Detector:
     """Factory function to create Gemma L2 detector.
 
@@ -1017,6 +1100,7 @@ def create_gemma_detector(
         harm_thresholds: Per-class thresholds for harm_types multilabel
         cache_size: Size of embedding cache (0 to disable)
         scorer: Optional HierarchicalThreatScorer instance
+        low_memory: Reduce memory via shared ONNX arena and fewer threads
 
     Returns:
         GemmaL2Detector instance
@@ -1027,4 +1111,5 @@ def create_gemma_detector(
         harm_thresholds=harm_thresholds,
         cache_size=cache_size,
         scorer=scorer,
+        low_memory=low_memory,
     )

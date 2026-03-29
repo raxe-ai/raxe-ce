@@ -258,7 +258,7 @@ def _check_ml_status() -> list[HealthCheck]:
     # Check individual ML deps
     ml_deps = [
         ("onnxruntime", "ONNX Runtime"),
-        ("sentence_transformers", "Sentence Transformers"),
+        ("tokenizers", "Tokenizers"),
         ("numpy", "NumPy"),
         ("sklearn", "scikit-learn"),
     ]

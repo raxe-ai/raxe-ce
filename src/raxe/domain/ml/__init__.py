@@ -56,7 +56,7 @@ from raxe.domain.ml.scoring_models import (
 )
 from raxe.domain.ml.stub_detector import StubL2Detector
 
-# ML-dependent imports (require numpy, onnxruntime, transformers)
+# ML-dependent imports (require numpy, onnxruntime, tokenizers)
 # These are lazily imported to allow basic SDK usage without ML deps
 _ML_AVAILABLE = False
 _ML_IMPORT_ERROR = None

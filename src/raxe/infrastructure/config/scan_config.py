@@ -108,6 +108,7 @@ class ScanConfig:
 
     packs_root: Path = field(default_factory=lambda: Path.home() / ".raxe" / "packs")
     enable_l2: bool = True
+    low_memory: bool = False
     use_production_l2: bool = True
     l2_confidence_threshold: float = 0.5
     fail_fast_on_critical: bool = False  # Changed: Always run both L1 and L2 in parallel
@@ -167,8 +168,14 @@ class ScanConfig:
 
         # Build performance config
         perf_mode_str = performance_data.get("mode", "fail_open")
+        try:
+            perf_mode = PerformanceMode(perf_mode_str)
+        except ValueError:
+            # Config file may use scan-mode names (fast/balanced/accurate)
+            # which are not PerformanceMode enum values — fall back to default
+            perf_mode = PerformanceMode.FAIL_OPEN
         performance = PerformanceConfig(
-            mode=PerformanceMode(perf_mode_str),
+            mode=perf_mode,
             failure_threshold=performance_data.get("failure_threshold", 5),
             reset_timeout_seconds=performance_data.get("reset_timeout_seconds", 30.0),
             half_open_requests=performance_data.get("half_open_requests", 3),
@@ -205,6 +212,7 @@ class ScanConfig:
         return cls(
             packs_root=Path(packs_root),
             enable_l2=scan_data.get("enable_l2", True),
+            low_memory=scan_data.get("low_memory", False),
             use_production_l2=scan_data.get("use_production_l2", True),
             l2_confidence_threshold=scan_data.get("l2_confidence_threshold", 0.5),
             fail_fast_on_critical=scan_data.get(
@@ -239,6 +247,7 @@ class ScanConfig:
         # Scan settings
         packs_root = os.getenv("RAXE_PACKS_ROOT", str(Path.home() / ".raxe" / "packs"))
         enable_l2 = os.getenv("RAXE_ENABLE_L2", "true").lower() == "true"
+        low_memory = os.getenv("RAXE_LOW_MEMORY", "false").lower() == "true"
         use_production_l2 = os.getenv("RAXE_USE_PRODUCTION_L2", "true").lower() == "true"
         l2_confidence_threshold = float(os.getenv("RAXE_L2_CONFIDENCE_THRESHOLD", "0.5"))
         fail_fast = (
@@ -268,6 +277,7 @@ class ScanConfig:
         return cls(
             packs_root=Path(packs_root),
             enable_l2=enable_l2,
+            low_memory=low_memory,
             use_production_l2=use_production_l2,
             l2_confidence_threshold=l2_confidence_threshold,
             fail_fast_on_critical=fail_fast,
@@ -280,16 +290,55 @@ class ScanConfig:
             customer_id=customer_id,
         )
 
+    def _apply_env_overrides(self) -> None:
+        """Override config values with explicitly-set environment variables.
+
+        Only overrides fields where the environment variable is actually
+        present in os.environ. This ensures env > config file > defaults
+        precedence without conflating "not set" with "set to default".
+        """
+        if "RAXE_PACKS_ROOT" in os.environ:
+            self.packs_root = Path(os.environ["RAXE_PACKS_ROOT"])
+        if "RAXE_ENABLE_L2" in os.environ:
+            self.enable_l2 = os.environ["RAXE_ENABLE_L2"].lower() == "true"
+        if "RAXE_LOW_MEMORY" in os.environ:
+            self.low_memory = os.environ["RAXE_LOW_MEMORY"].lower() == "true"
+        if "RAXE_USE_PRODUCTION_L2" in os.environ:
+            self.use_production_l2 = os.environ["RAXE_USE_PRODUCTION_L2"].lower() == "true"
+        if "RAXE_L2_CONFIDENCE_THRESHOLD" in os.environ:
+            self.l2_confidence_threshold = float(os.environ["RAXE_L2_CONFIDENCE_THRESHOLD"])
+        if "RAXE_FAIL_FAST_ON_CRITICAL" in os.environ:
+            self.fail_fast_on_critical = os.environ["RAXE_FAIL_FAST_ON_CRITICAL"].lower() == "true"
+        if "RAXE_MIN_CONFIDENCE_FOR_SKIP" in os.environ:
+            self.min_confidence_for_skip = float(os.environ["RAXE_MIN_CONFIDENCE_FOR_SKIP"])
+        if "RAXE_ENABLE_SCHEMA_VALIDATION" in os.environ:
+            self.enable_schema_validation = (
+                os.environ["RAXE_ENABLE_SCHEMA_VALIDATION"].lower() == "true"
+            )
+        if "RAXE_SCHEMA_VALIDATION_MODE" in os.environ:
+            self.schema_validation_mode = os.environ["RAXE_SCHEMA_VALIDATION_MODE"]
+        if "RAXE_API_KEY" in os.environ:
+            self.api_key = os.environ["RAXE_API_KEY"]
+            self.telemetry.api_key = os.environ["RAXE_API_KEY"]
+        if "RAXE_CUSTOMER_ID" in os.environ:
+            self.customer_id = os.environ["RAXE_CUSTOMER_ID"]
+        if "RAXE_PERFORMANCE_MODE" in os.environ:
+            self.performance.mode = PerformanceMode(os.environ["RAXE_PERFORMANCE_MODE"])
+        if "RAXE_TELEMETRY_ENABLED" in os.environ:
+            self.telemetry.enabled = os.environ["RAXE_TELEMETRY_ENABLED"].lower() == "true"
+
+        # Re-run validation so env-sourced values get the same normalization
+        # and range checks that __post_init__() applies at construction time.
+        self.__post_init__()
+
     @classmethod
     def load(cls, config_path: Path | None = None) -> "ScanConfig":
-        """Load configuration with fallback chain.
+        """Load configuration with layered precedence.
 
-        Priority:
-        1. Explicit config file path
-        2. .raxe/config.yaml in current directory
-        3. ~/.raxe/config.yaml in home directory
-        4. Environment variables
-        5. Defaults
+        Priority (highest wins):
+        1. Environment variables (only explicitly-set ones)
+        2. Config file (explicit path > .raxe/config.yaml > ~/.raxe/config.yaml)
+        3. Dataclass defaults
 
         Args:
             config_path: Optional explicit config file path
@@ -297,22 +346,25 @@ class ScanConfig:
         Returns:
             Loaded ScanConfig
         """
-        # Try explicit path first
-        if config_path and config_path.exists():
-            return cls.from_file(config_path)
+        # Layer 1: Start from config file or defaults
+        file_path = config_path
+        if not file_path or not file_path.exists():
+            local_config = Path(".raxe/config.yaml")
+            home_config = Path.home() / ".raxe" / "config.yaml"
+            if local_config.exists():
+                file_path = local_config
+            elif home_config.exists():
+                file_path = home_config
 
-        # Try current directory
-        local_config = Path(".raxe/config.yaml")
-        if local_config.exists():
-            return cls.from_file(local_config)
+        if file_path and file_path.exists():
+            config = cls.from_file(file_path)
+        else:
+            config = cls()
 
-        # Try home directory
-        home_config = Path.home() / ".raxe" / "config.yaml"
-        if home_config.exists():
-            return cls.from_file(home_config)
+        # Layer 2: Overlay explicitly-set environment variables
+        config._apply_env_overrides()
 
-        # Fall back to environment
-        return cls.from_env()
+        return config
 
     def to_dict(self) -> dict[str, object]:
         """Convert to dictionary for serialization.
@@ -324,6 +376,7 @@ class ScanConfig:
             "scan": {
                 "packs_root": str(self.packs_root),
                 "enable_l2": self.enable_l2,
+                "low_memory": self.low_memory,
                 "use_production_l2": self.use_production_l2,
                 "l2_confidence_threshold": self.l2_confidence_threshold,
                 "fail_fast_on_critical": self.fail_fast_on_critical,

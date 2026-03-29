@@ -116,4 +116,4 @@ Factors that affect results:
 - System load during benchmark
 - Python version (3.11+ has faster regex)
 - Number of rules loaded (more rules = higher L1 latency)
-- L2 model type (stub vs ONNX vs sentence-transformers)
+- L2 model type (stub vs ONNX INT8)

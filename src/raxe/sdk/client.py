@@ -159,8 +159,8 @@ class Raxe:
         *,
         api_key: str | None = None,
         config_path: Path | None = None,
-        telemetry: bool = True,
-        l2_enabled: bool = True,
+        telemetry: bool | None = None,
+        l2_enabled: bool | None = None,
         voting_preset: str | None = None,
         progress_callback=None,
         **kwargs,
@@ -176,8 +176,10 @@ class Raxe:
         Args:
             api_key: Optional API key for cloud features
             config_path: Path to config file (overrides default search)
-            telemetry: Enable privacy-preserving telemetry (default: True)
-            l2_enabled: Enable L2 ML detection (default: True)
+            telemetry: Enable privacy-preserving telemetry. None uses config
+                (env var / config file / default True).
+            l2_enabled: Enable L2 ML detection. Defaults to RAXE_ENABLE_L2
+                env var if set, otherwise True.
             voting_preset: L2 voting preset (balanced, high_security, low_fp)
             progress_callback: Optional progress indicator for initialization
             **kwargs: Additional config options passed to ScanConfig
@@ -190,13 +192,15 @@ class Raxe:
 
         self._progress = progress_callback or NullProgress()
 
-        # Build configuration with cascade
-        # Note: load_config would handle the cascade, but it doesn't exist yet
-        # For now, we'll use ScanConfig directly and update in Phase 4E
-        if config_path and config_path.exists():
-            self.config = ScanConfig.from_file(config_path)
-        else:
-            self.config = ScanConfig()
+        # Build configuration with layered precedence:
+        # defaults → config file → env vars → explicit params
+        self.config = ScanConfig.load(config_path)
+
+        # Resolve from config cascade: explicit param > config (env > file > default)
+        if l2_enabled is None:
+            l2_enabled = self.config.enable_l2
+        if telemetry is None:
+            telemetry = self.config.telemetry.enabled
 
         # Apply explicit overrides
         if api_key is not None:
@@ -216,7 +220,6 @@ class Raxe:
                 # Keep telemetry enabled (ignore the disable request)
                 telemetry = True
 
-        # Explicitly set telemetry (handles both True and False)
         self.config.telemetry.enabled = telemetry
         self.config.enable_l2 = l2_enabled
 
@@ -299,7 +302,6 @@ class Raxe:
                 rule_executor=self.pipeline.rule_executor,
                 l2_detector=self.pipeline.l2_detector,
                 scan_merger=self.pipeline.scan_merger,
-                apply_policy=self.pipeline.apply_policy,
                 enable_l2=self.pipeline.enable_l2,
                 fail_fast_on_critical=self.pipeline.fail_fast_on_critical,
                 min_confidence_for_skip=self.pipeline.min_confidence_for_skip,
@@ -978,7 +980,7 @@ class Raxe:
         block_on_threat: bool = False,
         mode: str = "balanced",
         l1_enabled: bool = True,
-        l2_enabled: bool = True,
+        l2_enabled: bool | None = None,
         confidence_threshold: float = 0.5,
         explain: bool = False,
         dry_run: bool = False,
@@ -1023,7 +1025,8 @@ class Raxe:
             block_on_threat: Raise SecurityException if threat detected (default: False)
             mode: Performance mode - "fast" (<3ms), "balanced" (<10ms), or "thorough" (<100ms)
             l1_enabled: Enable L1 regex detection layer (default: True)
-            l2_enabled: Enable L2 ML detection layer (default: True)
+            l2_enabled: Enable L2 ML detection layer. None uses client config
+                (env var / config file / default). Pass True/False to override per-call.
             confidence_threshold: Minimum confidence for reporting (0.0-1.0, default: 0.5)
             explain: Include explanations in detection results (default: False)
             dry_run: Test scan without saving to database (default: False)
@@ -1124,6 +1127,10 @@ class Raxe:
                 text_hash="",
                 metadata={"empty_text": True},
             )
+
+        # Resolve l2_enabled: explicit per-call > client config (env > file > default)
+        if l2_enabled is None:
+            l2_enabled = self.config.enable_l2
 
         # Use async pipeline for 5x speedup (parallel L1+L2)
         # Falls back to sync pipeline if async fails or is disabled
@@ -1385,9 +1392,7 @@ class Raxe:
                     scan_duration_ms=result.duration_ms,  # Actual scan time (not including init)
                     initialization_ms=init_stats.get("total_init_time_ms", 0),  # One-time init cost
                     l2_init_ms=init_stats.get("l2_init_time_ms", 0),  # ML model loading time
-                    l2_model_type=init_stats.get(
-                        "l2_model_type", "none"
-                    ),  # onnx_int8, sentence_transformers, stub
+                    l2_model_type=init_stats.get("l2_model_type", "none"),  # onnx_int8, stub
                     l1_enabled=l1_enabled,
                     l2_enabled=l2_enabled,
                     mode=mode,
@@ -1434,9 +1439,7 @@ class Raxe:
                 scan_duration_ms=result.duration_ms,  # Actual scan time (not including init)
                 initialization_ms=init_stats.get("total_init_time_ms", 0),  # One-time init cost
                 l2_init_ms=init_stats.get("l2_init_time_ms", 0),  # ML model loading time
-                l2_model_type=init_stats.get(
-                    "l2_model_type", "none"
-                ),  # onnx_int8, sentence_transformers, stub
+                l2_model_type=init_stats.get("l2_model_type", "none"),  # onnx_int8, stub
                 l1_enabled=l1_enabled,
                 l2_enabled=l2_enabled,
                 mode=mode,

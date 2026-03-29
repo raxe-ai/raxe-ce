@@ -1,0 +1,60 @@
+{
+  "model_type": "energy_head_candidate_c",
+  "variant": "compact",
+  "input_dim": 256,
+  "input_description": "256-dim L2-normalized Matryoshka-truncated embeddings from EmbeddingGemma-300M compact INT8",
+  "use_handcrafted_features": false,
+  "architecture": "MLP 256->128->64->1",
+  "output": "scalar energy score (higher = more anomalous)",
+  "onnx_file": "energy_head.onnx",
+  "onnx_size_kb": 1.6,
+  "training": {
+    "loss": "energy_bounded_margin",
+    "margins": {"m_in": -8.0, "m_out": -5.0},
+    "lambda": 0.1,
+    "epochs": 50,
+    "train_samples": 35325,
+    "train_id_samples": 24244,
+    "train_ood_samples": 11081
+  },
+  "thresholds": {
+    "shadow_mode": {
+      "threshold": -5.2087,
+      "calibration_source": "val_deployment (95% benign / 5% threats)",
+      "target_fpr": 0.01,
+      "expected_fpr": 0.0054,
+      "expected_tpr_deployment": 0.3355,
+      "expected_precision_deployment": 0.7647,
+      "expected_tpr_unseen_families": 0.1683,
+      "expected_precision_unseen_families": 0.9302,
+      "recommended_action": "review_escalation_only"
+    },
+    "conservative": {
+      "threshold": -5.1035,
+      "calibration_source": "val_deployment",
+      "target_fpr": 0.005,
+      "expected_fpr": 0.0034,
+      "expected_tpr_deployment": 0.2645,
+      "expected_precision_deployment": 0.8039,
+      "recommended_action": "review_escalation_only"
+    }
+  },
+  "performance": {
+    "eval_unseen_auroc": 0.8810,
+    "eval_unseen_auroc_5seed_mean": 0.8804,
+    "eval_unseen_auroc_5seed_std": 0.0021,
+    "single_inference_p50_ms": 0.007,
+    "single_inference_p95_ms": 0.008
+  },
+  "holdout_families": [
+    "encoding_or_obfuscation_attack",
+    "rag_or_context_attack",
+    "tool_or_command_abuse"
+  ],
+  "caveats": [
+    "Review/escalation signal only — not a blocking signal",
+    "Precision drops under deployment skew — use val_deployment-calibrated thresholds",
+    "Compact variant is weaker than full (768-dim) by ~0.037 AUROC",
+    "Trained on prototype data — production retraining recommended before deployment"
+  ]
+}

@@ -1,9 +1,151 @@
 # CHANGELOG
 
 
-## v0.14.0 (2026-03-23)
+## v0.15.0 (2026-03-30)
 
 ### Features
+
+- **ml**: Energy scoring, config cascade fix, model v0.5.0, memory optimization
+  ([#56](https://github.com/raxe-ai/raxe-ce/pull/56),
+  [`1d30ca4`](https://github.com/raxe-ai/raxe-ce/commit/1d30ca4deb17bc969b6dcb41521dd9137b493840))
+
+feat(ml): energy scoring, config cascade fix, model v0.5.0, memory optimization
+
+
+## v0.14.0 (2026-03-23)
+
+### Bug Fixes
+
+- **cli**: Make _format_energy null-safe for L2-disabled scans
+  ([`af496dc`](https://github.com/raxe-ai/raxe-ce/commit/af496dc138c4f1a9f9c4088b0640ffd6aa392fa7))
+
+When L2 is disabled (RAXE_ENABLE_L2=false or Raxe(l2_enabled=False)), l2_result is None. The
+  safe-path CLI rendering called _format_energy() unconditionally, causing an AttributeError on
+  None.metadata.
+
+Fix: early-return in _format_energy() when l2_result is None.
+
+Tests: add _format_energy(None) and _display_safe(l2_result=None) cases.
+
+Generated with RAXE AI Agent
+
+Co-Authored-By: AI <ai@raxe.ai>
+
+- **cli**: Route safe-path energy display through shared _format_energy helper
+  ([`e644057`](https://github.com/raxe-ai/raxe-ce/commit/e644057455f3e55ef9109b275177efd3b12be128))
+
+_display_safe() in output.py had inline energy rendering that duplicated
+  L2ResultFormatter._format_energy(). Replaced with a call to the shared helper so both safe and
+  threat CLI paths use the same rendering logic.
+
+Added 3 regression tests (TestDisplaySafeEnergy) that exercise the real _display_safe() code path
+  with energy metadata — scored, anomaly, absent.
+
+- **ml**: Add missing energy integration to serializer, telemetry, and CLI
+  ([`39e82b1`](https://github.com/raxe-ai/raxe-ce/commit/39e82b1e857aed93d31b586cfeffe736ffb035d7))
+
+The energy scoring code in gemma_detector.py correctly populates L2Result.metadata["energy"], but
+  the downstream consumers that expose it to users were missing from the prior commit.
+
+Re-adds energy integration to all four output paths: - serializers.py: top-level "energy" block in
+  JSON-RPC API response - scan_telemetry_builder.py: energy_* fields in both prediction and
+  no-prediction L2 telemetry branches - l2_formatter.py: _format_energy() method + calls from all 3
+  display paths (below-threshold, no-prediction, prediction) - output.py: energy display after SAFE
+  panel for clean scans
+
+All 17 energy regression tests now pass (were 9 failing).
+
+Generated with RAXE AI Agent
+
+Co-Authored-By: AI <ai@raxe.ai>
+
+- **ml**: Make model discovery version-aware to trigger stale upgrades
+  ([`c4311d2`](https://github.com/raxe-ai/raxe-ce/commit/c4311d2f0acdee9728458cfdb6119a766683ba58))
+
+_discover_onnx_folders() was accepting outdated model folders without checking model_version,
+  bypassing the version-aware cache invalidation in _get_model_install_state(). Stale v0.4.0
+  installs would never trigger re-download because discovery returned them before reaching the
+  auto-download step.
+
+Now checks install state before accepting a found folder. Outdated folders fall through to
+  auto-download, which deletes the stale folder and downloads the current version.
+
+- **sdk**: Fix config cascade for l2_enabled and telemetry, reduce L2 memory
+  ([`8ce89c9`](https://github.com/raxe-ai/raxe-ce/commit/8ce89c954edc9d9b787dff9f911c1c80d525cccd))
+
+Customer reported ~4x memory increase (500MB → 2369MB) with 2 workers. Root cause: L2 loads 6 ONNX
+  sessions (~1GB) per worker process, and config cascade bugs meant RAXE_ENABLE_L2=false was
+  silently ignored.
+
+Config cascade fixes (env > file > default): - ScanConfig.load() applies _apply_env_overrides()
+  after file load, then re-runs __post_init__() for path normalization and threshold validation on
+  env-sourced values - Raxe(l2_enabled=None) and Raxe(telemetry=None) use sentinel pattern to
+  resolve from config instead of overwriting with constructor defaults - Raxe.scan(l2_enabled=None)
+  resolves from self.config.enable_l2 - CLI only passes l2_enabled to scan() when
+  --l1-only/--l2-only explicit - JSON-RPC handler follows same conditional pattern - scan_pipeline
+  metadata reports effective l2_enabled (per-call AND init)
+
+Memory optimizations: - Replace sentence-transformers (~200MB, pulled PyTorch) with tokenizers
+  (~3MB, bit-identical token IDs validated via scripts/) - ONNX sessions share a single arena
+  allocator (kSameAsRequested) instead of 6 separate arenas — with error discrimination so genuine
+  allocator failures fall back to per-session arenas - Add RAXE_LOW_MEMORY=true /
+  ScanConfig.low_memory to reduce inference threads from 4 to 2 for constrained deployments -
+  low_memory wired through ScanConfig -> preloader -> EagerL2Detector -> GemmaL2Detector (not ad-hoc
+  env var in domain layer)
+
+Stale reference cleanup: - Remove 8 references to sentence-transformers/torch across src/ and docs/
+  - Update memory docstring and functional test comments to match measured reality (~1GB ONNX
+  sessions, not ~400MB as previously documented)
+
+New files: - tests/unit/infrastructure/config/test_config_precedence.py (56 tests covering full
+  cascade matrix: defaults, file, env, explicit, scan(), validation, normalization, edge cases) -
+  scripts/measure_memory.py (multi-worker RSS harness) - scripts/validate_tokenizer_parity.py,
+  validate_l2_parity.py - sales/memory-response-draft.md (customer response draft)
+
+### Features
+
+- **ml**: Add energy scoring shadow integration and regression tests
+  ([`467da4e`](https://github.com/raxe-ai/raxe-ce/commit/467da4ea39e3d7c75e96c7fe8b939661c5cc79b6))
+
+Energy-Based Model (EBM) shadow integration — computes an anomaly score on every L2 scan, logged and
+  exposed in telemetry/CLI/API, but with no influence on blocking decisions.
+
+Energy artifacts (compact 256-dim MLP, AUROC 0.881 on unseen families): - energy_head.onnx:
+  re-exported single-file (161 KB, no .onnx.data sidecar) - energy_config.json: thresholds,
+  calibration metadata, caveats
+
+Regression tests (17 tests in test_energy_scoring.py): - Loading: not_configured / missing_artifact
+  / loaded states - Scoring: clean prompt scored, threat prompt scored, absent when unconfigured -
+  Telemetry: energy fields in both prediction and no-prediction branches - Serializer: energy block
+  in API response (present/absent/anomaly) - CLI: _format_energy displays score+label, anomaly flag,
+  absent, failed
+
+Config precedence tests (11 tests in test_scan_config.py): - ScanConfig.load() env > file > defaults
+  layering - _apply_env_overrides() per-field coverage - Invalid PerformanceMode fallback
+
+Generated with RAXE AI Agent
+
+Co-Authored-By: AI <ai@raxe.ai>
+
+- **ml**: Update model to v0.5.0 with energy anomaly detection
+  ([`87d1a6b`](https://github.com/raxe-ai/raxe-ce/commit/87d1a6bc940a1a5a67acf55ecf1203ed5cda2403))
+
+Updates CURRENT_MODEL to point to raxe-models v0.5.0 release which includes energy_head.onnx and
+  energy_config.json. New users auto-download the energy-capable model on first use.
+
+Version-aware cache invalidation: - Added _get_model_install_state() returning
+  installed/outdated/missing - Reads model_version from model_metadata.json and compares to expected
+  - Legacy installs (no model_version field) treated as outdated - Outdated folders deleted before
+  re-download (clean extraction) - Doctor and models status consult install state, not just metadata
+
+Bundled models flipped to opt-in: - should_use_bundled_models() now requires
+  RAXE_USE_BUNDLED_MODELS=1 - Dev model tagged model_version: "dev-compact" (not production)
+
+CLI updates: - Fixed stale size (~329MB → ~235MB) and rule count (460+ → 514) - raxe doctor shows
+  model version + energy status with outdated warning - raxe models status shows version or outdated
+  message
+
+29 new tests covering install state, version checking, bundled polarity.
 
 - **sdk**: Add background scan mode and fix scan timeout bugs
   ([`cac5938`](https://github.com/raxe-ai/raxe-ce/commit/cac5938109ee8b090830977fb3559493ba7e4b24))

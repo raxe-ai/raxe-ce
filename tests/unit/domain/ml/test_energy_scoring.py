@@ -419,3 +419,93 @@ class TestEnergyFormatter:
 
         assert "Energy:" in output
         assert "score_failed" in output
+
+
+# ════════════════════════════════════════════════════════════════
+# CLI safe-path integration: _display_safe() renders energy
+# ════════════════════════════════════════════════════════════════
+
+
+class TestDisplaySafeEnergy:
+    """Verify the real CLI safe-path routes energy through the shared helper."""
+
+    def _make_safe_pipeline_result(self, energy_data: dict | None = None):
+        """Build a ScanPipelineResult that looks like a clean (safe) scan."""
+        from datetime import datetime, timezone
+
+        from raxe.application.scan_merger import CombinedScanResult
+        from raxe.application.scan_pipeline import BlockAction, ScanPipelineResult
+        from raxe.domain.engine.executor import ScanResult
+
+        l2_result = _make_l2_result(energy_data=energy_data)
+        l1_result = ScanResult(
+            detections=[],
+            scanned_at=datetime.now(timezone.utc).isoformat(),
+            text_length=10,
+            rules_checked=100,
+            scan_duration_ms=1.0,
+        )
+        combined = CombinedScanResult(
+            l1_result=l1_result,
+            l2_result=l2_result,
+            combined_severity=None,
+            total_processing_ms=5.0,
+        )
+        return ScanPipelineResult(
+            scan_result=combined,
+            policy_decision=BlockAction.ALLOW,
+            should_block=False,
+            duration_ms=5.0,
+            text_hash="abc123",
+            metadata={},
+        )
+
+    def test_display_safe_shows_energy_score(self):
+        """_display_safe() renders energy via shared _format_energy helper."""
+        from io import StringIO
+
+        from rich.console import Console
+
+        from raxe.cli.output import _display_safe
+
+        result = self._make_safe_pipeline_result(energy_data=SCORED_ENERGY)
+        buf = StringIO()
+        console = Console(file=buf, force_terminal=False, no_color=True)
+        _display_safe(result, console, use_emoji=False)
+        output = buf.getvalue()
+
+        assert "Energy:" in output
+        assert "-5.500" in output
+
+    def test_display_safe_shows_anomaly(self):
+        """_display_safe() renders ANOMALY label for above-threshold energy."""
+        from io import StringIO
+
+        from rich.console import Console
+
+        from raxe.cli.output import _display_safe
+
+        result = self._make_safe_pipeline_result(energy_data=SCORED_ENERGY_ANOMALY)
+        buf = StringIO()
+        console = Console(file=buf, force_terminal=False, no_color=True)
+        _display_safe(result, console, use_emoji=False)
+        output = buf.getvalue()
+
+        assert "Energy:" in output
+        assert "ANOMALY" in output
+
+    def test_display_safe_no_energy_when_absent(self):
+        """_display_safe() produces no energy output when not configured."""
+        from io import StringIO
+
+        from rich.console import Console
+
+        from raxe.cli.output import _display_safe
+
+        result = self._make_safe_pipeline_result(energy_data=None)
+        buf = StringIO()
+        console = Console(file=buf, force_terminal=False, no_color=True)
+        _display_safe(result, console, use_emoji=False)
+        output = buf.getvalue()
+
+        assert "Energy:" not in output

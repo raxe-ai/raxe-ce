@@ -509,3 +509,62 @@ class TestDisplaySafeEnergy:
         output = buf.getvalue()
 
         assert "Energy:" not in output
+
+    def test_display_safe_no_crash_when_l2_result_none(self):
+        """_display_safe() with l2_result=None must not crash (L2 disabled)."""
+        from datetime import datetime, timezone
+        from io import StringIO
+
+        from rich.console import Console
+
+        from raxe.application.scan_merger import CombinedScanResult
+        from raxe.application.scan_pipeline import BlockAction, ScanPipelineResult
+        from raxe.cli.output import _display_safe
+        from raxe.domain.engine.executor import ScanResult
+
+        l1_result = ScanResult(
+            detections=[],
+            scanned_at=datetime.now(timezone.utc).isoformat(),
+            text_length=5,
+            rules_checked=100,
+            scan_duration_ms=1.0,
+        )
+        combined = CombinedScanResult(
+            l1_result=l1_result,
+            l2_result=None,
+            combined_severity=None,
+            total_processing_ms=1.0,
+        )
+        result = ScanPipelineResult(
+            scan_result=combined,
+            policy_decision=BlockAction.ALLOW,
+            should_block=False,
+            duration_ms=1.0,
+            text_hash="abc",
+            metadata={},
+        )
+
+        buf = StringIO()
+        console = Console(file=buf, force_terminal=False, no_color=True)
+        _display_safe(result, console, use_emoji=False)
+        output = buf.getvalue()
+
+        assert "SAFE" in output
+        assert "Energy:" not in output
+
+
+class TestFormatEnergyNullSafety:
+    """Regression: _format_energy must handle l2_result=None."""
+
+    def test_format_energy_none_l2_result(self):
+        """_format_energy(None, console) must not raise."""
+        from io import StringIO
+
+        from rich.console import Console
+
+        from raxe.cli.l2_formatter import L2ResultFormatter
+
+        buf = StringIO()
+        console = Console(file=buf, force_terminal=False, no_color=True)
+        L2ResultFormatter._format_energy(None, console)
+        assert buf.getvalue() == ""

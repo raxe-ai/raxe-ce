@@ -257,8 +257,10 @@ class L2ResultFormatter:
         L2ResultFormatter._format_energy(l2_result, console)
 
     @staticmethod
-    def _format_energy(l2_result: L2Result, console: Console) -> None:
+    def _format_energy(l2_result: L2Result | None, console: Console) -> None:
         """Display energy scoring shadow-mode signal if present."""
+        if l2_result is None:
+            return
         metadata = l2_result.metadata if l2_result.metadata else {}
         energy = metadata.get("energy")
         if not energy:

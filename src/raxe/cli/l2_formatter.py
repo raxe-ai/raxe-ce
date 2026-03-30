@@ -239,9 +239,11 @@ class L2ResultFormatter:
         # If below threshold but we want to show analysis anyway
         if show_below_threshold and not l2_result.has_predictions:
             L2ResultFormatter._format_below_threshold(l2_result, console)
+            L2ResultFormatter._format_energy(l2_result, console)
             return
 
         if not l2_result.has_predictions:
+            L2ResultFormatter._format_energy(l2_result, console)
             return
 
         # Show default or explain mode
@@ -251,6 +253,28 @@ class L2ResultFormatter:
         else:
             # Compact default mode with key metrics
             L2ResultFormatter._format_default_mode(l2_result, console)
+
+        L2ResultFormatter._format_energy(l2_result, console)
+
+    @staticmethod
+    def _format_energy(l2_result: L2Result, console: Console) -> None:
+        """Display energy scoring shadow-mode signal if present."""
+        metadata = l2_result.metadata if l2_result.metadata else {}
+        energy = metadata.get("energy")
+        if not energy:
+            return
+
+        status = energy.get("status")
+        if status == "scored":
+            from rich.markup import escape
+
+            score = energy["score"]
+            hit = energy.get("above_threshold", False)
+            label = "ANOMALY" if hit else "normal"
+            color = "yellow bold" if hit else "dim"
+            console.print(f"  Energy: {score:.3f} {escape(f'[{label}]')}", style=color)
+        elif status:
+            console.print(f"  Energy: {status}", style="dim")
 
     @staticmethod
     def _format_below_threshold(l2_result: L2Result, console: Console) -> None:

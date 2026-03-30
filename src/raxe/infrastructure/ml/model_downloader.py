@@ -7,7 +7,7 @@ Architecture: Single source of truth for model configuration.
 - CURRENT_MODEL: The one model that RAXE uses (change only this to update)
 - MODEL_REGISTRY: Auto-generated from CURRENT_MODEL for backward compatibility
 
-Current model (v0.4.0 - RAXE 0.8.0+):
+Current model (v0.5.0 - RAXE 0.8.0+):
 - Gemma MLP 5-head classifier with BinaryFirstEngine
 - Classification: 15 families, 3 severity levels, 35 techniques
 - TPR: 91.2%, FPR: 6.4%, F1: 0.94
@@ -69,21 +69,23 @@ class ModelConfig:
     url: str
     sha256: str
     folder_name: str
+    model_version: str = ""
 
 
 # THE CURRENT MODEL - This is the ONLY place to update when releasing a new model
 _MODEL_BASE_URL = os.environ.get(
-    "RAXE_MODEL_URL", "https://github.com/raxe-ai/raxe-models/releases/download/v0.4.0"
+    "RAXE_MODEL_URL", "https://github.com/raxe-ai/raxe-models/releases/download/v0.5.0"
 )
 
 CURRENT_MODEL = ModelConfig(
     id="threat_classifier_gemma_mlp_v3",
     name="Threat Classifier Gemma MLP v3",
-    description="Gemma MLP 5-head classifier with BinaryFirstEngine. TPR 91.2%, FPR 6.4%.",
+    description="Gemma MLP 5-head + energy anomaly detection. TPR 91.2%, FPR 6.4%.",
     size_mb=235,  # Actual compressed size; use get_remote_file_size() for exact value
     url=f"{_MODEL_BASE_URL}/threat_classifier_gemma_mlp_v3_deploy.tar.gz",
-    sha256="4885735c08e8f4f28ec7aebdcb8e613df0c189e15a8ff28d98606bab831fd8c7",
+    sha256="c7c1abdf1c115dd40ec265ae4bc438676f57f1aa939108e5c623ca147e8fd6e6",
     folder_name="threat_classifier_gemma_mlp_v3_deploy",
+    model_version="0.5.0",
 )
 
 # =============================================================================
@@ -97,15 +99,19 @@ ModelMetadata = dict[str, str | int | None]
 DEFAULT_MODEL: str = CURRENT_MODEL.id
 
 # MODEL_REGISTRY is auto-generated for backward compatibility
+_current_model_entry: ModelMetadata = {
+    "name": CURRENT_MODEL.name,
+    "description": CURRENT_MODEL.description,
+    "size_mb": CURRENT_MODEL.size_mb,
+    "url": CURRENT_MODEL.url,
+    "sha256": CURRENT_MODEL.sha256,
+    "folder_name": CURRENT_MODEL.folder_name,
+}
+if CURRENT_MODEL.model_version:
+    _current_model_entry["model_version"] = CURRENT_MODEL.model_version
+
 MODEL_REGISTRY: dict[str, ModelMetadata] = {
-    CURRENT_MODEL.id: {
-        "name": CURRENT_MODEL.name,
-        "description": CURRENT_MODEL.description,
-        "size_mb": CURRENT_MODEL.size_mb,
-        "url": CURRENT_MODEL.url,
-        "sha256": CURRENT_MODEL.sha256,
-        "folder_name": CURRENT_MODEL.folder_name,
-    },
+    CURRENT_MODEL.id: _current_model_entry,
 }
 
 
@@ -140,61 +146,97 @@ def get_package_models_directory() -> Path:
 def should_use_bundled_models() -> bool:
     """Check if bundled (package) models should be searched.
 
-    By default, bundled models in the package directory are included
-    in the search path. This is useful for development where models
-    are pre-bundled.
+    By default, bundled models in the package directory are NOT searched.
+    Set RAXE_USE_BUNDLED_MODELS=1 to opt in, which is useful for
+    development where models are pre-bundled in the source tree.
 
     For production pip installs, the package directory is empty anyway
     (models too large for PyPI), so this has no effect.
-
-    Set RAXE_SKIP_BUNDLED_MODELS=1 to skip bundled models, which is
-    useful for testing the fresh install download UX in dev environments.
 
     Returns:
         True if bundled models should be searched, False to skip them.
 
     Environment Variables:
-        RAXE_SKIP_BUNDLED_MODELS: If set to any non-empty value, skip
-            the package models directory. Useful for testing fresh
-            install UX in development environments.
+        RAXE_USE_BUNDLED_MODELS: If set to any non-empty value, include
+            the package models directory in the search path. Useful for
+            development environments with pre-bundled models.
 
     Example:
-        # Test fresh install behavior in dev
-        RAXE_SKIP_BUNDLED_MODELS=1 raxe scan "test"
+        # Use bundled models in dev
+        RAXE_USE_BUNDLED_MODELS=1 raxe scan "test"
     """
-    return not os.environ.get("RAXE_SKIP_BUNDLED_MODELS")
+    return bool(os.environ.get("RAXE_USE_BUNDLED_MODELS"))
+
+
+def _get_model_install_state(model_name: str) -> str:
+    """Determine the install state of a model.
+
+    Checks user models directory (primary) and optionally the package
+    bundled directory. When ``CURRENT_MODEL.model_version`` is set the
+    installed ``model_metadata.json`` is inspected so that stale model
+    folders are reported as ``"outdated"`` rather than ``"installed"``.
+
+    Args:
+        model_name: Model identifier (e.g., "threat_classifier_gemma_mlp_v3")
+
+    Returns:
+        One of ``"installed"``, ``"outdated"``, or ``"missing"``.
+    """
+    if model_name not in MODEL_REGISTRY:
+        return "missing"
+
+    folder_name = str(MODEL_REGISTRY[model_name]["folder_name"])
+
+    # Collect candidate paths (user dir first, then optional bundled dir)
+    candidates: list[Path] = []
+
+    user_model_path = get_models_directory() / folder_name
+    candidates.append(user_model_path)
+
+    if should_use_bundled_models():
+        candidates.append(get_package_models_directory() / folder_name)
+
+    for path in candidates:
+        if not path.exists() or not _validate_model_folder(path):
+            continue
+
+        # Folder is structurally valid — now check version freshness
+        expected_version = CURRENT_MODEL.model_version
+        if expected_version:
+            metadata_file = path / "model_metadata.json"
+            if metadata_file.exists():
+                import json
+
+                try:
+                    with open(metadata_file) as f:
+                        meta = json.load(f)
+                    installed_version = meta.get("model_version", "")
+                    if installed_version != expected_version:
+                        return "outdated"
+                except (json.JSONDecodeError, OSError):
+                    return "outdated"
+            else:
+                # No metadata file means we cannot confirm the version
+                return "outdated"
+
+        return "installed"
+
+    return "missing"
 
 
 def is_model_installed(model_name: str) -> bool:
-    """Check if a model is already installed.
+    """Check if a model is already installed and up-to-date.
 
     Checks ~/.raxe/models/ (primary) and package directory (dev mode).
+    Returns False when the installed model is outdated (version mismatch).
 
     Args:
         model_name: Model identifier (e.g., "threat_classifier_gemma_compact")
 
     Returns:
-        True if model is installed and ready to use
+        True if model is installed, up-to-date, and ready to use
     """
-    if model_name not in MODEL_REGISTRY:
-        return False
-
-    folder_name = str(MODEL_REGISTRY[model_name]["folder_name"])
-
-    # Check user models directory (primary location for downloads)
-    user_models = get_models_directory()
-    user_model_path = user_models / folder_name
-    if user_model_path.exists() and _validate_model_folder(user_model_path):
-        return True
-
-    # Check package models directory (dev mode only)
-    if should_use_bundled_models():
-        package_models = get_package_models_directory()
-        package_model_path = package_models / folder_name
-        if package_model_path.exists() and _validate_model_folder(package_model_path):
-            return True
-
-    return False
+    return _get_model_install_state(model_name) == "installed"
 
 
 def _validate_model_folder(folder: Path) -> bool:
@@ -283,10 +325,19 @@ def download_model(
     folder_name = str(metadata["folder_name"])
     target_dir = get_models_directory() / folder_name
 
-    # Check if already installed
-    if not force and is_model_installed(model_name):
+    # Check install state for version-aware cache invalidation
+    install_state = _get_model_install_state(model_name)
+
+    if not force and install_state == "installed":
         logger.info(f"Model {model_name} already installed at {target_dir}")
         return target_dir
+
+    if install_state == "outdated":
+        logger.info(
+            f"Model {model_name} is outdated (expected version "
+            f"{CURRENT_MODEL.model_version}), re-downloading"
+        )
+        shutil.rmtree(target_dir, ignore_errors=True)
 
     # Remove existing if force
     if force and target_dir.exists():

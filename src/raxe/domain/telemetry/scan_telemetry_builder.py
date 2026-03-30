@@ -534,6 +534,14 @@ class ScanTelemetryBuilder:
             if token_count is not None:
                 base_result["token_count"] = token_count
                 base_result["tokens_truncated"] = l2_metadata.get("tokens_truncated", False)
+            # Energy scoring telemetry (shadow mode)
+            energy = l2_metadata.get("energy")
+            if energy:
+                base_result["energy_status"] = energy.get("status")
+                base_result["energy_score"] = energy.get("score")
+                base_result["energy_above_threshold"] = energy.get("above_threshold")
+                base_result["energy_threshold_name"] = energy.get("threshold_name")
+                base_result["energy_action"] = energy.get("action")
             # Include voting block for transparency on SAFE decisions
             voting_block = self._build_voting_block(l2_result)
             if voting_block:
@@ -639,6 +647,15 @@ class ScanTelemetryBuilder:
         if token_count is not None:
             result["token_count"] = token_count
             result["tokens_truncated"] = tokens_truncated
+
+        # Energy scoring telemetry (shadow mode)
+        energy = l2_metadata.get("energy")
+        if energy:
+            result["energy_status"] = energy.get("status")
+            result["energy_score"] = energy.get("score")
+            result["energy_above_threshold"] = energy.get("above_threshold")
+            result["energy_threshold_name"] = energy.get("threshold_name")
+            result["energy_action"] = energy.get("action")
 
         # Add voting block if available
         if voting_block:

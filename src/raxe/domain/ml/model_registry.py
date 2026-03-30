@@ -800,9 +800,7 @@ class ModelRegistry:
         if model.file_info.onnx_embeddings:
             onnx_path = self.models_dir / model.file_info.onnx_embeddings
             if not onnx_path.exists():
-                logger.warning(
-                    f"ONNX embeddings not found: {onnx_path}, falling back to sentence-transformers"
-                )
+                logger.warning(f"ONNX embeddings not found: {onnx_path}")
                 onnx_path = None
 
         # Extract tokenizer config if present

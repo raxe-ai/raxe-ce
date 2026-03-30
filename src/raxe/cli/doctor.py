@@ -258,7 +258,7 @@ def _check_ml_status() -> list[HealthCheck]:
     # Check individual ML deps
     ml_deps = [
         ("onnxruntime", "ONNX Runtime"),
-        ("sentence_transformers", "Sentence Transformers"),
+        ("tokenizers", "Tokenizers"),
         ("numpy", "NumPy"),
         ("sklearn", "scikit-learn"),
     ]
@@ -288,6 +288,55 @@ def _check_ml_status() -> list[HealthCheck]:
                 message=f"All installed: {', '.join(installed)}",
             )
         )
+
+    # Check installed model version (consult version-aware state)
+    try:
+        from raxe.infrastructure.ml.model_downloader import (
+            CURRENT_MODEL,
+            _get_model_install_state,
+        )
+
+        state = _get_model_install_state(CURRENT_MODEL.id)
+        if state == "installed":
+            from raxe.infrastructure.ml.model_downloader import get_models_directory
+
+            model_dir = get_models_directory() / CURRENT_MODEL.folder_name
+            metadata_path = model_dir / "model_metadata.json"
+            if metadata_path.exists():
+                import json
+
+                with open(metadata_path) as f:
+                    meta = json.load(f)
+                ver = meta.get("model_version", "unknown")
+                energy = "enabled" if meta.get("energy_enabled") else "not available"
+                checks.append(
+                    HealthCheck(
+                        name="L2 Model",
+                        status="ok",
+                        message=f"Model v{ver} installed",
+                        details=f"energy: {energy}",
+                    )
+                )
+        elif state == "outdated":
+            checks.append(
+                HealthCheck(
+                    name="L2 Model",
+                    status="warning",
+                    message=f"Model outdated (expected v{CURRENT_MODEL.model_version})",
+                    details="Run: raxe models download --force",
+                )
+            )
+        else:
+            checks.append(
+                HealthCheck(
+                    name="L2 Model",
+                    status="warning",
+                    message="Model not installed",
+                    details="Run: raxe models download",
+                )
+            )
+    except Exception:  # noqa: S110 - best-effort model metadata check
+        pass
 
     return checks
 

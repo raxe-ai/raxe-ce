@@ -83,8 +83,8 @@ class AsyncRaxe:
         *,
         api_key: str | None = None,
         config_path: Path | None = None,
-        telemetry: bool = True,
-        l2_enabled: bool = True,
+        telemetry: bool | None = None,
+        l2_enabled: bool | None = None,
         voting_preset: str | None = None,
         cache_size: int = 1000,
         cache_ttl: float = 300.0,
@@ -95,8 +95,10 @@ class AsyncRaxe:
         Args:
             api_key: Optional API key for cloud features
             config_path: Path to config file (overrides default search)
-            telemetry: Enable privacy-preserving telemetry (default: True)
-            l2_enabled: Enable L2 ML detection (default: True)
+            telemetry: Enable privacy-preserving telemetry. None uses config
+                (env var / config file / default True).
+            l2_enabled: Enable L2 ML detection. Defaults to RAXE_ENABLE_L2
+                env var if set, otherwise True.
             voting_preset: L2 voting preset (balanced, high_security, low_fp)
             cache_size: LRU cache size (default: 1000 entries)
             cache_ttl: Cache TTL in seconds (default: 300 = 5 minutes)
@@ -105,11 +107,15 @@ class AsyncRaxe:
         Raises:
             Exception: If critical components fail to load
         """
-        # Build configuration (same as sync client)
-        if config_path and config_path.exists():
-            self.config = ScanConfig.from_file(config_path)
-        else:
-            self.config = ScanConfig()
+        # Build configuration with layered precedence:
+        # defaults → config file → env vars → explicit params
+        self.config = ScanConfig.load(config_path)
+
+        # Resolve from config cascade: explicit param > config (env > file > default)
+        if l2_enabled is None:
+            l2_enabled = self.config.enable_l2
+        if telemetry is None:
+            telemetry = self.config.telemetry.enabled
 
         # Apply explicit overrides
         if api_key is not None:
@@ -147,7 +153,7 @@ class AsyncRaxe:
                 )
 
                 flush_stale_telemetry_async()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass  # Never block on stale flush
 
             logger.info(
@@ -492,9 +498,8 @@ class AsyncRaxe:
 
             # Track using v2 method
             orchestrator.track_scan_v2(payload=telemetry_payload)
-        except Exception:
-            # Never let telemetry break SDK functionality
-            pass
+        except Exception:  # noqa: S110
+            pass  # Never let telemetry break SDK functionality
 
     async def close(self) -> None:
         """Close client and cleanup resources.
@@ -524,7 +529,7 @@ class AsyncRaxe:
                 50,  # batch_size
                 True,  # end_session
             )
-        except Exception:
+        except Exception:  # noqa: S110
             pass  # Never let telemetry affect shutdown
 
     async def __aenter__(self) -> "AsyncRaxe":

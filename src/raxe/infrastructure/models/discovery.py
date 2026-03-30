@@ -298,16 +298,25 @@ class ModelDiscoveryService:
         Returns:
             DiscoveredModel if found, None otherwise (triggers auto-download)
         """
-        from raxe.infrastructure.ml.model_downloader import CURRENT_MODEL
+        from raxe.infrastructure.ml.model_downloader import (
+            CURRENT_MODEL,
+            _get_model_install_state,
+        )
 
         # Priority 1: Check for CURRENT_MODEL folder in ALL directories
-        for search_path in self._search_paths:
-            if not search_path.exists():
-                continue
-            current_folder = search_path / CURRENT_MODEL.folder_name
-            if current_folder.exists() and self._validate_onnx_folder(current_folder):
-                logger.info(f"Discovered CURRENT_MODEL: {current_folder.name} in {search_path}")
-                return self._create_onnx_folder_model(current_folder)
+        # Also verify version is current — outdated folders trigger re-download
+        install_state = _get_model_install_state(CURRENT_MODEL.id)
+        if install_state == "installed":
+            for search_path in self._search_paths:
+                if not search_path.exists():
+                    continue
+                current_folder = search_path / CURRENT_MODEL.folder_name
+                if current_folder.exists() and self._validate_onnx_folder(current_folder):
+                    logger.info(f"Discovered CURRENT_MODEL: {current_folder.name} in {search_path}")
+                    return self._create_onnx_folder_model(current_folder)
+
+        if install_state == "outdated":
+            logger.info("model_outdated_in_discovery", expected=CURRENT_MODEL.model_version)
 
         # Priority 2: Fall back to any valid model ONLY if allowed
         # This is used after auto-download fails to use any available model

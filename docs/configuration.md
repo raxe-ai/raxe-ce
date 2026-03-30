@@ -129,6 +129,7 @@ l2_scoring:
 |--------|------|---------|-------------|
 | `packs_root` | string | `~/.raxe/packs` | Directory containing detection rule packs |
 | `enable_l2` | boolean | `true` | Enable ML-based L2 detection |
+| `low_memory` | boolean | `false` | Reduce ONNX thread count for memory-constrained deployments |
 | `use_production_l2` | boolean | `true` | Use optimized production model (int8) vs development model (fp16) |
 | `l2_confidence_threshold` | float | `0.5` | Minimum confidence for L2 detections (0.0-1.0) |
 | `fail_fast_on_critical` | boolean | `false` | Stop scanning immediately on CRITICAL threat |
@@ -260,6 +261,7 @@ export RAXE_QUIET=true     # Suppress all output except errors
 ```bash
 export RAXE_PACKS_ROOT=~/.raxe/packs
 export RAXE_ENABLE_L2=true
+export RAXE_LOW_MEMORY=false
 export RAXE_USE_PRODUCTION_L2=true
 export RAXE_L2_CONFIDENCE_THRESHOLD=0.5
 export RAXE_FAIL_FAST_ON_CRITICAL=false

@@ -415,12 +415,12 @@ def compare_models(model_ids: tuple[str, ...]):
 def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
     """Download ML model for L2 detection.
 
-    The ML model is too large for PyPI (~329MB) so it's downloaded on-demand.
+    The ML model is too large for PyPI (~235MB) so it's downloaded on-demand.
     Downloads to ~/.raxe/models/ and persists across package upgrades.
 
     \b
     Examples:
-      raxe models download         # Download the Gemma Compact model
+      raxe models download         # Download the Gemma MLP model
       raxe models download --force # Re-download existing model
     """
     from rich.progress import (
@@ -560,7 +560,7 @@ def download_model_cmd(model_name: str | None, download_all: bool, force: bool):
         console.print("To enable L2 ML detection, reinstall RAXE:")
         console.print("  [cyan]pip install raxe[/cyan]")
         console.print()
-        console.print("L1 rule-based detection (460+ rules) works without ML dependencies.")
+        console.print("L1 rule-based detection (514 rules) works without ML dependencies.")
 
     console.print()
 
@@ -624,6 +624,36 @@ def model_status():
         console.print("To download remaining models:")
         console.print("  [cyan]raxe models download --all[/cyan]")
         console.print()
+
+    # Show model version and energy status (consult version-aware state)
+    try:
+        import json
+
+        from raxe.infrastructure.ml.model_downloader import (
+            CURRENT_MODEL,
+            _get_model_install_state,
+        )
+
+        state = _get_model_install_state(CURRENT_MODEL.id)
+        model_dir = get_models_directory() / CURRENT_MODEL.folder_name
+        metadata_path = model_dir / "model_metadata.json"
+
+        if state == "installed" and metadata_path.exists():
+            with open(metadata_path) as f:
+                meta = json.load(f)
+            ver = meta.get("model_version", "unknown")
+            energy = "enabled" if meta.get("energy_enabled") else "not available"
+            console.print("[bold]Model Details:[/bold]")
+            console.print(f"  Version: [cyan]{ver}[/cyan]")
+            console.print(f"  Energy scoring: [cyan]{energy}[/cyan]")
+            console.print()
+        elif state == "outdated":
+            console.print("[bold]Model Details:[/bold]")
+            console.print(f"  [yellow]Outdated — expected v{CURRENT_MODEL.model_version}[/yellow]")
+            console.print("  Run: [cyan]raxe models download --force[/cyan]")
+            console.print()
+    except Exception:  # noqa: S110 - best-effort model metadata display
+        pass
 
     # Show directories
     console.print("[dim]Model directories:[/dim]")

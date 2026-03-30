@@ -12,7 +12,6 @@ Key Differences from LazyL2Detector:
 
 Performance:
 - ONNX INT8: ~500ms initialization, ~10ms inference
-- Bundle (sentence-transformers): ~5s initialization, ~50ms inference
 - Stub: ~1ms initialization, ~1ms inference (no real detection)
 
 Example:
@@ -70,6 +69,7 @@ class EagerL2Detector:
         confidence_threshold: float = 0.5,
         models_dir: str | None = None,
         voting_preset: str | None = None,
+        low_memory: bool = False,
     ):
         """Initialize eager L2 detector.
 
@@ -81,6 +81,7 @@ class EagerL2Detector:
             confidence_threshold: Minimum confidence for L2 detections
             models_dir: Optional custom models directory
             voting_preset: Voting preset override (balanced, high_security, low_fp)
+            low_memory: Reduce memory via shared ONNX arena and fewer threads
 
         Example:
             # Eager initialization
@@ -97,6 +98,7 @@ class EagerL2Detector:
         self.use_production = use_production
         self.confidence_threshold = confidence_threshold
         self.voting_preset = voting_preset
+        self.low_memory = low_memory
         self._detector: L2Detector | None = None
         self._init_stats: dict[str, Any] = {}
 
@@ -311,6 +313,7 @@ class EagerL2Detector:
                     model_dir=str(discovered.model_dir),
                     confidence_threshold=self.confidence_threshold,
                     scorer=scorer,
+                    low_memory=self.low_memory,
                 )
             else:
                 # No other model types supported - raise clear error

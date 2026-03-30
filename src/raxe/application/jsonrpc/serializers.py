@@ -100,6 +100,19 @@ class ScanResultSerializer:
         if l2_predictions:
             response["l2_predictions"] = l2_predictions
 
+        # Add energy scoring block if available (shadow mode — top-level for
+        # visibility on both threat and clean scans)
+        l2_result = result.scan_result.l2_result
+        if l2_result and l2_result.metadata:
+            energy = l2_result.metadata.get("energy")
+            if energy:
+                response["energy"] = {
+                    "status": energy.get("status"),
+                    "score": energy.get("score"),
+                    "above_threshold": energy.get("above_threshold"),
+                    "action": energy.get("action"),
+                }
+
         return response
 
     def _serialize_severity(self, result: ScanPipelineResult) -> str | None:

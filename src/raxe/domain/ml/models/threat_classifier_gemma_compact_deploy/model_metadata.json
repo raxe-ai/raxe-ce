@@ -1,4 +1,6 @@
 {
+  "model_version": "dev-compact",
+  "energy_enabled": true,
   "model_type": "embeddinggemma_threat_classifier",
   "variant": "compact",
   "embedding_model": "google/embeddinggemma-300m",

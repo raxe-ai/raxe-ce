@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "raxe"
 version = "0.14.0"
-description = "RAXE Community Edition - AI Security for Everyone. 460+ threat detection rules, L2 CPU-based ML, always free."
+description = "RAXE Community Edition - AI Security for Everyone. 514 threat detection rules, L2 ML classification, energy-based anomaly detection, always free."
 authors = [{name = "RAXE Technologies, Inc.", email = "hello@raxe.ai"}]
 license = {text = "Proprietary - See LICENSE file"}
 readme = "README.md"
@@ -46,7 +46,7 @@ dependencies = [
     "jsonschema>=4.17,<5.0",
     "regex>=2024.0.0,<2026.0",  # ReDoS-safe pattern matching with timeout
     "onnxruntime>=1.16.0,<2.0",
-    "sentence-transformers>=2.2.0,<3.0",
+    "tokenizers>=0.15.0,<1.0",
     "numpy>=1.24.0,<2.0",
     "scikit-learn>=1.7.0,<1.8.0",  # Pin to 1.7.x to match feature_scaler.pkl
 ]
@@ -215,6 +215,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "S105", "S106", "T20"]
 "examples/**/*.py" = ["T20"]
+"scripts/**/*.py" = ["T20", "S603", "S607"]
 
 [tool.mypy]
 python_version = "3.10"

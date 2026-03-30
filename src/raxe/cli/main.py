@@ -761,9 +761,15 @@ def scan(
     progress = create_progress_indicator(progress_mode)
 
     # Create Raxe client (uses config if available)
-    # Pass l2_enabled=False when --l1-only to skip expensive ML model loading (~2.5s)
+    # Explicit CLI flags override env var; when neither flag is set, Raxe() checks RAXE_ENABLE_L2
     try:
-        raxe = Raxe(progress_callback=progress, l2_enabled=not l1_only)
+        if l1_only:
+            l2_kwarg: dict = {"l2_enabled": False}
+        elif l2_only:
+            l2_kwarg = {"l2_enabled": True}
+        else:
+            l2_kwarg = {}  # Let Raxe() resolve via RAXE_ENABLE_L2 env var
+        raxe = Raxe(progress_callback=progress, **l2_kwarg)
     except Exception as e:
         display_error("Failed to initialize RAXE", str(e))
         console.print("Try running: [cyan]raxe init[/cyan]")
@@ -848,6 +854,14 @@ def scan(
                 display_error(f"Invalid suppression pattern: {pattern_str}", str(e))
                 sys.exit(EXIT_INVALID_INPUT)
 
+    # Build per-scan layer kwargs: only pass when CLI flag is explicit
+    # so scan() defaults to client config (env > file > default)
+    scan_layer_kwargs: dict[str, bool] = {}
+    if l1_only:
+        scan_layer_kwargs = {"l1_enabled": True, "l2_enabled": False}
+    elif l2_only:
+        scan_layer_kwargs = {"l1_enabled": False, "l2_enabled": True}
+
     # Scan using unified client
     # Wire all CLI flags to scan parameters
     try:
@@ -860,8 +874,7 @@ def scan(
                 prof_result = profiler.profile_scan(text, iterations=1)
                 result = raxe.scan(
                     text,
-                    l1_enabled=not l2_only,
-                    l2_enabled=not l1_only,
+                    **scan_layer_kwargs,
                     mode=mode,
                     confidence_threshold=confidence if confidence else 0.5,
                     explain=explain,
@@ -893,8 +906,7 @@ def scan(
                     # For JSON/YAML, just show result (profile would clutter output)
                     result = raxe.scan(
                         text,
-                        l1_enabled=not l2_only,
-                        l2_enabled=not l1_only,
+                        **scan_layer_kwargs,
                         mode=mode,
                         confidence_threshold=confidence if confidence else 0.5,
                         explain=explain,
@@ -910,8 +922,7 @@ def scan(
                 console.print("[yellow]Warning: Profiling not available[/yellow]")
                 result = raxe.scan(
                     text,
-                    l1_enabled=not l2_only,
-                    l2_enabled=not l1_only,
+                    **scan_layer_kwargs,
                     mode=mode,
                     confidence_threshold=confidence if confidence else 0.5,
                     explain=explain,
@@ -926,8 +937,7 @@ def scan(
         else:
             result = raxe.scan(
                 text,
-                l1_enabled=not l2_only,
-                l2_enabled=not l1_only,
+                **scan_layer_kwargs,
                 mode=mode,
                 confidence_threshold=confidence if confidence else 0.5,
                 explain=explain,

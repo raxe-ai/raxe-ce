@@ -273,7 +273,7 @@ class AsyncScanPipeline:
             "l2_duration_ms": l2_duration_ms,
             "mode": mode,
             "l1_enabled": l1_enabled,
-            "l2_enabled": l2_enabled,
+            "l2_enabled": l2_enabled and self.enable_l2,
             "l2_cancelled": l2_cancelled,
             "l2_timeout": l2_timeout,
             "execution_mode": "async_parallel",

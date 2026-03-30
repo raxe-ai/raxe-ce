@@ -355,6 +355,12 @@ def _display_safe(result: ScanPipelineResult, console: Console, use_emoji: bool 
         content.append(f" • Model: {model_name}", style="dim")
 
     console.print(Panel(content, border_style="green", width=80, padding=(1, 2)))
+
+    # Show energy score (shadow mode) if present — uses shared helper
+    from raxe.cli.l2_formatter import L2ResultFormatter
+
+    L2ResultFormatter._format_energy(result.scan_result.l2_result, console)
+
     console.print()
 
 

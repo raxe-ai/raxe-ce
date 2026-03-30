@@ -53,7 +53,7 @@ class PreloadStats:
         config_loaded: True if config loaded successfully
         telemetry_initialized: True if telemetry initialized
         l2_init_time_ms: L2 model initialization time (separate from preload)
-        l2_model_type: Type of L2 model loaded (onnx_int8, sentence_transformers, stub)
+        l2_model_type: Type of L2 model loaded (onnx_int8, stub)
     """
 
     duration_ms: float
@@ -238,6 +238,7 @@ class PipelinePreloader:
                     use_production=config.use_production_l2,
                     confidence_threshold=config.l2_confidence_threshold,
                     voting_preset=self.voting_preset,
+                    low_memory=config.low_memory,
                 )
                 l2_init_time_ms = (time.perf_counter() - l2_init_start) * 1000
 

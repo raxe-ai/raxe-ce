@@ -75,16 +75,19 @@ class ScanHandler(BaseHandler):
 
         # Extract optional parameters
         mode = params.get("mode", "balanced")
-        l2_enabled = params.get("l2_enabled", True)
         confidence_threshold = params.get("confidence_threshold", 0.5)
 
+        # Build scan kwargs — only pass l2_enabled if explicitly provided,
+        # otherwise inherit from Raxe instance config
+        scan_kwargs: dict[str, Any] = {
+            "mode": mode,
+            "confidence_threshold": confidence_threshold,
+        }
+        if "l2_enabled" in params:
+            scan_kwargs["l2_enabled"] = params["l2_enabled"]
+
         # Perform scan
-        result = self._raxe.scan(
-            prompt,
-            mode=mode,
-            l2_enabled=l2_enabled,
-            confidence_threshold=confidence_threshold,
-        )
+        result = self._raxe.scan(prompt, **scan_kwargs)
 
         # Serialize to privacy-safe format
         return self._serializer.serialize(result)

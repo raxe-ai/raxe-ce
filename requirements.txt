@@ -22,4 +22,4 @@ sqlalchemy>=2.0
 aiosqlite>=0.19
 
 # Utilities
-python-dateutil>=2.8
+python-dateutil>=2.9.0.post0

@@ -19,7 +19,7 @@ pyyaml>=6.0
 
 # Database
 sqlalchemy>=2.0
-aiosqlite>=0.19
+aiosqlite>=0.22.1
 
 # Utilities
 python-dateutil>=2.8

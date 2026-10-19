@@ -80,7 +80,7 @@ config-tools = [
 
 # MCP (Model Context Protocol) server and gateway
 mcp = [
-    "mcp>=1.0.0,<2.0",
+    "mcp>=1.0.0,<3.0",
 ]
 
 # Optional LLM client wrappers
@@ -144,7 +144,7 @@ all = [
     "dspy>=2.0",
     "prompt-toolkit>=3.0,<4.0",
     "tomli-w>=1.0,<2.0",
-    "mcp>=1.0.0,<2.0",
+    "mcp>=1.0.0,<3.0",
 ]
 
 [project.urls]
